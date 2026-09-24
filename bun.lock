@@ -19,6 +19,8 @@
         "@ffmpeg/core": "0.12.6",
         "@ffmpeg/ffmpeg": "^0.12.15",
         "@ffmpeg/util": "^0.12.1",
+        "@fontsource/epilogue": "^5.3.0",
+        "@fontsource/urbanist": "^5.3.0",
         "@grapecity/activereports-localization": "^5.2.6",
         "@hookform/resolvers": "^3.10.0",
         "@jsreport/browser-client": "^3.1.1",
@@ -537,6 +539,10 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.4", "", { "dependencies": { "@floating-ui/dom": "^1.7.2" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-JbbpPhp38UmXDDAu60RJmbeme37Jbgsm7NrHGgzYYFKmblzRUh6Pa641dII6LsjwF4XlScDrde2UAzDo/b9KPw=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
+
+    "@fontsource/epilogue": ["@fontsource/epilogue@5.3.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/epilogue/-/epilogue-5.3.0.tgz", {}, "sha512-rUyuuIOG8BYkcTCxeekoVW0YKg0EsGBO1RGRd2brP2BGSbN8nUo1tc3PzD7QZB0NomTLdA7Dc6wrPsKCZ4m1aw=="],
+
+    "@fontsource/urbanist": ["@fontsource/urbanist@5.3.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/urbanist/-/urbanist-5.3.0.tgz", {}, "sha512-588s006ey+ygDqZtnJ1qehGNzIfNDl49ibAKifeYmU3juExX39LfMuCSkvT4nMktbvc07hg/8zc3qABh8zoxeA=="],
 
     "@grapecity/activereports-localization": ["@grapecity/activereports-localization@5.2.6", "", {}, "sha512-SjG2irG900tmJQ/99Zb12Qmq/QhN+pHLZxxTSY2drB3e9uEGUk/tzAszd1sxQ2//xWYJ9wzGWBQUJAnHHJ12YA=="],
 

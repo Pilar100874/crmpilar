@@ -5839,6 +5839,7 @@ ${recentMessages}
                       <AtendimentoClientCard
                         key={`contact-${contact.contactId}`}
                         title={`Chat - ${contact.nome}`}
+                        companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                         customerName={contact.nome}
                         sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                         onClick={async () => {
@@ -6236,7 +6237,7 @@ ${recentMessages}
                     return (
                     <div
                       key={task.id}
-                      className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
+                      className={`group relative min-h-[116px] rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${
                         selectedTaskId === task.id
                           ? "bg-primary/10 border-primary/40 shadow-md"
                           : semContato
@@ -6255,27 +6256,11 @@ ${recentMessages}
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
-                      {task.linkedUsers && task.linkedUsers.length > 0 ? (
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary"
-                        >
-                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                            {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                          </span>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                            !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
-                          }`}
-                        >
-                          <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                            {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
-                          </span>
-                        </div>
-                      )}
-                      
-                      <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
+                      <div className="flex items-start gap-3 p-3.5 pr-10">
+                       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+                         {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
+                         <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
+                       </div>
                        <div className="flex-1 min-w-0">
                          {(() => {
                            const ce = task.customers?.customer_empresas || [];
@@ -6284,12 +6269,15 @@ ${recentMessages}
                            const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^tarefa\s*[:\-]?\s*/i, '');
                            return (
                              <>
-                               {empresaNome && <p className="font-bold text-base truncate">{empresaNome}</p>}
-                               <p className={empresaNome ? "text-sm font-medium text-muted-foreground truncate" : "font-bold text-base truncate"}>{contatoNome}</p>
+                               {empresaNome && <p className="font-cardTitle font-bold text-[15px] leading-tight truncate">{empresaNome}</p>}
+                               <p className={empresaNome ? "mt-0.5 text-xs font-medium text-muted-foreground truncate" : "font-cardTitle font-bold text-[15px] leading-tight truncate"}>{contatoNome}</p>
                              </>
                            );
                          })()}
-                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                           <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
+                             {taskPendente ? 'Pendente' : task.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || (!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente')}
+                           </Badge>
                            <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
@@ -6350,7 +6338,7 @@ ${recentMessages}
                                  })()}
                                 </div>
                            </div>
-                            <div className="mt-1.5 flex items-center gap-1.5">
+                            <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                                 <button
@@ -8187,32 +8175,13 @@ function MobileListContent({
                 
                 {/* Conversas ativas da agenda */}
                 {agendaConversations.map((conv) => (
-                  <div
+                  <ConversaAgendaCard
                     key={conv.id}
+                    conversa={conv}
+                    selecionado={selectedConversation === conv.id}
+                    tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
-                      className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
-                      selectedConversation === conv.id 
-                        ? "bg-primary/10 border-primary/40 shadow-md" 
-                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-orange-100 to-orange-200"
-                      }`}>
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
-                      </div>
-                    </div>
-                  </div>
+                  />
                 ))}
 
                 {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
@@ -8220,6 +8189,7 @@ function MobileListContent({
                   <AtendimentoClientCard
                     key={`contact-${contact.contactId}`}
                     title={`Chat - ${contact.nome}`}
+                      companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                     customerName={contact.nome}
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
@@ -8247,32 +8217,13 @@ function MobileListContent({
                   </Badge>
                 </div>
                 {otherConversations.map((conv) => (
-                  <div
+                  <ConversaAgendaCard
                     key={conv.id}
+                    conversa={conv}
+                    selecionado={selectedConversation === conv.id}
+                    tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
-                      selectedConversation === conv.id 
-                        ? "bg-primary/10 border-primary/40 shadow-md" 
-                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-muted to-muted"
-                      }`}>
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
-                      </div>
-                    </div>
-                  </div>
+                  />
                 ))}
               </>
             )}
@@ -8302,38 +8253,24 @@ function MobileListContent({
               setDiscadorModo(null);
               setSelectedTaskId(task.id);
             }}
-            className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all overflow-hidden border ${
+            className={`group relative min-h-[116px] rounded-lg cursor-pointer overflow-hidden border font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 ${
               selectedTaskId === task.id
                 ? "bg-primary/10 border-primary/40 shadow-md"
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
           >
-            {/* Tarja lateral indicando vínculo com nome do usuário */}
-            {task.linkedUsers && task.linkedUsers.length > 0 ? (
-              <div 
-                className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary"
-              >
-                <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                  {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                </span>
+            <div className="flex items-start gap-3 p-3.5 pr-10">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+                {(task.contact_name || parseTituloCartao(task.title).nome || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
+                <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
               </div>
-            ) : (
-              <div 
-                className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                  !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
-                }`}
-              >
-                <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                  {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
-                </span>
-              </div>
-            )}
-            
-            <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
-                <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
+                <p className="font-cardTitle font-bold text-[15px] leading-tight truncate">{parseTituloCartao(task.title).nome}</p>
+                <p className="mt-0.5 text-xs font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
+                    {taskPendente ? 'Pendente' : task.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || (!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente')}
+                  </Badge>
                   <AtendimentoHoraBadge hora={task.time || ""} />
                   {/* Badge de usuários vinculados adicional */}
                   {task.linkedUsers && task.linkedUsers.length > 1 && (
@@ -8378,7 +8315,7 @@ function MobileListContent({
                       })()}
                     </div>
                  </div>
-                  <div className="mt-1.5 flex items-center gap-1.5">
+                  <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                     {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                       <button

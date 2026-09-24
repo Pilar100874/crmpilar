@@ -75,10 +75,13 @@ export default function ContatosCanalList({
         const temEmpresa = (contato.companies || []).some(
           (vinculo: any) => vinculo?.empresas?.id || vinculo?.empresa_id,
         );
+        const empresaPrincipal = (contato.companies || []).find((vinculo: any) => vinculo?.is_primary) || contato.companies?.[0];
+        const nomeEmpresa = empresaPrincipal?.empresas?.nome_fantasia || empresaPrincipal?.empresas?.nome;
         return (
           <AtendimentoClientCard
           key={`${canal}-${contato.id}`}
           title={contato.referencia || `${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
+          companyName={nomeEmpresa}
           customerName={contato.nome}
           sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
