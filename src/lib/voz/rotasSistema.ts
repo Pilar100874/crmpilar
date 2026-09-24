@@ -215,7 +215,6 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/listas?tab=gerentes", titulo: "Gerentes", aliases: ["cadastro de gerentes", "lista de gerentes", "abrir gerentes"] },
   { path: "/listas?tab=todos", titulo: "Todos os Cadastros", aliases: ["todos cadastros"] },
   { path: "/listas?tab=repassar-vendedores-gerente", titulo: "Repassar Vendedores entre Gerentes", aliases: ["repassar vendedores", "transferir vendedores gerente"] },
-  { path: "/listas?tab=vinculos-segmento-prospect-usuario", titulo: "Vínculo Segmento Prospect x Gerente", aliases: ["vinculo segmento prospect", "segmento prospect gerente"] },
   { path: "/listas?tab=mapa-clientes", titulo: "Mapa de Clientes", aliases: ["mapa dos clientes", "mapa de empresas"] },
   { path: "/listas?tab=prospeccao-b2b", titulo: "Prospecção B2B", aliases: ["prospectar b2b"] },
   { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao", "prospeccao empresas", "prospeccao empresas ia", "wizard prospeccao"] },
