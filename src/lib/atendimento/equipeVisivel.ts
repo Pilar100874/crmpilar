@@ -99,19 +99,22 @@ export async function carregarEquipeVisivel(estabelecimentoId: string): Promise<
   return { usuarioId: eu.id, papel, membros };
 }
 
-/** Resolve o escopo escolhido em lista de usuarios.id visíveis. */
+/**
+ * Resolve o escopo em lista de usuarios.id visíveis.
+ * Escopo = ids (separados por vírgula) de gerentes/vendedores assumidos.
+ * O próprio usuário sempre está incluído.
+ */
 export function resolverIdsVisiveis(equipe: EquipeVisivel | null, escopo: string): string[] {
   if (!equipe) return [];
-  if (equipe.papel === "vendedor" || escopo === "meus") return [equipe.usuarioId];
-  if (escopo === "equipe") {
-    // Gerente: ele + vendedores. Admin: ele + todos gerentes + vendedores.
-    return [equipe.usuarioId, ...equipe.membros.map((m) => m.id)];
-  }
-  const membro = equipe.membros.find((m) => m.id === escopo);
-  if (!membro) return [equipe.usuarioId];
-  if (membro.papel === "gerente") {
-    // Gerente escolhido pelo admin: ele + os vendedores dele
-    return [membro.id, ...equipe.membros.filter((m) => m.gerenteId === membro.id).map((m) => m.id)];
-  }
-  return [membro.id];
+  const ids = new Set<string>([equipe.usuarioId]);
+  if (equipe.papel === "vendedor") return [...ids];
+  escopo.split(",").filter(Boolean).forEach((id) => {
+    const membro = equipe.membros.find((m) => m.id === id);
+    if (!membro) return;
+    ids.add(membro.id);
+    if (membro.papel === "gerente") {
+      equipe.membros.filter((m) => m.gerenteId === membro.id).forEach((m) => ids.add(m.id));
+    }
+  });
+  return [...ids];
 }
