@@ -494,6 +494,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
+  const [novosContatosVinculo, setNovosContatosVinculo] = useState<string[]>([]);
   const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
@@ -1082,6 +1083,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setContatosVinculados(prev => [...prev, { contato, cargo: "", departamento: "", is_primary: prev.length === 0 }]);
     setBuscaContato("");
     toast.success("Contato vinculado! O vínculo também aparecerá no cadastro do contato.");
+  };
+
+  const handleAddContatosSelecionados = async () => {
+    const ids = novosContatosVinculo.filter(id => !contatosVinculados.some(v => v.contato?.id === id));
+    if (ids.length === 0) { toast.error("Selecione pelo menos um contato"); return; }
+    const novos = ids.map(id => contatos.find(c => c.id === id)).filter(Boolean) as any[];
+    if (editingEmpresa) {
+      const base = contatosVinculados.length;
+      const { error } = await supabase.from('customer_empresas').insert(
+        novos.map((c, i) => ({ customer_id: c.id, empresa_id: editingEmpresa.id, is_primary: base === 0 && i === 0 }))
+      );
+      if (error) { toast.error("Erro ao vincular contatos"); return; }
+      await supabase.from('customers').update({ tipo_operador: true }).in('id', novos.map(c => c.id));
+      if (estabelecimentoId) await fetchEmpresas(estabelecimentoId);
+    }
+    setContatosVinculados(prev => [...prev, ...novos.map((contato, i) => ({ contato, cargo: "", departamento: "", is_primary: prev.length === 0 && i === 0 }))]);
+    setNovosContatosVinculo([]);
+    toast.success(`${novos.length} contato(s) vinculado(s)!`);
   };
 
   const handleRemoveContatoVinculado = async (index: number) => {
@@ -2935,38 +2954,33 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   <div className="space-y-4">
                     <Card className="border-primary/20 bg-primary/5">
                       <CardContent className="p-4 space-y-4">
-                        <h4 className="text-sm font-semibold">Adicionar Contatos</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Buscar por nome, e-mail ou WhatsApp..."
-                            value={buscaContato}
-                            className="h-9 text-sm bg-background"
-                            onChange={(e) => setBuscaContato(e.target.value)}
-                          />
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold">Adicionar Contatos</h4>
                           <Button variant="outline" size="sm" onClick={() => setCriarNovoContato(true)}>
                             <Plus className="w-4 h-4 mr-1" /> Novo
                           </Button>
                         </div>
-                        {contatosFiltrados.length > 0 && (
-                          <div className="border rounded-md max-h-[240px] overflow-y-auto bg-background">
-                            {contatosFiltrados.map((contato) => (
-                              <button
-                                key={contato.id}
-                                className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                                onClick={() => {
-                                  handleAddContatoVinculado(contato.id);
-                                  setContatosFiltrados([]);
-                                  setBuscaContato("");
-                                }}
-                              >
-                                <div className="font-medium text-sm">{contato.nome}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {contato.email} {contato.telefone && `• ${contato.telefone}`}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {(() => {
+                          const ja = new Set(contatosVinculados.map((v: any) => v?.contato?.id).filter(Boolean));
+                          const disp = contatos.filter(c => !ja.has(c.id));
+                          return (
+                            <FilteredCheckboxList
+                              idPrefix="new-cont"
+                              items={disp.map((c) => ({ id: c.id, label: c.nome, extra: [c.email, c.telefone].filter(Boolean).join(" • ") || undefined }))}
+                              selected={novosContatosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosContatosVinculo(checked ? [...novosContatosVinculo, id] : novosContatosVinculo.filter((x) => x !== id))
+                              }
+                              searchPlaceholder="Buscar por nome, e-mail ou WhatsApp..."
+                              emptyText="Nenhum contato disponível."
+                              maxHeightClass="max-h-[240px]"
+                            />
+                          );
+                        })()}
+                        <Button onClick={handleAddContatosSelecionados} className="w-full" size="sm">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Contatos Selecionados
+                        </Button>
                       </CardContent>
                     </Card>
                     <div>
