@@ -1,4 +1,5 @@
 import type { MouseEvent } from "react";
+import { CalendarClock, FileText, Mail, MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +20,7 @@ interface AtendimentoCardIndicatorsProps extends AtendimentoIndicatorData {
 
 /**
  * Indicadores numéricos compartilhados pelos cartões de todas as abas do Atendimento.
- * As quatro bolinhas são sempre exibidas, com cor fixa por tipo de conteúdo:
- * atraso (vermelho), e-mails (azul/primário), chats (amarelo) e orçamentos (verde).
+ * Exibe somente indicadores ativos, em uma faixa compacta de ícone + quantidade.
  */
 export function AtendimentoCardIndicators({
   diasAtraso = 0,
@@ -37,28 +37,32 @@ export function AtendimentoCardIndicators({
     {
       chave: "atraso",
       valor: diasAtraso,
-      classe: "bg-destructive text-destructive-foreground",
+      Icone: CalendarClock,
+      classe: "border-destructive/25 bg-destructive/10 text-destructive",
       texto: `${diasAtraso} ${diasAtraso === 1 ? "dia atrasado" : "dias atrasados"}`,
       onClick: onAtrasoClick,
     },
     {
       chave: "email",
       valor: emailsNaoLidos,
-      classe: "bg-primary text-primary-foreground",
+      Icone: Mail,
+      classe: "border-info/25 bg-info/10 text-info",
       texto: `${emailsNaoLidos} ${emailsNaoLidos === 1 ? "e-mail não lido" : "e-mails não lidos"}`,
       onClick: onEmailClick,
     },
     {
       chave: "chat",
       valor: chatsPendentes,
-      classe: "bg-warning text-warning-foreground",
+      Icone: MessageSquare,
+      classe: "border-warning/30 bg-warning/10 text-warning-foreground",
       texto: `${chatsPendentes} ${chatsPendentes === 1 ? "chat pendente" : "chats pendentes"}`,
       onClick: onChatClick,
     },
     {
       chave: "orcamento",
       valor: orcamentosAbertos,
-      classe: "bg-success text-success-foreground",
+      Icone: FileText,
+      classe: "border-success/25 bg-success/10 text-success",
       texto: `${orcamentosAbertos} ${orcamentosAbertos === 1 ? "orçamento em aberto" : "orçamentos em aberto"}`,
       onClick: onOrcamentoClick,
     },
@@ -66,10 +70,11 @@ export function AtendimentoCardIndicators({
 
   return (
     <TooltipProvider>
-      <div className={cn("flex flex-col items-center gap-1", className)}>
-        {indicadores.map((indicador) => {
+      <div className={cn("flex shrink-0 items-center justify-end gap-1", className)}>
+        {indicadores.filter((indicador) => indicador.valor > 0).map((indicador) => {
           const ativo = indicador.valor > 0;
           const clicavel = ativo && Boolean(indicador.onClick);
+          const Icone = indicador.Icone;
           return (
             <Tooltip key={indicador.chave}>
               <TooltipTrigger asChild>
@@ -82,12 +87,13 @@ export function AtendimentoCardIndicators({
                     indicador.onClick?.();
                   }}
                   className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold leading-none shadow-sm transition-opacity",
-                    ativo ? indicador.classe : "bg-muted text-muted-foreground opacity-60",
+                    "flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-md border px-1 text-[9px] font-bold leading-none transition-opacity",
+                    indicador.classe,
                     clicavel ? "cursor-pointer hover:opacity-90" : "cursor-default",
                   )}
                 >
-                  {indicador.valor}
+                  <Icone className="h-2.5 w-2.5" />
+                  <span>{indicador.valor}</span>
                 </span>
               </TooltipTrigger>
               <TooltipContent><p>{indicador.texto}</p></TooltipContent>

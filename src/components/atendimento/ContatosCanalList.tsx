@@ -4,7 +4,6 @@ import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/useP
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoCardsDensityButton, AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
-import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 export type CanalContato = "tel" | "whatsapp" | "email" | "todos";
 
@@ -84,7 +83,6 @@ export default function ContatosCanalList({
           title={contato.referencia || `${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
           companyName={nomeEmpresa}
           customerName={contato.nome}
-          sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
           selectionTone={colorirPorEmpresa && !temEmpresa ? "info" : "primary"}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
@@ -96,11 +94,7 @@ export default function ContatosCanalList({
               ? "border-primary/80 hover:border-primary"
               : "border-info/80 hover:border-info"
             : undefined}
-        >
-          <AtendimentoHoraBadge hora={contato.horario || ""} />
-          {contato.origem && <AtendimentoInfoBadge>{contato.origem}</AtendimentoInfoBadge>}
-          {acaoLabel && <AtendimentoInfoBadge>{acaoLabel}</AtendimentoInfoBadge>}
-          </AtendimentoClientCard>
+        />
         );
       })}
     </div>

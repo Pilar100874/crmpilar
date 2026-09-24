@@ -1,6 +1,5 @@
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
-import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 interface DadosAgenda {
   title: string;
@@ -32,15 +31,11 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, onClick
       title={dadosAgenda?.title || `Chat - ${nome}`}
       companyName={nomeEmpresa}
       customerName={nome}
-      sideLabel={dadosAgenda?.responsavel || conversa.customerLinkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
       selected={selecionado}
       onClick={onClick}
       indicators={<AtendimentoCardIndicators {...dadosAgenda} />}
       historicoClienteId={conversa.customer_id}
       historicoClienteNome={nome}
-    >
-      <AtendimentoHoraBadge hora={dadosAgenda?.time || ""} />
-      {dadosAgenda?.origem && <AtendimentoInfoBadge>{dadosAgenda.origem}</AtendimentoInfoBadge>}
-    </AtendimentoClientCard>
+    />
   );
 }

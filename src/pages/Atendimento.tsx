@@ -5915,15 +5915,9 @@ ${recentMessages}
                             toast.error('Erro ao iniciar conversa');
                           }
                         }}
-                        indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                         historicoClienteId={contact.contactId}
                         historicoClienteNome={contact.nome}
-                      >
-                        {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
-                        <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                        {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
-                        {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
-                      </AtendimentoClientCard>
+                      />
                     ))}
                   </>
                 )}
@@ -8269,15 +8263,9 @@ function MobileListContent({
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     selected={[...agendaConversations, ...otherConversations].find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
-                    indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                     historicoClienteId={contact.contactId}
                     historicoClienteNome={contact.nome}
-                  >
-                    {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
-                    <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                    {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
-                    {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
-                  </AtendimentoClientCard>
+                  />
                 ))}
               </>
             )}
