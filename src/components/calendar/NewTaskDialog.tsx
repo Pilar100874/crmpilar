@@ -693,7 +693,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           <div className="relative">
             <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
             <Input
-              placeholder="Pesquisar contato..."
+              placeholder="Pesquisar contato ou empresa..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -733,6 +733,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                     <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
                       {contact.customFields?.cpf_cnpj && (
                         <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
+                      )}
+                      {contact.empresaNomes && contact.empresaNomes.length > 0 && (
+                        <div>Empresa: {contact.empresaNomes[0]}</div>
                       )}
                       {contact.phone && (
                         <div>Tel: {contact.phone}</div>
