@@ -52,12 +52,15 @@ export const useMapLayers = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes] = await Promise.all([
-        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao'),
+      const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes, vendedoresRes] = await Promise.all([
+        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao, tipo_cliente'),
         supabase.from('usuarios').select('id, nome'),
-        supabase.from('empresa_vinculos').select('empresa_id, usuario_id'),
-        supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude')
+        supabase.from('empresa_vinculos').select('empresa_id, usuario_id, vendedor_id'),
+        supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude'),
+        supabase.from('empresas').select('id, nome_fantasia, nome').eq('tipo_cliente', 'vendedor').order('nome_fantasia')
       ]);
+
+      if (vendedoresRes.data) setVendedores(vendedoresRes.data);
 
       if (empresasRes.data) setEmpresas(empresasRes.data);
       if (usuariosRes.data) setUsuarios(usuariosRes.data);
@@ -113,7 +116,8 @@ export const useMapLayers = () => {
       if (empresaVinculosRes.data) {
         setVinculos(empresaVinculosRes.data.map(v => ({
           empresa_id: v.empresa_id,
-          usuario_id: v.usuario_id
+          usuario_id: v.usuario_id,
+          vendedor_id: (v as any).vendedor_id ?? null
         })));
       }
 
