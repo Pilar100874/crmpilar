@@ -3307,10 +3307,18 @@ ${recentMessages}
     return emails;
   }, [todayTasks]);
 
+  // Contatos vinculados ao usuário/equipe escolhida (usados quando a flag está desligada)
+  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
+  const idsContatosVinculados = useMemo(() => new Set(contatosVinculados.map((c) => c.id)), [contatosVinculados]);
+
   const filteredConversations = useMemo(() => {
     const seenCustomers = new Set<string>();
     const filtradas = conversations.filter((conv) => {
       if (usarAgenda && !agendaContactIds.has(conv.customer_id)) {
+        return false;
+      }
+      // Agenda desligada: só conversas de contatos vinculados ao escopo escolhido ("Somente os meus", equipe, gerente…)
+      if (!usarAgenda && !idsContatosVinculados.has(conv.customer_id) && !pendenciasAtendimento.includes(conv.customer_id)) {
         return false;
       }
       if (!conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -3336,7 +3344,7 @@ ${recentMessages}
       return true;
     });
     return ordenarPendentesPrimeiro(filtradas, (c: any) => c.customer_id, pendenciasAtendimento);
-  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds, pendenciasAtendimento]);
+  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds, pendenciasAtendimento, idsContatosVinculados]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
   // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
@@ -3442,8 +3450,6 @@ ${recentMessages}
     return () => window.removeEventListener(EVENTO_FINALIZAR, h);
   }, []);
 
-  // Contatos vinculados ao usuário (usados quando a flag está desligada)
-  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
 
   // Carrega equipe visível (papel do usuário) ao definir o estabelecimento
   useEffect(() => {
