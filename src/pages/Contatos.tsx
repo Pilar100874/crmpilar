@@ -117,7 +117,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [substituicao, setSubstituicao] = useState<{ contato: { id: string; name: string }; empresas: EmpresaSubstituicao[] } | null>(null);
+  const [substituicao, setSubstituicao] = useState<{ contato: { id: string; name: string }; empresas: EmpresaSubstituicao[]; modo: 'inativar' | 'excluir' } | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -1773,22 +1773,39 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     await refreshContactDeps(contactId);
   };
 
-  const confirmDelete = async () => {
-    if (!contactToDelete) return;
+  const executarExclusao = async (contato: { id: string; name: string }, novo: { id: string; name: string } | null) => {
     try {
+      if (novo) {
+        const { error: errT } = await (supabase as any)
+          .from('calendario_tarefas')
+          .update({ contact_id: novo.id, contact_name: novo.name })
+          .eq('contact_id', contato.id);
+        if (errT) throw errT;
+      }
       const { data, error } = await supabase
-        .rpc('delete_customer_cascade', { p_customer_id: contactToDelete.id });
+        .rpc('delete_customer_cascade', { p_customer_id: contato.id });
       if (error) throw error;
       if (data === false) throw new Error('Não foi possível excluir o contato.');
       await loadContacts();
-      toast.success("Contato excluído com sucesso");
+      toast.success(novo ? `Contato excluído e tarefas transferidas para ${novo.name}` : "Contato excluído com sucesso");
     } catch (e: any) {
       console.error('Erro ao excluir contato:', e);
       toast.error(e?.message || "Erro ao excluir contato");
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!contactToDelete) return;
+    const contato = { id: contactToDelete.id, name: contactToDelete.name };
     setDeleteDialogOpen(false);
     setContactToDelete(null);
     setContactDeps(null);
+    const empresas = await carregarSubstituicaoContato(contato.id, estabelecimentoId);
+    if (empresas && empresas.length) {
+      setSubstituicao({ contato, empresas, modo: 'excluir' });
+      return;
+    }
+    await executarExclusao(contato, null);
   };
 
   const executarInativacao = async (contato: { id: string; name: string }, novo: { id: string; name: string } | null) => {
@@ -1818,7 +1835,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     setContactDeps(null);
     const empresas = await carregarSubstituicaoContato(contato.id, estabelecimentoId);
     if (empresas && empresas.length) {
-      setSubstituicao({ contato, empresas });
+      setSubstituicao({ contato, empresas, modo: 'inativar' });
       return;
     }
     await executarInativacao(contato, null);
@@ -3354,8 +3371,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         open={!!substituicao}
         contato={substituicao?.contato || null}
         empresas={substituicao?.empresas || []}
+        modo={substituicao?.modo || 'inativar'}
         onCancel={() => setSubstituicao(null)}
-        onConfirm={async (novo) => { if (substituicao) await executarInativacao(substituicao.contato, novo); setSubstituicao(null); }}
+        onConfirm={async (novo) => { if (substituicao) await (substituicao.modo === 'excluir' ? executarExclusao : executarInativacao)(substituicao.contato, novo); setSubstituicao(null); }}
       />
     </div>
   );
