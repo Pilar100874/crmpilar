@@ -6319,7 +6319,51 @@ ${recentMessages}
                               </div>
                            );
                          })()}
-                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <div className="mt-1 flex min-h-5 items-center">
+                            {(() => {
+                              const customerEmail = task.customers?.email?.toLowerCase();
+                              const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                              const customerPhone = normalizePhone(task.customers?.telefone);
+                              const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                              const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                              const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                              const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                              const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                              return (
+                                <AtendimentoCardIndicators
+                                  diasAtraso={task.diasAtraso || 0}
+                                  emailsNaoLidos={unreadEmailCount}
+                                  chatsPendentes={unreadChatsCount}
+                                  orcamentosAbertos={customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount}
+                                  onEmailClick={() => {
+                                    const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
+                                    setActiveTab('email');
+                                    if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
+                                  }}
+                                  onChatClick={() => {
+                                    const firstUnreadChat = conversations.find(c =>
+                                      (c.chat_status === 'em_fila' || c.chat_status === 'novo') &&
+                                      normalizePhone(c.customer?.telefone) === customerPhone
+                                    );
+                                    setActiveTab('chat');
+                                    if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
+                                  }}
+                                  onOrcamentoClick={() => {
+                                    const firstOrcamento = orcamentos.find(o =>
+                                      o.status !== 'cancelado' && o.status !== 'ganho' &&
+                                      (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                                    );
+                                    if (firstOrcamento) {
+                                      setActiveTab('orcamento');
+                                      setSelectedOrcamentoId(firstOrcamento.id);
+                                      setOrcamentoSheetOpen(true);
+                                    }
+                                  }}
+                                />
+                              );
+                            })()}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             {taskPendente && (
                               <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
                                 Pendente
@@ -6337,53 +6381,6 @@ ${recentMessages}
                                +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                              </Badge>
                            )}
-                             {/* Stacked indicators in top-right corner */}
-                              <div className="absolute right-2 top-2 flex items-center gap-1">
-                               {(() => {
-                                 const customerEmail = task.customers?.email?.toLowerCase();
-                                 const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                                 const customerPhone = normalizePhone(task.customers?.telefone);
-                                 const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                                 const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                                 const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                                 const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                                 const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                                 const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
-                                 return (
-                                   <AtendimentoCardIndicators
-                                     diasAtraso={task.diasAtraso || 0}
-                                     emailsNaoLidos={unreadEmailCount}
-                                     chatsPendentes={unreadChatsCount}
-                                     orcamentosAbertos={totalBudgetCount}
-                                     onEmailClick={() => {
-                                       const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
-                                       setActiveTab('email');
-                                       if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
-                                     }}
-                                     onChatClick={() => {
-                                       const firstUnreadChat = conversations.find(c =>
-                                         (c.chat_status === 'em_fila' || c.chat_status === 'novo') &&
-                                         normalizePhone(c.customer?.telefone) === customerPhone
-                                       );
-                                       setActiveTab('chat');
-                                       if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
-                                     }}
-                                     onOrcamentoClick={() => {
-                                       const firstOrcamento = orcamentos.find(o =>
-                                         o.status !== 'cancelado' &&
-                                         o.status !== 'ganho' &&
-                                         (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
-                                       );
-                                       if (firstOrcamento) {
-                                         setActiveTab('orcamento');
-                                         setSelectedOrcamentoId(firstOrcamento.id);
-                                         setOrcamentoSheetOpen(true);
-                                       }
-                                     }}
-                                     />
-                                   );
-                                 })()}
-                                </div>
                            </div>
                             <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-3 border-t border-border/60 pt-2.5'}`}>
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
@@ -8343,6 +8340,39 @@ function MobileListContent({
                     </>
                   );
                 })()}
+                <div className="mt-1 flex min-h-5 items-center">
+                  {(() => {
+                    const customerEmail = task.customers?.email?.toLowerCase();
+                    const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                    const customerPhone = normalizePhone(task.customers?.telefone);
+                    const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                    const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                    const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                    const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                    const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                    return (
+                      <AtendimentoCardIndicators
+                        diasAtraso={task.diasAtraso || 0}
+                        emailsNaoLidos={unreadEmailCount}
+                        chatsPendentes={unreadChatsCount}
+                        orcamentosAbertos={customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount}
+                        onEmailClick={() => setActiveTab('email')}
+                        onChatClick={() => setActiveTab('chat')}
+                        onOrcamentoClick={() => {
+                          const firstOrcamento = orcamentos.find(o =>
+                            o.status !== 'cancelado' && o.status !== 'ganho' &&
+                            (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                          );
+                          if (firstOrcamento) {
+                            setActiveTab('orcamento');
+                            setSelectedOrcamentoId(firstOrcamento.id);
+                            setOrcamentoSheetOpen(true);
+                          }
+                        }}
+                      />
+                    );
+                  })()}
+                </div>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {taskPendente && (
                     <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
@@ -8356,42 +8386,6 @@ function MobileListContent({
                       +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                     </Badge>
                   )}
-                  {/* Stacked indicators in top-right corner */}
-                   <div className="absolute right-2 top-2 flex items-center gap-1">
-                    {(() => {
-                      const customerEmail = task.customers?.email?.toLowerCase();
-                      const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                      const customerPhone = normalizePhone(task.customers?.telefone);
-                      const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                      const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                      const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                      const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                      const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                      const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
-                      return (
-                        <AtendimentoCardIndicators
-                          diasAtraso={task.diasAtraso || 0}
-                          emailsNaoLidos={unreadEmailCount}
-                          chatsPendentes={unreadChatsCount}
-                          orcamentosAbertos={totalBudgetCount}
-                          onEmailClick={() => setActiveTab('email')}
-                          onChatClick={() => setActiveTab('chat')}
-                          onOrcamentoClick={() => {
-                            const firstOrcamento = orcamentos.find(o =>
-                              o.status !== 'cancelado' &&
-                              o.status !== 'ganho' &&
-                              (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
-                            );
-                            if (firstOrcamento) {
-                              setActiveTab('orcamento');
-                              setSelectedOrcamentoId(firstOrcamento.id);
-                              setOrcamentoSheetOpen(true);
-                            }
-                          }}
-                          />
-                        );
-                      })()}
-                    </div>
                  </div>
                   <div className={`flex items-center gap-1.5 border-t border-border/60 ${cardsCompactos ? 'mt-1.5 pt-1.5' : 'mt-3 pt-2.5'}`}>
                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
