@@ -97,52 +97,50 @@ export function AtendimentoClientCard({
       </div>
       {historicoClienteId && (
         <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
-          {historicoClienteId && (
-              <button
-                type="button"
-                title="Ver histórico do cliente"
-                aria-label="Ver histórico do cliente"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
-                }}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <button
+            type="button"
+            title="Ver histórico do cliente"
+            aria-label="Ver histórico do cliente"
+            onClick={(event) => {
+              event.stopPropagation();
+              abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
+            }}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <History className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            disabled={!pendente}
+            title={pendente ? "Finalizar atendimento (próximo contato)" : "Disponível após uma ação com o cliente (mensagem, e-mail, orçamento, ligação ou visita)"}
+            aria-label="Finalizar atendimento"
+            onClick={(event) => {
+              event.stopPropagation();
+              pedirFinalizacao({ customerId: historicoClienteId, nome: historicoClienteNome });
+            }}
+            className={cn(
+              "flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              pendente
+                ? "border-destructive/50 bg-destructive/10 text-destructive"
+                : "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50",
+            )}
+          >
+            <CalendarCheck className="h-3.5 w-3.5" />
+            {pendente ? "Pendente" : "Finalizar"}
+          </button>
+          {(() => {
+            const { canal } = parseTituloCartao(title);
+            if (!canal) return null;
+            const IconeCanal = ICONES_CANAL[canal];
+            return (
+              <span
+                title={ROTULOS_CANAL[canal]}
+                className="ml-auto flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground"
               >
-                <History className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                disabled={!pendente}
-                title={pendente ? "Finalizar atendimento (próximo contato)" : "Disponível após uma ação com o cliente (mensagem, e-mail, orçamento, ligação ou visita)"}
-                aria-label="Finalizar atendimento"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  pedirFinalizacao({ customerId: historicoClienteId, nome: historicoClienteNome });
-                }}
-                className={cn(
-                  "flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  pendente
-                    ? "border-destructive/50 bg-destructive/10 text-destructive"
-                    : "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50",
-                )}
-              >
-                <CalendarCheck className="h-3.5 w-3.5" />
-                {pendente ? "Pendente" : "Finalizar"}
-              </button>
-              {(() => {
-                const { canal } = parseTituloCartao(title);
-                if (!canal) return null;
-                const IconeCanal = ICONES_CANAL[canal];
-                return (
-                  <span
-                    title={ROTULOS_CANAL[canal]}
-                    className="ml-auto flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground"
-                  >
-                    <IconeCanal className="h-3.5 w-3.5" />
-                  </span>
-                );
-              })()}
-          )}
+                <IconeCanal className="h-3.5 w-3.5" />
+              </span>
+            );
+          })()}
         </div>
       )}
       {indicators && (

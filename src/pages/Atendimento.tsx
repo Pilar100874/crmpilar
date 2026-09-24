@@ -8187,32 +8187,14 @@ function MobileListContent({
                 
                 {/* Conversas ativas da agenda */}
                 {agendaConversations.map((conv) => (
-                  <div
+                  <ConversaAgendaCard
                     key={conv.id}
+                    conversa={conv}
+                    dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
+                    selecionado={selectedConversation === conv.id}
+                    tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
-                      className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
-                      selectedConversation === conv.id 
-                        ? "bg-primary/10 border-primary/40 shadow-md" 
-                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-orange-100 to-orange-200"
-                      }`}>
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
-                      </div>
-                    </div>
-                  </div>
+                  />
                 ))}
 
                 {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
@@ -8247,32 +8229,14 @@ function MobileListContent({
                   </Badge>
                 </div>
                 {otherConversations.map((conv) => (
-                  <div
+                  <ConversaAgendaCard
                     key={conv.id}
+                    conversa={conv}
+                    dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
+                    selecionado={selectedConversation === conv.id}
+                    tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
-                      selectedConversation === conv.id 
-                        ? "bg-primary/10 border-primary/40 shadow-md" 
-                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-muted to-muted"
-                      }`}>
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
-                      </div>
-                    </div>
-                  </div>
+                  />
                 ))}
               </>
             )}
