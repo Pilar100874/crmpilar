@@ -86,10 +86,25 @@ function NoItem({ no, getFilhos, caminho }: {
   );
 }
 
-function ListaArvore({ titulo, nos, getFilhos }: {
+function Legenda({ tipos }: { tipos: TipoNo[] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3 px-1">
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Legenda:</span>
+      {tipos.map((t) => (
+        <span key={t} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {ICONE_NO[t]}
+          {ROTULO_NO[t]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ListaArvore({ titulo, nos, getFilhos, legenda }: {
   titulo: string;
   nos: NoArvore[];
   getFilhos: (tipo: TipoNo, id: string, caminho: Set<string>) => NoArvore[];
+  legenda: TipoNo[];
 }) {
   if (nos.length === 0) {
     return (
