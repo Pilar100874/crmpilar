@@ -8190,7 +8190,6 @@ function MobileListContent({
                   <ConversaAgendaCard
                     key={conv.id}
                     conversa={conv}
-                    dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
                     selecionado={selectedConversation === conv.id}
                     tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
@@ -8232,7 +8231,6 @@ function MobileListContent({
                   <ConversaAgendaCard
                     key={conv.id}
                     conversa={conv}
-                    dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
                     selecionado={selectedConversation === conv.id}
                     tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
