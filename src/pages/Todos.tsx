@@ -413,27 +413,33 @@ export default function Todos() {
         </div>
 
         <TabsContent value="all" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="registro" nos={nosTodos} getFilhos={getFilhos} />
+          <ListaArvore titulo="registro" nos={nosTodos} getFilhos={getFilhos}
+            legenda={['usuario', 'vendedor', 'empresa', 'transportadora', 'contato']} />
         </TabsContent>
 
         <TabsContent value="contacts" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="contato" nos={nosContatos} getFilhos={getFilhos} />
+          <ListaArvore titulo="contato" nos={nosContatos} getFilhos={getFilhos}
+            legenda={['contato', 'empresa']} />
         </TabsContent>
 
         <TabsContent value="companies" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="empresa" nos={nosEmpresas} getFilhos={getFilhos} />
+          <ListaArvore titulo="empresa" nos={nosEmpresas} getFilhos={getFilhos}
+            legenda={['empresa', 'usuario', 'vendedor', 'contato']} />
         </TabsContent>
 
         <TabsContent value="vendedores" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="vendedor" nos={nosVendedores} getFilhos={getFilhos} />
+          <ListaArvore titulo="vendedor" nos={nosVendedores} getFilhos={getFilhos}
+            legenda={['vendedor', 'usuario', 'empresa', 'contato']} />
         </TabsContent>
 
         <TabsContent value="transportadoras" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="transportadora" nos={nosTransportadoras} getFilhos={getFilhos} />
+          <ListaArvore titulo="transportadora" nos={nosTransportadoras} getFilhos={getFilhos}
+            legenda={['transportadora', 'contato']} />
         </TabsContent>
 
         <TabsContent value="usuarios" className="flex-1 p-8 overflow-auto">
-          <ListaArvore titulo="gerente" nos={nosGerentes} getFilhos={getFilhos} />
+          <ListaArvore titulo="gerente" nos={nosGerentes} getFilhos={getFilhos}
+            legenda={['usuario', 'vendedor', 'empresa', 'contato']} />
         </TabsContent>
       </Tabs>
     </div>
