@@ -1123,6 +1123,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       errors.cep = "CEP inválido";
     }
 
+    // Vendedor: vínculo com um gerente é obrigatório
+    if (variant === "vendedor" && !String(formData.gerente_usuario_id || "").trim()) {
+      errors.gerente_usuario_id = "Selecione o gerente responsável";
+    }
+
     if (formData.email && !validateEmail(formData.email)) {
       errors.email = "E-mail inválido";
     }
