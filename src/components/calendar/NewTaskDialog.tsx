@@ -27,8 +27,7 @@ interface Contact {
   phone: string;
   email: string;
   customFields?: Record<string, any>;
-  cnpj?: string;
-  razaoSocial?: string;
+  empresaNomes?: string[];
 }
 
 interface NewTaskDialogProps {
@@ -296,6 +295,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       .select('*')
       .eq('estabelecimento_id', estabId);
 
+    // Buscar vínculos contato -> empresas (para permitir buscar o contato pela empresa)
+    const { data: vinculosData } = await supabase
+      .from('customer_empresas')
+      .select('customer_id, empresas(nome_fantasia, nome, cnpj)');
+
+    const empresasPorContato: Record<string, string[]> = {};
+    if (vinculosData) {
+      vinculosData.forEach((v: any) => {
+        const emp = v.empresas;
+        if (!emp) return;
+        const nomes = [emp.nome_fantasia, emp.nome, emp.cnpj].filter(Boolean) as string[];
+        if (!empresasPorContato[v.customer_id]) empresasPorContato[v.customer_id] = [];
+        empresasPorContato[v.customer_id].push(...nomes);
+      });
+    }
+
     if (contatosData) {
       contatosData.forEach(contato => {
         allContacts.push({
@@ -305,6 +320,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           phone: contato.telefone || '',
           email: contato.email || '',
           customFields: (contato.custom_fields as Record<string, any>) || {},
+          empresaNomes: empresasPorContato[contato.id] || [],
         });
       });
     }
@@ -342,17 +358,19 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     
     const searchTerm = searchQuery.toLowerCase();
 
-    // Para contatos
+    // Para contatos (inclui busca pelas empresas vinculadas)
     const nome = (contact.name || '').toLowerCase();
     const telefone = (contact.phone || '').toLowerCase();
     const email = (contact.email || '').toLowerCase();
     const cpfCnpj = (contact.customFields?.cpf_cnpj || '').toString().toLowerCase();
-    
+    const empresas = (contact.empresaNomes || []).join(' ').toLowerCase();
+
     return (
       nome.includes(searchTerm) ||
       telefone.includes(searchTerm) ||
       email.includes(searchTerm) ||
-      cpfCnpj.includes(searchTerm)
+      cpfCnpj.includes(searchTerm) ||
+      empresas.includes(searchTerm)
     );
   });
 
@@ -674,7 +692,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           <div className="relative">
             <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
             <Input
-              placeholder="Pesquisar contato..."
+              placeholder="Pesquisar contato ou empresa..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -714,6 +732,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                     <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
                       {contact.customFields?.cpf_cnpj && (
                         <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
+                      )}
+                      {contact.empresaNomes && contact.empresaNomes.length > 0 && (
+                        <div>Empresa: {contact.empresaNomes[0]}</div>
                       )}
                       {contact.phone && (
                         <div>Tel: {contact.phone}</div>
