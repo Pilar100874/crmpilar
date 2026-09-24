@@ -3014,7 +3014,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       setCriarNovaEmpresa(true);
                     }}
                   >
-                    + Nova
+                    {vinculoTab === 'vendedor' ? '+ Novo' : '+ Nova'}
                   </Button>
                 </div>
 
@@ -3042,14 +3042,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Card>
             )}
 
-            {/* Lista de Empresas Vinculadas (abaixo) */}
-            {empresasVinculadas.length > 0 && (
+            {/* Lista de Vinculadas (abaixo) */}
+            {empresasVinculadas.filter(ev => vinculoTab === 'empresa' ? !['vendedor', 'transportadora'].includes((ev as any).tipo_cliente) : (ev as any).tipo_cliente === vinculoTab).length > 0 && (
               <Card className="p-4 mb-4">
                 <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-                  Empresas Vinculadas
+                  {vinculoTab === 'empresa' ? 'Empresas Vinculadas' : vinculoTab === 'transportadora' ? 'Transportadoras Vinculadas' : 'Vendedores Vinculados'}
                 </h3>
                 <div className="space-y-2">
-                  {empresasVinculadas.map((empresa) => (
+                  {empresasVinculadas.filter(ev => vinculoTab === 'empresa' ? !['vendedor', 'transportadora'].includes((ev as any).tipo_cliente) : (ev as any).tipo_cliente === vinculoTab).map((empresa) => (
                     <div key={empresa.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
                       const full = empresas.find(e => e.id === empresa.id) || empresa;
                       setViewingVinculo({
