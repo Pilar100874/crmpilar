@@ -17,6 +17,7 @@ import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
@@ -78,6 +79,22 @@ export function UnifiedDetailsPanel({
   onCompanyCardClick
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
+  const [extrasPicker, setExtrasPicker] = useState<{ tipo: "localizacao" | "qualificacao"; empresas: any[] } | null>(null);
+
+  const handleExtrasClick = (tipo: "localizacao" | "qualificacao") => {
+    const empresasList = (companies || [])
+      .map((c: any) => c?.empresas || c)
+      .filter((e: any) => e?.id);
+    if (empresasList.length > 1) {
+      setExtrasPicker({ tipo, empresas: empresasList });
+      return;
+    }
+    const empresa = empresasList[0];
+    const id = empresa?.id || empresaId;
+    if (!id) return;
+    const nomeEmpresa = empresa?.nome_fantasia || empresa?.nome || empresa?.company_fantasia || empresa?.company_name || nome;
+    abrirExtrasDaEmpresa({ tipo, empresaId: id, empresaNome: nomeEmpresa });
+  };
   const [contatoOpen, setContatoOpen] = useState(true);
   const [extrasOpen, setExtrasOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
