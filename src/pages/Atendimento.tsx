@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
+import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X, Rows3 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -67,7 +67,7 @@ import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFina
 import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
-import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardsDensityProvider, AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { BotaoHistoricoCard } from "@/components/atendimento/BotaoHistoricoCard";
 import { CustomerHistoryTimeline } from "@/components/atendimento/agenda/CustomerHistoryTimeline";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
@@ -287,6 +287,10 @@ export default function Atendimento() {
   const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("atendimento_usar_agenda") !== "false";
+  });
+  const [cardsCompactos, setCardsCompactos] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("atendimento_cards_compactos") === "true";
   });
   // Visibilidade por equipe (vendedor / gerente / admin)
   const [equipeVisivel, setEquipeVisivel] = useState<EquipeVisivel | null>(null);
@@ -3437,6 +3441,10 @@ ${recentMessages}
     localStorage.setItem("atendimento_usar_agenda", usarAgenda ? "true" : "false");
   }, [usarAgenda]);
 
+  useEffect(() => {
+    localStorage.setItem("atendimento_cards_compactos", cardsCompactos ? "true" : "false");
+  }, [cardsCompactos]);
+
   // Pedido de finalização vindo do botão "Finalizar" do cartão
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
@@ -4822,6 +4830,7 @@ ${recentMessages}
       </DialogContent>
     </Dialog>
 
+    <AtendimentoCardsDensityProvider compact={cardsCompactos}>
     <RadialMenu
       menuItems={RADIAL_MENU_ITEMS}
       onSelect={handleRadialMenuSelect}
@@ -5034,11 +5043,24 @@ ${recentMessages}
                   <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
                   <span className="text-xs font-medium text-foreground">Usar agenda</span>
                 </div>
-                <Switch
-                  checked={usarAgenda}
-                  onCheckedChange={setUsarAgenda}
-                  aria-label="Usar agenda"
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={cardsCompactos ? "secondary" : "ghost"}
+                    onClick={() => setCardsCompactos((atual) => !atual)}
+                    className="h-7 gap-1.5 px-2 text-[10px]"
+                    title={cardsCompactos ? "Usar cartões normais" : "Encolher cartões"}
+                    aria-pressed={cardsCompactos}
+                  >
+                    <Rows3 className="h-3.5 w-3.5" />
+                    Compactos
+                  </Button>
+                  <Switch
+                    checked={usarAgenda}
+                    onCheckedChange={setUsarAgenda}
+                    aria-label="Usar agenda"
+                  />
+                </div>
               </div>
               {seletorEquipe && <div className="flex-shrink-0 px-3 pb-2 border-b border-border/50 bg-card">{seletorEquipe}</div>}
               <div className="flex-1 min-h-0">
@@ -5648,15 +5670,28 @@ ${recentMessages}
                       <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowConversationsList(false)}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
-                    title="Ocultar painel"
-                  >
-                    <PanelLeftClose className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant={cardsCompactos ? "secondary" : "ghost"}
+                      onClick={() => setCardsCompactos((atual) => !atual)}
+                      className="h-8 gap-1.5 px-2 text-[10px]"
+                      title={cardsCompactos ? "Usar cartões normais" : "Encolher cartões"}
+                      aria-pressed={cardsCompactos}
+                    >
+                      <Rows3 className="h-3.5 w-3.5" />
+                      Compactos
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowConversationsList(false)}
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+                      title="Ocultar painel"
+                    >
+                      <PanelLeftClose className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 {/* Search Input + Global Filter + New Button */}
@@ -6271,7 +6306,7 @@ ${recentMessages}
                     return (
                     <div
                       key={task.id}
-                      className={`group relative min-h-[116px] rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${
+                      className={`group relative rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${cardsCompactos ? 'min-h-[82px]' : 'min-h-[116px]'} ${
                         selectedTaskId === task.id
                           ? semEmpresa
                             ? "bg-info/15 border-info shadow-md ring-2 ring-info/60"
@@ -6293,8 +6328,8 @@ ${recentMessages}
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
-                      <div className="flex items-start gap-3 p-3.5 pr-10">
-                       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+                      <div className={`flex items-start pr-10 ${cardsCompactos ? 'gap-2 p-2.5' : 'gap-3 p-3.5'}`}>
+                       <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
                          {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
                          <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
                        </div>
@@ -6306,8 +6341,8 @@ ${recentMessages}
                            const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^tarefa\s*[:\-]?\s*/i, '');
                            return (
                              <>
-                               {empresaNome && <p className="font-cardTitle font-bold text-[15px] leading-tight truncate">{empresaNome}</p>}
-                               <p className={empresaNome ? "mt-0.5 text-xs font-medium text-muted-foreground truncate" : "font-cardTitle font-bold text-[15px] leading-tight truncate"}>{contatoNome}</p>
+                               {empresaNome && <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{empresaNome}</p>}
+                               <p className={empresaNome ? "mt-0.5 text-xs font-medium text-muted-foreground truncate" : `font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{contatoNome}</p>
                              </>
                            );
                          })()}
@@ -6375,7 +6410,7 @@ ${recentMessages}
                                  })()}
                                 </div>
                            </div>
-                            <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
+                            <div className={`flex items-center gap-1.5 border-t border-border/60 ${cardsCompactos ? 'mt-1.5 pt-1.5' : 'mt-3 pt-2.5'}`}>
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                                 <button
@@ -7761,6 +7796,7 @@ ${recentMessages}
       </div>
       )}
     </RadialMenu>
+    </AtendimentoCardsDensityProvider>
     
     {/* Global Dialogs - render regardless of mobile/desktop */}
     <DiscadorModoDialog
