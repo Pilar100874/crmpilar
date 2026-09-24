@@ -26,7 +26,7 @@ export function canalDaAba(aba: string): CanalAtendimento | null {
 }
 
 const STATUS_PENDENTES = ["pendente", "pending"];
-const ORIGENS_VALIDAS = ["bot","campanha","ligacao","visita","email_enviado","email_recebido","pedido_orcamento","pedido_negociacao","pedido_aprovacao"];
+const ORIGENS_VALIDAS = ["bot","campanha","ligacao","visita","email_enviado","email_recebido","pedido_orcamento","pedido_negociacao","pedido_aprovacao","manual","novo_contato"];
 const ORIGEM_CANAL: Record<CanalAtendimento, string> = { whatsapp: "bot", email: "email_enviado", telefone: "ligacao", presencial: "visita", orcamento: "pedido_orcamento" };
 const origemValida = (o: string | null | undefined, canal: CanalAtendimento) => (o && ORIGENS_VALIDAS.includes(o) ? o : ORIGEM_CANAL[canal]);
 const hojeStr = () => format(new Date(), "yyyy-MM-dd");
