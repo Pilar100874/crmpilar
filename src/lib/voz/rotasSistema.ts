@@ -214,7 +214,6 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/listas?tab=transportadoras", titulo: "Transportadoras", aliases: ["cadastro de transportadoras", "lista de transportadoras", "abrir transportadoras", "transportadora"] },
   { path: "/listas?tab=gerentes", titulo: "Gerentes", aliases: ["cadastro de gerentes", "lista de gerentes", "abrir gerentes"] },
   { path: "/listas?tab=todos", titulo: "Todos os Cadastros", aliases: ["todos cadastros"] },
-  { path: "/listas?tab=vinculos-vendedor-usuario", titulo: "Vínculo Vendedor x Gerente", aliases: ["vinculo vendedor gerente", "vendedor x gerente"] },
   { path: "/listas?tab=vinculos-segmento-prospect-usuario", titulo: "Vínculo Segmento Prospect x Gerente", aliases: ["vinculo segmento prospect", "segmento prospect gerente"] },
   { path: "/listas?tab=mapa-clientes", titulo: "Mapa de Clientes", aliases: ["mapa dos clientes", "mapa de empresas"] },
   { path: "/listas?tab=prospeccao-b2b", titulo: "Prospecção B2B", aliases: ["prospectar b2b"] },
