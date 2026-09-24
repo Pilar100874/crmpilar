@@ -3884,6 +3884,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           open={deleteDialogOpen}
           onOpenChange={(o) => { setDeleteDialogOpen(o); if (!o) setEmpresaToDelete(null); }}
           entity="empresa"
+          permitirLimparVinculos={false}
+          transferencia={variant === 'vendedor' ? 'vendedor' : undefined}
           entityLabel={variant === 'vendedor' ? 'vendedor' : variant === 'transportadora' ? 'transportadora' : 'empresa'}
           id={empresaToDelete.id}
           name={empresaToDelete.nome_fantasia || empresaToDelete.nome}

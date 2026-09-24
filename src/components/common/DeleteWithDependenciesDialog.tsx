@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Trash2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TransferenciaCarteira, transferirCarteira, type TransferenciaValor } from "@/components/cadastros/TransferenciaCarteira";
 
 export type DeletableEntity =
   | "empresa"
@@ -43,6 +44,10 @@ interface Props {
   onDelete: () => Promise<void>;
   /** Called after successful inactivation */
   onInactivated?: () => void;
+  /** Permite remover vínculos para liberar a exclusão (padrão: true) */
+  permitirLimparVinculos?: boolean;
+  /** Exige transferência da carteira ao inativar (vendedor) */
+  transferencia?: "vendedor";
 }
 
 const ENTITY_KEY_MAP: Record<DeletableEntity, string> = {
@@ -73,7 +78,11 @@ export function DeleteWithDependenciesDialog({
   name,
   onDelete,
   onInactivated,
+  permitirLimparVinculos = true,
+  transferencia,
 }: Props) {
+  const [transf, setTransf] = useState<TransferenciaValor>({ novoGerenteId: null, novoVendedorId: null });
+  const [qtdCarteira, setQtdCarteira] = useState(0);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [clearingKey, setClearingKey] = useState<string | null>(null);
@@ -87,7 +96,21 @@ export function DeleteWithDependenciesDialog({
         p_id: id,
       });
       if (error) throw error;
-      setDeps((data as Record<string, number>) || {});
+      const d: Record<string, number> = { ...((data as Record<string, number>) || {}) };
+      if (entity === "empresa") {
+        const conta = async (tabela: string, col: string) => {
+          const { count } = await supabase.from(tabela as any).select("id", { count: "exact", head: true }).eq(col, id);
+          return count || 0;
+        };
+        const extras: Array<[string, number]> = [
+          ["Vínculos com gerentes/vendedores", await conta("empresa_vinculos", "empresa_id")],
+          ["Empresas atendidas como vendedor", await conta("empresa_vinculos", "vendedor_id")],
+          ["Empresas atendidas como transportadora", await conta("empresa_vinculos", "transportadora_id")],
+          ["Gerentes vinculados", await conta("gerente_vendedores", "vendedor_empresa_id")],
+        ];
+        extras.forEach(([k, n]) => { if (n > 0) d[k] = n; });
+      }
+      setDeps(d);
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao verificar dependências");
@@ -118,6 +141,7 @@ export function DeleteWithDependenciesDialog({
   useEffect(() => {
     if (!open) return;
     setDeps(null);
+    setTransf({ novoGerenteId: null, novoVendedorId: null });
     refreshDeps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entity, id]);
@@ -139,8 +163,13 @@ export function DeleteWithDependenciesDialog({
   };
 
   const handleInactivate = async () => {
+    if (transferencia && qtdCarteira > 0 && !transf.novoGerenteId) {
+      toast.error("Selecione o novo gerente que vai assumir as empresas.");
+      return;
+    }
     setBusy(true);
     try {
+      if (transferencia && qtdCarteira > 0) await transferirCarteira(transferencia, id, transf);
       const { error } = await supabase.rpc("inactivate_entity", {
         p_entity: entity,
         p_id: id,
@@ -175,16 +204,16 @@ export function DeleteWithDependenciesDialog({
                 <>
                   <p className="text-sm">
                     Este {label} está sendo usado no sistema e <strong>não pode ser excluído</strong>.
-                    Você pode <strong>inativá-lo</strong> para preservar o histórico.
+                    {permitirLimparVinculos ? <>Você pode <strong>inativá-lo</strong> para preservar o histórico.</> : <>Veja abaixo onde ele está sendo usado. Use <strong>Inativar</strong> para retirá-lo das listas.</>}
                   </p>
                   <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
                     {Object.entries(deps!).map(([k, v]) => {
-                      const isProtected = /or[çc]amento/i.test(k);
+                      const isProtected = !permitirLimparVinculos || /or[çc]amento/i.test(k);
                       return (
                         <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
                           <span className="flex-1 truncate">{k}</span>
                           <span className="font-mono font-semibold min-w-[2rem] text-right">{v}</span>
-                          {isProtected ? (
+                          {!permitirLimparVinculos ? null : isProtected ? (
                             <span className="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400 font-semibold px-2">
                               Protegido
                             </span>
@@ -208,9 +237,12 @@ export function DeleteWithDependenciesDialog({
                       );
                     })}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  {transferencia && (
+                    <TransferenciaCarteira tipo={transferencia} id={id} valor={transf} onChange={setTransf} onEmpresasCount={setQtdCarteira} />
+                  )}
+                  {permitirLimparVinculos && <p className="text-xs text-muted-foreground">
                     Remova os vínculos acima para liberar a exclusão. Itens marcados como <strong>Protegido</strong> (orçamentos) não podem ser removidos — nesse caso use <strong>Inativar</strong> para preservar o histórico.
-                  </p>
+                  </p>}
                 </>
               ) : (
                 <p className="text-sm">

@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
+import { UserCog, Search, Pencil, Plus, Trash2, X, Info, Archive } from "lucide-react";
+import { InativarGerenteDialog } from "@/components/cadastros/InativarGerenteDialog";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 
@@ -45,6 +46,7 @@ export default function Gerentes() {
   const [novosVendedores, setNovosVendedores] = useState<string[]>([]);
   const [novasEmpresas, setNovasEmpresas] = useState<string[]>([]);
   const [contagemVendedores, setContagemVendedores] = useState<Record<string, number>>({});
+  const [inativando, setInativando] = useState<Gerente | null>(null);
 
 
   useEffect(() => {
@@ -514,10 +516,16 @@ export default function Gerentes() {
                 ),
                 fields: [{ label: "Telefone", value: g.whatsapp || "-", full: true }],
                 actions: (
-                  <Button variant="outline" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8 rounded-full border-primary/20">
-                    <Pencil className="h-3.5 w-3.5" />
-                    <span className="text-xs">Vínculos</span>
-                  </Button>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8 rounded-full border-primary/20">
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span className="text-xs">Vínculos</span>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setInativando(g)} className="gap-1.5 h-8 rounded-full text-destructive border-destructive/30" aria-label="Inativar gerente">
+                      <Archive className="h-3.5 w-3.5" />
+                      <span className="text-xs">Inativar</span>
+                    </Button>
+                  </div>
                 ),
               }))}
             />
@@ -563,6 +571,13 @@ export default function Gerentes() {
 
           )}
         </div>
+        {inativando && (
+          <InativarGerenteDialog
+            gerente={inativando}
+            onClose={() => setInativando(null)}
+            onDone={() => { setInativando(null); loadGerentes(); loadContagemVendedores(); }}
+          />
+        )}
       </div>
   );
 }

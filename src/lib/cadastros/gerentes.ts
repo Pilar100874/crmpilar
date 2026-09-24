@@ -19,6 +19,7 @@ export async function carregarGerentesEAdministradores(
     .from("usuarios")
     .select("id, nome, email, whatsapp, tipo, auth_user_id, grupos_acesso(perfil)")
     .eq("estabelecimento_id", estabelecimentoId)
+    .or("ativo.is.null,ativo.eq.true")
     .order("nome");
 
   if (error) throw error;
