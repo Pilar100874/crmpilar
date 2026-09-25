@@ -18,7 +18,7 @@
 
 - [x] Etapa 1 — Base segura e estado único.
 - [x] Etapa 2 — Estrutura responsiva desktop, tablet e celular.
-- [ ] Etapa 3 — Fila do dia unificada.
+- [x] Etapa 3 — Fila do dia unificada.
 - [x] Etapa 4 — Área central multicanal.
 - [x] Etapa 5 — Cadastro e vínculos.
 - [ ] Etapa 6 — Finalização e reagendamento atômicos.
@@ -27,6 +27,6 @@
 
 ## Referência visual do Atendimento
 
-- [ ] Reproduzir no desktop o cabeçalho, a faixa de datas e a fila unificada da referência.
-- [ ] Exibir atendimento multicanal e finalização no centro, mantendo cadastro e vínculos à direita.
-- [ ] Validar o resultado visual e os fluxos principais.
+- [x] Reproduzir no desktop o cabeçalho, a faixa de datas e a fila unificada da referência.
+- [x] Exibir atendimento multicanal e finalização no centro, mantendo cadastro e vínculos à direita.
+- [x] Validar o resultado visual e os fluxos principais.
