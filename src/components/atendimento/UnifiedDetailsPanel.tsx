@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
 interface UnifiedDetailsPanelProps {
+  onOcultar?: () => void;
   type: PanelType;
   // Dados do cliente/empresa
   nome?: string;
