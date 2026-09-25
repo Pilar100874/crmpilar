@@ -1,5 +1,5 @@
 import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck, Expand, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -52,6 +52,8 @@ interface UnifiedDetailsPanelProps {
   onCreateContato?: () => void;
   onCreateEmpresa?: (customerId?: string) => void;
   onCompanyCardClick?: (empresa: any) => void;
+  // Ocultar o painel (botão no cabeçalho)
+  onOcultar?: () => void;
 }
 
 export function UnifiedDetailsPanel({ 
