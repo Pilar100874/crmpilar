@@ -476,9 +476,6 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('channel')}
               onNext={() => goToStep('compose')}
               canal={state.canal}
-              existingScheduleCount={existingScheduleContactIds.size}
-              scheduleConflictAction={scheduleConflictAction}
-              onScheduleConflictActionChange={setScheduleConflictAction}
             />
           )}
 
@@ -524,6 +521,9 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
+              existingScheduleCount={existingScheduleContactIds.size}
+              scheduleConflictAction={scheduleConflictAction}
+              onScheduleConflictActionChange={setScheduleConflictAction}
             />
           )}
         </div>
