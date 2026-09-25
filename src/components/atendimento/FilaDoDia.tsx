@@ -7,7 +7,6 @@ import {
   ChevronDown,
   MoreVertical,
   MessageCircle,
-  CalendarClock,
   Inbox,
   PanelLeftClose,
   PanelLeftOpen,
@@ -467,32 +466,6 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         )}
       </div>
 
-      {/* Cartão Envio em massa */}
-      <div className="flex-shrink-0 border-t border-border/40 bg-muted/30 px-3 py-3">
-        <div className="flex items-start gap-2.5">
-          <div className="h-9 w-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Send className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-foreground">Envio em massa</p>
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              Selecione contatos para enviar por WhatsApp ou e-mail.
-            </p>
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <CalendarClock className="h-3 w-3" />
-              Próximo contato: 3 dias após o envio.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onConfigurarRegra}
-            className="h-8 shrink-0 rounded-lg border-primary/40 text-primary text-xs hover:bg-primary/10"
-          >
-            Configurar regra
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
