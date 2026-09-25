@@ -5798,7 +5798,7 @@ ${recentMessages}
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
+          <div className={`px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20 ${clienteCabecalho && !isMobile ? "hidden" : ""}`}>
             <ExpandableTabs
               tabs={[
                 { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
