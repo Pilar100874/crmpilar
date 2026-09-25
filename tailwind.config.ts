@@ -152,6 +152,10 @@ export default {
           "0%, 100%": { opacity: "1", filter: "brightness(1)" },
           "50%": { opacity: "0.35", filter: "brightness(1.4)" },
         },
+        "wipe-in": {
+          "0%": { clipPath: "inset(0 100% 0 0)", opacity: "0.6" },
+          "100%": { clipPath: "inset(0 0 0 0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -161,6 +165,7 @@ export default {
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "tv-blink": "tv-blink 0.9s ease-in-out infinite",
+        "wipe-in": "wipe-in 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },
   },

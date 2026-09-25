@@ -161,6 +161,16 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const cabecalhoRef = useRef<HTMLDivElement | null>(null);
+  // Efeito de "wipe" ao abrir/trocar o quadro central
+  const quadroCentralRef = useRef<HTMLDivElement | null>(null);
+  const dispararWipe = () => {
+    const el = quadroCentralRef.current;
+    if (!el) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    el.classList.remove("animate-wipe-in");
+    void el.offsetWidth;
+    el.classList.add("animate-wipe-in");
+  };
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const el = cabecalhoRef.current;
@@ -4181,6 +4191,12 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
+  useEffect(() => {
+    dispararWipe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -5924,7 +5940,7 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
         {clienteCabecalho && !isMobile && (
           <div ref={cabecalhoRef}>
           <CabecalhoClienteAtendimento
