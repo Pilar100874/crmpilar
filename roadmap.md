@@ -1,5 +1,14 @@
 # Roteiro
 
+## Nova versão do Painel de Atendimento
+
+- [ ] Criar rota, menu, permissões e busca por voz sem alterar o painel atual.
+- [ ] Montar a fila real unificada com datas, filtros e recebidos não identificados.
+- [ ] Implementar atendimento responsivo em desktop, tablet e celular.
+- [ ] Integrar cadastro e vínculos no painel contextual.
+- [ ] Integrar finalização/reagendamento e envio em massa.
+- [ ] Validar nos tamanhos definidos e corrigir erros.
+
 - [x] Tornar os cartões do Atendimento compactos em duas linhas.
 - [x] Mover o controle de compactação para antes de “Meus contatos”.
 - [x] Exigir a seleção de um contato antes de criar uma tarefa pela Agenda.
