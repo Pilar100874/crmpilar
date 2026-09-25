@@ -7434,7 +7434,6 @@ ${recentMessages}
           </div>
         )}
       </div>
-      </div>
       )}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
@@ -7906,6 +7905,7 @@ ${recentMessages}
         onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
         draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
       />
+      </div>
       </div>
       )}
     </RadialMenu>
