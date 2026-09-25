@@ -12,7 +12,7 @@ import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
