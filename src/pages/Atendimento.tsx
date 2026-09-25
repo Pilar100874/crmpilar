@@ -82,6 +82,7 @@ import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOver
 import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
 import { MobileAtendimentoFlowNav, type MobileFlowView } from "@/components/atendimento/MobileAtendimentoFlowNav";
 import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
+import { AtendimentoDesktopTopbar } from "@/components/atendimento/AtendimentoDesktopTopbar";
 
 import { EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -338,6 +339,9 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
+  const [desktopQueueFilter, setDesktopQueueFilter] = useState<'all' | 'scheduled' | 'received'>('all');
+  const [desktopDateCounts, setDesktopDateCounts] = useState<Record<string, number>>({});
+  const [desktopOverdueCount, setDesktopOverdueCount] = useState(0);
   
   type SortCriterion = 
     | { type: 'field'; field: 'created_at' | 'time' | 'dias_atraso' }
@@ -1636,6 +1640,23 @@ export default function Atendimento() {
       loadAvailableOrigens();
     }
   }, [agendaDate, taskSortOrder, activeTab, usarAgenda]);
+
+  useEffect(() => {
+    if (!estabelecimentoId || idsVisiveis.length === 0) return;
+    const inicio = format(new Date(), 'yyyy-MM-dd');
+    const fim = format(addDays(new Date(), 5), 'yyyy-MM-dd');
+    void Promise.all([
+      supabase.from('calendario_tarefas').select('date').eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).gte('date', inicio).lte('date', fim),
+      supabase.from('calendario_tarefas').select('id', { count: 'exact', head: true }).eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).lt('date', inicio),
+    ]).then(([datas, atrasadas]) => {
+      if (!datas.error) {
+        const counts: Record<string, number> = {};
+        (datas.data || []).forEach((item) => { counts[item.date] = (counts[item.date] || 0) + 1; });
+        setDesktopDateCounts(counts);
+      }
+      if (!atrasadas.error) setDesktopOverdueCount(atrasadas.count || 0);
+    });
+  }, [estabelecimentoId, idsVisiveisChave]);
 
   // Mantém as abas sincronizadas quando as tarefas da agenda mudam (criação, edição, mudança de data, exclusão)
   const loadTodayTasksRef = useRef(loadTodayTasks);
@@ -3687,6 +3708,14 @@ ${recentMessages}
     
     return ordenarPendentesPrimeiro(tasks, (t: any) => t.contact_id, pendenciasAtendimento);
   }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
+
+  const desktopQueueTasks = useMemo(() => {
+    if (desktopQueueFilter === 'all') return filteredTasks;
+    const recebidas = new Set(['bot', 'email_recebido', 'chat_recebido']);
+    return filteredTasks.filter((task: any) => desktopQueueFilter === 'received'
+      ? recebidas.has(task.origem)
+      : !recebidas.has(task.origem));
+  }, [desktopQueueFilter, filteredTasks]);
 
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
