@@ -103,6 +103,16 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
+
+  const alternarCanal = (canal: FilaCanal) => {
+    setCanaisAtivos((anterior) => {
+      const proximo = new Set(anterior);
+      if (proximo.has(canal)) proximo.delete(canal);
+      else proximo.add(canal);
+      return proximo;
+    });
+  };
 
   const totalAgendados = items.filter((item) => item.tipo === "agendado").length;
   const totalRecebidos = items.filter((item) => item.tipo === "recebido").length;
@@ -111,6 +121,8 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
+    if (canaisAtivos.size > 0) lista = lista.filter((item) => canaisAtivos.has(item.canal));
+
 
     const ordenada = [...lista];
     if (ordenacao === "nome") {
@@ -128,7 +140,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
       });
     }
     return ordenada;
-  }, [items, filtro, ordenacao]);
+  }, [items, filtro, ordenacao, canaisAtivos]);
 
   const alternarSelecao = (id: string) => {
     setSelecionados((anterior) => {
@@ -270,6 +282,44 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
               </button>
             );
           })}
+        </div>
+
+        {/* Filtro por canal */}
+        <div className="flex items-center gap-1.5 mt-2">
+          {(Object.keys(CANAL_CONFIG) as FilaCanal[]).map((canal) => {
+            const cfg = CANAL_CONFIG[canal];
+            const Icone = cfg.icon;
+            const ativo = canaisAtivos.has(canal);
+            const total = items.filter((item) => item.canal === canal).length;
+            return (
+              <button
+                key={canal}
+                type="button"
+                onClick={() => alternarCanal(canal)}
+                title={`${cfg.label} (${total})`}
+                aria-label={`Filtrar por ${cfg.label}`}
+                aria-pressed={ativo}
+                className={cn(
+                  "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                  ativo
+                    ? "border-primary/50 bg-primary/10 text-primary"
+                    : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <Icone className={cn("h-4 w-4", ativo ? cfg.cor : "")} />
+                <span className="tabular-nums">{total}</span>
+              </button>
+            );
+          })}
+          {canaisAtivos.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setCanaisAtivos(new Set())}
+              className="h-8 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar
+            </button>
+          )}
         </div>
 
         {/* Seleção e envio em massa */}
