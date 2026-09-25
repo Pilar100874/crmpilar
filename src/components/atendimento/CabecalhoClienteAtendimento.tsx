@@ -17,7 +17,6 @@ interface Props {
   cliente: ClienteCabecalho;
   abaAtiva: string;
   onTrocarCanal: (aba: string) => void;
-  onHistorico?: () => void;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
   filaAberta?: boolean;
@@ -28,7 +27,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
@@ -101,22 +100,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 pb-4">
-        <button
-          type="button"
-          className="flex h-8 items-center rounded-full bg-primary/10 px-4 text-sm font-semibold text-primary"
-        >
-          Atendimento
-        </button>
-        <button
-          type="button"
-          onClick={onHistorico}
-          disabled={!onHistorico}
-          className="flex h-8 items-center rounded-full bg-muted px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground disabled:opacity-50"
-        >
-          Histórico
-        </button>
-      </div>
     </div>
   );
 }
