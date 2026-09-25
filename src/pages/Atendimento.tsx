@@ -6060,22 +6060,6 @@ ${recentMessages}
                       Reativar Bot
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const newState = !showClientDetailsChat;
-                      setShowClientDetailsChat(newState);
-                      // Em tablets, coordenar com o painel de conversas
-                      if (isTablet && newState && showConversationsList) {
-                        setShowConversationsList(false);
-                      }
-                    }}
-                    className="h-6 w-6 md:h-7 md:w-7 p-0"
-                    title={showClientDetailsChat ? "Ocultar detalhes" : "Mostrar detalhes"}
-                  >
-                    {showClientDetailsChat ? <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />}
-                  </Button>
                 </div>
               </div>
             </div>
@@ -6559,21 +6543,6 @@ ${recentMessages}
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
                     <ModuloCalendario dataInicial={dataAgendaCentral ?? undefined} viewModeInicial={modoAgendaCentral as any} />
                   </Suspense>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const newState = !showClientDetailsAgenda;
-                      setShowClientDetailsAgenda(newState);
-                      if (isTablet && newState && showConversationsList) {
-                        setShowConversationsList(false);
-                      }
-                    }}
-                    className="absolute top-2 right-2 z-20 h-7 w-7 p-0 rounded-full bg-card/90 border border-border shadow-sm hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                    title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
-                  >
-                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4 text-orange-600" /> : <ChevronLeft className="h-4 w-4 text-orange-600" />}
-                  </Button>
                 </div>
               )}
               {/* Desktop: inline wizard */}
