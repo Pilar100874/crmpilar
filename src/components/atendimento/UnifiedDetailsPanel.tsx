@@ -287,7 +287,7 @@ export function UnifiedDetailsPanel({
   };
   if (!nome && !protocolo && !titulo) {
     return (
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card animate-wipe-in">
         <div className="p-4 text-center text-muted-foreground flex-1 flex items-center justify-center">
           <div>
             {getIcon()}
@@ -385,7 +385,7 @@ export function UnifiedDetailsPanel({
   );
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card animate-wipe-in">
       <div className="flex-shrink-0 px-4 pt-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-lg font-semibold text-foreground">Cadastro e vínculos</h3>
