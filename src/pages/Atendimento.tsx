@@ -80,6 +80,7 @@ import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
+import { MobileAtendimentoFlowNav, type MobileFlowView } from "@/components/atendimento/MobileAtendimentoFlowNav";
 import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -4902,7 +4903,7 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
-      {(isMobile || isTablet) ? (
+      {isMobile ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
           {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
@@ -5101,6 +5102,32 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
+              <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-card px-2 py-1.5">
+                {[
+                  { id: "agenda", label: "Agenda", icon: CalendarIcon, count: filteredTasks.length },
+                  { id: "chat", label: "Chats", icon: MessageSquare, count: quantidadeCardsChat },
+                  { id: "tel", label: "Telefone", icon: Phone, count: quantidadeCardsTelefone },
+                  { id: "email", label: "E-mails", icon: Mail, count: quantidadeCardsEmail },
+                  { id: "orcamento", label: "Orçamentos", icon: FileText, count: quantidadeCardsOrcamento },
+                  { id: "visita", label: "Visitas", icon: MapPin, count: quantidadeCardsVisita },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <Button
+                      key={tab.id}
+                      type="button"
+                      size="sm"
+                      variant={activeTab === tab.id ? "secondary" : "ghost"}
+                      onClick={() => trocarAba(tab.id)}
+                      className="h-10 shrink-0 gap-1.5 px-3"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                      <Badge variant="outline" className="min-w-5 justify-center px-1 text-[10px]">{tab.count}</Badge>
+                    </Button>
+                  );
+                })}
+              </div>
               {/* Flag: usar agenda como origem dos contatos (mobile/tablet) */}
               <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-card">
                 <div className="flex items-center gap-2">
@@ -5402,12 +5429,31 @@ ${recentMessages}
               />}
             </div>
 
-            {/* Detalhes */}
-            <div
-              className={`absolute inset-0 transition-transform duration-300 ease-out bg-card overflow-y-auto ${
+            {/* Cadastro e vínculos em painel lateral sobreposto no celular */}
+            {mobileView === "details" && (
+              <button
+                type="button"
+                aria-label="Fechar cadastro"
+                onClick={() => setMobileView("main")}
+                className="absolute inset-0 z-30 bg-foreground/20"
+              />
+            )}
+            <aside
+              aria-label="Cadastro e vínculos"
+              className={`absolute inset-y-0 right-0 z-40 flex w-[92%] max-w-md flex-col border-l border-border bg-card shadow-xl transition-transform duration-300 ease-out ${
                 mobileView === "details" ? "translate-x-0" : "translate-x-full"
               }`}
             >
+              <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
+                <div>
+                  <p className="text-sm font-semibold">Cadastro e vínculos</p>
+                  <p className="text-xs text-muted-foreground">Contato e empresa</p>
+                </div>
+                <Button type="button" size="icon" variant="ghost" onClick={() => setMobileView("main")} aria-label="Fechar cadastro">
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto">
               {activeTab === "chat" && selectedConv && (
                 <UnifiedDetailsPanel
                   type="chat"
@@ -5576,56 +5622,27 @@ ${recentMessages}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
                 />
               )}
-            </div>
+              </div>
+            </aside>
           </div>
 
-          {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
-          {mobileView === "list" && !((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
-            <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
-              <div className="flex justify-around">
-                {[
-                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: filteredTasks.length },
-                  { id: "chat", label: "Chats", icon: MessageSquare, badge: quantidadeCardsChat },
-                  { id: "tel", label: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
-                  { id: "email", label: "E-mails", icon: Mail, badge: quantidadeCardsEmail },
-                  { id: "orcamento", label: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
-                  { id: "visita", label: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => trocarAba(tab.id)}
-                        className={`flex flex-col items-center justify-center py-1.5 px-4 transition-all relative ${
-                          isActive
-                            ? "text-primary"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {isActive && (
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-                        )}
-                        <div className={`relative p-2 rounded-xl transition-colors ${isActive ? "bg-primary/10" : ""}`}>
-                          <Icon className="h-5 w-5" />
-                          {tab.badge > 0 && (
-                            <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[9px] font-bold px-1 rounded-full ${
-                              isActive 
-                                ? "bg-primary text-primary-foreground" 
-                                : "bg-destructive text-destructive-foreground"
-                            }`}>
-                              {tab.badge > 99 ? "99+" : tab.badge}
-                            </span>
-                          )}
-                        </div>
-                        <span className={`text-[10px] font-medium mt-0.5 ${isActive ? "text-primary" : ""}`}>
-                          {tab.label}
-                        </span>
-                      </button>
-                    );
-                })}
-              </div>
-            </div>
+          {!((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && agendaViewMode === 'massa') && (
+            <MobileAtendimentoFlowNav
+              activeView={(mobileView === "list" ? "agenda" : mobileView === "details" ? "cadastro" : "atendimento") as MobileFlowView}
+              hasContact={!!activeContactId}
+              pendingCount={filteredTasks.length}
+              onNavigate={(view) => {
+                if (view === "agenda") setMobileView("list");
+                if (view === "atendimento") setMobileView("main");
+                if (view === "cadastro") setMobileView("details");
+                if (view === "finalizacao" && activeContactId) {
+                  pedirFinalizacao({
+                    customerId: activeContactId,
+                    nome: selectedConv?.customer?.nome || selectedTaskData?.contact_name || selectedTelContato?.nome || contatoEmailSelecionado?.nome || "Cliente",
+                  });
+                }
+              }}
+            />
           )}
 
           {/* Dialogs */}
