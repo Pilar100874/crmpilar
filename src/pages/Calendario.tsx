@@ -2806,12 +2806,12 @@ export default function Calendario() {
           </div>
         </div>
 
-        <div className="overflow-x-auto border-b border-border/50 px-3 py-2 sm:px-5 lg:px-6">
-          <div className="grid min-w-[760px] grid-cols-[150px_repeat(5,minmax(118px,1fr))] overflow-hidden rounded-md border border-border/60 bg-card shadow-sm">
+        <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card">
+          <div className="grid min-w-[720px] grid-cols-[140px_repeat(5,minmax(110px,1fr))]">
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className="flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors hover:bg-muted/50"
+              className="group flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors hover:bg-muted/50 sm:px-6"
             >
               <span>
                 <span className="block text-xs font-medium text-foreground">Atrasados</span>
@@ -2827,7 +2827,7 @@ export default function Calendario() {
                   type="button"
                   key={resumo.date.toISOString()}
                   onClick={() => setCurrentDate(resumo.date)}
-                  className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 ${selecionado ? "bg-primary/10" : ""}`}
+                  className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:px-6 ${selecionado ? "bg-primary/10" : ""}`}
                 >
                   <span>
                     <span className={`block text-xs font-semibold capitalize ${index === 0 ? "text-primary" : "text-foreground"}`}>
