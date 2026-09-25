@@ -30,6 +30,7 @@ export function PainelConversaV2({ item, canal, mensagens, enviando, onCanalChan
   const chaveRascunho = item?.contatoId ? `atendimento_v2_rascunho_${item.contatoId}_${canal}` : "";
   const [texto, setTexto] = useState("");
   const fimRef = useRef<HTMLDivElement>(null);
+  const conversaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setTexto(chaveRascunho ? localStorage.getItem(chaveRascunho) || "" : "");
@@ -39,7 +40,10 @@ export function PainelConversaV2({ item, canal, mensagens, enviando, onCanalChan
     if (chaveRascunho) localStorage.setItem(chaveRascunho, texto);
   }, [chaveRascunho, texto]);
 
-  useEffect(() => fimRef.current?.scrollIntoView({ block: "nearest" }), [mensagens]);
+  useEffect(() => {
+    const conversa = conversaRef.current;
+    if (conversa) conversa.scrollTop = conversa.scrollHeight;
+  }, [mensagens]);
 
   if (!item) {
     return (
@@ -95,7 +99,7 @@ export function PainelConversaV2({ item, canal, mensagens, enviando, onCanalChan
         <Button variant="ghost" className="h-11 gap-2 rounded-none px-3" onClick={onHistorico}><History className="h-4 w-4" />Histórico</Button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-muted/30 p-4">
+      <div ref={conversaRef} className="min-h-0 flex-1 overflow-y-auto bg-muted/30 p-4">
         {semDado ? (
           <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
             <UserRoundCog className="mb-3 h-10 w-10 text-muted-foreground" />
