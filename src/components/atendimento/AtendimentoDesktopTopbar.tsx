@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3, Plus, Search } from "lucide-react";
+import { CalendarDays, Clock3, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -27,36 +27,39 @@ export function AtendimentoDesktopTopbar({
   const days = Array.from({ length: 6 }, (_, index) => addDays(new Date(), index));
 
   return (
-    <header className="shrink-0 border-b border-border bg-card">
-      <div className="flex h-14 items-center gap-4 px-4">
+    <header className="shrink-0 border-b border-border bg-card shadow-sm">
+      <div className="flex h-16 items-center gap-4 px-5">
         <div className="flex min-w-0 items-baseline gap-3">
-          <h1 className="truncate text-xl font-bold text-foreground">Minha agenda</h1>
-          <span className="hidden text-sm text-muted-foreground xl:inline">
+          <h1 className="truncate text-2xl font-bold text-foreground">Minha agenda</h1>
+          <span className="hidden border-l border-border pl-4 text-sm font-medium text-foreground xl:inline">
             {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </span>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <div className="relative hidden w-72 lg:block">
+          <div className="relative hidden w-80 lg:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Buscar contatos, empresas, conversas..."
-              className="h-9 bg-muted/40 pl-9"
+              className="h-10 border-border bg-muted/30 pl-9 shadow-none"
             />
           </div>
-          <Button onClick={onSchedule} className="h-9 gap-2 px-4">
+          <Button variant="outline" size="icon" className="hidden h-10 w-10 lg:inline-flex" title="Filtros">
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
+          <Button onClick={onSchedule} className="h-10 gap-2 px-5 shadow-sm">
             <Plus className="h-4 w-4" />
             Agendar
           </Button>
         </div>
       </div>
 
-      <div className="grid h-[66px] grid-cols-7 border-t border-border/60 px-3">
+      <div className="grid h-[68px] grid-cols-7 border-t border-border/60 px-3">
         <button
           type="button"
           onClick={() => onSelectDate(new Date())}
-          className="flex min-w-0 items-center justify-between border-r border-border px-3 text-left transition-colors hover:bg-muted/50"
+          className="flex min-w-0 items-center justify-between border-r border-border px-4 text-left transition-colors hover:bg-muted/50"
         >
           <span>
             <span className="block text-[11px] font-medium text-muted-foreground">Atrasados</span>
@@ -73,8 +76,8 @@ export function AtendimentoDesktopTopbar({
               type="button"
               onClick={() => onSelectDate(day)}
               className={cn(
-                "flex min-w-0 items-center justify-between border-r border-border px-3 text-left transition-colors last:border-r-0 hover:bg-muted/50",
-                selected && "bg-primary/10",
+                "relative flex min-w-0 items-center justify-between border-r border-border px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-transparent",
+                selected && "bg-primary/10 after:bg-primary",
               )}
             >
               <span className="min-w-0">
