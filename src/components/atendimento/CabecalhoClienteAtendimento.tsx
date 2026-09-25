@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
+import { CalendarDays, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,8 @@ interface Props {
   cliente: ClienteCabecalho;
   abaAtiva: string;
   onTrocarCanal: (aba: string) => void;
+  onHistorico?: () => void;
+  historicoAtivo?: boolean;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
   filaAberta?: boolean;
@@ -27,7 +29,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, historicoAtivo, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
@@ -79,9 +81,23 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        {onHistorico && (
+          <button
+            type="button"
+            onClick={onHistorico}
+            title="Histórico"
+            aria-label="Histórico"
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
+              historicoAtivo ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40",
+            )}
+          >
+            <History className="h-4 w-4 text-orange-600" />
+          </button>
+        )}
         {canais.map((c) => {
           const Icon = c.icon;
-          const ativo = abaAtiva === c.aba;
+          const ativo = !historicoAtivo && abaAtiva === c.aba;
           return (
             <button
               key={c.aba}
