@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
+import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, GripVertical, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -5803,16 +5803,16 @@ ${recentMessages}
             <Suspense fallback={null}><ModuloCalendario /></Suspense>
           </div>
         )}
-        {/* Abinha para reabrir a Fila do dia quando encolhida (igual ao painel de detalhes) */}
+        {/* Barrinha lateral para reabrir a Fila do dia quando encolhida */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <button
             type="button"
             onClick={() => setShowConversationsList(true)}
             title="Abrir Fila do dia"
             aria-label="Abrir Fila do dia"
-            className="fixed left-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-r-lg border border-l-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+            className="fixed left-0 top-0 bottom-0 z-[640] flex w-4 items-center justify-center border-r border-border/60 bg-card/80 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
-            <ChevronRight className="h-4 w-4" />
+            <GripVertical className="h-4 w-4" />
           </button>
         )}
         {/* Conversation List */}
@@ -6628,9 +6628,9 @@ ${recentMessages}
             onClick={reabrir}
             title="Mostrar detalhes"
             aria-label="Mostrar detalhes"
-            className="fixed right-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-l-lg border border-r-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+            className="fixed right-0 top-0 bottom-0 z-[640] flex w-4 items-center justify-center border-l border-border/60 bg-card/80 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <GripVertical className="h-4 w-4" />
           </button>
         );
       })()}
