@@ -146,20 +146,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Teste de Webhooks"
     }
   ],
-  "Calendario Painel": [
-    {
-      "id": "day",
-      "label": "Dia"
-    },
-    {
-      "id": "month",
-      "label": "Mês"
-    },
-    {
-      "id": "table",
-      "label": "Tabela"
-    }
-  ],
   "Roteirizador Visitas": [
     {
       "id": "carteira",
@@ -700,20 +686,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "pool",
       "label": "Programas"
-    }
-  ],
-  "Campanhas": [
-    {
-      "id": "day",
-      "label": "Dia"
-    },
-    {
-      "id": "month",
-      "label": "Mês"
-    },
-    {
-      "id": "table",
-      "label": "Tabela"
     }
   ],
   "Config Notificacoes Sistema": [
