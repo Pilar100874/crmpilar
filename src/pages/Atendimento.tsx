@@ -5880,6 +5880,9 @@ ${recentMessages}
             setShowEnvioMassaWizard(true);
           }}
           onConfigurarRegra={() => setShowEnvioMassa(true)}
+          filtro={filtroFila}
+          onFiltroChange={aoTrocarFiltroFila}
+          assumirContatos={assumirContatosConfig}
         />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
