@@ -152,7 +152,7 @@ All colors MUST be HSL.
     top: 0;
     bottom: 0;
     width: 260px;
-    z-index: 500;
+    z-index: 700;
     transition: left 0.3s ease;
   }
 
