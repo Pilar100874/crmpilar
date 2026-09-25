@@ -160,6 +160,15 @@ export default function Atendimento() {
   // Estados independentes de Client Details por aba (sempre encolhido por padrão)
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
+  const cabecalhoRef = useRef<HTMLDivElement | null>(null);
+  const [alturaCabecalho, setAlturaCabecalho] = useState(0);
+  useEffect(() => {
+    const el = cabecalhoRef.current;
+    if (!el) { setAlturaCabecalho(0); return; }
+    const ro = new ResizeObserver(() => setAlturaCabecalho(el.offsetHeight));
+    ro.observe(el); setAlturaCabecalho(el.offsetHeight);
+    return () => ro.disconnect();
+  });
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
@@ -4004,6 +4013,7 @@ ${recentMessages}
           openDetailsPanel(setShowClientDetailsAgenda);
           setAgendaViewMode("default");
           setDiscadorModo(null);
+          setHistoricoCliente(task.contact_id ? { customerId: task.contact_id, nome } : null);
         },
       });
     });
@@ -4030,6 +4040,7 @@ ${recentMessages}
             setActiveTab("chat");
             setSelectedConversation(conv.id);
             openDetailsPanel(setShowClientDetailsChat);
+            setHistoricoCliente(filtroFila !== "recebidos" && conv.customer_id ? { customerId: conv.customer_id, nome: conv.customer?.nome || "Cliente" } : null);
           },
         });
       });
@@ -4049,12 +4060,13 @@ ${recentMessages}
           onClick: () => {
             setActiveTab("email");
             setSelectedEmailId(email.id);
+            setHistoricoCliente(null);
           },
         });
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento]);
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila]);
 
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
@@ -5903,15 +5915,22 @@ ${recentMessages}
       {!orcamentoSheetOpen && (
       <div className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
         {clienteCabecalho && !isMobile && (
+          <div ref={cabecalhoRef}>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
             abaAtiva={activeTab}
-            onTrocarCanal={trocarAba}
+            onTrocarCanal={(aba) => { setHistoricoCliente(null); trocarAba(aba); }}
+            historicoAtivo={!!historicoCliente}
+            onHistorico={() => {
+              const id = (clienteCabecalho as any)?.id;
+              setHistoricoCliente(historicoCliente ? null : { customerId: id || undefined, nome: clienteCabecalho?.nome });
+            }}
             painelAberto={painelDetalhesAtivo}
             onTogglePainel={alternarPainelDetalhes}
             filaAberta={showConversationsList}
             onToggleFila={() => setShowConversationsList((valor) => !valor)}
           />
+          </div>
         )}
         {/* Extras da empresa (localização/qualificação) em tela central */}
         {extrasEmpresa && (
@@ -5924,7 +5943,7 @@ ${recentMessages}
         )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div className="absolute inset-0 z-[110] flex flex-col bg-background">
+          <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>
