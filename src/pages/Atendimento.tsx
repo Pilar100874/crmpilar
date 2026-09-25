@@ -82,6 +82,7 @@ import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOver
 import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
 import { MobileAtendimentoFlowNav, type MobileFlowView } from "@/components/atendimento/MobileAtendimentoFlowNav";
 import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
+import { AtendimentoDesktopTopbar } from "@/components/atendimento/AtendimentoDesktopTopbar";
 
 import { EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -338,6 +339,9 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
+  const [desktopQueueFilter, setDesktopQueueFilter] = useState<'all' | 'scheduled' | 'received'>('all');
+  const [desktopDateCounts, setDesktopDateCounts] = useState<Record<string, number>>({});
+  const [desktopOverdueCount, setDesktopOverdueCount] = useState(0);
   
   type SortCriterion = 
     | { type: 'field'; field: 'created_at' | 'time' | 'dias_atraso' }
@@ -1636,6 +1640,23 @@ export default function Atendimento() {
       loadAvailableOrigens();
     }
   }, [agendaDate, taskSortOrder, activeTab, usarAgenda]);
+
+  useEffect(() => {
+    if (!estabelecimentoId || idsVisiveis.length === 0) return;
+    const inicio = format(new Date(), 'yyyy-MM-dd');
+    const fim = format(addDays(new Date(), 5), 'yyyy-MM-dd');
+    void Promise.all([
+      supabase.from('calendario_tarefas').select('date').eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).gte('date', inicio).lte('date', fim),
+      supabase.from('calendario_tarefas').select('id', { count: 'exact', head: true }).eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).lt('date', inicio),
+    ]).then(([datas, atrasadas]) => {
+      if (!datas.error) {
+        const counts: Record<string, number> = {};
+        (datas.data || []).forEach((item) => { counts[item.date] = (counts[item.date] || 0) + 1; });
+        setDesktopDateCounts(counts);
+      }
+      if (!atrasadas.error) setDesktopOverdueCount(atrasadas.count || 0);
+    });
+  }, [estabelecimentoId, idsVisiveis]);
 
   // Mantém as abas sincronizadas quando as tarefas da agenda mudam (criação, edição, mudança de data, exclusão)
   const loadTodayTasksRef = useRef(loadTodayTasks);
@@ -3688,6 +3709,14 @@ ${recentMessages}
     return ordenarPendentesPrimeiro(tasks, (t: any) => t.contact_id, pendenciasAtendimento);
   }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
 
+  const desktopQueueTasks = useMemo(() => {
+    if (desktopQueueFilter === 'all') return filteredTasks;
+    const recebidas = new Set(['bot', 'email_recebido', 'chat_recebido']);
+    return filteredTasks.filter((task: any) => desktopQueueFilter === 'received'
+      ? recebidas.has(task.origem)
+      : !recebidas.has(task.origem));
+  }, [desktopQueueFilter, filteredTasks]);
+
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
     let emails = userEmails;
@@ -5703,7 +5732,25 @@ ${recentMessages}
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
-        <div className="h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+        {!isTablet && (
+          <AtendimentoDesktopTopbar
+            selectedDate={agendaDate}
+            counts={desktopDateCounts}
+            overdueCount={desktopOverdueCount}
+            search={searchTerm}
+            onSearchChange={setSearchTerm}
+            onSelectDate={(date) => {
+              setAgendaDate(date);
+              setActiveTab('agenda');
+            }}
+            onSchedule={() => {
+              setActiveTab('agenda');
+              setShowCustomerSearchForTask(true);
+            }}
+          />
+        )}
+        <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <Button
@@ -5733,15 +5780,12 @@ ${recentMessages}
             {/* Modern Header with Gradient */}
             <div className="flex-shrink-0">
               {/* Header Title Section */}
-              <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent">
+              <div className="border-b border-border bg-card px-3 py-3">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                      <MessageSquare className="h-5 w-5 text-white" />
-                    </div>
                     <div>
-                      <h2 className="text-base font-bold text-foreground">Atendimento</h2>
-                      <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
+                      <h2 className="text-xl font-bold text-foreground">Fila do dia</h2>
+                      <p className="text-[11px] text-muted-foreground">Contatos por prioridade</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -5845,6 +5889,38 @@ ${recentMessages}
               hideTitles
             />
           </div>
+
+          {activeTab === 'agenda' && (
+            <div className="grid grid-cols-3 gap-1 border-b border-border bg-card px-2 py-2">
+              {[
+                { id: 'all' as const, label: 'Tudo', count: filteredTasks.length },
+                { id: 'scheduled' as const, label: 'Agendados', count: filteredTasks.filter((task: any) => !['bot', 'email_recebido', 'chat_recebido'].includes(task.origem)).length },
+                { id: 'received' as const, label: 'Recebidos', count: filteredTasks.filter((task: any) => ['bot', 'email_recebido', 'chat_recebido'].includes(task.origem)).length },
+              ].map((item) => (
+                <Button
+                  key={item.id}
+                  type="button"
+                  size="sm"
+                  variant={desktopQueueFilter === item.id ? 'secondary' : 'ghost'}
+                  onClick={() => setDesktopQueueFilter(item.id)}
+                  className="h-8 gap-1 px-2 text-xs"
+                >
+                  {item.label}
+                  <Badge variant="secondary" className="h-5 min-w-5 px-1 text-[10px]">{item.count}</Badge>
+                </Button>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEnvioMassaWizard(true)}
+                className="col-span-3 mt-1 h-9 gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Envio em massa
+              </Button>
+            </div>
+          )}
 
           {/* Tel Tab - contatos com telefone */}
           <TabsContent value="tel" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
@@ -6336,7 +6412,7 @@ ${recentMessages}
                     openDetailsPanel(setShowClientDetailsAgenda);
                   }}
                 />
-              ) : filteredTasks.length === 0 ? (
+               ) : desktopQueueTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
                     <CalendarIcon className="w-8 h-8 text-orange-300" />
@@ -6345,7 +6421,7 @@ ${recentMessages}
                   <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
                 </div>
               ) : (
-                 filteredTasks.map((task) => {
+                 desktopQueueTasks.map((task) => {
                    const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
                    const isSameSegment = task.contact_id && !isLinkedToUser && 
                      customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
@@ -6373,6 +6449,7 @@ ${recentMessages}
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
                         setSelectedAgendaContato(null);
+                         setFluxoInitialIndex(Math.max(0, desktopQueueTasks.findIndex((item: any) => item.id === task.id)));
                         openDetailsPanel(setShowClientDetailsAgenda);
                         setAgendaViewMode('default');
                         setDiscadorModo(null);
@@ -7143,12 +7220,12 @@ ${recentMessages}
         ) : (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <FluxoAtendimentoPanel
-            tasks={filteredTasks}
+            tasks={desktopQueueTasks}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
             discadorModo={activeTab === "visita" ? null : discadorModo}
-            tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
+            tipoContatoFixo={activeTab === "visita" ? "presencial" : activeTab === "tel" ? "telefone" : undefined}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
@@ -7202,6 +7279,37 @@ ${recentMessages}
               </Button>
             </div>
           </div>
+        ) : activeTab === "agenda" && selectedTaskData && agendaViewMode === 'default' ? (
+          <FluxoAtendimentoPanel
+            tasks={desktopQueueTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onTaskCompleted={loadTodayTasks}
+            onClose={() => {
+              setSelectedTaskId(null);
+              setSelectedTaskData(null);
+            }}
+            onCurrentTaskChange={(task) => {
+              setSelectedTaskData(task);
+              setSelectedTaskId(task?.id || null);
+            }}
+            showDetails={showClientDetailsAgenda}
+            onToggleDetails={() => setShowClientDetailsAgenda(!showClientDetailsAgenda)}
+            initialTaskIndex={fluxoInitialIndex}
+            onNavigateToItem={(type, id) => {
+              if (type === 'chat') {
+                setActiveTab('chat');
+                setSelectedConversation(id);
+              } else if (type === 'email') {
+                setActiveTab('email');
+                setSelectedEmailId(id);
+              } else {
+                setActiveTab('orcamento');
+                setSelectedOrcamentoId(id);
+                setOrcamentoSheetOpen(true);
+              }
+            }}
+          />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
           <EnvioMassaPanel
@@ -7797,6 +7905,7 @@ ${recentMessages}
         onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
         draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
       />
+      </div>
       </div>
       )}
     </RadialMenu>
