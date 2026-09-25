@@ -3491,6 +3491,16 @@ ${recentMessages}
     { titulo: "Vendedores", itens: membrosEquipe.filter((m) => m.papel === "vendedor") },
   ].filter((g) => g.itens.length > 0);
 
+  // Slot na barra superior ("Minha agenda") para as ações do Atendimento
+  const [barraSlot, setBarraSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const encontrar = () => setBarraSlot(document.getElementById("barra-acoes-atendimento"));
+    encontrar();
+    const obs = new MutationObserver(encontrar);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
   const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && membrosEquipe.length > 0 ? (
     <div className="flex items-center gap-2 mt-2 px-1">
       <Users className="w-3.5 h-3.5 text-primary shrink-0" />
