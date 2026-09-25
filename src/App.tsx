@@ -21,6 +21,7 @@ const DevLookupE2E = React.lazy(() => import("./pages/DevLookupE2E"));
 
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Atendimento = React.lazy(() => import("./pages/Atendimento"));
+const AtendimentoV2 = React.lazy(() => import("./pages/AtendimentoV2"));
 const BotBuilder = React.lazy(() => import("./pages/BotBuilder"));
 const BotTest = React.lazy(() => import("./pages/BotTest"));
 const BotCreate = React.lazy(() => import("./pages/BotCreate"));
@@ -526,6 +527,7 @@ const App = () => (
               <Route path="/menu" element={<MenuHub />} />
               <Route path="/menu-visual" element={<MenuVisual />} />
               <Route path="/atendimento" element={<Atendimento />} />
+              <Route path="/painel-atendimento" element={<AtendimentoV2 />} />
               <Route path="/email" element={<EmailPage />} />
               <Route path="/email-config" element={<EmailConfig />} />
               <Route path="/listas" element={<ListasHub />} />
