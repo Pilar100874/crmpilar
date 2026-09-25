@@ -5934,7 +5934,7 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
         {clienteCabecalho && !isMobile && (
           <div ref={cabecalhoRef}>
           <CabecalhoClienteAtendimento
