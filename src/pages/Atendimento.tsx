@@ -3537,49 +3537,22 @@ ${recentMessages}
     return () => obs.disconnect();
   }, []);
 
-  const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && membrosEquipe.length > 0 ? (
-    <div className="flex items-center gap-2 mt-2 px-1">
-      <Users className="w-3.5 h-3.5 text-primary shrink-0" />
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 flex-1 justify-between text-xs font-normal" aria-label="Assumir contatos de">
-            <span className="truncate">
-              {assumidos.length === 0
-                ? "Assumir contatos de..."
-                : assumidos.length === 1
-                  ? `Assumindo: ${membrosEquipe.find((m) => m.id === assumidos[0])?.nome}`
-                  : `Assumindo ${assumidos.length} pessoas`}
-            </span>
-            <ChevronDownAssumir className="w-3.5 h-3.5 opacity-60 shrink-0" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-72 p-2">
-          <div className="flex items-center justify-between px-1 pb-2">
-            <span className="text-xs font-semibold">Assumir contatos de</span>
-            {assumidos.length > 0 && (
-              <button type="button" className="text-xs text-primary hover:underline" onClick={() => setEscopoEquipe("")}>
-                Limpar
-              </button>
-            )}
-          </div>
-          <div className="max-h-72 overflow-y-auto space-y-2">
-            {gruposAssumir.map((g) => (
-              <div key={g.titulo}>
-                <div className="px-1 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">{g.titulo}</div>
-                {g.itens.map((m) => (
-                  <label key={m.id} className="flex items-center gap-2 rounded px-1 py-1 text-xs cursor-pointer hover:bg-accent">
-                    <Checkbox checked={assumidos.includes(m.id)} onCheckedChange={(v) => alternarAssumido(m.id, v === true)} />
-                    <span className="truncate">{m.nome}</span>
-                  </label>
-                ))}
-              </div>
-            ))}
-          </div>
-          <p className="px-1 pt-2 text-[10px] text-muted-foreground">Seus contatos continuam aparecendo. Ao marcar um gerente, os vendedores dele também entram.</p>
-        </PopoverContent>
-      </Popover>
-    </div>
-  ) : null;
+  // "Assumir contatos de" agora vive no menu de 3 pontos da Fila do dia
+  const assumirContatosConfig = equipeVisivel && equipeVisivel.papel !== "vendedor" && membrosEquipe.length > 0
+    ? {
+        grupos: gruposAssumir.map((g) => ({ titulo: g.titulo, itens: g.itens.map((m) => ({ id: m.id, nome: m.nome })) })),
+        assumidos,
+        onAlternar: alternarAssumido,
+        onLimpar: () => setEscopoEquipe(""),
+      }
+    : undefined;
+
+  // Filtro das abas da Fila do dia controla a origem dos contatos (substitui a flag "Usar agenda")
+  const [filtroFila, setFiltroFila] = useState<"tudo" | "agendados" | "recebidos">(() => (usarAgenda ? "agendados" : "tudo"));
+  const aoTrocarFiltroFila = (valor: "tudo" | "agendados" | "recebidos") => {
+    setFiltroFila(valor);
+    setUsarAgenda(valor === "agendados");
+  };
 
   // Base de contatos das abas Tel / Chats / E-mails
   const contatosPendentes = useContatosPendentes(pendenciasAtendimento);
