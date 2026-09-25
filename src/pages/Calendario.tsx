@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3 } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -2768,6 +2768,18 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   const barraSuperiorRef = useRef<HTMLDivElement | null>(null);
   const [barraAltura, setBarraAltura] = useState(0);
   const [menuLargura, setMenuLargura] = useState(0);
+  // Recolher/expandir a faixa de dias da barra superior
+  const [diasRecolhidos, setDiasRecolhidos] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("calendario_dias_recolhidos") === "true";
+  });
+  const alternarDias = () => {
+    setDiasRecolhidos((v) => {
+      const novo = !v;
+      localStorage.setItem("calendario_dias_recolhidos", String(novo));
+      return novo;
+    });
+  };
 
   useEffect(() => {
     const el = barraSuperiorRef.current;
@@ -2846,10 +2858,21 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Agendar</span>
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={alternarDias}
+                title={diasRecolhidos ? "Mostrar dias" : "Ocultar dias"}
+                aria-label={diasRecolhidos ? "Mostrar dias" : "Ocultar dias"}
+                className="h-9 w-9"
+              >
+                {diasRecolhidos ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </Button>
             </div>
           </div>
         </div>
 
+        {!diasRecolhidos && (
         <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
           <div className="grid min-w-[720px] grid-cols-[140px_repeat(5,minmax(110px,1fr))]">
             <button
@@ -2902,6 +2925,20 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
             })}
           </div>
         </div>
+        )}
+
+        {/* Aba para reexpandir a faixa de dias quando recolhida */}
+        {diasRecolhidos && (
+          <button
+            type="button"
+            onClick={alternarDias}
+            title="Mostrar dias"
+            aria-label="Mostrar dias"
+            className="absolute -bottom-5 left-1/2 z-10 flex h-5 w-14 -translate-x-1/2 items-center justify-center rounded-b-lg bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+        )}
 
         {/* Dialog de filtros (compartilhado) */}
         <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
