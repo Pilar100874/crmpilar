@@ -46,7 +46,7 @@ function DataCard({ data, quantidade, ativo, atrasados, onClick }: { data: Date;
     <Button
       variant="outline"
       onClick={onClick}
-      className={cn("h-14 min-w-[138px] flex-1 justify-between px-3", ativo && "border-primary bg-primary/10 text-primary", atrasados && quantidade > 0 && "text-destructive")}
+      className={cn("h-14 min-w-0 flex-1 justify-between px-3", ativo && "border-primary bg-primary/10 text-primary", atrasados && quantidade > 0 && "text-destructive")}
     >
       <span className="text-left">
         <span className="block text-xs font-medium">{atrasados ? "Atrasados" : format(data, "EEE · dd", { locale: ptBR })}</span>
@@ -80,6 +80,10 @@ export default function AtendimentoV2() {
   const [enviando, setEnviando] = useState(false);
   const dados = useAtendimentoV2Data(dataSelecionada);
   const tablet = !isMobile && largura < 1280;
+
+  useEffect(() => {
+    if (tablet) setCadastroAberto(false);
+  }, [tablet]);
 
   useEffect(() => {
     const aoRedimensionar = () => setLargura(window.innerWidth);
@@ -268,6 +272,7 @@ export default function AtendimentoV2() {
               <Input value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Buscar contatos, empresas, conversas..." className="h-10 pl-9" />
             </div>
             <Button className="h-10 gap-2" onClick={() => setAgendarAberto(true)}><Plus className="h-4 w-4" /> Agendar</Button>
+            {tablet && <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setCadastroAberto(true)} title="Abrir cadastro e vínculos"><PanelRightOpen className="h-4 w-4" /></Button>}
           </header>
           <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-card p-2">
             <DataCard data={subDays(new Date(), 1)} quantidade={dados.fila.filter((item) => item.atrasado).length} atrasados ativo={false} onClick={() => setDataSelecionada(new Date())} />

@@ -2,11 +2,11 @@
 
 ## Nova versão do Painel de Atendimento
 
-- [ ] Criar rota, menu, permissões e busca por voz sem alterar o painel atual.
-- [ ] Montar a fila real unificada com datas, filtros e recebidos não identificados.
-- [ ] Implementar atendimento responsivo em desktop, tablet e celular.
-- [ ] Integrar cadastro e vínculos no painel contextual.
-- [ ] Integrar finalização/reagendamento e envio em massa.
+- [x] Criar rota, menu, permissões e busca por voz sem alterar o painel atual.
+- [x] Montar a fila real unificada com datas, filtros e recebidos não identificados.
+- [x] Implementar atendimento responsivo em desktop, tablet e celular.
+- [x] Integrar cadastro e vínculos no painel contextual.
+- [x] Integrar finalização/reagendamento e envio em massa.
 - [ ] Validar nos tamanhos definidos e corrigir erros.
 
 - [x] Tornar os cartões do Atendimento compactos em duas linhas.
