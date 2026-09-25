@@ -79,6 +79,8 @@ import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useConta
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
+import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
+import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -130,6 +132,11 @@ const normalizePhone = (phone: string | undefined | null): string => {
   return phone.replace(/\D/g, '');
 };
 
+const readDetailsPreference = (isCompactViewport: boolean) => {
+  if (isCompactViewport || typeof window === "undefined") return false;
+  return window.localStorage.getItem("atendimento_painel_detalhes_aberto") !== "false";
+};
+
 export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -157,13 +164,13 @@ export default function Atendimento() {
   const [showConversationsList, setShowConversationsList] = useState(true);
   
   // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
-  const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
-  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(() => readDetailsPreference(isMobile));
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
-  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
-  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
-  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(() => readDetailsPreference(isMobile));
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
@@ -285,6 +292,7 @@ export default function Atendimento() {
   
   // Tab states
   const [activeTab, setActiveTab] = useState("agenda");
+  const { updateSession: updateAtendimentoSession } = useAtendimentoSession();
   // Flag "Usar agenda": ligada usa os contatos da agenda do dia; desligada usa os contatos vinculados ao usuário
   const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -3785,6 +3793,34 @@ ${recentMessages}
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
+  const activeContactId = useMemo(() => {
+    if (activeTab === "chat") return selectedConv?.customer_id ?? null;
+    if (activeTab === "agenda") return selectedTaskData?.contact_id ?? selectedAgendaContato?.id ?? null;
+    if (activeTab === "tel" || activeTab === "visita") return selectedTelContato?.id ?? fluxoCurrentTask?.contact_id ?? null;
+    if (activeTab === "email") return contatoEmailSelecionado?.id ?? selectedEmailData?.customer?.id ?? null;
+    if (activeTab === "orcamento") return selectedOrcamentoData?.cliente_id ?? contatoOrcamentoDetalhe?.cliente_id ?? null;
+    return null;
+  }, [activeTab, selectedConv, selectedTaskData, selectedAgendaContato, selectedTelContato, fluxoCurrentTask, contatoEmailSelecionado, selectedEmailData, selectedOrcamentoData, contatoOrcamentoDetalhe]);
+
+  useEffect(() => {
+    updateAtendimentoSession({
+      contactId: activeContactId,
+      taskId: selectedTaskId,
+      channel: activeTab as AtendimentoCanal,
+      mobileView,
+    });
+  }, [activeContactId, activeTab, mobileView, selectedTaskId, updateAtendimentoSession]);
+
+  useEffect(() => {
+    if (isMobile || isTablet) return;
+    const visibility = activeTab === "chat" ? showClientDetailsChat
+      : activeTab === "agenda" ? showClientDetailsAgenda
+      : activeTab === "email" ? showClientDetailsEmail
+      : activeTab === "orcamento" ? showClientDetailsOrcamento
+      : showClientDetailsFluxo;
+    window.localStorage.setItem("atendimento_painel_detalhes_aberto", String(visibility));
+  }, [activeTab, isMobile, isTablet, showClientDetailsAgenda, showClientDetailsChat, showClientDetailsEmail, showClientDetailsFluxo, showClientDetailsOrcamento]);
+
   // Update counters based on filtered data
   useEffect(() => {
     const inQueueCount = filteredConversations.filter(c => c.chat_status === 'em_fila').length;
@@ -5643,6 +5679,7 @@ ${recentMessages}
             }}
             pendingAppendText={pendingEmailAppendText}
             onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
+            draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
           />
         </div>
       ) : (
@@ -7074,6 +7111,7 @@ ${recentMessages}
                   customerPhone={selectedConv?.customer?.telefone}
                   customerName={selectedConv?.customer?.nome}
                   customerId={selectedConv?.customer?.id}
+                  draftKey={selectedConv?.customer?.id || selectedConversation || undefined}
                   chatAgents={chatAgents}
                   onSelectAgent={handleSelectAgent}
                   externalText={injectedChatText}
@@ -7287,7 +7325,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -7314,12 +7352,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
@@ -7346,11 +7384,11 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedAgendaContato.nome}
@@ -7368,12 +7406,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
@@ -7399,11 +7437,11 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTelContato.nome}
@@ -7424,12 +7462,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {/* Detalhes do cliente ao clicar no card na aba E-mail */}
       {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="email"
             nome={contatoEmailDetalhe.nome}
@@ -7451,12 +7489,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
@@ -7492,7 +7530,7 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
       
       {/* Novo Contato Dialog */}
@@ -7614,7 +7652,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
       {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
@@ -7636,12 +7674,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
-        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 144 : 176) : undefined}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}
@@ -7674,7 +7712,7 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
-        </div>
+        </AtendimentoDetailsSidebar>
       )}
 
       <SoftphoneDialog 
@@ -7767,6 +7805,7 @@ ${recentMessages}
         }}
         pendingAppendText={pendingEmailAppendText}
         onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
+        draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
       />
       </div>
       )}

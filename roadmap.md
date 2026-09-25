@@ -16,7 +16,7 @@
 
 ## Redesenho total do Atendimento
 
-- [ ] Etapa 1 — Base segura e estado único.
+- [x] Etapa 1 — Base segura e estado único.
 - [ ] Etapa 2 — Estrutura responsiva desktop, tablet e celular.
 - [ ] Etapa 3 — Fila do dia unificada.
 - [ ] Etapa 4 — Área central multicanal.
