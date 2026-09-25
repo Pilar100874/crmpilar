@@ -3952,7 +3952,7 @@ ${recentMessages}
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
       const nome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title || "").nome.replace(/^tarefa\s*[:\-]?\s*/i, "") || "Sem nome";
-      const motivo = parseTituloCartao(task.title || "").nome || task.title || "Retorno";
+      const motivo = (task.title || "").replace(/^tarefa\s*[:\-]?\s*/i, "").trim() || "Retorno";
       const canal: FilaCanal = task.customers?.telefone
         ? "whatsapp"
         : task.customers?.tel
