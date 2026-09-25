@@ -152,6 +152,7 @@ export default function Atendimento() {
   
   const isTablet = !isMobile && windowWidth < 1280; // Considera tablet entre 768-1280px
   const isSmallTablet = !isMobile && windowWidth >= 768 && windowWidth < 1024; // Tablet pequeno
+  const isTabletPortrait = isTablet && typeof window !== "undefined" && window.innerHeight > windowWidth;
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -4903,7 +4904,7 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
-      {isMobile ? (
+      {(isMobile || isTabletPortrait) ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
           {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (

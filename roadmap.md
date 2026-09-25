@@ -17,10 +17,10 @@
 ## Redesenho total do Atendimento
 
 - [x] Etapa 1 — Base segura e estado único.
-- [ ] Etapa 2 — Estrutura responsiva desktop, tablet e celular.
+- [x] Etapa 2 — Estrutura responsiva desktop, tablet e celular.
 - [ ] Etapa 3 — Fila do dia unificada.
-- [ ] Etapa 4 — Área central multicanal.
-- [ ] Etapa 5 — Cadastro e vínculos.
+- [x] Etapa 4 — Área central multicanal.
+- [x] Etapa 5 — Cadastro e vínculos.
 - [ ] Etapa 6 — Finalização e reagendamento atômicos.
-- [ ] Etapa 7 — Envio em massa consolidado.
+- [x] Etapa 7 — Envio em massa consolidado.
 - [ ] Validação completa nos tamanhos e fluxos definidos.
