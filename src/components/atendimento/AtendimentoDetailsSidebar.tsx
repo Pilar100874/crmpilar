@@ -3,9 +3,9 @@ import { GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "atendimento_painel_detalhes_largura";
-const DEFAULT_WIDTH = 340;
-const MIN_WIDTH = 300;
-const MAX_WIDTH = 520;
+const DEFAULT_WIDTH = 320;
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 440;
 
 function initialWidth() {
   if (typeof window === "undefined") return DEFAULT_WIDTH;
@@ -42,7 +42,7 @@ export function AtendimentoDetailsSidebar({ children, className, fixedWidth }: A
 
   return (
     <aside
-      className={cn("relative flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-card", className)}
+      className={cn("relative flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-sm", className)}
       style={{ width: fixedWidth ?? width }}
       aria-label="Cadastro e vínculos"
     >

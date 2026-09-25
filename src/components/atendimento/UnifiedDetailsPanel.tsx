@@ -297,17 +297,19 @@ export function UnifiedDetailsPanel({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
       {/* PARTE 1 - Nome da Empresa/Cliente */}
-      <div className="p-4 border-b flex-shrink-0">
-        <div className="flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-3">
-            {getIcon()}
+      <div className="flex-shrink-0 border-b border-border px-4 py-4">
+        <p className="text-base font-bold text-foreground">Cadastro e vínculos</p>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">{getIcon()}</div>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold">{getTitle()}</h3>
+            <p className="text-xs text-muted-foreground">Contato selecionado</p>
           </div>
-          <h3 className="font-semibold text-lg text-center">{getTitle()}</h3>
         </div>
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
         
         {/* PARTE 2 - Empresa Vinculada - Colapsável */}
         <Collapsible open={empresasOpen} onOpenChange={setEmpresasOpen}>
@@ -318,7 +320,7 @@ export function UnifiedDetailsPanel({
             >
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm">Empresa Vinculada</span>
+                <span className="font-semibold text-sm">Empresas vinculadas · {companies.length}</span>
               </div>
               {empresasOpen ? (
                 <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -361,7 +363,7 @@ export function UnifiedDetailsPanel({
                           onCompanyCardClick(empresa);
                         }
                       }}
-                      className={`p-3 rounded-2xl hover:bg-muted/50 transition-colors ${onCompanyCardClick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : ""}`}
+                      className={`rounded-md border-border p-3 shadow-none transition-colors hover:bg-muted/50 ${onCompanyCardClick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : ""}`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">

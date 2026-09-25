@@ -3717,6 +3717,15 @@ ${recentMessages}
       : !recebidas.has(task.origem));
   }, [desktopQueueFilter, filteredTasks]);
 
+  useEffect(() => {
+    if (isMobile || isTabletPortrait || activeTab !== 'agenda' || selectedTaskData || desktopQueueTasks.length === 0) return;
+    const firstTask = desktopQueueTasks[0];
+    setSelectedTaskId(firstTask.id);
+    setSelectedTaskData(firstTask);
+    setFluxoInitialIndex(0);
+    setShowClientDetailsAgenda(true);
+  }, [activeTab, desktopQueueTasks, isMobile, isTabletPortrait, selectedTaskData]);
+
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
     let emails = userEmails;
@@ -5764,7 +5773,7 @@ ${recentMessages}
           </Button>
         )}
         {/* Conversation List */}
-      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
+      <div className={`flex h-full min-h-0 flex-col border-r border-border bg-card transition-all duration-300 ${
         isMobile 
           ? 'hidden' 
           : showConversationsList 
@@ -5772,7 +5781,7 @@ ${recentMessages}
               ? 'w-40' 
               : isTablet 
                 ? 'w-48'
-                : 'w-72 lg:w-80' 
+                : 'w-[360px]' 
             : 'w-0 border-r-0'
       }`}>
         {showConversationsList && (
@@ -5780,12 +5789,12 @@ ${recentMessages}
             {/* Modern Header with Gradient */}
             <div className="flex-shrink-0">
               {/* Header Title Section */}
-              <div className="border-b border-border bg-card px-3 py-3">
-                <div className="flex items-center justify-between mb-4">
+              <div className="border-b border-border bg-card px-4 py-4">
+                <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Fila do dia</h2>
-                      <p className="text-[11px] text-muted-foreground">Contatos por prioridade</p>
+                      <h2 className="text-2xl font-bold text-foreground">Fila do dia</h2>
+                      <p className="text-xs text-muted-foreground">Contatos por prioridade</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -5812,7 +5821,7 @@ ${recentMessages}
                         activeTab === "email" ? "Buscar e-mails..." :
                         "Buscar orçamentos..."
                       }
-                      className="pl-10 h-10 rounded-xl text-sm bg-background/80 dark:bg-card/80 border-border/40 focus:bg-card dark:focus:bg-card focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                      className="h-10 rounded-md border-border bg-background pl-10 text-sm shadow-none"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -5828,7 +5837,7 @@ ${recentMessages}
                           else if (activeTab === "email") setShowCustomerSearchForEmail(true);
                           else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
                         }}
-                        className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                        className="h-10 w-10 rounded-md border-border hover:bg-primary/10"
                       >
                         <Plus className="h-4 w-4 text-primary" />
                       </Button>
@@ -5861,7 +5870,7 @@ ${recentMessages}
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
+          <div className="hidden border-b border-border bg-muted/30 px-3 py-2.5">
             <ExpandableTabs
               tabs={[
                 { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
@@ -5891,7 +5900,7 @@ ${recentMessages}
           </div>
 
           {activeTab === 'agenda' && (
-            <div className="grid grid-cols-3 gap-1 border-b border-border bg-card px-2 py-2">
+            <div className="grid grid-cols-3 gap-1 border-b border-border bg-card px-3 py-3">
               {[
                 { id: 'all' as const, label: 'Tudo', count: filteredTasks.length },
                 { id: 'scheduled' as const, label: 'Agendados', count: filteredTasks.filter((task: any) => !['bot', 'email_recebido', 'chat_recebido'].includes(task.origem)).length },
@@ -5914,7 +5923,7 @@ ${recentMessages}
                 variant="outline"
                 size="sm"
                 onClick={() => setShowEnvioMassaWizard(true)}
-                className="col-span-3 mt-1 h-9 gap-2"
+                className="col-span-3 mt-2 h-10 gap-2 rounded-md"
               >
                 <Send className="h-4 w-4" />
                 Envio em massa
@@ -6111,7 +6120,7 @@ ${recentMessages}
             {/* Main Content */}
             <div className="flex flex-col flex-1 overflow-hidden">
             {/* Agenda Controls - Modern Card Design */}
-            <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-transparent dark:from-amber-950/20 dark:via-orange-950/10 dark:to-transparent border-b border-orange-100/50 dark:border-orange-900/30">
+            <div className="hidden flex-shrink-0 border-b border-border bg-muted/20 p-3">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Date Navigation Card */}
                 <div className="flex items-center gap-1 bg-white dark:bg-card rounded-xl shadow-sm border border-orange-100 dark:border-orange-900/30 px-1.5 py-1">
@@ -6391,7 +6400,7 @@ ${recentMessages}
             </div>
 
             {/* Tasks List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            <div className="flex-1 space-y-1 overflow-y-auto bg-card p-2">
               {!usarAgenda ? (
                 <ContatosCanalList
                   contatos={contatosComIndicadores}
@@ -6433,16 +6442,16 @@ ${recentMessages}
                     return (
                     <div
                       key={task.id}
-                      className={`group relative rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${cardsCompactos ? 'min-h-[58px]' : 'min-h-[116px]'} ${
+                       className={`group relative cursor-pointer overflow-hidden rounded-md border font-cardBody transition-colors ${cardsCompactos ? 'min-h-[58px]' : 'min-h-[76px]'} ${
                         selectedTaskId === task.id
                           ? semEmpresa
-                            ? "bg-info/15 border-info shadow-md ring-2 ring-info/60"
-                            : "bg-primary/15 border-primary shadow-md ring-2 ring-primary/60"
+                            ? "bg-info/10 border-info"
+                            : "bg-primary/10 border-primary"
                           : semContato
-                            ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
+                            ? "bg-card border-accent hover:bg-muted/40"
                             : semEmpresa
-                              ? "bg-card border-blue-500/70 hover:bg-muted/40 hover:border-blue-500 hover:shadow-md"
-                              : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
+                              ? "bg-card border-info hover:bg-muted/40"
+                              : "bg-card border-border hover:bg-muted/40 hover:border-primary/40"
                       } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
@@ -6456,7 +6465,7 @@ ${recentMessages}
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
-                      <div className={`flex pr-10 ${cardsCompactos ? 'items-center gap-1.5 px-2 py-1.5' : 'items-start gap-3 p-3.5'}`}>
+                       <div className={`flex pr-9 ${cardsCompactos ? 'items-center gap-1.5 px-2 py-1.5' : 'items-start gap-3 p-3'}`}>
                        <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
                          {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
                          <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
@@ -6530,7 +6539,7 @@ ${recentMessages}
                              </Badge>
                            )}
                            </div>
-                            <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-3 border-t border-border/60 pt-2.5'}`}>
+                             <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-1.5'}`}>
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                                 <button

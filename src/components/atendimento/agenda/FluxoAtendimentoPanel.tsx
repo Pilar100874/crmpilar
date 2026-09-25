@@ -50,6 +50,10 @@ interface Task {
     nome?: string;
     email?: string;
     telefone?: string;
+    customer_empresas?: Array<{
+      is_primary?: boolean;
+      empresas?: { nome_fantasia?: string; nome?: string };
+    }>;
   };
 }
 
@@ -115,7 +119,7 @@ export function FluxoAtendimentoPanel({
   const [isSaving, setIsSaving] = useState(false);
   
   // Estados para área de contato expandida
-  const [showContactArea, setShowContactArea] = useState(false);
+  const [showContactArea, setShowContactArea] = useState(true);
   const [contactMessage, setContactMessage] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [isSendingContact, setIsSendingContact] = useState(false);
@@ -474,18 +478,18 @@ export function FluxoAtendimentoPanel({
   if (!currentTask) return null;
 
   return (
-    <div className="flex flex-col bg-background h-full max-h-[100dvh] md:max-h-full">
+    <div className="flex h-full max-h-[100dvh] flex-col bg-card md:max-h-full">
       {/* Header Minimalista - Fixo */}
-      <div className="px-3 py-2.5 border-b border-border/50 flex-shrink-0">
+      <div className="flex-shrink-0 border-b border-border px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Play className="w-4 h-4 text-primary" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-base font-bold text-foreground">
+              {currentTask.contact_name?.split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase() || <Play className="h-4 w-4 text-primary" />}
             </div>
             <div>
-              <h3 className="font-medium text-sm">Fluxo de Atendimento</h3>
+              <h3 className="text-base font-bold text-foreground">{currentTask.contact_name}</h3>
               <p className="text-xs text-muted-foreground">
-                Tarefa {currentIndex + 1} de {tasks.length}
+                 {currentTask.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || currentTask.customers?.customer_empresas?.[0]?.empresas?.nome || `Atendimento ${currentIndex + 1} de ${tasks.length}`}
                 {discadorModo && (
                   <span className="text-primary font-medium">
                     {" "}• Discador {discadorModo === 'previa' ? '(aprovação uma a uma)' : '(sequencial)'}
@@ -511,7 +515,7 @@ export function FluxoAtendimentoPanel({
           </div>
         </div>
         {/* Progress bar elegante */}
-        <div className="w-full h-1 bg-muted rounded-full overflow-hidden mt-4">
+        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-muted">
           <div 
             className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -523,9 +527,13 @@ export function FluxoAtendimentoPanel({
       <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0 overflow-hidden">
         
         {/* Tab Atendimento */}
-        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 px-4 py-3 space-y-3">
+        <TabsContent value="atendimento" className="mt-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <div className="flex items-center gap-6 border-b border-border text-sm font-semibold">
+            <span className="border-b-2 border-primary px-1 pb-3 text-primary">Atendimento</span>
+            <button type="button" className="px-1 pb-3 text-muted-foreground transition-colors hover:text-foreground">Histórico</button>
+          </div>
           {/* Info da tarefa atual - compacto */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div className="rounded-md border border-border bg-muted/20 p-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Users className="h-4 w-4 text-primary" />
@@ -662,7 +670,7 @@ export function FluxoAtendimentoPanel({
                     variant={tipoContato === id ? "default" : "outline"}
                     disabled={!!tipoContatoFixo || indisponivel}
                     onClick={() => setTipoContatoSelecionado(id)}
-                    className="h-9 gap-1.5"
+                     className="h-10 gap-1.5 rounded-md"
                     title={indisponivel ? `O contato não possui ${requiresData} cadastrado` : label}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -846,7 +854,7 @@ export function FluxoAtendimentoPanel({
       </Tabs>
 
       {/* Footer Actions - Fixo no mobile */}
-      <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-background flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="flex flex-shrink-0 items-center justify-between border-t border-border bg-card px-5 py-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -878,7 +886,7 @@ export function FluxoAtendimentoPanel({
           ) : (
             <>
               <Check className="h-4 w-4" />
-              {isLastTask ? "Finalizar" : "Próximo"}
+               {isLastTask ? "Finalizar e reagendar" : "Finalizar e próximo"}
               {!isLastTask && <ChevronRight className="h-4 w-4" />}
             </>
           )}
