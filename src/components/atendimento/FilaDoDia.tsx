@@ -304,15 +304,6 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         </div>
       </div>
 
-      {/* Cabeçalho das colunas */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 border-b border-border/30 text-[11px] font-medium text-muted-foreground">
-        <span className="w-4" />
-        <span className="flex-1">Contato</span>
-        <span className="w-[124px] hidden md:block">Motivo / canal</span>
-        <span className="w-[52px] text-right">Horário</span>
-        <span className="w-7" />
-      </div>
-
       {/* Lista */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         {visiveis.length === 0 ? (
@@ -341,7 +332,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   item.onClick();
                 }}
                 className={cn(
-                  "group relative flex items-center gap-3 px-3 py-3 border-b border-border/20 cursor-pointer transition-colors",
+                  "group relative flex items-center gap-3 px-3 py-3.5 border-b border-border/20 cursor-pointer transition-colors",
                   item.selecionado
                     ? "bg-orange-500/[0.08] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-orange-500"
                     : "hover:bg-muted/40",
@@ -353,52 +344,47 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   checked={marcado}
                   onCheckedChange={() => alternarSelecao(item.id)}
                   onClick={(event) => event.stopPropagation()}
-                  className="shrink-0"
+                  className="shrink-0 border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                 />
 
-                {/* Contato */}
+                {/* Contato: avatar + nome em cima, pílula do canal embaixo */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center text-[13px] font-bold text-foreground/70">
+                  <div className="h-11 w-11 shrink-0 rounded-full bg-muted flex items-center justify-center text-[13px] font-bold text-foreground/70">
                     {iniciais(item.nome)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-bold text-foreground leading-tight truncate">
+                    <p className="text-[14px] font-semibold text-foreground leading-tight truncate">
                       {item.nome}
                     </p>
                     {item.empresa && (
-                      <p className="text-[12px] text-muted-foreground truncate">{item.empresa}</p>
+                      <p className="text-[11px] text-muted-foreground truncate leading-tight">{item.empresa}</p>
+                    )}
+                    <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm">
+                      <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
+                      {canalCfg.label}
+                    </span>
+                    {(item.mensagensNovas || 0) > 0 && (
+                      <span className="ml-1.5 inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                        {item.mensagensNovas === 1
+                          ? "1 mensagem nova"
+                          : `${item.mensagensNovas} mensagens novas`}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                {/* Motivo / canal */}
-                <div className="w-[124px] shrink-0 hidden md:block">
-                  <p className="text-[11px] font-medium text-foreground/80 leading-tight truncate">{item.motivo}</p>
-                  <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2 py-1 text-[11px] font-medium text-foreground">
-                    <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
-                    {canalCfg.label}
-                  </span>
-                  {(item.mensagensNovas || 0) > 0 && (
-                    <span className="mt-1 block w-fit rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
-                      {item.mensagensNovas === 1
-                        ? "1 mensagem nova"
-                        : `${item.mensagensNovas} mensagens novas`}
-                    </span>
-                  )}
-                </div>
-
-                {/* Horário */}
-                <div className="w-[52px] shrink-0 text-right">
+                {/* Horário em destaque */}
+                <div className="shrink-0 text-right">
                   <p
                     className={cn(
-                      "text-[13px] font-bold leading-tight",
+                      "text-[17px] font-extrabold leading-tight tabular-nums",
                       item.atrasado ? "text-destructive" : "text-foreground"
                     )}
                   >
                     {item.horario || "--:--"}
                   </p>
                   {item.atrasado && (
-                    <p className="text-[10px] font-medium text-destructive leading-tight">Atrasado</p>
+                    <p className="text-[11px] font-semibold text-destructive leading-tight">Atrasado</p>
                   )}
                 </div>
 
