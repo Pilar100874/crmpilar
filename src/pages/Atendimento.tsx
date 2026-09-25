@@ -5234,21 +5234,6 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              {/* Flag: usar agenda como origem dos contatos (mobile/tablet) */}
-              <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-card">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
-                  <span className="text-xs font-medium text-foreground">Usar agenda</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={usarAgenda}
-                    onCheckedChange={setUsarAgenda}
-                    aria-label="Usar agenda"
-                  />
-                </div>
-              </div>
-              {seletorEquipe && <div className="flex-shrink-0 px-3 pb-2 border-b border-border/50 bg-card">{seletorEquipe}</div>}
               <div className="flex-1 min-h-0">
               <MobileListContent
 
