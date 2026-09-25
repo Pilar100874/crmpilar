@@ -2841,7 +2841,7 @@ export default function Calendario() {
           </div>
         </div>
 
-        <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card">
+        <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
           <div className="grid min-w-[720px] grid-cols-[140px_repeat(5,minmax(110px,1fr))]">
             <button
               type="button"
