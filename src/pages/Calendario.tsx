@@ -2849,7 +2849,6 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
               <Button
-              <Button
                 variant="ghost"
                 size="icon"
                 onClick={alternarDias}
