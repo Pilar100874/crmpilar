@@ -1,5 +1,5 @@
 import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck, Expand, PanelRightClose, History } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
-import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa, abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
+import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
 interface UnifiedDetailsPanelProps {
+  onOcultar?: () => void;
   type: PanelType;
   // Dados do cliente/empresa
   nome?: string;
@@ -52,8 +53,6 @@ interface UnifiedDetailsPanelProps {
   onCreateContato?: () => void;
   onCreateEmpresa?: (customerId?: string) => void;
   onCompanyCardClick?: (empresa: any) => void;
-  // Ocultar o painel (botão no cabeçalho)
-  onOcultar?: () => void;
 }
 
 export function UnifiedDetailsPanel({ 
@@ -78,8 +77,7 @@ export function UnifiedDetailsPanel({
   onEditEmpresa,
   onCreateContato,
   onCreateEmpresa,
-  onCompanyCardClick,
-  onOcultar
+  onCompanyCardClick
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [extrasPicker, setExtrasPicker] = useState<{ tipo: "localizacao" | "qualificacao"; empresas: any[] } | null>(null);
@@ -99,7 +97,6 @@ export function UnifiedDetailsPanel({
     abrirExtrasDaEmpresa({ tipo, empresaId: id, empresaNome: nomeEmpresa });
   };
   const [contatoOpen, setContatoOpen] = useState(true);
-  const [abaCadastro, setAbaCadastro] = useState<"contato" | "empresa">("contato");
   const [extrasOpen, setExtrasOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
   const [showVincularContatoDialog, setShowVincularContatoDialog] = useState(false);
@@ -298,167 +295,456 @@ export function UnifiedDetailsPanel({
     );
   }
 
-  const empresasLista = companies.map((c: any) => ({ vinculo: c, empresa: c?.empresas || c }));
-  const podeVincular = !!(customerId || email || whatsapp || telefone);
-  const linhaDado = (label: string, conteudo: React.ReactNode, acao?: React.ReactNode) => (
-    <div className="flex min-h-[40px] items-center gap-3 border-b border-border/60 py-1.5 last:border-b-0">
-      <span className="w-20 flex-shrink-0 text-xs text-muted-foreground">{label}</span>
-      <div className="min-w-0 flex-1 text-sm text-foreground">{conteudo}</div>
-      {acao && <div className="flex-shrink-0">{acao}</div>}
-    </div>
-  );
-  const iconeAcao = (icon: React.ReactNode, titulo: string, onClick?: () => void) => (
-    <button type="button" title={titulo} aria-label={titulo} onClick={onClick} disabled={!onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-40">
-      {icon}
-    </button>
-  );
-  const campo = (key: keyof typeof editFormData, placeholder: string, onChange?: (v: string) => void) => (
-    <Input value={editFormData[key]} placeholder={placeholder} className="h-8 text-sm"
-      onChange={(e) => onChange ? onChange(e.target.value) : setEditFormData(prev => ({ ...prev, [key]: e.target.value }))} />
-  );
-
-  const blocoEmpresas = (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between pb-1">
-        <h4 className="text-sm font-semibold text-foreground">Empresas vinculadas · {empresasLista.length}</h4>
-        {podeVincular && (
-          <button type="button" onClick={() => setShowVincularDialog(true)} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-            <Plus className="h-3.5 w-3.5" /> Vincular empresa
-          </button>
-        )}
-      </div>
-      {empresasLista.length === 0 && (
-        <p className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
-      )}
-      {empresasLista.map(({ vinculo, empresa }, idx) => (
-        <div key={idx} className="flex items-start gap-3 border-b border-border/60 py-2.5 last:border-b-0">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <Building2 className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-medium text-foreground">{empresa?.nome_fantasia || empresa?.nome}</p>
-              {vinculo?.is_primary && <Badge variant="outline" className="border-primary/30 bg-primary/10 text-[10px] text-primary">Principal</Badge>}
-            </div>
-            {empresa?.cnpj && <p className="truncate text-xs text-muted-foreground">CNPJ {empresa.cnpj}</p>}
-            {vinculo?.cargo && <p className="truncate text-xs text-muted-foreground">{vinculo.cargo}</p>}
-            {(onCompanyCardClick || (onEditEmpresa && empresa?.id)) && (
-              <button type="button" className="mt-0.5 text-xs font-medium text-primary hover:underline"
-                onClick={() => onEditEmpresa && empresa?.id ? onEditEmpresa(empresa.id, vinculo?.id) : onCompanyCardClick?.(empresa)}>
-                Abrir empresa
-              </button>
-            )}
-          </div>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Desvincular empresa"
-            onClick={() => setDesvincularEmpresa({ id: vinculo.id, nome: empresa?.nome_fantasia || empresa?.nome || 'esta empresa' })}>
-            <Unlink className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-
-  const temEmpresaExtra = !!(companies.find((c: any) => c?.empresas?.id)?.empresas?.id || empresaId);
-  const blocoExtras = temEmpresaExtra && (
-    <div className="border-t border-border">
-      {[{ tipo: "localizacao" as const, label: "Endereços", icon: MapPin }, { tipo: "qualificacao" as const, label: "Qualificação", icon: ShieldCheck }].map(({ tipo, label, icon: Icon }) => (
-        <button key={tipo} type="button" onClick={() => handleExtrasClick(tipo)}
-          className="flex w-full items-center gap-3 border-b border-border/60 py-3 text-left text-sm text-foreground hover:text-primary">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">{label}</span>
-          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-        </button>
-      ))}
-    </div>
-  );
-
-  const blocoHistorico = customerId && (
-    <div className="border-t border-border">
-      <button type="button" onClick={() => abrirHistoricoDoContato({ customerId, nome })}
-        className="flex w-full items-center gap-3 border-b border-border/60 py-3 text-left text-sm text-foreground hover:text-primary">
-        <History className="h-4 w-4 text-muted-foreground" />
-        <span className="flex-1">Histórico</span>
-        <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-      </button>
-    </div>
-  );
-
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
-      <div className="flex-shrink-0 px-4 pt-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-lg font-semibold text-foreground">Cadastro e vínculos</h3>
-        </div>
-        <div className="mt-3 grid grid-cols-2 border-b border-border">
-          {(["contato", "empresa"] as const).map((aba) => (
-            <button key={aba} type="button" onClick={() => setAbaCadastro(aba)}
-              className={`-mb-px border-b-2 pb-2 text-sm font-medium transition-colors ${abaCadastro === aba ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {aba === "contato" ? "Contato" : "Empresa"}
-            </button>
-          ))}
+      {/* PARTE 1 - Nome da Empresa/Cliente */}
+      <div className="p-4 border-b flex-shrink-0">
+        <div className="flex flex-col items-center">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-3">
+            {getIcon()}
+          </div>
+          <h3 className="font-semibold text-lg text-center">{getTitle()}</h3>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain px-4 py-4 space-y-5">
-        {abaCadastro === "contato" ? (
-          <>
-            <div>
-              <div className="flex items-center justify-between pb-1">
-                <div className="flex items-baseline gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">Dados do contato</h4>
-                  {!isEditingContato && <span className="text-[10px] italic text-muted-foreground">Clique em um campo para editar</span>}
-                </div>
-                <div className="flex items-center gap-0.5">
-                  {isEditingContato ? (
-                    <>
-                      <Button size="sm" className="h-7 w-7 p-0" onClick={handleSaveContato} disabled={isSaving} title="Salvar"><Check className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleCancelEdit} disabled={isSaving} title="Cancelar"><X className="h-3.5 w-3.5" /></Button>
-                    </>
-                  ) : customerId ? (
-                    <>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-primary" onClick={() => setIsEditingContato(true)} title="Editar aqui"><Pencil className="h-3.5 w-3.5" /></Button>
-                      {onEditContato && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-primary" onClick={handleEditContatoClick} title="Abrir cadastro completo"><ExternalLink className="h-3.5 w-3.5" /></Button>}
-                      {companies.length > 0 && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => setDesvincularContato(true)} title="Desvincular de todas as empresas"><Unlink className="h-3.5 w-3.5" /></Button>}
-                    </>
-                  ) : onCreateContato && (
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-primary" onClick={onCreateContato} title="Criar contato"><UserPlus className="h-3.5 w-3.5" /></Button>
-                  )}
-                </div>
+      {/* Conteúdo Principal */}
+      <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
+        
+        {/* PARTE 2 - Empresa Vinculada - Colapsável */}
+        <Collapsible open={empresasOpen} onOpenChange={setEmpresasOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-0 h-auto hover:bg-transparent"
+            >
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm">Empresa Vinculada</span>
               </div>
-              {linhaDado("Nome", isEditingContato ? campo("nome", "Nome") : <span className="block truncate">{nome || "-"}</span>)}
-              {linhaDado("WhatsApp", isEditingContato ? campo("whatsapp", "+55 (00) 00000-0000", (v) => handlePhoneChange('whatsapp', v)) : <span className="block truncate">{whatsapp || "-"}</span>,
-                !isEditingContato && iconeAcao(<MessageSquare className="h-4 w-4" />, "Abrir conversa no Chat", whatsapp ? () => abrirChatDoContato({ customerId, nome, whatsapp }) : undefined))}
-              {linhaDado("Telefone", isEditingContato ? campo("telefone", "+55 (00) 00000-0000", (v) => handlePhoneChange('telefone', v)) : <span className="block truncate">{telefone || "-"}</span>,
-                !isEditingContato && iconeAcao(<Phone className="h-4 w-4" />, "Ligar pelo Pilar Fone", telefone ? async () => {
-                  const numero = await prepararNumeroComRegras(telefone);
-                  abrirPilarSip(numero || telefone.replace(/\D/g, ''));
-                  marcarPendencia(customerId);
-                } : undefined))}
-              {linhaDado("E-mail", isEditingContato ? campo("email", "email@exemplo.com") : <span className="block truncate">{email || "-"}</span>,
-                !isEditingContato && iconeAcao(<Mail className="h-4 w-4" />, "Escrever e-mail", email ? () => novoEmailParaContato({ customerId, email, nome }) : undefined))}
-              {linhaDado("Cargo", isEditingContato ? campo("cargo", "Cargo") : <span className="block truncate">{currentCargo || "-"}</span>)}
-              {isEditingContato && <p className="pt-1 text-[11px] text-muted-foreground">Clique no ✓ para salvar ou no ✕ para cancelar</p>}
-            </div>
-
-            {blocoEmpresas}
-
-            {companies.length > 0 && companies[0]?.empresas?.id && (
-              <button type="button" onClick={() => setShowVincularContatoDialog(true)} className="flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-                <UserPlus className="h-4 w-4" /> Vincular outro contato à empresa
-              </button>
+              {empresasOpen ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            {companies.length === 0 ? (
+              <Card className="p-4 text-center rounded-2xl border-dashed">
+                <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
+                {(customerId || email || whatsapp || telefone) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary mt-2"
+                    onClick={() => setShowVincularDialog(true)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Vincular Empresa
+                  </Button>
+                )}
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {companies.map((company, idx) => {
+                  const empresa = company.empresas || company;
+                  return (
+                    <Card
+                      key={idx}
+                      role={onCompanyCardClick ? "button" : undefined}
+                      tabIndex={onCompanyCardClick ? 0 : undefined}
+                      aria-label={onCompanyCardClick ? `Abrir detalhes de ${empresa?.nome_fantasia || empresa?.nome || "empresa"}` : undefined}
+                      onClick={() => onCompanyCardClick?.(empresa)}
+                      onKeyDown={(event) => {
+                        if (onCompanyCardClick && (event.key === "Enter" || event.key === " ")) {
+                          event.preventDefault();
+                          onCompanyCardClick(empresa);
+                        }
+                      }}
+                      className={`p-3 rounded-2xl hover:bg-muted/50 transition-colors ${onCompanyCardClick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : ""}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {empresa?.nome_fantasia || empresa?.nome}
+                          </p>
+                          {empresa?.cnpj && (
+                            <p className="text-xs text-muted-foreground whitespace-nowrap truncate" title={`CNPJ: ${empresa.cnpj}`}>
+                              CNPJ: {empresa.cnpj}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {company.is_primary && (
+                            <Badge className="text-[10px] bg-primary text-primary-foreground">
+                              Principal
+                            </Badge>
+                          )}
+                          {/* Botão Editar Empresa na tela central */}
+                          {onEditEmpresa && empresa?.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-orange-600 hover:bg-orange-50"
+                              title="Editar empresa"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onEditEmpresa(empresa.id, company.id);
+                              }}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          {/* Botão Desvincular Empresa */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            title="Desvincular empresa"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDesvincularEmpresa({
+                                id: company.id,
+                                nome: empresa?.nome_fantasia || empresa?.nome || 'esta empresa'
+                              });
+                            }}
+                          >
+                            <Unlink className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {(company.cargo || company.departamento) && (
+                        <div className="flex gap-2 flex-wrap">
+                          {company.cargo && (
+                            <Badge variant="outline" className="text-[10px]">{company.cargo}</Badge>
+                          )}
+                          {company.departamento && (
+                            <Badge variant="secondary" className="text-[10px]">{company.departamento}</Badge>
+                          )}
+                        </div>
+                      )}
+                    </Card>
+                  );
+                })}
+                {(customerId || email || whatsapp || telefone) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-primary"
+                    onClick={() => setShowVincularDialog(true)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Vincular Empresa
+                  </Button>
+                )}
+              </div>
             )}
+          </CollapsibleContent>
+        </Collapsible>
 
-            {blocoExtras}
-            {blocoHistorico}
-          </>
-        ) : (
-          <>
-            {blocoEmpresas}
-            {blocoExtras}
-            {blocoHistorico}
-          </>
-        )}
+        {/* PARTE 3 - Contato - Colapsável */}
+        <Collapsible open={contatoOpen} onOpenChange={setContatoOpen}>
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex-1 justify-between p-0 h-auto hover:bg-transparent"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm">Contato</span>
+                </div>
+                {contatoOpen ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            {/* Botões Editar/Criar ao lado do título */}
+            <div className="flex items-center gap-0.5 ml-2">
+              {isEditingContato ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-green-600 hover:bg-green-50"
+                    onClick={handleSaveContato}
+                    disabled={isSaving}
+                    title="Salvar"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    title="Cancelar"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              ) : customerId ? (
+                <>
+                  {/* Botão edição inline */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                    onClick={() => setIsEditingContato(true)}
+                    title="Editar aqui (inline)"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  {/* Botão abrir edição completa na tela central */}
+                  {onEditContato && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-orange-600 hover:bg-orange-50"
+                      onClick={handleEditContatoClick}
+                      title="Editar na tela central"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                  {/* Botão desvincular contato de todas as empresas */}
+                  {companies.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDesvincularContato(true)}
+                      title="Desvincular de todas as empresas"
+                    >
+                      <Unlink className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </>
+              ) : onCreateContato && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-green-600 hover:bg-green-50"
+                  onClick={onCreateContato}
+                  title="Criar contato"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <CollapsibleContent className="mt-3">
+            <Card className="p-3 rounded-2xl space-y-3">
+
+              {/* Nome */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+                  <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Nome</span>
+                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.nome}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="Nome"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{nome || '-'}</span>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground">WhatsApp</span>
+                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.whatsapp}
+                    onChange={(e) => handlePhoneChange('whatsapp', e.target.value)}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="+55 (00) 00000-0000"
+                  />
+                ) : whatsapp ? (
+                  <button
+                    type="button"
+                    onClick={() => abrirChatDoContato({ customerId, nome, whatsapp })}
+                    title="Abrir a conversa deste cliente no Chat"
+                    className="text-xs truncate max-w-[140px] text-primary hover:underline"
+                  >
+                    {whatsapp}
+                  </button>
+
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">-</span>
+                )}
+
+              </div>
+
+              {/* Telefone */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground">Telefone</span>
+                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.telefone}
+                    onChange={(e) => handlePhoneChange('telefone', e.target.value)}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="+55 (00) 00000-0000"
+                  />
+                ) : telefone ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const numero = await prepararNumeroComRegras(telefone);
+                      abrirPilarSip(numero || telefone.replace(/\D/g, ''));
+                      marcarPendencia(customerId);
+                    }}
+                    title="Abrir o Pilar Fone com este número"
+                    className="text-xs truncate max-w-[140px] text-primary hover:underline"
+                  >
+                    {telefone}
+                  </button>
+
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">-</span>
+                )}
+
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+                  <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Email</span>
+                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="email@exemplo.com"
+                    type="email"
+                  />
+                ) : (
+                  <div className="flex items-center gap-1">
+                    {email ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => novoEmailParaContato({ customerId, email, nome })}
+                          className="text-xs truncate max-w-[120px] text-primary hover:underline"
+                          title="Escrever e-mail para este cliente"
+                        >
+                          {email}
+                        </button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
+                          onClick={() => novoEmailParaContato({ customerId, email, nome })}
+                          title="Escrever e-mail para este cliente"
+                        >
+                          <Mail className="w-3 h-3" />
+                        </Button>
+                      </>
+
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Cargo */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+                  <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Cargo</span>
+                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.cargo}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, cargo: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="Cargo"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
+                )}
+              </div>
+            </Card>
+            
+            {/* Botão Vincular Contato - abaixo do card de contato */}
+            {companies.length > 0 && companies[0]?.empresas?.id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-primary mt-2"
+                onClick={() => setShowVincularContatoDialog(true)}
+              >
+                <UserPlus className="w-3 h-3 mr-1" />
+                Vincular Contato
+              </Button>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* PARTE 4 - Extras - Colapsável */}
+        {(() => {
+          const empresaExtra = companies.find((c: any) => c?.empresas?.id)?.empresas;
+          const extraEmpresaId = empresaExtra?.id || empresaId;
+          const extraEmpresaNome = empresaExtra?.nome_fantasia || empresaExtra?.nome || empresaExtra?.company_fantasia || empresaExtra?.company_name || nome;
+          if (!extraEmpresaId) return null;
+          return (
+            <Collapsible open={extrasOpen} onOpenChange={setExtrasOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex-1 justify-between p-0 h-auto hover:bg-transparent w-full"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-sm">Extras</span>
+                  </div>
+                  {extrasOpen ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => handleExtrasClick("localizacao")}
+                  >
+                    <MapPin className="w-3.5 h-3.5 mr-2 text-primary" />
+                    Ver localização
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => handleExtrasClick("qualificacao")}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 mr-2 text-primary" />
+                    Ver qualificação
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })()}
       </div>
 
       {/* Dialogs */}
