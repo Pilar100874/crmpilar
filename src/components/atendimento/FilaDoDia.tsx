@@ -272,6 +272,44 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
           })}
         </div>
 
+        {/* Filtro por canal */}
+        <div className="flex items-center gap-1.5 mt-2">
+          {(Object.keys(CANAL_CONFIG) as FilaCanal[]).map((canal) => {
+            const cfg = CANAL_CONFIG[canal];
+            const Icone = cfg.icon;
+            const ativo = canaisAtivos.has(canal);
+            const total = items.filter((item) => item.canal === canal).length;
+            return (
+              <button
+                key={canal}
+                type="button"
+                onClick={() => alternarCanal(canal)}
+                title={`${cfg.label} (${total})`}
+                aria-label={`Filtrar por ${cfg.label}`}
+                aria-pressed={ativo}
+                className={cn(
+                  "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                  ativo
+                    ? "border-primary/50 bg-primary/10 text-primary"
+                    : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <Icone className={cn("h-4 w-4", ativo ? cfg.cor : "")} />
+                <span className="tabular-nums">{total}</span>
+              </button>
+            );
+          })}
+          {canaisAtivos.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setCanaisAtivos(new Set())}
+              className="h-8 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+
         {/* Seleção e envio em massa */}
         <div className="flex items-center gap-2 mt-2.5">
           <button
