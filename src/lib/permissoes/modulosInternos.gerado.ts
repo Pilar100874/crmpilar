@@ -152,16 +152,8 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Dia"
     },
     {
-      "id": "week",
-      "label": "Semana"
-    },
-    {
       "id": "month",
       "label": "Mês"
-    },
-    {
-      "id": "list",
-      "label": "Lista"
     },
     {
       "id": "table",
@@ -716,16 +708,8 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Dia"
     },
     {
-      "id": "week",
-      "label": "Semana"
-    },
-    {
       "id": "month",
       "label": "Mês"
-    },
-    {
-      "id": "list",
-      "label": "Lista"
     },
     {
       "id": "table",
