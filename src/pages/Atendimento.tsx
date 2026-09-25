@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown as ChevronDownAssumir } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -3490,6 +3491,16 @@ ${recentMessages}
     { titulo: "Vendedores", itens: membrosEquipe.filter((m) => m.papel === "vendedor") },
   ].filter((g) => g.itens.length > 0);
 
+  // Slot na barra superior ("Minha agenda") para as ações do Atendimento
+  const [barraSlot, setBarraSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const encontrar = () => setBarraSlot(document.getElementById("barra-acoes-atendimento"));
+    encontrar();
+    const obs = new MutationObserver(encontrar);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
   const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && membrosEquipe.length > 0 ? (
     <div className="flex items-center gap-2 mt-2 px-1">
       <Users className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -5818,94 +5829,62 @@ ${recentMessages}
       }`}>
         {showConversationsList && (
           <>
-            {/* Modern Header with Gradient */}
-            <div className="flex-shrink-0">
-              {/* Header Title Section */}
-              <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                      <MessageSquare className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-foreground">Atendimento</h2>
-                      <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowConversationsList(false)}
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
-                      title="Ocultar painel"
-                    >
-                      <PanelLeftClose className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Search Input + Global Filter + New Button */}
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder={
-                        activeTab === "agenda" ? "Buscar tarefas..." :
-                        activeTab === "chat" ? "Buscar conversas..." :
-                        activeTab === "email" ? "Buscar e-mails..." :
-                        "Buscar orçamentos..."
-                      }
-                      className="pl-10 h-10 rounded-xl text-sm bg-background/80 dark:bg-card/80 border-border/40 focus:bg-card dark:focus:bg-card focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => {
-                          if (activeTab === "agenda") setShowCustomerSearchForTask(true);
-                          else if (activeTab === "chat") setShowCustomerSearchForChat(true);
-                          else if (activeTab === "email") setShowCustomerSearchForEmail(true);
-                          else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
-                        }}
-                        className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-                      >
-                        <Plus className="h-4 w-4 text-primary" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Puxar ou criar cadastro</TooltipContent>
-                  </Tooltip>
-                  <GlobalClientFilter 
-                    activeFilter={globalFilter} 
-                    onFilterChange={setGlobalFilter}
-                    compact
-                  />
-                </div>
-
-                {/* Flag: usar agenda como origem dos contatos */}
-                <div className="flex items-center justify-between gap-2 mt-2 px-1">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
-                    <span className="text-xs font-medium text-foreground">Usar agenda</span>
-                  </div>
+            {/* Ações na barra superior ("Minha agenda") via portal */}
+            {barraSlot && createPortal(
+              <>
+                <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-2 py-1">
+                  <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-xs font-medium text-foreground hidden lg:inline">Usar agenda</span>
                   <Switch
                     checked={usarAgenda}
                     onCheckedChange={setUsarAgenda}
                     aria-label="Usar agenda"
+                    className="scale-90"
                   />
                 </div>
                 {seletorEquipe}
-              </div>
-            </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => {
+                        if (activeTab === "agenda") setShowCustomerSearchForTask(true);
+                        else if (activeTab === "chat") setShowCustomerSearchForChat(true);
+                        else if (activeTab === "email") setShowCustomerSearchForEmail(true);
+                        else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
+                      }}
+                      className="h-9 w-9 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                    >
+                      <Plus className="h-4 w-4 text-primary" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Puxar ou criar cadastro</TooltipContent>
+                </Tooltip>
+                <GlobalClientFilter
+                  activeFilter={globalFilter}
+                  onFilterChange={setGlobalFilter}
+                  compact
+                />
+              </>,
+              barraSlot
+            )}
 
         {/* Fila do dia - lista unificada (visual da referência) */}
         <FilaDoDia
           items={filaItems}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+          headerExtra={
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowConversationsList(false)}
+              className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+              title="Ocultar painel"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          }
           onEnvioMassa={() => {
             setActiveTab("agenda");
             setAgendaViewMode("default");

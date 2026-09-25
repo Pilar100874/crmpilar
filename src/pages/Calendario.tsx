@@ -2833,6 +2833,8 @@ export default function Calendario() {
                   className="h-9 border-border/60 bg-muted/30 pl-9 text-xs sm:h-10 sm:text-sm"
                 />
               </div>
+              {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
+              <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
               <Button
                 onClick={() => {
                   setSelectedDate(null);
