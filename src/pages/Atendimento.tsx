@@ -3523,8 +3523,14 @@ ${recentMessages}
 
   // Slot na barra superior ("Minha agenda") para as ações do Atendimento
   const [barraSlot, setBarraSlot] = useState<HTMLElement | null>(null);
+  const [layoutPronto, setLayoutPronto] = useState(false);
+  useEffect(() => { const t = window.setTimeout(() => setLayoutPronto(true), 1500); return () => window.clearTimeout(t); }, []);
   useEffect(() => {
-    const encontrar = () => setBarraSlot(document.getElementById("barra-acoes-atendimento"));
+    // Mantém o último slot enquanto a barra remonta (evita pisca ao trocar de canal)
+    const encontrar = () => {
+      const el = document.getElementById("barra-acoes-atendimento");
+      if (el) { setBarraSlot((atual) => (atual === el ? atual : el)); setLayoutPronto(true); }
+    };
     encontrar();
     const obs = new MutationObserver(encontrar);
     obs.observe(document.body, { childList: true, subtree: true });
@@ -5843,7 +5849,7 @@ ${recentMessages}
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
-        <div className="atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative" style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
+        <div className={`atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative transition-opacity duration-200 ${layoutPronto ? "opacity-100" : "opacity-0"}`} style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
         {activeTab !== "agenda" && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
@@ -5863,7 +5869,7 @@ ${recentMessages}
           </button>
         )}
         {/* Conversation List */}
-      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
+      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-[width] duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
         isMobile 
           ? 'hidden' 
           : showConversationsList 
