@@ -2768,6 +2768,18 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   const barraSuperiorRef = useRef<HTMLDivElement | null>(null);
   const [barraAltura, setBarraAltura] = useState(0);
   const [menuLargura, setMenuLargura] = useState(0);
+  // Recolher/expandir a faixa de dias da barra superior
+  const [diasRecolhidos, setDiasRecolhidos] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("calendario_dias_recolhidos") === "true";
+  });
+  const alternarDias = () => {
+    setDiasRecolhidos((v) => {
+      const novo = !v;
+      localStorage.setItem("calendario_dias_recolhidos", String(novo));
+      return novo;
+    });
+  };
 
   useEffect(() => {
     const el = barraSuperiorRef.current;
@@ -2845,6 +2857,16 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Agendar</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={alternarDias}
+                title={diasRecolhidos ? "Mostrar dias" : "Ocultar dias"}
+                aria-label={diasRecolhidos ? "Mostrar dias" : "Ocultar dias"}
+                className="h-9 w-9"
+              >
+                {diasRecolhidos ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
               </Button>
             </div>
           </div>
