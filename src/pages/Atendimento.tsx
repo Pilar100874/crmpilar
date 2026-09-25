@@ -5891,8 +5891,6 @@ ${recentMessages}
         <FilaDoDia
           items={filaItems}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
-          painelAberto={showConversationsList}
-          onTogglePainel={() => setShowConversationsList((valor) => !valor)}
           onEnvioMassa={() => {
             setActiveTab("agenda");
             setAgendaViewMode("default");
@@ -5927,6 +5925,8 @@ ${recentMessages}
             onHistorico={clienteCabecalho.id ? () => abrirHistoricoDoContato({ customerId: clienteCabecalho.id, nome: clienteCabecalho.nome }) : undefined}
             painelAberto={painelDetalhesAtivo}
             onTogglePainel={alternarPainelDetalhes}
+            filaAberta={showConversationsList}
+            onToggleFila={() => setShowConversationsList((valor) => !valor)}
           />
         )}
         {/* Extras da empresa (localização/qualificação) em tela central */}
@@ -6022,6 +6022,14 @@ ${recentMessages}
             }
             defaultTab="contatos"
           />
+        ) : showEnvioMassaWizard && !isMobile ? (
+          /* Envio em massa aberto na tela central (onde fica o calendário) */
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
+            <EnvioMassaWizardContent
+              onClose={() => setShowEnvioMassaWizard(false)}
+              onComplete={loadTodayTasks}
+            />
+          </div>
         ) : activeTab === "chat" && selectedConversation && selectedConv ? (
           <>
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
