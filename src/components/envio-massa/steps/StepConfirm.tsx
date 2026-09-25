@@ -10,6 +10,8 @@ import {
   Image, Video, BookOpen, FileText, FileSpreadsheet,
   File, LinkIcon, Paperclip, ExternalLink
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
@@ -23,6 +25,9 @@ interface StepConfirmProps {
   onBack: () => void;
   onConfirm: () => void;
   canal: CanalEnvio | null;
+  existingScheduleCount?: number;
+  scheduleConflictAction?: 'keep' | 'replace';
+  onScheduleConflictActionChange?: (action: 'keep' | 'replace') => void;
 }
 
 export function StepConfirm({
@@ -33,7 +38,10 @@ export function StepConfirm({
   progress,
   onBack,
   onConfirm,
-  canal
+  canal,
+  existingScheduleCount = 0,
+  scheduleConflictAction = 'keep',
+  onScheduleConflictActionChange,
 }: StepConfirmProps) {
   const previewContact = selectedContacts[0] || {
     nome: 'João Silva',
@@ -130,6 +138,28 @@ export function StepConfirm({
             </div>
           </div>
         </Card>
+
+        {existingScheduleCount > 0 && (
+          <Card className="border-border p-4">
+            <div className="mb-3 flex items-start gap-2">
+              <Calendar className="mt-0.5 h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">{existingScheduleCount} destinatário(s) já possuem próximo contato</p>
+                <p className="text-xs text-muted-foreground">Escolha como tratar esses agendamentos antes do envio.</p>
+              </div>
+            </div>
+            <RadioGroup value={scheduleConflictAction} onValueChange={(value) => onScheduleConflictActionChange?.(value as 'keep' | 'replace')}>
+              <div className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3">
+                <RadioGroupItem value="keep" id="schedule-keep" />
+                <Label htmlFor="schedule-keep" className="flex-1 cursor-pointer">Manter o próximo contato já agendado</Label>
+              </div>
+              <div className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3">
+                <RadioGroupItem value="replace" id="schedule-replace" />
+                <Label htmlFor="schedule-replace" className="flex-1 cursor-pointer">Substituir pela nova data escolhida</Label>
+              </div>
+            </RadioGroup>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Preview do Conteúdo - Igual ao StepPreview */}
