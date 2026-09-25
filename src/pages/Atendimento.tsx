@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown as ChevronDownAssumir } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -5822,6 +5823,17 @@ ${recentMessages}
         <FilaDoDia
           items={filaItems}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+          headerExtra={
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowConversationsList(false)}
+              className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+              title="Ocultar painel"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          }
           onEnvioMassa={() => {
             setActiveTab("agenda");
             setAgendaViewMode("default");
