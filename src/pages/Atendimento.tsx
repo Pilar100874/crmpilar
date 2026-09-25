@@ -35,6 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
+import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
 import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
@@ -77,7 +78,7 @@ import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoC
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
-import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
+import { abrirHistoricoDoContato, ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -3785,6 +3786,43 @@ ${recentMessages}
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
+  // Cliente do cartão selecionado — alimenta o cabeçalho com os canais disponíveis.
+  const clienteCabecalho = useMemo(() => {
+    const empresaDe = (lista: any[] | undefined) => {
+      const e = (lista || []).find((x: any) => x?.is_primary) || (lista || [])[0];
+      return e?.empresas?.nome_fantasia || e?.empresas?.nome || null;
+    };
+    if (activeTab === "agenda" && selectedTaskData) {
+      const t: any = selectedTaskData;
+      const c = t.customers || {};
+      const d = t.date ? new Date(t.date) : null;
+      const hoje = startOfDay(new Date());
+      let quando: string | null = null;
+      if (d) {
+        const dia = startOfDay(d).getTime() === hoje.getTime() ? "Hoje" : format(d, "dd/MM", { locale: ptBR });
+        quando = `${dia}${t.time ? `, ${String(t.time).slice(0, 5)}` : ""}`;
+      }
+      return { id: c.id || t.contact_id, nome: c.nome || t.contact_name || "Cliente", empresa: empresaDe(c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: quando, atrasado: !!d && startOfDay(d) < hoje };
+    }
+    if (activeTab === "agenda" && selectedAgendaContato) {
+      const c: any = selectedAgendaContato;
+      return { id: c.id, nome: c.nome, empresa: empresaDe(c.companies), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: c.horario ? `Hoje, ${c.horario}` : null, atrasado: (c.diasAtraso || 0) > 0 };
+    }
+    if (activeTab === "chat" && selectedConv) {
+      const c: any = (selectedConv as any).customer || {};
+      return { id: (selectedConv as any).customer_id || c.id, nome: c.nome || "Cliente", empresa: empresaDe(c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email };
+    }
+    if ((activeTab === "tel" || activeTab === "visita") && selectedTelContato) {
+      const c: any = selectedTelContato;
+      return { id: c.id, nome: c.nome, empresa: empresaDe(c.companies), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: c.horario ? `Hoje, ${c.horario}` : null, atrasado: (c.diasAtraso || 0) > 0 };
+    }
+    if (activeTab === "email" && contatoEmailSelecionado) {
+      const c: any = contatoEmailSelecionado;
+      return { id: c.id, nome: c.nome, email: c.email, telefone: c.telefone, tel: c.tel };
+    }
+    return null;
+  }, [activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado]);
+
   // Update counters based on filtered data
   useEffect(() => {
     const inQueueCount = filteredConversations.filter(c => c.chat_status === 'em_fila').length;
@@ -5761,7 +5799,7 @@ ${recentMessages}
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
+          <div className={`px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20 ${clienteCabecalho && !isMobile ? "hidden" : ""}`}>
             <ExpandableTabs
               tabs={[
                 { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
@@ -6607,7 +6645,16 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+      <div className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+        {clienteCabecalho && !isMobile && (
+          <CabecalhoClienteAtendimento
+            cliente={clienteCabecalho}
+            abaAtiva={activeTab}
+            onTrocarCanal={trocarAba}
+            onVerCadastro={clienteCabecalho.id ? () => setEditingContatoId(clienteCabecalho.id) : undefined}
+            onHistorico={clienteCabecalho.id ? () => abrirHistoricoDoContato({ customerId: clienteCabecalho.id, nome: clienteCabecalho.nome }) : undefined}
+          />
+        )}
         {/* Extras da empresa (localização/qualificação) em tela central */}
         {extrasEmpresa && (
           <EmpresaExtrasOverlay

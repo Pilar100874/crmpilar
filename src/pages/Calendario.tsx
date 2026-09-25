@@ -2778,6 +2778,12 @@ export default function Calendario() {
     return () => observer.disconnect();
   }, []);
 
+  // Expõe a altura da barra fixa para telas que embutem o calendário (ex.: Atendimento)
+  useEffect(() => {
+    document.documentElement.style.setProperty("--calendario-barra", `${barraAltura}px`);
+    return () => { document.documentElement.style.removeProperty("--calendario-barra"); };
+  }, [barraAltura]);
+
   // Largura do menu lateral quando travado (fixed) para a barra cobri-lo por cima
   useEffect(() => {
     const medirMenu = () => {
@@ -2800,7 +2806,7 @@ export default function Calendario() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
+      <div className="calendario-raiz flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
       <div
         ref={barraSuperiorRef}
         className="fixed top-0 left-0 right-0 z-[600] border-b border-border/60 bg-background/95 backdrop-blur-sm"
