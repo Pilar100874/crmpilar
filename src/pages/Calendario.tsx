@@ -2925,6 +2925,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
             })}
           </div>
         </div>
+        )}
 
         {/* Dialog de filtros (compartilhado) */}
         <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
