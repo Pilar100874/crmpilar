@@ -158,26 +158,30 @@ export default function Atendimento() {
   // Estado do painel de conversas (expandido por padrão)
   const [showConversationsList, setShowConversationsList] = useState(true);
   
-  // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
-  const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
-  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
+  // Estados independentes de Client Details por aba (sempre encolhido por padrão)
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
-  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
-  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
-  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
+  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(false);
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
   const pendenciasAtendimento = usePendenciasAtendimento();
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
-    setVisible(true);
     if (isMobile || isTablet) {
+      setVisible(true);
       setMobileView("details");
-    }
-    if (isTablet && showConversationsList) {
-      setShowConversationsList(false);
+      if (isTablet && showConversationsList) {
+        setShowConversationsList(false);
+      }
+    } else {
+      // No desktop o painel "Cadastro e vínculos" vem sempre encolhido;
+      // o usuário amplia pelo botão no cabeçalho central.
+      setVisible(false);
     }
   };
   
@@ -5438,7 +5442,7 @@ ${recentMessages}
                   onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
                   pendingAppendText={pendingEmailAppendText}
                   onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
-                  onToggleDetails={() => openDetailsPanel(setShowClientDetailsEmail)}
+                  onToggleDetails={() => setShowClientDetailsEmail((v) => !v)}
                   detailsOpen={showClientDetailsEmail}
                 />
               ) : <MobileMainContent
