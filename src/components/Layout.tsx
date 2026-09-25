@@ -47,6 +47,7 @@ import {
   LifeBuoy,
   RefreshCw,
   AppWindow,
+  ContactRound,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";

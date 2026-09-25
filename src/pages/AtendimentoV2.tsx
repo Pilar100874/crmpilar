@@ -161,7 +161,10 @@ export default function AtendimentoV2() {
 
   const enviarMensagem = async (texto: string) => {
     const conversaId = selecionado?.conversa?.id;
-    if (!conversaId) return toast.error("Este contato ainda não possui uma conversa aberta");
+    if (!conversaId) {
+      toast.error("Este contato ainda não possui uma conversa aberta");
+      return;
+    }
     setEnviando(true);
     try {
       await dados.enviarMensagem(conversaId, texto);
