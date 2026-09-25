@@ -140,7 +140,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
       });
     }
     return ordenada;
-  }, [items, filtro, ordenacao]);
+  }, [items, filtro, ordenacao, canaisAtivos]);
 
   const alternarSelecao = (id: string) => {
     setSelecionados((anterior) => {
