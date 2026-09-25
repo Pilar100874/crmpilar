@@ -248,7 +248,6 @@ export function EmbeddedChatPanel({
           conversationMessages={conversationMessages}
           customerPhone={customerPhone}
           customerName={customerName}
-          draftKey={customerId || customerPhone}
         />
       </div>
     </div>

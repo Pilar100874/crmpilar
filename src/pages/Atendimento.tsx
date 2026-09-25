@@ -79,12 +79,8 @@ import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useConta
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
-import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
-import { MobileAtendimentoFlowNav, type MobileFlowView } from "@/components/atendimento/MobileAtendimentoFlowNav";
-import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
-import { AtendimentoDesktopTopbar } from "@/components/atendimento/AtendimentoDesktopTopbar";
 
-import { EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
 interface Conversation {
@@ -134,11 +130,6 @@ const normalizePhone = (phone: string | undefined | null): string => {
   return phone.replace(/\D/g, '');
 };
 
-const readDetailsPreference = (isCompactViewport: boolean) => {
-  if (isCompactViewport || typeof window === "undefined") return false;
-  return window.localStorage.getItem("atendimento_painel_detalhes_aberto") !== "false";
-};
-
 export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -153,7 +144,6 @@ export default function Atendimento() {
   
   const isTablet = !isMobile && windowWidth < 1280; // Considera tablet entre 768-1280px
   const isSmallTablet = !isMobile && windowWidth >= 768 && windowWidth < 1024; // Tablet pequeno
-  const isTabletPortrait = isTablet && typeof window !== "undefined" && window.innerHeight > windowWidth;
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -167,13 +157,13 @@ export default function Atendimento() {
   const [showConversationsList, setShowConversationsList] = useState(true);
   
   // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
-  const [showClientDetailsChat, setShowClientDetailsChat] = useState(() => readDetailsPreference(isMobile));
-  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
-  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(() => readDetailsPreference(isMobile));
-  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(() => readDetailsPreference(isMobile));
-  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
+  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
@@ -295,7 +285,6 @@ export default function Atendimento() {
   
   // Tab states
   const [activeTab, setActiveTab] = useState("agenda");
-  const { updateSession: updateAtendimentoSession } = useAtendimentoSession();
   // Flag "Usar agenda": ligada usa os contatos da agenda do dia; desligada usa os contatos vinculados ao usuário
   const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -339,9 +328,6 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
-  const [desktopQueueFilter, setDesktopQueueFilter] = useState<'all' | 'scheduled' | 'received'>('all');
-  const [desktopDateCounts, setDesktopDateCounts] = useState<Record<string, number>>({});
-  const [desktopOverdueCount, setDesktopOverdueCount] = useState(0);
   
   type SortCriterion = 
     | { type: 'field'; field: 'created_at' | 'time' | 'dias_atraso' }
@@ -1640,23 +1626,6 @@ export default function Atendimento() {
       loadAvailableOrigens();
     }
   }, [agendaDate, taskSortOrder, activeTab, usarAgenda]);
-
-  useEffect(() => {
-    if (!estabelecimentoId || idsVisiveis.length === 0) return;
-    const inicio = format(new Date(), 'yyyy-MM-dd');
-    const fim = format(addDays(new Date(), 5), 'yyyy-MM-dd');
-    void Promise.all([
-      supabase.from('calendario_tarefas').select('date').eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).gte('date', inicio).lte('date', fim),
-      supabase.from('calendario_tarefas').select('id', { count: 'exact', head: true }).eq('estabelecimento_id', estabelecimentoId).in('user_id', idsVisiveis).in('status', ['pending', 'pendente']).lt('date', inicio),
-    ]).then(([datas, atrasadas]) => {
-      if (!datas.error) {
-        const counts: Record<string, number> = {};
-        (datas.data || []).forEach((item) => { counts[item.date] = (counts[item.date] || 0) + 1; });
-        setDesktopDateCounts(counts);
-      }
-      if (!atrasadas.error) setDesktopOverdueCount(atrasadas.count || 0);
-    });
-  }, [estabelecimentoId, idsVisiveis]);
 
   // Mantém as abas sincronizadas quando as tarefas da agenda mudam (criação, edição, mudança de data, exclusão)
   const loadTodayTasksRef = useRef(loadTodayTasks);
@@ -3709,23 +3678,6 @@ ${recentMessages}
     return ordenarPendentesPrimeiro(tasks, (t: any) => t.contact_id, pendenciasAtendimento);
   }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
 
-  const desktopQueueTasks = useMemo(() => {
-    if (desktopQueueFilter === 'all') return filteredTasks;
-    const recebidas = new Set(['bot', 'email_recebido', 'chat_recebido']);
-    return filteredTasks.filter((task: any) => desktopQueueFilter === 'received'
-      ? recebidas.has(task.origem)
-      : !recebidas.has(task.origem));
-  }, [desktopQueueFilter, filteredTasks]);
-
-  useEffect(() => {
-    if (isMobile || isTabletPortrait || activeTab !== 'agenda' || selectedTaskData || desktopQueueTasks.length === 0) return;
-    const firstTask = desktopQueueTasks[0];
-    setSelectedTaskId(firstTask.id);
-    setSelectedTaskData(firstTask);
-    setFluxoInitialIndex(0);
-    setShowClientDetailsAgenda(true);
-  }, [activeTab, desktopQueueTasks, isMobile, isTabletPortrait, selectedTaskData]);
-
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
     let emails = userEmails;
@@ -3832,34 +3784,6 @@ ${recentMessages}
     }), [filteredOrcamentos, orcamentosStatusFilter, orcamentosDateRange]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
-
-  const activeContactId = useMemo(() => {
-    if (activeTab === "chat") return selectedConv?.customer_id ?? null;
-    if (activeTab === "agenda") return selectedTaskData?.contact_id ?? selectedAgendaContato?.id ?? null;
-    if (activeTab === "tel" || activeTab === "visita") return selectedTelContato?.id ?? fluxoCurrentTask?.contact_id ?? null;
-    if (activeTab === "email") return contatoEmailSelecionado?.id ?? selectedEmailData?.customer?.id ?? null;
-    if (activeTab === "orcamento") return selectedOrcamentoData?.cliente_id ?? contatoOrcamentoDetalhe?.cliente_id ?? null;
-    return null;
-  }, [activeTab, selectedConv, selectedTaskData, selectedAgendaContato, selectedTelContato, fluxoCurrentTask, contatoEmailSelecionado, selectedEmailData, selectedOrcamentoData, contatoOrcamentoDetalhe]);
-
-  useEffect(() => {
-    updateAtendimentoSession({
-      contactId: activeContactId,
-      taskId: selectedTaskId,
-      channel: activeTab as AtendimentoCanal,
-      mobileView,
-    });
-  }, [activeContactId, activeTab, mobileView, selectedTaskId, updateAtendimentoSession]);
-
-  useEffect(() => {
-    if (isMobile || isTablet) return;
-    const visibility = activeTab === "chat" ? showClientDetailsChat
-      : activeTab === "agenda" ? showClientDetailsAgenda
-      : activeTab === "email" ? showClientDetailsEmail
-      : activeTab === "orcamento" ? showClientDetailsOrcamento
-      : showClientDetailsFluxo;
-    window.localStorage.setItem("atendimento_painel_detalhes_aberto", String(visibility));
-  }, [activeTab, isMobile, isTablet, showClientDetailsAgenda, showClientDetailsChat, showClientDetailsEmail, showClientDetailsFluxo, showClientDetailsOrcamento]);
 
   // Update counters based on filtered data
   useEffect(() => {
@@ -4942,7 +4866,7 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
-      {(isMobile || isTabletPortrait) ? (
+      {(isMobile || isTablet) ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
           {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
@@ -5141,32 +5065,6 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-card px-2 py-1.5">
-                {[
-                  { id: "agenda", label: "Agenda", icon: CalendarIcon, count: filteredTasks.length },
-                  { id: "chat", label: "Chats", icon: MessageSquare, count: quantidadeCardsChat },
-                  { id: "tel", label: "Telefone", icon: Phone, count: quantidadeCardsTelefone },
-                  { id: "email", label: "E-mails", icon: Mail, count: quantidadeCardsEmail },
-                  { id: "orcamento", label: "Orçamentos", icon: FileText, count: quantidadeCardsOrcamento },
-                  { id: "visita", label: "Visitas", icon: MapPin, count: quantidadeCardsVisita },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <Button
-                      key={tab.id}
-                      type="button"
-                      size="sm"
-                      variant={activeTab === tab.id ? "secondary" : "ghost"}
-                      onClick={() => trocarAba(tab.id)}
-                      className="h-10 shrink-0 gap-1.5 px-3"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                      <Badge variant="outline" className="min-w-5 justify-center px-1 text-[10px]">{tab.count}</Badge>
-                    </Button>
-                  );
-                })}
-              </div>
               {/* Flag: usar agenda como origem dos contatos (mobile/tablet) */}
               <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-card">
                 <div className="flex items-center gap-2">
@@ -5468,32 +5366,12 @@ ${recentMessages}
               />}
             </div>
 
-            {/* Cadastro e vínculos em painel lateral sobreposto no celular */}
-            {mobileView === "details" && (
-              <Button
-                type="button"
-                variant="ghost"
-                aria-label="Fechar cadastro"
-                onClick={() => setMobileView("main")}
-                className="absolute inset-0 z-30 h-auto w-auto rounded-none bg-foreground/20 p-0 hover:bg-foreground/25"
-              />
-            )}
-            <aside
-              aria-label="Cadastro e vínculos"
-              className={`absolute inset-y-0 right-0 z-40 flex w-[92%] max-w-md flex-col border-l border-border bg-card shadow-xl transition-transform duration-300 ease-out ${
+            {/* Detalhes */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-out bg-card overflow-y-auto ${
                 mobileView === "details" ? "translate-x-0" : "translate-x-full"
               }`}
             >
-              <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
-                <div>
-                  <p className="text-sm font-semibold">Cadastro e vínculos</p>
-                  <p className="text-xs text-muted-foreground">Contato e empresa</p>
-                </div>
-                <Button type="button" size="icon" variant="ghost" onClick={() => setMobileView("main")} aria-label="Fechar cadastro">
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
               {activeTab === "chat" && selectedConv && (
                 <UnifiedDetailsPanel
                   type="chat"
@@ -5662,27 +5540,56 @@ ${recentMessages}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
                 />
               )}
-              </div>
-            </aside>
+            </div>
           </div>
 
-          {!((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && agendaViewMode === 'massa') && (
-            <MobileAtendimentoFlowNav
-              activeView={(finalizarCtx ? "finalizacao" : mobileView === "list" ? "agenda" : mobileView === "details" ? "cadastro" : "atendimento") as MobileFlowView}
-              hasContact={!!activeContactId}
-              pendingCount={filteredTasks.length}
-              onNavigate={(view) => {
-                if (view === "agenda") setMobileView("list");
-                if (view === "atendimento") setMobileView("main");
-                if (view === "cadastro") setMobileView("details");
-                if (view === "finalizacao" && activeContactId) {
-                  pedirFinalizacao({
-                    customerId: activeContactId,
-                    nome: selectedConv?.customer?.nome || selectedTaskData?.contact_name || selectedTelContato?.nome || contatoEmailSelecionado?.nome || "Cliente",
-                  });
-                }
-              }}
-            />
+          {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
+          {mobileView === "list" && !((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
+            <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
+              <div className="flex justify-around">
+                {[
+                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: filteredTasks.length },
+                  { id: "chat", label: "Chats", icon: MessageSquare, badge: quantidadeCardsChat },
+                  { id: "tel", label: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
+                  { id: "email", label: "E-mails", icon: Mail, badge: quantidadeCardsEmail },
+                  { id: "orcamento", label: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
+                  { id: "visita", label: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => trocarAba(tab.id)}
+                        className={`flex flex-col items-center justify-center py-1.5 px-4 transition-all relative ${
+                          isActive
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isActive && (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                        )}
+                        <div className={`relative p-2 rounded-xl transition-colors ${isActive ? "bg-primary/10" : ""}`}>
+                          <Icon className="h-5 w-5" />
+                          {tab.badge > 0 && (
+                            <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[9px] font-bold px-1 rounded-full ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground" 
+                                : "bg-destructive text-destructive-foreground"
+                            }`}>
+                              {tab.badge > 99 ? "99+" : tab.badge}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[10px] font-medium mt-0.5 ${isActive ? "text-primary" : ""}`}>
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                })}
+              </div>
+            </div>
           )}
 
           {/* Dialogs */}
@@ -5736,30 +5643,11 @@ ${recentMessages}
             }}
             pendingAppendText={pendingEmailAppendText}
             onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
-            draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
           />
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
-        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-        {!isTablet && (
-          <AtendimentoDesktopTopbar
-            selectedDate={agendaDate}
-            counts={desktopDateCounts}
-            overdueCount={desktopOverdueCount}
-            search={searchTerm}
-            onSearchChange={setSearchTerm}
-            onSelectDate={(date) => {
-              setAgendaDate(date);
-              setActiveTab('agenda');
-            }}
-            onSchedule={() => {
-              setActiveTab('agenda');
-              setShowCustomerSearchForTask(true);
-            }}
-          />
-        )}
-        <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        <div className="h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative">
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <Button
@@ -5773,7 +5661,7 @@ ${recentMessages}
           </Button>
         )}
         {/* Conversation List */}
-      <div className={`flex h-full min-h-0 flex-col border-r border-border bg-card transition-all duration-300 ${
+      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
         isMobile 
           ? 'hidden' 
           : showConversationsList 
@@ -5781,7 +5669,7 @@ ${recentMessages}
               ? 'w-40' 
               : isTablet 
                 ? 'w-48'
-                : 'w-[360px]' 
+                : 'w-72 lg:w-80' 
             : 'w-0 border-r-0'
       }`}>
         {showConversationsList && (
@@ -5789,12 +5677,15 @@ ${recentMessages}
             {/* Modern Header with Gradient */}
             <div className="flex-shrink-0">
               {/* Header Title Section */}
-              <div className="border-b border-border bg-card px-4 py-4">
-                <div className="mb-3 flex items-center justify-between">
+              <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground">Fila do dia</h2>
-                      <p className="text-xs text-muted-foreground">Contatos por prioridade</p>
+                      <h2 className="text-base font-bold text-foreground">Atendimento</h2>
+                      <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -5821,7 +5712,7 @@ ${recentMessages}
                         activeTab === "email" ? "Buscar e-mails..." :
                         "Buscar orçamentos..."
                       }
-                      className="h-10 rounded-md border-border bg-background pl-10 text-sm shadow-none"
+                      className="pl-10 h-10 rounded-xl text-sm bg-background/80 dark:bg-card/80 border-border/40 focus:bg-card dark:focus:bg-card focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -5837,7 +5728,7 @@ ${recentMessages}
                           else if (activeTab === "email") setShowCustomerSearchForEmail(true);
                           else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
                         }}
-                        className="h-10 w-10 rounded-md border-border hover:bg-primary/10"
+                        className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
                       >
                         <Plus className="h-4 w-4 text-primary" />
                       </Button>
@@ -5870,7 +5761,7 @@ ${recentMessages}
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="hidden border-b border-border bg-muted/30 px-3 py-2.5">
+          <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
             <ExpandableTabs
               tabs={[
                 { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
@@ -5898,38 +5789,6 @@ ${recentMessages}
               hideTitles
             />
           </div>
-
-          {activeTab === 'agenda' && (
-            <div className="grid grid-cols-3 gap-1 border-b border-border bg-card px-3 py-3">
-              {[
-                { id: 'all' as const, label: 'Tudo', count: filteredTasks.length },
-                { id: 'scheduled' as const, label: 'Agendados', count: filteredTasks.filter((task: any) => !['bot', 'email_recebido', 'chat_recebido'].includes(task.origem)).length },
-                { id: 'received' as const, label: 'Recebidos', count: filteredTasks.filter((task: any) => ['bot', 'email_recebido', 'chat_recebido'].includes(task.origem)).length },
-              ].map((item) => (
-                <Button
-                  key={item.id}
-                  type="button"
-                  size="sm"
-                  variant={desktopQueueFilter === item.id ? 'secondary' : 'ghost'}
-                  onClick={() => setDesktopQueueFilter(item.id)}
-                  className="h-8 gap-1 px-2 text-xs"
-                >
-                  {item.label}
-                  <Badge variant="secondary" className="h-5 min-w-5 px-1 text-[10px]">{item.count}</Badge>
-                </Button>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEnvioMassaWizard(true)}
-                className="col-span-3 mt-2 h-10 gap-2 rounded-md"
-              >
-                <Send className="h-4 w-4" />
-                Envio em massa
-              </Button>
-            </div>
-          )}
 
           {/* Tel Tab - contatos com telefone */}
           <TabsContent value="tel" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
@@ -6120,7 +5979,7 @@ ${recentMessages}
             {/* Main Content */}
             <div className="flex flex-col flex-1 overflow-hidden">
             {/* Agenda Controls - Modern Card Design */}
-            <div className="hidden flex-shrink-0 border-b border-border bg-muted/20 p-3">
+            <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-transparent dark:from-amber-950/20 dark:via-orange-950/10 dark:to-transparent border-b border-orange-100/50 dark:border-orange-900/30">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Date Navigation Card */}
                 <div className="flex items-center gap-1 bg-white dark:bg-card rounded-xl shadow-sm border border-orange-100 dark:border-orange-900/30 px-1.5 py-1">
@@ -6400,7 +6259,7 @@ ${recentMessages}
             </div>
 
             {/* Tasks List */}
-            <div className="flex-1 space-y-1 overflow-y-auto bg-card p-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {!usarAgenda ? (
                 <ContatosCanalList
                   contatos={contatosComIndicadores}
@@ -6421,7 +6280,7 @@ ${recentMessages}
                     openDetailsPanel(setShowClientDetailsAgenda);
                   }}
                 />
-               ) : desktopQueueTasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
                     <CalendarIcon className="w-8 h-8 text-orange-300" />
@@ -6430,7 +6289,7 @@ ${recentMessages}
                   <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
                 </div>
               ) : (
-                 desktopQueueTasks.map((task) => {
+                 filteredTasks.map((task) => {
                    const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
                    const isSameSegment = task.contact_id && !isLinkedToUser && 
                      customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
@@ -6442,30 +6301,29 @@ ${recentMessages}
                     return (
                     <div
                       key={task.id}
-                       className={`group relative cursor-pointer overflow-hidden rounded-md border font-cardBody transition-colors ${cardsCompactos ? 'min-h-[58px]' : 'min-h-[76px]'} ${
+                      className={`group relative rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${cardsCompactos ? 'min-h-[58px]' : 'min-h-[116px]'} ${
                         selectedTaskId === task.id
                           ? semEmpresa
-                            ? "bg-info/10 border-info"
-                            : "bg-primary/10 border-primary"
+                            ? "bg-info/15 border-info shadow-md ring-2 ring-info/60"
+                            : "bg-primary/15 border-primary shadow-md ring-2 ring-primary/60"
                           : semContato
-                            ? "bg-card border-accent hover:bg-muted/40"
+                            ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
                             : semEmpresa
-                              ? "bg-card border-info hover:bg-muted/40"
-                              : "bg-card border-border hover:bg-muted/40 hover:border-primary/40"
+                              ? "bg-card border-blue-500/70 hover:bg-muted/40 hover:border-blue-500 hover:shadow-md"
+                              : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
                       } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
                         setSelectedAgendaContato(null);
-                         setFluxoInitialIndex(Math.max(0, desktopQueueTasks.findIndex((item: any) => item.id === task.id)));
                         openDetailsPanel(setShowClientDetailsAgenda);
                         setAgendaViewMode('default');
                         setDiscadorModo(null);
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
-                       <div className={`flex pr-9 ${cardsCompactos ? 'items-center gap-1.5 px-2 py-1.5' : 'items-start gap-3 p-3'}`}>
+                      <div className={`flex pr-10 ${cardsCompactos ? 'items-center gap-1.5 px-2 py-1.5' : 'items-start gap-3 p-3.5'}`}>
                        <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
                          {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
                          <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
@@ -6539,7 +6397,7 @@ ${recentMessages}
                              </Badge>
                            )}
                            </div>
-                             <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-1.5'}`}>
+                            <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-3 border-t border-border/60 pt-2.5'}`}>
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                                 <button
@@ -7216,7 +7074,6 @@ ${recentMessages}
                   customerPhone={selectedConv?.customer?.telefone}
                   customerName={selectedConv?.customer?.nome}
                   customerId={selectedConv?.customer?.id}
-                  draftKey={selectedConv?.customer?.id || selectedConversation || undefined}
                   chatAgents={chatAgents}
                   onSelectAgent={handleSelectAgent}
                   externalText={injectedChatText}
@@ -7229,12 +7086,12 @@ ${recentMessages}
         ) : (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <FluxoAtendimentoPanel
-            tasks={desktopQueueTasks}
+            tasks={filteredTasks}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
             discadorModo={activeTab === "visita" ? null : discadorModo}
-            tipoContatoFixo={activeTab === "visita" ? "presencial" : activeTab === "tel" ? "telefone" : undefined}
+            tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
@@ -7288,37 +7145,6 @@ ${recentMessages}
               </Button>
             </div>
           </div>
-        ) : activeTab === "agenda" && selectedTaskData && agendaViewMode === 'default' ? (
-          <FluxoAtendimentoPanel
-            tasks={desktopQueueTasks}
-            estabelecimentoId={estabelecimentoId}
-            usuarioId={usuarioId}
-            onTaskCompleted={loadTodayTasks}
-            onClose={() => {
-              setSelectedTaskId(null);
-              setSelectedTaskData(null);
-            }}
-            onCurrentTaskChange={(task) => {
-              setSelectedTaskData(task);
-              setSelectedTaskId(task?.id || null);
-            }}
-            showDetails={showClientDetailsAgenda}
-            onToggleDetails={() => setShowClientDetailsAgenda(!showClientDetailsAgenda)}
-            initialTaskIndex={fluxoInitialIndex}
-            onNavigateToItem={(type, id) => {
-              if (type === 'chat') {
-                setActiveTab('chat');
-                setSelectedConversation(id);
-              } else if (type === 'email') {
-                setActiveTab('email');
-                setSelectedEmailId(id);
-              } else {
-                setActiveTab('orcamento');
-                setSelectedOrcamentoId(id);
-                setOrcamentoSheetOpen(true);
-              }
-            }}
-          />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
           <EnvioMassaPanel
@@ -7330,7 +7156,12 @@ ${recentMessages}
           />
         ) : activeTab === "agenda" && showEnvioMassaWizard ? (
           /* Envio em Massa Wizard */
-          <div className="flex flex-1 items-center justify-center bg-card text-sm text-muted-foreground">Abrindo envio em massa…</div>
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
+            <EnvioMassaWizardContent
+              onClose={() => setShowEnvioMassaWizard(false)}
+              onComplete={loadTodayTasks}
+            />
+          </div>
         ) : activeTab === "email" ? (
           <AtendimentoEmailPanel
             contato={contatoEmailSelecionado}
@@ -7432,6 +7263,15 @@ ${recentMessages}
                   </Button>
                 </div>
               )}
+              {/* Desktop: inline wizard */}
+              {activeTab === "agenda" && showEnvioMassaWizard && (
+                <div className="hidden lg:block w-full h-full absolute inset-0">
+                  <EnvioMassaWizardContent
+                    onClose={() => setShowEnvioMassaWizard(false)}
+                    onComplete={loadTodayTasks}
+                  />
+                </div>
+              )}
               {activeTab === "orcamento" && (
                 <>
                   <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
@@ -7447,7 +7287,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -7474,12 +7314,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
@@ -7506,11 +7346,11 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedAgendaContato.nome}
@@ -7528,12 +7368,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
@@ -7559,11 +7399,11 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTelContato.nome}
@@ -7584,12 +7424,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {/* Detalhes do cliente ao clicar no card na aba E-mail */}
       {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="email"
             nome={contatoEmailDetalhe.nome}
@@ -7611,12 +7451,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
@@ -7652,7 +7492,7 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
       
       {/* Novo Contato Dialog */}
@@ -7774,7 +7614,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
       {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 224 : 256) : undefined}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
@@ -7796,12 +7636,12 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
-        <AtendimentoDetailsSidebar fixedWidth={isTablet ? (isSmallTablet ? 144 : 176) : undefined}>
+        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}
@@ -7834,7 +7674,7 @@ ${recentMessages}
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
-        </AtendimentoDetailsSidebar>
+        </div>
       )}
 
       <SoftphoneDialog 
@@ -7892,6 +7732,21 @@ ${recentMessages}
         </AlertDialogContent>
       </AlertDialog>
 
+      <FinalizarAtendimentoDialog
+        open={!!finalizarCtx}
+        onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
+        contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
+        canal={(finalizarCtx?.canal as any) || "telefone"}
+        usuarioId={usuarioId}
+        estabelecimentoId={estabelecimentoId}
+        obrigatorio={finalizarCtx?.obrigatorio}
+        onFinalizado={() => {
+          const depois = finalizarCtx?.depois;
+          setFinalizarCtx(null);
+          void loadTodayTasks();
+          depois?.();
+        }}
+      />
       <ComposeEmailDialog
         open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
         onOpenChange={(open) => {
@@ -7912,30 +7767,13 @@ ${recentMessages}
         }}
         pendingAppendText={pendingEmailAppendText}
         onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
-        draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
       />
-      </div>
       </div>
       )}
     </RadialMenu>
     </AtendimentoCardsDensityProvider>
     
     {/* Global Dialogs - render regardless of mobile/desktop */}
-    <FinalizarAtendimentoDialog
-      open={!!finalizarCtx}
-      onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
-      contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
-      canal={(finalizarCtx?.canal as any) || "telefone"}
-      usuarioId={usuarioId}
-      estabelecimentoId={estabelecimentoId}
-      obrigatorio={finalizarCtx?.obrigatorio}
-      onFinalizado={() => {
-        const depois = finalizarCtx?.depois;
-        setFinalizarCtx(null);
-        void loadTodayTasks();
-        depois?.();
-      }}
-    />
     <DiscadorModoDialog
       open={showDiscadorModo}
       onOpenChange={setShowDiscadorModo}
@@ -7971,12 +7809,14 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
-    {/* Fluxo único de envio em massa em todos os tamanhos */}
+    {/* Mobile/Tablet: Full screen wizard */}
     {showEnvioMassaWizard && (
-      <EnvioMassaWizardPanel
-        onClose={() => setShowEnvioMassaWizard(false)}
-        onComplete={loadTodayTasks}
-      />
+      <div className="lg:hidden">
+        <EnvioMassaWizardPanel
+          onClose={() => setShowEnvioMassaWizard(false)}
+          onComplete={loadTodayTasks}
+        />
+      </div>
     )}
     </>
   );

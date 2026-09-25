@@ -24,7 +24,6 @@ import AutomacoesChatTool from "./AutomacoesChatTool";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { usePersistentDraft } from "@/hooks/usePersistentDraft";
 
 // Elegant toolbar button styles
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
@@ -90,7 +89,6 @@ interface ChatInputProps {
   externalText?: string;
   onExternalTextConsumed?: () => void;
   onOpenConsultaEstoque?: () => void;
-  draftKey?: string;
 }
 
 export default function ChatInput({ 
@@ -132,10 +130,8 @@ export default function ChatInput({
   externalText,
   onExternalTextConsumed,
   onOpenConsultaEstoque,
-  draftKey,
 }: ChatInputProps) {
-  const resolvedDraftKey = draftKey || customerId || conversationId || customerPhone;
-  const [message, setMessage, clearDraft] = usePersistentDraft(resolvedDraftKey ? `chat:${resolvedDraftKey}` : undefined, "");
+  const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -415,7 +411,7 @@ export default function ChatInput({
   const handleSend = () => {
     if (message.trim() && !disabled) {
       onSendMessage(message, "text");
-      clearDraft();
+      setMessage("");
     }
   };
 

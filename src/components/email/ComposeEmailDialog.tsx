@@ -13,7 +13,6 @@ import {
 import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EmailToolsMenu } from "./EmailToolsMenu";
-import { usePersistentDraft } from "@/hooks/usePersistentDraft";
 
 export interface EmailAttachment {
   id: string;
@@ -36,14 +35,6 @@ interface ComposeEmailDialogProps {
   pendingAppendText?: string | null;
   onPendingAppendConsumed?: () => void;
   embedded?: boolean;
-  draftKey?: string;
-}
-
-interface EmailDraft {
-  to: string;
-  subject: string;
-  body: string;
-  attachments: EmailAttachment[];
 }
 
 export function ComposeEmailDialog({
@@ -59,36 +50,22 @@ export function ComposeEmailDialog({
   pendingAppendText,
   onPendingAppendConsumed,
   embedded = false,
-  draftKey,
 }: ComposeEmailDialogProps) {
-  const [draft, setDraft, clearDraft] = usePersistentDraft<EmailDraft>(
-    draftKey ? `email:${draftKey}` : undefined,
-    { to: defaultTo, subject: defaultSubject, body: defaultBody, attachments: [] },
-  );
-  const { to, subject, body, attachments } = draft;
-  const setTo = (value: string) => setDraft((current) => ({ ...current, to: value }));
-  const setSubject = (value: string) => setDraft((current) => ({ ...current, subject: value }));
-  const setBody = (value: string | ((previous: string) => string)) => setDraft((current) => ({
-    ...current,
-    body: typeof value === "function" ? value(current.body) : value,
-  }));
-  const setAttachments = (value: EmailAttachment[] | ((previous: EmailAttachment[]) => EmailAttachment[])) => setDraft((current) => ({
-    ...current,
-    attachments: typeof value === "function" ? value(current.attachments) : value,
-  }));
+  const [to, setTo] = useState(defaultTo);
+  const [subject, setSubject] = useState(defaultSubject);
+  const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   // Sync state when dialog opens or defaults change
   useEffect(() => {
     if (open) {
-      setDraft((current) => ({
-        ...current,
-        to: current.to || defaultTo,
-        subject: current.subject || defaultSubject,
-        body: current.body || defaultBody,
-      }));
+      setTo(defaultTo);
+      setSubject(defaultSubject);
+      setBody(defaultBody);
+      setAttachments([]);
     }
-  }, [open, defaultTo, defaultSubject, defaultBody, setDraft]);
+  }, [open, defaultTo, defaultSubject, defaultBody]);
 
   // Append text from external tools (e.g. stock consultation)
   useEffect(() => {
@@ -130,7 +107,10 @@ export function ComposeEmailDialog({
         title: "Email enviado",
         description: "O email foi enviado com sucesso",
       });
-      clearDraft();
+      setTo("");
+      setSubject("");
+      setBody("");
+      setAttachments([]);
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -144,6 +124,10 @@ export function ComposeEmailDialog({
   };
 
   const handleClose = () => {
+    setTo("");
+    setSubject("");
+    setBody("");
+    setAttachments([]);
     onOpenChange(false);
   };
 

@@ -236,7 +236,7 @@ export function FinalizarAtendimentoDialog({
               )}
               <Button onClick={() => void confirmar()} disabled={salvando} variant={modoInativar ? "destructive" : "default"}>
                 {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {modoInativar ? "Inativar" : "Finalizar e reagendar"}
+                {modoInativar ? "Inativar" : "Confirmar"}
               </Button>
             </div>
           </DialogFooter>

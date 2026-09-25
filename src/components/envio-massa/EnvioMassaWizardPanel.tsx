@@ -54,8 +54,6 @@ export function EnvioMassaWizardPanel({
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
-  const [existingScheduleContactIds, setExistingScheduleContactIds] = useState<Set<string>>(new Set());
-  const [scheduleConflictAction, setScheduleConflictAction] = useState<'keep' | 'replace'>('keep');
 
   // Load estabelecimento and usuario
   useEffect(() => {
@@ -139,30 +137,6 @@ export function EnvioMassaWizardPanel({
   const handleDateChange = (date: Date) => {
     setState(prev => ({ ...prev, proximaDataContato: date }));
   };
-
-  useEffect(() => {
-    if (state.step !== 'confirm' || !usuarioId || state.selectedContacts.length === 0) {
-      setExistingScheduleContactIds(new Set());
-      return;
-    }
-    let active = true;
-    void supabase
-      .from('calendario_tarefas')
-      .select('contact_id')
-      .eq('user_id', usuarioId)
-      .eq('status', 'pending')
-      .in('contact_id', state.selectedContacts.map((contact) => contact.id))
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) {
-          console.error('Erro ao conferir próximos contatos:', error);
-          setExistingScheduleContactIds(new Set());
-          return;
-        }
-        setExistingScheduleContactIds(new Set((data || []).map((task) => task.contact_id).filter(Boolean)));
-      });
-    return () => { active = false; };
-  }, [state.step, state.selectedContacts, usuarioId]);
 
   // Replace variables in content
   const replaceVariables = (text: string, contact: ContactForBulkSend) => {
@@ -248,34 +222,24 @@ export function EnvioMassaWizardPanel({
           })
           .join('\n');
 
-        const hasExistingSchedule = existingScheduleContactIds.has(contact.id);
-        if (hasExistingSchedule && scheduleConflictAction === 'replace') {
-          const { error: deleteError } = await supabase
-            .from('calendario_tarefas')
-            .delete()
-            .eq('user_id', usuarioId)
-            .eq('contact_id', contact.id)
-            .eq('status', 'pending');
-          if (deleteError) throw deleteError;
-        }
+        // Create task for next contact
+        const { error } = await supabase
+          .from('calendario_tarefas')
+          .insert({
+            user_id: usuarioId,
+            estabelecimento_id: estabelecimentoId,
+            contact_id: contact.id,
+            contact_name: contact.nome,
+            title: `Retorno: Envio em massa (${state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'})`,
+            description: description.substring(0, 1000), // Limit description
+            date: format(state.proximaDataContato, 'yyyy-MM-dd'),
+            origem: 'envio_massa',
+            origem_sub_item: state.canal,
+            status: 'pendente'
+          });
 
-        if (!hasExistingSchedule || scheduleConflictAction === 'replace') {
-          const { error } = await supabase
-            .from('calendario_tarefas')
-            .insert({
-              user_id: usuarioId,
-              estabelecimento_id: estabelecimentoId,
-              contact_id: contact.id,
-              contact_name: contact.nome,
-              title: `Retorno: Envio em massa (${state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'})`,
-              description: description.substring(0, 1000),
-              date: format(state.proximaDataContato, 'yyyy-MM-dd'),
-              origem: 'campanha',
-              origem_sub_item: state.canal,
-              status: 'pending'
-            });
-
-          if (error) throw error;
+        if (error) {
+          console.error('Error creating task:', error);
         }
 
         // Call webhook with full data payload for n8n
@@ -521,9 +485,6 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
-              existingScheduleCount={existingScheduleContactIds.size}
-              scheduleConflictAction={scheduleConflictAction}
-              onScheduleConflictActionChange={setScheduleConflictAction}
             />
           )}
         </div>
