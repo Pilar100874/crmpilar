@@ -5122,7 +5122,7 @@ ${recentMessages}
           )}
 
           {/* Mobile Content Area */}
-          <div key={activeTab} className="flex-1 overflow-hidden relative animate-wipe-in">
+          <div className="flex-1 overflow-hidden relative">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
             {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && (
               <div className="absolute inset-0 z-20 bg-background overflow-hidden">
@@ -6018,8 +6018,6 @@ ${recentMessages}
             </div>
           </div>
         )}
-        {/* Quadro central com efeito wipe ao trocar de aba/canal */}
-        <div key={`${activeTab}-${historicoCliente ? "hist" : "normal"}`} className="flex-1 flex flex-col min-h-0 min-w-0 animate-wipe-in">
         {/* Listas Panel - Tem prioridade sobre outros conteúdos */}
         {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
@@ -6596,7 +6594,6 @@ ${recentMessages}
             </div>
           </div>
         )}
-        </div>
       </div>
       )}
 
