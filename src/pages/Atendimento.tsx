@@ -6598,34 +6598,6 @@ ${recentMessages}
       </div>
       )}
 
-      {/* Botão flutuante para reabrir o painel de detalhes quando estiver oculto (desktop) */}
-      {!isMobile && !orcamentoSheetOpen && (() => {
-        const painelOculto =
-          (activeTab === "chat" && selectedConv && !showClientDetailsChat) ||
-          (activeTab === "agenda" && (selectedTaskData || selectedAgendaContato) && !showClientDetailsAgenda && agendaViewMode === 'default') ||
-          ((activeTab === "tel" || activeTab === "visita") && selectedTelContato && !showClientDetailsFluxo) ||
-          (activeTab === "email" && (contatoEmailDetalhe || selectedEmailData) && !showClientDetailsEmail) ||
-          (activeTab === "orcamento" && contatoOrcamentoDetalhe && !showClientDetailsOrcamento);
-        if (!painelOculto) return null;
-        const reabrir = () => {
-          if (activeTab === "chat") setShowClientDetailsChat(true);
-          else if (activeTab === "agenda") setShowClientDetailsAgenda(true);
-          else if (activeTab === "tel" || activeTab === "visita") setShowClientDetailsFluxo(true);
-          else if (activeTab === "email") setShowClientDetailsEmail(true);
-          else if (activeTab === "orcamento") setShowClientDetailsOrcamento(true);
-        };
-        return (
-          <button
-            type="button"
-            onClick={reabrir}
-            title="Mostrar detalhes"
-            aria-label="Mostrar detalhes"
-            className="fixed right-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-l-lg border border-r-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        );
-      })()}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
