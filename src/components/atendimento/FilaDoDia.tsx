@@ -304,15 +304,6 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         </div>
       </div>
 
-      {/* Cabeçalho das colunas */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 border-b border-border/30 text-[11px] font-medium text-muted-foreground">
-        <span className="w-4" />
-        <span className="flex-1">Contato</span>
-        <span className="w-[124px] hidden md:block">Motivo / canal</span>
-        <span className="w-[52px] text-right">Horário</span>
-        <span className="w-7" />
-      </div>
-
       {/* Lista */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         {visiveis.length === 0 ? (
