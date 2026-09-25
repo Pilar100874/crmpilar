@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Mail, MapPin, MessageCircle, MoreVertical, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
+import { CalendarDays, FileText, Mail, MapPin, MessageCircle, MoreVertical, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,13 +21,15 @@ interface Props {
   onHistorico?: () => void;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
+  filaAberta?: boolean;
+  onToggleFila?: () => void;
 }
 
 const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onVerCadastro, onHistorico, painelAberto, onTogglePainel }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onVerCadastro, onHistorico, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
@@ -58,6 +60,18 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
           <MoreVertical className="h-4 w-4" />
         </Button>
+        {onToggleFila && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onToggleFila}
+            title={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
+            aria-label={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
+          >
+            {filaAberta ? <PanelLeftClose className="h-4 w-4 text-orange-600" /> : <PanelLeftOpen className="h-4 w-4 text-orange-600" />}
+          </Button>
+        )}
         {onTogglePainel && (
           <Button
             variant="ghost"

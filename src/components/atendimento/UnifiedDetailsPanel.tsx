@@ -378,20 +378,6 @@ export function UnifiedDetailsPanel({
       <div className="flex-shrink-0 px-4 pt-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-lg font-semibold text-foreground">Cadastro e vínculos</h3>
-          <div className="flex items-center gap-1">
-            {customerId && onEditContato && (
-              <button type="button" onClick={handleEditContatoClick} title="Abrir cadastro completo" aria-label="Abrir cadastro completo"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
-                <Expand className="h-4 w-4" />
-              </button>
-            )}
-            {onOcultar && (
-              <button type="button" onClick={onOcultar} title="Ocultar detalhes" aria-label="Ocultar detalhes"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
-                <PanelRightClose className="h-4 w-4" />
-              </button>
-            )}
-          </div>
         </div>
         <div className="mt-3 grid grid-cols-2 border-b border-border">
           {(["contato", "empresa"] as const).map((aba) => (
