@@ -5679,6 +5679,7 @@ ${recentMessages}
             }}
             pendingAppendText={pendingEmailAppendText}
             onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
+            draftKey={contatoEmailSelecionado?.id || composeEmailDefaults.to || undefined}
           />
         </div>
       ) : (

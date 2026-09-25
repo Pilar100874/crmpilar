@@ -134,7 +134,8 @@ export default function ChatInput({
   onOpenConsultaEstoque,
   draftKey,
 }: ChatInputProps) {
-  const [message, setMessage, clearDraft] = usePersistentDraft(draftKey ? `chat:${draftKey}` : undefined, "");
+  const resolvedDraftKey = draftKey || customerId || conversationId || customerPhone;
+  const [message, setMessage, clearDraft] = usePersistentDraft(resolvedDraftKey ? `chat:${resolvedDraftKey}` : undefined, "");
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
