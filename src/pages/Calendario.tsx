@@ -2849,16 +2849,6 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
               <Button
-                onClick={() => {
-                  setSelectedDate(null);
-                  setShowTaskDialog(true);
-                }}
-                className="h-9 gap-2 px-3 shadow-sm sm:h-10 sm:px-5"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Agendar</span>
-              </Button>
-              <Button
                 variant="ghost"
                 size="icon"
                 onClick={alternarDias}
@@ -2909,7 +2899,22 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                   </span>
                   {!ultimo && <Calendar className={`h-5 w-5 ${index === 0 ? "text-primary" : "text-muted-foreground/60"}`} />}
                   {ultimo && (
-                    <span className="absolute bottom-2 right-2 flex rounded-md bg-muted p-0.5 text-[10px] font-semibold shadow-inner">
+                    <>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedDate(null);
+                          setShowTaskDialog(true);
+                        }}
+                        title="Agendar"
+                        aria-label="Agendar"
+                        className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Agendar</span>
+                      </button>
+                      <span className="absolute bottom-2 right-2 flex rounded-md bg-muted p-0.5 text-[10px] font-semibold shadow-inner">
                       <span
                         onClick={(event) => { event.stopPropagation(); setViewMode("list"); }}
                         className={`rounded px-2 py-1 ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
@@ -2918,7 +2923,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                         onClick={(event) => { event.stopPropagation(); setViewMode("week"); }}
                         className={`rounded px-2 py-1 ${viewMode === "week" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
                       >Semana</span>
-                    </span>
+                      </span>
+                    </>
                   )}
                 </button>
               );
