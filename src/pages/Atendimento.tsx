@@ -161,6 +161,16 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const cabecalhoRef = useRef<HTMLDivElement | null>(null);
+  // Efeito de "wipe" ao abrir/trocar o quadro central
+  const quadroCentralRef = useRef<HTMLDivElement | null>(null);
+  const dispararWipe = () => {
+    const el = quadroCentralRef.current;
+    if (!el) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    el.classList.remove("animate-wipe-in");
+    void el.offsetWidth;
+    el.classList.add("animate-wipe-in");
+  };
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const el = cabecalhoRef.current;
