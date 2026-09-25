@@ -5829,6 +5829,47 @@ ${recentMessages}
       }`}>
         {showConversationsList && (
           <>
+            {/* Ações na barra superior ("Minha agenda") via portal */}
+            {barraSlot && createPortal(
+              <>
+                <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-2 py-1">
+                  <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-xs font-medium text-foreground hidden lg:inline">Usar agenda</span>
+                  <Switch
+                    checked={usarAgenda}
+                    onCheckedChange={setUsarAgenda}
+                    aria-label="Usar agenda"
+                    className="scale-90"
+                  />
+                </div>
+                {seletorEquipe}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => {
+                        if (activeTab === "agenda") setShowCustomerSearchForTask(true);
+                        else if (activeTab === "chat") setShowCustomerSearchForChat(true);
+                        else if (activeTab === "email") setShowCustomerSearchForEmail(true);
+                        else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
+                      }}
+                      className="h-9 w-9 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                    >
+                      <Plus className="h-4 w-4 text-primary" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Puxar ou criar cadastro</TooltipContent>
+                </Tooltip>
+                <GlobalClientFilter
+                  activeFilter={globalFilter}
+                  onFilterChange={setGlobalFilter}
+                  compact
+                />
+              </>,
+              barraSlot
+            )}
+
         {/* Fila do dia - lista unificada (visual da referência) */}
         <FilaDoDia
           items={filaItems}
