@@ -591,7 +591,16 @@ export default function Atendimento() {
   }, [selectedConversation]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Rola só a lista de mensagens (scrollIntoView empurrava a página inteira para trás da barra de datas)
+    let el: HTMLElement | null = messagesEndRef.current?.parentElement ?? null;
+    while (el) {
+      const oy = getComputedStyle(el).overflowY;
+      if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+        break;
+      }
+      el = el.parentElement;
+    }
   }, [messages]);
 
   // Realtime: ouvir mudanças na tabela customers para sincronizar edições inline/tela central
