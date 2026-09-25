@@ -73,6 +73,13 @@ function iniciais(nome: string): string {
     .toUpperCase();
 }
 
+export interface AssumirContatosConfig {
+  grupos: { titulo: string; itens: { id: string; nome: string }[] }[];
+  assumidos: string[];
+  onAlternar: (id: string, marcado: boolean) => void;
+  onLimpar: () => void;
+}
+
 interface FilaDoDiaProps {
   items: FilaItem[];
   onEnvioMassa: (idsSelecionados: string[]) => void;
@@ -81,10 +88,18 @@ interface FilaDoDiaProps {
   headerExtra?: React.ReactNode;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
+  filtro?: FiltroFila;
+  onFiltroChange?: (filtro: FiltroFila) => void;
+  assumirContatos?: AssumirContatosConfig;
 }
 
-export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel }: FilaDoDiaProps) {
-  const [filtro, setFiltro] = useState<FiltroFila>("tudo");
+export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos }: FilaDoDiaProps) {
+  const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
+  const filtro = filtroProp ?? filtroInterno;
+  const setFiltro = (valor: FiltroFila) => {
+    setFiltroInterno(valor);
+    onFiltroChange?.(valor);
+  };
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
