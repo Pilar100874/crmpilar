@@ -13,3 +13,14 @@
 - [x] Exibir os indicadores com ícone e número no mesmo padrão.
 - [x] Remover o ícone do canal ao lado de Finalizar.
 - [x] Validar Agenda, Chat e compilação.
+
+## Redesenho total do Atendimento
+
+- [ ] Etapa 1 — Base segura e estado único.
+- [ ] Etapa 2 — Estrutura responsiva desktop, tablet e celular.
+- [ ] Etapa 3 — Fila do dia unificada.
+- [ ] Etapa 4 — Área central multicanal.
+- [ ] Etapa 5 — Cadastro e vínculos.
+- [ ] Etapa 6 — Finalização e reagendamento atômicos.
+- [ ] Etapa 7 — Envio em massa consolidado.
+- [ ] Validação completa nos tamanhos e fluxos definidos.
