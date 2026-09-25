@@ -1030,7 +1030,7 @@ export default function Layout({ children }: LayoutProps) {
                     })()}
                     
                     {openSubmenuId === "Atalhos" && (
-                      <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
+                      <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-[700] overflow-y-auto">
                         <div className="px-4 py-6">
                           <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
                             Atalhos
@@ -1239,7 +1239,7 @@ export default function Layout({ children }: LayoutProps) {
                         </button>
                         
                         {isMenuOpen && (
-                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-[700] overflow-y-auto">
                             <div className="px-4 py-6">
                               <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
                                 {item.title}
@@ -1585,7 +1585,7 @@ export default function Layout({ children }: LayoutProps) {
                 )}
                 
                 {openSubmenuId === "UserMenu" && (
-                  <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50">
+                  <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-[700]">
                     <div className="px-4 py-6">
                       <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
                         {nomeResumido || "Minha Conta"}
