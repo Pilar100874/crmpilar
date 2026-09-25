@@ -79,6 +79,8 @@ import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useConta
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
+import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoDetailsSidebar";
+import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -130,6 +132,11 @@ const normalizePhone = (phone: string | undefined | null): string => {
   return phone.replace(/\D/g, '');
 };
 
+const readDetailsPreference = (isCompactViewport: boolean) => {
+  if (isCompactViewport || typeof window === "undefined") return false;
+  return window.localStorage.getItem("atendimento_painel_detalhes_aberto") !== "false";
+};
+
 export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -157,13 +164,13 @@ export default function Atendimento() {
   const [showConversationsList, setShowConversationsList] = useState(true);
   
   // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
-  const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
-  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(() => readDetailsPreference(isMobile));
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
-  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
-  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
-  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(() => readDetailsPreference(isMobile));
+  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(() => readDetailsPreference(isMobile));
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
@@ -285,6 +292,7 @@ export default function Atendimento() {
   
   // Tab states
   const [activeTab, setActiveTab] = useState("agenda");
+  const { session: atendimentoSession, updateSession: updateAtendimentoSession } = useAtendimentoSession();
   // Flag "Usar agenda": ligada usa os contatos da agenda do dia; desligada usa os contatos vinculados ao usuário
   const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -3784,6 +3792,34 @@ ${recentMessages}
     }), [filteredOrcamentos, orcamentosStatusFilter, orcamentosDateRange]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
+
+  const activeContactId = useMemo(() => {
+    if (activeTab === "chat") return selectedConv?.customer_id ?? null;
+    if (activeTab === "agenda") return selectedTaskData?.contact_id ?? selectedAgendaContato?.id ?? null;
+    if (activeTab === "tel" || activeTab === "visita") return selectedTelContato?.id ?? fluxoCurrentTask?.contact_id ?? null;
+    if (activeTab === "email") return contatoEmailSelecionado?.id ?? selectedEmailData?.customer?.id ?? null;
+    if (activeTab === "orcamento") return selectedOrcamentoData?.cliente_id ?? contatoOrcamentoDetalhe?.cliente_id ?? null;
+    return null;
+  }, [activeTab, selectedConv, selectedTaskData, selectedAgendaContato, selectedTelContato, fluxoCurrentTask, contatoEmailSelecionado, selectedEmailData, selectedOrcamentoData, contatoOrcamentoDetalhe]);
+
+  useEffect(() => {
+    updateAtendimentoSession({
+      contactId: activeContactId,
+      taskId: selectedTaskId,
+      channel: activeTab as AtendimentoCanal,
+      mobileView,
+    });
+  }, [activeContactId, activeTab, mobileView, selectedTaskId, updateAtendimentoSession]);
+
+  useEffect(() => {
+    if (isMobile || isTablet) return;
+    const visibility = activeTab === "chat" ? showClientDetailsChat
+      : activeTab === "agenda" ? showClientDetailsAgenda
+      : activeTab === "email" ? showClientDetailsEmail
+      : activeTab === "orcamento" ? showClientDetailsOrcamento
+      : showClientDetailsFluxo;
+    window.localStorage.setItem("atendimento_painel_detalhes_aberto", String(visibility));
+  }, [activeTab, isMobile, isTablet, showClientDetailsAgenda, showClientDetailsChat, showClientDetailsEmail, showClientDetailsFluxo, showClientDetailsOrcamento]);
 
   // Update counters based on filtered data
   useEffect(() => {

@@ -5,7 +5,7 @@ import { EmailPanel } from "@/components/email/EmailPanel";
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 
 interface AtendimentoEmailPanelProps {
-  contato: { nome: string; email: string } | null;
+  contato: { id?: string; nome: string; email: string } | null;
   emails: any[];
   selectedEmailId: string | null;
   selectedEmailData: any;
@@ -141,6 +141,7 @@ export function AtendimentoEmailPanel({
           onOpenConsultaEstoque={onOpenConsultaEstoque}
           pendingAppendText={pendingAppendText}
           onPendingAppendConsumed={onPendingAppendConsumed}
+          draftKey={contato.id || contato.email}
         />
       ) : (
         <EmailPanel
