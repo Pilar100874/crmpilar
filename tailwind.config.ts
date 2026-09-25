@@ -152,6 +152,10 @@ export default {
           "0%, 100%": { opacity: "1", filter: "brightness(1)" },
           "50%": { opacity: "0.35", filter: "brightness(1.4)" },
         },
+        "wipe-in": {
+          "0%": { clipPath: "inset(0 100% 0 0)", opacity: "0.6" },
+          "100%": { clipPath: "inset(0 0 0 0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
