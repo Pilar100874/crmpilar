@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
-import { ExpandableTabs } from "@/components/ui/expandable-tabs";
+import { FilaDoDia, type FilaItem, type FilaCanal } from "@/components/atendimento/FilaDoDia";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -3943,6 +3942,100 @@ ${recentMessages}
     orcamentosVisiveis.map((orcamento) => orcamento.empresa_id || `sem-empresa-${orcamento.cliente_id || "geral"}`),
   ).size;
 
+  // Itens unificados da "Fila do dia" (coluna esquerda desktop)
+  const filaItems = useMemo<FilaItem[]>(() => {
+    const lista: FilaItem[] = [];
+
+    // Agendados: tarefas da agenda
+    filteredTasks.forEach((task: any) => {
+      const ce = task.customers?.customer_empresas || [];
+      const principal = ce.find((c: any) => c.is_primary) || ce[0];
+      const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
+      const nome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title || "").nome.replace(/^tarefa\s*[:\-]?\s*/i, "") || "Sem nome";
+      const motivo = (task.title || "").replace(/^tarefa\s*[:\-]?\s*/i, "").trim() || "Retorno";
+      const canal: FilaCanal = task.customers?.telefone
+        ? "whatsapp"
+        : task.customers?.tel
+          ? "telefone"
+          : task.customers?.email
+            ? "email"
+            : "telefone";
+      const agora = new Date();
+      const horaAtual = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
+      const atrasado = (task.diasAtraso || 0) > 0 || (!!task.time && task.time < horaAtual);
+      lista.push({
+        id: `task-${task.id}`,
+        tipo: "agendado",
+        contactId: task.contact_id,
+        nome,
+        empresa: empresaNome,
+        motivo,
+        canal,
+        horario: (task.time || "").slice(0, 5),
+        atrasado,
+        selecionado: selectedTaskId === task.id,
+        bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
+        onClick: () => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setActiveTab("agenda");
+          setSelectedTaskId(task.id);
+          setSelectedTaskData(task);
+          setSelectedAgendaContato(null);
+          openDetailsPanel(setShowClientDetailsAgenda);
+          setAgendaViewMode("default");
+          setDiscadorModo(null);
+        },
+      });
+    });
+
+    // Recebidos: conversas aguardando atendimento
+    filteredConversations
+      .filter((conv) => conv.chat_status === "em_fila" || conv.chat_status === "novo")
+      .forEach((conv) => {
+        const phone = normalizePhone(conv.customer?.telefone);
+        const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
+        lista.push({
+          id: `conv-${conv.id}`,
+          tipo: "recebido",
+          contactId: conv.customer_id,
+          nome: conv.customer?.nome || "Sem nome",
+          empresa: empresaNome,
+          motivo: "Mensagem recebida",
+          canal: "whatsapp",
+          horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
+          mensagensNovas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0,
+          selecionado: selectedConversation === conv.id,
+          onClick: () => {
+            if (bloquearTrocaClientePendente(conv.customer_id)) return;
+            setActiveTab("chat");
+            setSelectedConversation(conv.id);
+            openDetailsPanel(setShowClientDetailsChat);
+          },
+        });
+      });
+
+    // Recebidos: e-mails não lidos
+    filteredEmails
+      .filter((email) => !email.read)
+      .forEach((email) => {
+        lista.push({
+          id: `email-${email.id}`,
+          tipo: "recebido",
+          nome: (email as any).from_name || email.from_email || "Sem nome",
+          motivo: "E-mail recebido",
+          canal: "email",
+          horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
+          selecionado: selectedEmailId === email.id,
+          onClick: () => {
+            setActiveTab("email");
+            setSelectedEmailId(email.id);
+          },
+        });
+      });
+
+    return lista;
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento]);
+
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
@@ -5809,845 +5902,17 @@ ${recentMessages}
               </div>
             </div>
 
-        {/* Tabs - Modern Design with ExpandableTabs */}
-        <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Tab Navigation - pílulas com contadores (estilo "Fila do dia") */}
-          <div className={`px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20 ${clienteCabecalho && !isMobile ? "hidden" : ""}`}>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[
-                { id: "agenda", label: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
-                { id: "chat", label: "Chats", icon: MessageSquare, badge: quantidadeCardsChat },
-                { id: "tel", label: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
-                { id: "email", label: "E-mails", icon: Inbox, badge: quantidadeCardsEmail },
-                { id: "orcamento", label: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
-                { id: "visita", label: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => trocarAba(tab.id)}
-                    className={`flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                    {tab.badge > 0 && (
-                      <span className={`text-[11px] font-bold ${isActive ? "text-primary" : "text-foreground"}`}>
-                        {tab.badge > 99 ? "99+" : tab.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Tel Tab - contatos com telefone */}
-          <TabsContent value="tel" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
-            <div className="flex-shrink-0 flex items-center gap-2 border-b border-border/30 px-3 py-2.5">
-              <Button variant="outline" size="sm" onClick={() => void abrirDiscador()} className="h-8 gap-1.5">
-                <PhoneCall className="h-3.5 w-3.5" />
-                Discador
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
-              <ContatosCanalList
-                 contatos={contatosComIndicadores.filter((contato) =>
-                  !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
-                )}
-                canal="tel"
-                titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
-                selecionadoId={selectedTelContato?.id ?? null}
-                 colorirPorEmpresa={!usarAgenda}
-                 onSelecionar={(contato) => {
-                   if (bloquearTrocaClientePendente(contato.id)) return;
-                   setSelectedTelContato(contato);
-                   abrirFluxoComContato(contato);
-                 }}
-              />
-            </div>
-          </TabsContent>
-          
-          {/* Visita presencial: mesma lista da aba Tel, sem discador */}
-          <TabsContent value="visita" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
-            <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
-              <ContatosCanalList
-                contatos={contatosComIndicadores.filter((contato) =>
-                  !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
-                )}
-                canal="todos"
-                titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                vazioTexto={usarAgenda ? "Nenhum contato na agenda" : "Nenhum contato vinculado"}
-                selecionadoId={selectedTelContato?.id ?? null}
-                colorirPorEmpresa={!usarAgenda}
-                onSelecionar={(contato) => {
-                  if (bloquearTrocaClientePendente(contato.id)) return;
-                  setSelectedTelContato(contato);
-                  abrirFluxoComContato(contato);
-                }}
-              />
-            </div>
-          </TabsContent>
-
-          {/* E-mail: contatos na coluna esquerda */}
-          {activeTab === "email" && (
-            <div className="flex-1 overflow-y-auto px-2 py-2">
-              <ContatosCanalList
-                 contatos={contatosComIndicadores}
-                canal="email"
-                titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
-                selecionadoId={contatoEmailSelecionado?.id ?? null}
-                colorirPorEmpresa={!usarAgenda}
-                onSelecionar={(contato) => {
-                  if (bloquearTrocaClientePendente(contato.id)) return;
-                  setSelectedEmailId(null);
-                  setSelectedEmailData(null);
-                  setShowComposeEmail(false);
-                  setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
-                  setContatoEmailDetalhe(contato);
-                  openDetailsPanel(setShowClientDetailsEmail);
-                }}
-              />
-            </div>
-          )}
-
-
-            {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-muted/30 to-background dark:to-card">
-            {agendaConversations.length === 0 && otherConversations.length === 0 && contatosSemConversa.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                  <MessageSquare className="w-8 h-8 text-primary/40" />
-                </div>
-                <p className="text-sm font-medium">Nenhuma conversa</p>
-                <p className="text-xs text-muted-foreground mt-1">Use o botão + para iniciar</p>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 px-2 py-1.5">
-                  <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                  {!usarAgenda && <AtendimentoCardsDensityButton />}
-                  <span className="text-xs font-medium text-muted-foreground">Conversas</span>
-                  <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
-                    {agendaConversations.length + contatosSemConversa.length + otherConversations.length}
-                  </Badge>
-                </div>
-
-                {(agendaConversations.length > 0 || contatosSemConversa.length > 0) && (
-                  <>
-                    
-                    {/* Conversas ativas da agenda */}
-                    {agendaConversations.map((conv) => (
-                      <ConversaAgendaCard
-                        key={conv.id}
-                        conversa={conv}
-                        dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
-                        selecionado={selectedConversation === conv.id}
-                        tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                        onClick={() => {
-                          if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
-                          setSelectedConversation(conv.id);
-                          openDetailsPanel(setShowClientDetailsChat);
-                        }}
-                      />
-                    ))}
-
-                    {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
-                    {contatosSemConversa.map((contact) => (
-                      <AtendimentoClientCard
-                        key={`contact-${contact.contactId}`}
-                        title={`Chat - ${contact.nome}`}
-                        companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
-                        customerName={contact.nome}
-                        sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
-                        selected={conversations.find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
-                        indicators={<AtendimentoCardIndicators {...indicadoresPorContato.get(contact.contactId)} />}
-                        onClick={async () => {
-                          if (bloquearTrocaClientePendente(contact.contactId)) return;
-                          // Criar conversa para o contato da agenda
-                          try {
-                            const estabId = await getEstabelecimentoId();
-                            if (!estabId) return;
-
-                            const { data: newConv, error } = await supabase
-                              .from('conversations')
-                              .insert({
-                                customer_id: contact.contactId,
-                                estabelecimento_id: estabId,
-                                canal: 'whatsapp',
-                                status: 'open',
-                                chat_status: 'em_atendimento',
-                                bot_active: false
-                              })
-                              .select()
-                              .single();
-
-                            if (error) throw error;
-
-                            toast.success(`Conversa iniciada com ${contact.nome}`);
-                            loadConversations();
-                            if (newConv) {
-                              setSelectedConversation(newConv.id);
-                              openDetailsPanel(setShowClientDetailsChat);
-                            }
-                          } catch (error) {
-                            console.error('Erro ao criar conversa:', error);
-                            toast.error('Erro ao iniciar conversa');
-                          }
-                        }}
-                        historicoClienteId={contact.contactId}
-                        historicoClienteNome={contact.nome}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {otherConversations.length > 0 && (
-                  <>
-                    {otherConversations.map((conv) => (
-                      <ConversaAgendaCard
-                        key={conv.id}
-                        conversa={conv}
-                        dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
-                        selecionado={selectedConversation === conv.id}
-                        tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                        onClick={() => {
-                          if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
-                          setSelectedConversation(conv.id);
-                          openDetailsPanel(setShowClientDetailsChat);
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
-            {/* Main Content */}
-            <div className="flex flex-col flex-1 overflow-hidden">
-            {/* Agenda Controls - Modern Card Design */}
-            <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-transparent dark:from-amber-950/20 dark:via-orange-950/10 dark:to-transparent border-b border-orange-100/50 dark:border-orange-900/30">
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Date Navigation Card */}
-                <div className="flex items-center gap-1 bg-white dark:bg-card rounded-xl shadow-sm border border-orange-100 dark:border-orange-900/30 px-1.5 py-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handlePreviousDay}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                  </Button>
-                  
-                  <div className="flex flex-col items-center min-w-[120px] py-0.5">
-                    <p className="text-xs font-bold text-foreground">
-                      {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
-                    </p>
-                    <p className="text-[9px] text-muted-foreground capitalize">
-                      {format(agendaDate, "EEEE, yyyy", { locale: ptBR })}
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleNextDay}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                  >
-                    <ChevronRight className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                  </Button>
-
-                  <div className="w-px h-6 bg-orange-200 dark:bg-orange-800 mx-1" />
-
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleToday}
-                    className="h-7 px-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-medium"
-                  >
-                    <CalendarDays className="w-3.5 h-3.5 mr-1" />
-                    Hoje
-                  </Button>
-                </div>
-
-                {/* Ações, filtros e configurações da agenda */}
-                <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-lg border border-orange-100 dark:border-orange-900/30 p-0.5">
-                  <Button 
-                    variant="ghost"
-                    size="sm" 
-                    onClick={() => {
-                      setAgendaViewMode('default');
-                      setShowEnvioMassaWizard(true);
-                    }}
-                    className={cn(
-                      "h-7 px-2 rounded text-xs font-medium transition-all",
-                      "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
-                    )}
-                  >
-                    <Users className="w-3 h-3 mr-1" />
-                    Massa
-                  </Button>
-                  <Button
-                    variant={agendaFilterPossuiTel ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setAgendaFilterPossuiTel(!agendaFilterPossuiTel)}
-                    aria-label="Filtrar por telefone"
-                    title="Filtrar por telefone"
-                    className={cn(
-                      "h-7 w-7 p-0 rounded transition-all",
-                      agendaFilterPossuiTel 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
-                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
-                    )}
-                  >
-                    <Phone className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant={agendaFilterPossuiWhatsapp ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setAgendaFilterPossuiWhatsapp(!agendaFilterPossuiWhatsapp)}
-                    aria-label="Filtrar por WhatsApp"
-                    title="Filtrar por WhatsApp"
-                    className={cn(
-                      "h-7 w-7 p-0 rounded transition-all",
-                      agendaFilterPossuiWhatsapp 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
-                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
-                    )}
-                  >
-                    <MessageSquare className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant={agendaFilterPossuiEmail ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setAgendaFilterPossuiEmail(!agendaFilterPossuiEmail)}
-                    aria-label="Filtrar por e-mail"
-                    title="Filtrar por e-mail"
-                    className={cn(
-                      "h-7 w-7 p-0 rounded transition-all",
-                      agendaFilterPossuiEmail 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
-                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
-                    )}
-                  >
-                    <Mail className="w-3 h-3" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowConfigDatas(true)}
-                    className="h-7 w-7 p-0 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                    aria-label="Dias padrão para próximo contato"
-                    title="Dias padrão para próximo contato"
-                  >
-                    <Settings2 className="w-3 h-3 text-orange-600 dark:text-orange-400" />
-                  </Button>
-                  <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 w-7 p-0 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30" 
-                      aria-label="Configurar ordenação"
-                      title="Configurar ordenação"
-                    >
-                      <ArrowUpDown className="w-3 h-3 text-orange-600 dark:text-orange-400" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Configurar Ordenação</DialogTitle>
-                      <DialogDescription>
-                        Defina a ordem de prioridade dos critérios de ordenação
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      {taskSortOrder.map((criterion, index) => (
-                        <Card key={index} className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="secondary" className="font-mono">
-                                {index + 1}
-                              </Badge>
-                              <span className="text-sm font-medium">
-                                {getSortLabel(criterion)}
-                              </span>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => moveSortCriterion(index, 'up')}
-                                disabled={index === 0}
-                                className="h-8 w-8 p-0"
-                              >
-                                <ArrowUp className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => moveSortCriterion(index, 'down')}
-                                disabled={index === taskSortOrder.length - 1}
-                                className="h-8 w-8 p-0"
-                              >
-                                <ArrowDown className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSortCriterion(index)}
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              >
-                                <span className="text-lg">×</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                      
-                      {/* Add new field section */}
-                      <div className="border-t pt-4 mt-4 space-y-4">
-                        <div>
-                          <Label className="text-sm font-medium mb-2 block">
-                            Adicionar Campo Simples
-                          </Label>
-                          <div className="flex gap-2">
-                            <Select value={newSortField} onValueChange={(value: any) => setNewSortField(value)}>
-                              <SelectTrigger className="flex-1">
-                                <SelectValue placeholder="Selecione um campo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {getAvailableSortFields().map((field) => (
-                                  <SelectItem key={field} value={field}>
-                                    {getSortLabel({ type: 'field', field })}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              onClick={addSortField}
-                              disabled={!newSortField}
-                              size="sm"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Adicionar
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Add origem filter section */}
-                        <div>
-                          <Label className="text-sm font-medium mb-2 block">
-                            Adicionar Filtro por Origem
-                          </Label>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Prioriza tarefas da origem selecionada. Você pode adicionar a mesma origem várias vezes com sub-itens diferentes.
-                          </p>
-                          <div className="space-y-2">
-                            <div>
-                              <Label className="text-xs mb-1 block">Origem</Label>
-                              <Select 
-                                value={newOrigemFilter.origem} 
-                                onValueChange={handleOrigemChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a Origem" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {availableOrigens.map((origem) => (
-                                    <SelectItem key={origem} value={origem}>
-                                      {origem}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {newOrigemFilter.origem && availableSubItems.length > 0 && (
-                              <div>
-                                <Label className="text-xs mb-1 block">Sub-item (opcional)</Label>
-                                <Select
-                                  value={newOrigemFilter.subItem}
-                                  onValueChange={(value) => setNewOrigemFilter({ ...newOrigemFilter, subItem: value })}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Todos os sub-itens" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="">Todos os sub-itens</SelectItem>
-                                    {availableSubItems.map((subItem) => (
-                                      <SelectItem key={subItem} value={subItem}>
-                                        {subItem}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
-                            
-                            <Button
-                              onClick={addOrigemFilter}
-                              disabled={!newOrigemFilter.origem}
-                              size="sm"
-                              className="w-full"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Adicionar à Ordenação
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                  </Dialog>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Tasks List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-              {!usarAgenda ? (
-                <ContatosCanalList
-                  contatos={contatosComIndicadores}
-                  canal="todos"
-                  titulo="Meus contatos"
-                  acaoLabel="Abrir"
-                  vazioTexto="Nenhum contato vinculado a você"
-                  colorirPorEmpresa
-                  selecionadoId={selectedAgendaContato?.id ?? null}
-                  onSelecionar={(contato) => {
-                    if (bloquearTrocaClientePendente(contato.id)) return;
-                    setGlobalFilter({ type: 'customer', id: contato.id, nome: contato.nome });
-                    setSelectedTaskId(null);
-                    setSelectedTaskData(null);
-                    setSelectedAgendaContato(contato);
-                    setAgendaViewMode('default');
-                    setDiscadorModo(null);
-                    openDetailsPanel(setShowClientDetailsAgenda);
-                  }}
-                />
-              ) : filteredTasks.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
-                    <CalendarIcon className="w-8 h-8 text-orange-300" />
-                  </div>
-                  <p className="text-sm font-medium">Nenhuma tarefa</p>
-                  <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
-                </div>
-              ) : (
-                 filteredTasks.map((task) => {
-                   const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
-                   const isSameSegment = task.contact_id && !isLinkedToUser && 
-                     customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
-                    const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
-                    const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
-                    const semEmpresa = !(task.customers?.customer_empresas || []).some((c: any) => c?.empresas?.id || c?.empresa_id);
-                    const semContato = !semEmpresa && !task.contact_id;
-
-                    return (
-                    <div
-                      key={task.id}
-                      className={`group relative rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${cardsCompactos ? 'min-h-[58px]' : 'min-h-[116px]'} ${
-                        selectedTaskId === task.id
-                          ? semEmpresa
-                            ? "bg-info/15 border-info shadow-md ring-2 ring-info/60"
-                            : "bg-primary/15 border-primary shadow-md ring-2 ring-primary/60"
-                          : semContato
-                            ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
-                            : semEmpresa
-                              ? "bg-card border-blue-500/70 hover:bg-muted/40 hover:border-blue-500 hover:shadow-md"
-                              : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                      } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
-                      onClick={() => {
-                        if (bloquearTrocaClientePendente(task.contact_id)) return;
-                        setSelectedTaskId(task.id);
-                        setSelectedTaskData(task);
-                        setSelectedAgendaContato(null);
-                        openDetailsPanel(setShowClientDetailsAgenda);
-                        setAgendaViewMode('default');
-                        setDiscadorModo(null);
-                      }}
-                   >
-                      {/* Tarja lateral indicando vínculo com nome do usuário */}
-                      <div className={`flex pr-10 ${cardsCompactos ? 'items-center gap-1.5 px-2 py-1.5' : 'items-start gap-3 p-3.5'}`}>
-                       <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
-                         {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
-                         <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
-                       </div>
-                       <div className="flex-1 min-w-0">
-                         {(() => {
-                           const ce = task.customers?.customer_empresas || [];
-                           const principal = ce.find((c: any) => c.is_primary) || ce[0];
-                           const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome;
-                           const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^tarefa\s*[:\-]?\s*/i, '');
-                           return (
-                              <div className={cardsCompactos ? "flex min-w-0 items-baseline gap-1.5" : undefined}>
-                                {empresaNome && <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-xs' : 'text-[15px]'}`}>{empresaNome}</p>}
-                                <p className={empresaNome ? `font-medium text-muted-foreground truncate ${cardsCompactos ? 'text-[10px]' : 'mt-0.5 text-xs'}` : `font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-xs' : 'text-[15px]'}`}>{contatoNome}</p>
-                              </div>
-                           );
-                         })()}
-                          <div className="mt-1 flex min-h-5 items-center">
-                              {(() => {
-                                const indicadores = task.contact_id ? indicadoresPorContato.get(task.contact_id) : undefined;
-                                const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                              return (
-                                <AtendimentoCardIndicators
-                                  {...indicadores}
-                                  onEmailClick={() => {
-                                     const customerEmail = task.customers?.email?.toLowerCase();
-                                     const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
-                                    setActiveTab('email');
-                                    if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
-                                  }}
-                                  onChatClick={() => {
-                                     const customerPhone = normalizePhone(task.customers?.telefone);
-                                     const firstUnreadChat = conversations.find(c =>
-                                      (c.chat_status === 'em_fila' || c.chat_status === 'novo') &&
-                                      normalizePhone(c.customer?.telefone) === customerPhone
-                                    );
-                                    setActiveTab('chat');
-                                    if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
-                                  }}
-                                  onOrcamentoClick={() => {
-                                    const firstOrcamento = orcamentos.find(o =>
-                                      o.status !== 'cancelado' && o.status !== 'ganho' &&
-                                      (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
-                                    );
-                                    if (firstOrcamento) {
-                                      setActiveTab('orcamento');
-                                      setSelectedOrcamentoId(firstOrcamento.id);
-                                      setOrcamentoSheetOpen(true);
-                                    }
-                                  }}
-                                />
-                              );
-                            })()}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            {taskPendente && (
-                              <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
-                                Pendente
-                              </Badge>
-                            )}
-                           <AtendimentoHoraBadge hora={task.time || ""} />
-                           {task.origem && (
-                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
-                               {task.origem === 'manual' ? 'Manual' : task.origem === 'novo_contato' ? 'Novo Contato' : task.origem}
-                             </Badge>
-                           )}
-                           {/* Badge de usuários vinculados adicional */}
-                           {task.linkedUsers && task.linkedUsers.length > 1 && (
-                             <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                               +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
-                             </Badge>
-                           )}
-                           </div>
-                            <div className={`flex items-center gap-1.5 ${cardsCompactos ? 'absolute bottom-1.5 right-2' : 'mt-3 border-t border-border/60 pt-2.5'}`}>
-                              <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                              {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
-                                <button
-                                  type="button"
-                                  title="Finalizar atendimento (próximo contato)"
-                                  aria-label="Finalizar atendimento"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    pedirFinalizacao({ customerId: task.contact_id!, nome: task.contact_name });
-                                  }}
-                                  className="flex h-6 items-center gap-1 rounded-full border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                >
-                                  <CalendarCheck className="h-3.5 w-3.5" />
-                                  Pendente
-                                </button>
-                              )}
-                            </div>
-                       </div>
-                     </div>
-                   </div>
-                 );})
-              )}
-            </div>
-            </div>
-          </TabsContent>
-
-          {/* Email Tab - Empty, content shown in main area */}
-          <TabsContent value="email" className="hidden" />
-          
-          {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
-            {/* Header with Filter */}
-            <div className="px-3 py-2 bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20 border-b border-orange-100/50 dark:border-orange-900/30">
-              <div className="flex items-center gap-2">
-                {/* Filtros agrupados */}
-                <div className="flex items-center gap-1.5 bg-white/50 dark:bg-background/50 rounded-xl px-2 py-1 border border-orange-100 dark:border-orange-900/50 min-w-0 overflow-hidden">
-                  <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                    <SelectTrigger className="h-7 w-[85px] bg-transparent border-0 shadow-none text-xs px-2 focus:ring-0">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="orcamento">Orçamento</SelectItem>
-                      <SelectItem value="negociacao">Negociação</SelectItem>
-                      <SelectItem value="aprovacao_gerencia">Aprovação</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="w-px h-5 bg-orange-200 dark:bg-orange-800 shrink-0" />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-7 px-2 text-xs gap-1 hover:bg-orange-100 dark:hover:bg-orange-900/30 whitespace-nowrap ${orcamentosDateRange.from ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}
-                      >
-                        <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                        {orcamentosDateRange.from ? (
-                          orcamentosDateRange.to ? (
-                            <span>{format(orcamentosDateRange.from, "dd/MM", { locale: ptBR })} - {format(orcamentosDateRange.to, "dd/MM", { locale: ptBR })}</span>
-                          ) : (
-                            <span>{format(orcamentosDateRange.from, "dd/MM", { locale: ptBR })}</span>
-                          )
-                        ) : (
-                          <span>Período</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background border shadow-lg" align="start">
-                      <Calendar
-                        mode="range"
-                        defaultMonth={orcamentosDateRange.from}
-                        selected={orcamentosDateRange.from ? { from: orcamentosDateRange.from, to: orcamentosDateRange.to } : undefined}
-                        onSelect={(range: any) => setOrcamentosDateRange({ from: range?.from, to: range?.to })}
-                        numberOfMonths={1}
-                        locale={ptBR}
-                        className="pointer-events-auto p-3"
-                      />
-                      <div className="p-2 border-t flex justify-end">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-7"
-                          onClick={() => setOrcamentosDateRange({ from: undefined, to: undefined })}
-                        >
-                          Limpar
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                {/* Toggle Meus/Todos */}
-                <div className="flex gap-0.5 bg-white/50 dark:bg-background/50 rounded-lg border border-orange-100 dark:border-orange-900/50">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowOnlyMyOrcamentos(false)}
-                    className={`h-7 px-2 text-xs rounded-md ${!showOnlyMyOrcamentos ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' : 'text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-900/20'}`}
-                  >
-                    Todos
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowOnlyMyOrcamentos(true)}
-                    className={`h-7 px-2 text-xs rounded-md ${showOnlyMyOrcamentos ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' : 'text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-900/20'}`}
-                  >
-                    Meus
-                  </Button>
-                </div>
-                <div className="flex-1" />
-                {/* Botão Novo */}
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    if (orcamentoSheetOpen) {
-                      setShowNovoOrcamentoConfirm(true);
-                    } else {
-                      setSelectedOrcamentoId(null);
-                      setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
-                      setOrcamentoSheetOpen(true);
-                    }
-                  }}
-                  className="h-8 px-3 rounded-xl bg-orange-600 hover:bg-orange-700 shrink-0"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Novo
-                </Button>
-              </div>
-            </div>
-
-            {/* Alert Dialog para confirmar novo orçamento */}
-            <AlertDialog open={showNovoOrcamentoConfirm} onOpenChange={setShowNovoOrcamentoConfirm}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Criar novo orçamento?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Você tem um orçamento aberto. Deseja fechar o atual e criar um novo?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      setOrcamentoSheetOpen(false);
-                      setSelectedOrcamentoId(null);
-                      setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
-                      setTimeout(() => {
-                        setOrcamentoSheetOpen(true);
-                      }, 100);
-                    }}
-                  >
-                    Criar Novo
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <div className="px-2 py-2 space-y-1.5">
-            {orcamentosVisiveis.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <Receipt className="w-8 h-8 text-orange-300" />
-                </div>
-                <p className="text-sm font-medium">Sem orçamentos</p>
-                <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'Nenhum orçamento para este filtro' : 'Nenhum orçamento em andamento'}</p>
-              </div>
-            ) : (
-              <OrcamentosEmpresaList
-                orcamentos={orcamentosVisiveis}
-                tarefasAgenda={filteredTasks}
-                emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
-                chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
-                indicadoresPorContato={indicadoresPorContato}
-                selectedOrcamentoId={selectedOrcamentoId}
-                onSelectOrcamento={(orcamento) => {
-                  if (bloquearTrocaClientePendente((orcamento as any)?.cliente_id)) return;
-                  setSelectedOrcamentoId(orcamento.id);
-                  setSelectedOrcamentoData(orcamento);
-                  setOrcamentoSheetOpen(true);
-                  openDetailsPanel(setShowClientDetailsOrcamento);
-                }}
-                onSelectEmpresa={(orcamento) => {
-                  setContatoOrcamentoDetalhe(orcamento);
-                  openDetailsPanel(setShowClientDetailsOrcamento);
-                }}
-                onDuplicate={setConfirmDuplicateOrcamento}
-                onDelete={setConfirmDeleteOrcamento}
-              />
-            )}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Fila do dia - lista unificada (visual da referência) */}
+        <FilaDoDia
+          items={filaItems}
+          vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+          onEnvioMassa={() => {
+            setActiveTab("agenda");
+            setAgendaViewMode("default");
+            setShowEnvioMassaWizard(true);
+          }}
+          onConfigurarRegra={() => setShowEnvioMassa(true)}
+        />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
         {atendente && activeTab === "chat" && (
