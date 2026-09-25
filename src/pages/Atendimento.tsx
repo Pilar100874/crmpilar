@@ -5803,17 +5803,17 @@ ${recentMessages}
             <Suspense fallback={null}><ModuloCalendario /></Suspense>
           </div>
         )}
-        {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
+        {/* Abinha para reabrir a Fila do dia quando encolhida (igual ao painel de detalhes) */}
         {!showConversationsList && !orcamentoSheetOpen && (
-          <Button
-            size="sm"
-            variant="ghost"
+          <button
+            type="button"
             onClick={() => setShowConversationsList(true)}
-            className="absolute top-3 left-3 z-50 h-9 w-9 p-0 rounded-full bg-background/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50"
-            title="Abrir painel"
+            title="Abrir Fila do dia"
+            aria-label="Abrir Fila do dia"
+            className="fixed left-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-r-lg border border-l-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
           >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
+            <ChevronRight className="h-4 w-4" />
+          </button>
         )}
         {/* Conversation List */}
       <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
@@ -6637,7 +6637,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -6670,7 +6670,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
@@ -6702,7 +6702,7 @@ ${recentMessages}
       )}
 
       {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedAgendaContato.nome}
@@ -6726,7 +6726,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Fluxo Details Panel */}
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
@@ -6757,7 +6757,7 @@ ${recentMessages}
       )}
 
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTelContato.nome}
@@ -6784,7 +6784,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card na aba E-mail */}
       {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="email"
             nome={contatoEmailDetalhe.nome}
@@ -6812,7 +6812,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
@@ -6971,7 +6971,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
       {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
@@ -6999,7 +6999,7 @@ ${recentMessages}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
-        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
+        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}

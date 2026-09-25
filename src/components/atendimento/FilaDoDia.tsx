@@ -135,7 +135,6 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-foreground">Fila do dia</h2>
           <div className="flex items-center gap-1.5">
-            {headerExtra}
             <span className="text-[11px] text-muted-foreground hidden xl:inline">Ordenar por:</span>
             <Select value={ordenacao} onValueChange={(valor) => setOrdenacao(valor as OrdenacaoFila)}>
               <SelectTrigger className="h-8 w-[104px] rounded-lg text-xs bg-card border-border/60">
@@ -147,6 +146,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                 <SelectItem value="nome">Nome</SelectItem>
               </SelectContent>
             </Select>
+            {headerExtra}
           </div>
         </div>
 
