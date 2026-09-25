@@ -16,4 +16,4 @@
 - [x] Remodelar somente o topo do Calendário conforme a referência enviada.
 - [x] Criar a faixa de Atrasados, Hoje e próximos dias com contagens reais.
 - [x] Reposicionar busca, filtros, responsáveis, modos e ação de agendamento.
-- [ ] Validar visualmente o novo Calendário no computador e em tela estreita.
+- [x] Validar visualmente o novo Calendário no computador e em tela estreita.
