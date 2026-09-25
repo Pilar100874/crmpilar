@@ -172,9 +172,9 @@ export function EnvioMassaWizardContent({
             title: `Retorno: Envio em massa (${state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'})`,
             description: description.substring(0, 1000),
             date: format(state.proximaDataContato, 'yyyy-MM-dd'),
-            origem: 'envio_massa',
+            origem: 'campanha',
             origem_sub_item: state.canal,
-            status: 'pendente'
+            status: 'pending'
           });
 
         if (error) {
