@@ -4541,8 +4541,25 @@ ${recentMessages}
     setShowRadialTransferDialog(false);
   };
 
+  // Ampliar/reduzir do painel "Cadastro e vínculos" conforme a aba ativa
+  const painelDetalhesAtivo =
+    activeTab === "chat" ? showClientDetailsChat :
+    activeTab === "agenda" ? showClientDetailsAgenda :
+    activeTab === "email" ? showClientDetailsEmail :
+    activeTab === "orcamento" ? showClientDetailsOrcamento :
+    showClientDetailsFluxo;
+
+  const alternarPainelDetalhes = () => {
+    if (activeTab === "chat") setShowClientDetailsChat((v) => !v);
+    else if (activeTab === "agenda") setShowClientDetailsAgenda((v) => !v);
+    else if (activeTab === "email") setShowClientDetailsEmail((v) => !v);
+    else if (activeTab === "orcamento") setShowClientDetailsOrcamento((v) => !v);
+    else setShowClientDetailsFluxo((v) => !v);
+  };
+
   return (
     <>
+
     {/* Dialog de Chat Privado com Agente */}
     <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0">
@@ -5874,17 +5891,8 @@ ${recentMessages}
         <FilaDoDia
           items={filaItems}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
-          headerExtra={
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowConversationsList(false)}
-              className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
-              title="Ocultar painel"
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
-          }
+          painelAberto={showConversationsList}
+          onTogglePainel={() => setShowConversationsList((valor) => !valor)}
           onEnvioMassa={() => {
             setActiveTab("agenda");
             setAgendaViewMode("default");
@@ -5917,6 +5925,8 @@ ${recentMessages}
             onTrocarCanal={trocarAba}
             onVerCadastro={clienteCabecalho.id ? () => setEditingContatoId(clienteCabecalho.id) : undefined}
             onHistorico={clienteCabecalho.id ? () => abrirHistoricoDoContato({ customerId: clienteCabecalho.id, nome: clienteCabecalho.nome }) : undefined}
+            painelAberto={painelDetalhesAtivo}
+            onTogglePainel={alternarPainelDetalhes}
           />
         )}
         {/* Extras da empresa (localização/qualificação) em tela central */}

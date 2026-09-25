@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Mail, MapPin, MessageCircle, MoreVertical, Phone } from "lucide-react";
+import { CalendarDays, FileText, Mail, MapPin, MessageCircle, MoreVertical, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -19,13 +19,15 @@ interface Props {
   onTrocarCanal: (aba: string) => void;
   onVerCadastro?: () => void;
   onHistorico?: () => void;
+  painelAberto?: boolean;
+  onTogglePainel?: () => void;
 }
 
 const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onVerCadastro, onHistorico }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onVerCadastro, onHistorico, painelAberto, onTogglePainel }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
@@ -56,6 +58,18 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
           <MoreVertical className="h-4 w-4" />
         </Button>
+        {onTogglePainel && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onTogglePainel}
+            title={painelAberto ? "Reduzir cadastro e vínculos" : "Ampliar cadastro e vínculos"}
+            aria-label={painelAberto ? "Reduzir cadastro e vínculos" : "Ampliar cadastro e vínculos"}
+          >
+            {painelAberto ? <PanelRightClose className="h-4 w-4 text-orange-600" /> : <PanelRightOpen className="h-4 w-4 text-orange-600" />}
+          </Button>
+        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
