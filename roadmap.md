@@ -24,3 +24,9 @@
 - [ ] Etapa 6 — Finalização e reagendamento atômicos.
 - [x] Etapa 7 — Envio em massa consolidado.
 - [ ] Validação completa nos tamanhos e fluxos definidos.
+
+## Referência visual do Atendimento
+
+- [ ] Reproduzir no desktop o cabeçalho, a faixa de datas e a fila unificada da referência.
+- [ ] Exibir atendimento multicanal e finalização no centro, mantendo cadastro e vínculos à direita.
+- [ ] Validar o resultado visual e os fluxos principais.

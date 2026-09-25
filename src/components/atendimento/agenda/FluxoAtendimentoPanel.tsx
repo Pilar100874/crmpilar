@@ -100,14 +100,15 @@ export function FluxoAtendimentoPanel({
   initialTaskIndex = 0,
   onNavigateToItem,
   discadorModo = null,
-  tipoContatoFixo = 'telefone',
+  tipoContatoFixo,
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
   const [configDatas, setConfigDatas] = useState<ConfigProximaData[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
-  const tipoContato: string = tipoContatoFixo;
+  const [tipoContatoSelecionado, setTipoContatoSelecionado] = useState<string>(tipoContatoFixo || 'whatsapp');
+  const tipoContato = tipoContatoFixo || tipoContatoSelecionado;
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
   const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
   const [isRecording, setIsRecording] = useState(false);
@@ -161,6 +162,10 @@ export function FluxoAtendimentoPanel({
     setContactMessage("");
     setEmailSubject("");
   }, [currentIndex]);
+
+  useEffect(() => {
+    if (tipoContatoFixo) setTipoContatoSelecionado(tipoContatoFixo);
+  }, [tipoContatoFixo]);
 
   const discarParaAtual = async () => {
     const tarefa = tasks[currentIndex];
@@ -640,12 +645,32 @@ export function FluxoAtendimentoPanel({
             </div>
           )}
 
-          {/* Tipo de contato definido pela aba (Tel = Telefone, Visita = Presencial) */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-medium">Tipo de contato:</span>
-            <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-              {tipoContato === 'presencial' ? 'Visita' : 'Telefone'}
-            </span>
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-muted-foreground">Canais disponíveis</span>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {ALL_TIPOS_CONTATO.map(({ id, label, icon: Icon, requiresData }) => {
+                const indisponivel = requiresData === 'telefone'
+                  ? !currentTask.customers?.telefone
+                  : requiresData === 'email'
+                    ? !currentTask.customers?.email
+                    : false;
+                return (
+                  <Button
+                    key={id}
+                    type="button"
+                    size="sm"
+                    variant={tipoContato === id ? "default" : "outline"}
+                    disabled={!!tipoContatoFixo || indisponivel}
+                    onClick={() => setTipoContatoSelecionado(id)}
+                    className="h-9 gap-1.5"
+                    title={indisponivel ? `O contato não possui ${requiresData} cadastrado` : label}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label === 'Chats' ? 'WhatsApp' : label === 'Presencial' ? 'Visita' : label}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
 
 
