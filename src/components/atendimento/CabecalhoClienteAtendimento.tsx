@@ -17,7 +17,6 @@ interface Props {
   cliente: ClienteCabecalho;
   abaAtiva: string;
   onTrocarCanal: (aba: string) => void;
-  onHistorico?: () => void;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
   filaAberta?: boolean;
@@ -101,22 +100,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 pb-4">
-        <button
-          type="button"
-          className="flex h-8 items-center rounded-full bg-primary/10 px-4 text-sm font-semibold text-primary"
-        >
-          Atendimento
-        </button>
-        <button
-          type="button"
-          onClick={onHistorico}
-          disabled={!onHistorico}
-          className="flex h-8 items-center rounded-full bg-muted px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground disabled:opacity-50"
-        >
-          Histórico
-        </button>
-      </div>
     </div>
   );
 }
