@@ -5925,7 +5925,6 @@ ${recentMessages}
             cliente={clienteCabecalho}
             abaAtiva={activeTab}
             onTrocarCanal={trocarAba}
-            onVerCadastro={clienteCabecalho.id ? () => setEditingContatoId(clienteCabecalho.id) : undefined}
             onHistorico={clienteCabecalho.id ? () => abrirHistoricoDoContato({ customerId: clienteCabecalho.id, nome: clienteCabecalho.nome }) : undefined}
             painelAberto={painelDetalhesAtivo}
             onTogglePainel={alternarPainelDetalhes}

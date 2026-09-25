@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Mail, MapPin, MessageCircle, MoreVertical, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
+import { CalendarDays, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,6 @@ interface Props {
   cliente: ClienteCabecalho;
   abaAtiva: string;
   onTrocarCanal: (aba: string) => void;
-  onVerCadastro?: () => void;
   onHistorico?: () => void;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
@@ -29,7 +28,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onVerCadastro, onHistorico, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
@@ -66,12 +65,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             </p>
           )}
         </div>
-        {onVerCadastro && (
-          <Button variant="outline" size="sm" onClick={onVerCadastro}>Ver cadastro</Button>
-        )}
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
         {onTogglePainel && (
           <Button
             variant="ghost"
