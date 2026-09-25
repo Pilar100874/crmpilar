@@ -83,7 +83,7 @@ import { AtendimentoDetailsSidebar } from "@/components/atendimento/AtendimentoD
 import { MobileAtendimentoFlowNav, type MobileFlowView } from "@/components/atendimento/MobileAtendimentoFlowNav";
 import { useAtendimentoSession, type AtendimentoCanal } from "@/hooks/useAtendimentoSession";
 
-import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
 interface Conversation {
@@ -5628,7 +5628,7 @@ ${recentMessages}
 
           {!((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && agendaViewMode === 'massa') && (
             <MobileAtendimentoFlowNav
-              activeView={(mobileView === "list" ? "agenda" : mobileView === "details" ? "cadastro" : "atendimento") as MobileFlowView}
+              activeView={(finalizarCtx ? "finalizacao" : mobileView === "list" ? "agenda" : mobileView === "details" ? "cadastro" : "atendimento") as MobileFlowView}
               hasContact={!!activeContactId}
               pendingCount={filteredTasks.length}
               onNavigate={(view) => {
@@ -7211,12 +7211,7 @@ ${recentMessages}
           />
         ) : activeTab === "agenda" && showEnvioMassaWizard ? (
           /* Envio em Massa Wizard */
-          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
-            <EnvioMassaWizardContent
-              onClose={() => setShowEnvioMassaWizard(false)}
-              onComplete={loadTodayTasks}
-            />
-          </div>
+          <div className="flex flex-1 items-center justify-center bg-card text-sm text-muted-foreground">Abrindo envio em massa…</div>
         ) : activeTab === "email" ? (
           <AtendimentoEmailPanel
             contato={contatoEmailSelecionado}
@@ -7316,15 +7311,6 @@ ${recentMessages}
                   >
                     {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4 text-orange-600" /> : <ChevronLeft className="h-4 w-4 text-orange-600" />}
                   </Button>
-                </div>
-              )}
-              {/* Desktop: inline wizard */}
-              {activeTab === "agenda" && showEnvioMassaWizard && (
-                <div className="hidden lg:block w-full h-full absolute inset-0">
-                  <EnvioMassaWizardContent
-                    onClose={() => setShowEnvioMassaWizard(false)}
-                    onComplete={loadTodayTasks}
-                  />
                 </div>
               )}
               {activeTab === "orcamento" && (
@@ -7865,14 +7851,12 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
-    {/* Mobile/Tablet: Full screen wizard */}
+    {/* Fluxo único de envio em massa em todos os tamanhos */}
     {showEnvioMassaWizard && (
-      <div className="lg:hidden">
-        <EnvioMassaWizardPanel
-          onClose={() => setShowEnvioMassaWizard(false)}
-          onComplete={loadTodayTasks}
-        />
-      </div>
+      <EnvioMassaWizardPanel
+        onClose={() => setShowEnvioMassaWizard(false)}
+        onComplete={loadTodayTasks}
+      />
     )}
     </>
   );
