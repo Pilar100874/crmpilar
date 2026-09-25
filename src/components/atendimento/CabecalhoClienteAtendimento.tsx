@@ -72,18 +72,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
           <MoreVertical className="h-4 w-4" />
         </Button>
-        {onToggleFila && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onToggleFila}
-            title={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
-            aria-label={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
-          >
-            {filaAberta ? <PanelLeftClose className="h-4 w-4 text-orange-600" /> : <PanelLeftOpen className="h-4 w-4 text-orange-600" />}
-          </Button>
-        )}
         {onTogglePainel && (
           <Button
             variant="ghost"
