@@ -78,7 +78,8 @@ export function UnifiedDetailsPanel({
   onEditEmpresa,
   onCreateContato,
   onCreateEmpresa,
-  onCompanyCardClick
+  onCompanyCardClick,
+  onOcultar
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [extrasPicker, setExtrasPicker] = useState<{ tipo: "localizacao" | "qualificacao"; empresas: any[] } | null>(null);
@@ -375,7 +376,23 @@ export function UnifiedDetailsPanel({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
       <div className="flex-shrink-0 px-4 pt-4">
-        <h3 className="text-lg font-semibold text-foreground">Cadastro e vínculos</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-lg font-semibold text-foreground">Cadastro e vínculos</h3>
+          <div className="flex items-center gap-1">
+            {customerId && onEditContato && (
+              <button type="button" onClick={handleEditContatoClick} title="Abrir cadastro completo" aria-label="Abrir cadastro completo"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+                <Expand className="h-4 w-4" />
+              </button>
+            )}
+            {onOcultar && (
+              <button type="button" onClick={onOcultar} title="Ocultar detalhes" aria-label="Ocultar detalhes"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+                <PanelRightClose className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
         <div className="mt-3 grid grid-cols-2 border-b border-border">
           {(["contato", "empresa"] as const).map((aba) => (
             <button key={aba} type="button" onClick={() => setAbaCadastro(aba)}
@@ -391,7 +408,10 @@ export function UnifiedDetailsPanel({
           <>
             <div>
               <div className="flex items-center justify-between pb-1">
-                <h4 className="text-sm font-semibold text-foreground">Dados do contato</h4>
+                <div className="flex items-baseline gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">Dados do contato</h4>
+                  {!isEditingContato && <span className="text-[10px] italic text-muted-foreground">Clique em um campo para editar</span>}
+                </div>
                 <div className="flex items-center gap-0.5">
                   {isEditingContato ? (
                     <>
