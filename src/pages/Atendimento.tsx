@@ -3785,6 +3785,43 @@ ${recentMessages}
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
+  // Cliente do cartão selecionado — alimenta o cabeçalho com os canais disponíveis.
+  const clienteCabecalho = useMemo(() => {
+    const empresaDe = (lista: any[] | undefined) => {
+      const e = (lista || []).find((x: any) => x?.is_primary) || (lista || [])[0];
+      return e?.empresas?.nome_fantasia || e?.empresas?.nome || null;
+    };
+    if (activeTab === "agenda" && selectedTaskData) {
+      const t: any = selectedTaskData;
+      const c = t.customers || {};
+      const d = t.date ? new Date(t.date) : null;
+      const hoje = startOfDay(new Date());
+      let quando: string | null = null;
+      if (d) {
+        const dia = startOfDay(d).getTime() === hoje.getTime() ? "Hoje" : format(d, "dd/MM", { locale: ptBR });
+        quando = `${dia}${t.time ? `, ${String(t.time).slice(0, 5)}` : ""}`;
+      }
+      return { id: c.id || t.contact_id, nome: c.nome || t.contact_name || "Cliente", empresa: empresaDe(c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: quando, atrasado: !!d && startOfDay(d) < hoje };
+    }
+    if (activeTab === "agenda" && selectedAgendaContato) {
+      const c: any = selectedAgendaContato;
+      return { id: c.id, nome: c.nome, empresa: empresaDe(c.companies), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: c.horario ? `Hoje, ${c.horario}` : null, atrasado: (c.diasAtraso || 0) > 0 };
+    }
+    if (activeTab === "chat" && selectedConv) {
+      const c: any = (selectedConv as any).customer || {};
+      return { id: (selectedConv as any).customer_id || c.id, nome: c.nome || "Cliente", empresa: empresaDe(c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email };
+    }
+    if ((activeTab === "tel" || activeTab === "visita") && selectedTelContato) {
+      const c: any = selectedTelContato;
+      return { id: c.id, nome: c.nome, empresa: empresaDe(c.companies), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: c.horario ? `Hoje, ${c.horario}` : null, atrasado: (c.diasAtraso || 0) > 0 };
+    }
+    if (activeTab === "email" && contatoEmailSelecionado) {
+      const c: any = contatoEmailSelecionado;
+      return { id: c.id, nome: c.nome, email: c.email, telefone: c.telefone, tel: c.tel };
+    }
+    return null;
+  }, [activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado]);
+
   // Update counters based on filtered data
   useEffect(() => {
     const inQueueCount = filteredConversations.filter(c => c.chat_status === 'em_fila').length;
