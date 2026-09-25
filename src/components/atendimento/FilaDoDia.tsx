@@ -305,12 +305,12 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
       </div>
 
       {/* Cabeçalho das colunas */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/30 text-[11px] font-medium text-muted-foreground">
-        {modoSelecao && <span className="w-4" />}
+      <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 border-b border-border/30 text-[11px] font-medium text-muted-foreground">
+        <span className="w-4" />
         <span className="flex-1">Contato</span>
-        <span className="w-[92px] hidden md:block">Motivo / canal</span>
+        <span className="w-[124px] hidden md:block">Motivo / canal</span>
         <span className="w-[52px] text-right">Horário</span>
-        <span className="w-6" />
+        <span className="w-7" />
       </div>
 
       {/* Lista */}
@@ -341,54 +341,48 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   item.onClick();
                 }}
                 className={cn(
-                  "group relative flex items-center gap-2 px-3 py-2.5 border-b border-border/20 cursor-pointer transition-colors",
+                  "group relative flex items-center gap-3 px-3 py-3 border-b border-border/20 cursor-pointer transition-colors",
                   item.selecionado
-                    ? "bg-primary/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-primary"
+                    ? "bg-orange-500/[0.08] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-orange-500"
                     : "hover:bg-muted/40",
-                  marcado && "bg-primary/5",
+                  marcado && "bg-orange-500/[0.08]",
                   item.bloqueado && "opacity-50"
                 )}
               >
-                {modoSelecao && (
-                  <Checkbox
-                    checked={marcado}
-                    onCheckedChange={() => alternarSelecao(item.id)}
-                    onClick={(event) => event.stopPropagation()}
-                    className="shrink-0"
-                  />
-                )}
+                <Checkbox
+                  checked={marcado}
+                  onCheckedChange={() => alternarSelecao(item.id)}
+                  onClick={(event) => event.stopPropagation()}
+                  className="shrink-0"
+                />
 
                 {/* Contato */}
-                <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground/70">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center text-[13px] font-bold text-foreground/70">
                     {iniciais(item.nome)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-foreground leading-tight truncate">
+                    <p className="text-[13px] font-bold text-foreground leading-tight truncate">
                       {item.nome}
                     </p>
                     {item.empresa && (
-                      <p className="text-[11px] text-muted-foreground truncate">{item.empresa}</p>
+                      <p className="text-[12px] text-muted-foreground truncate">{item.empresa}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Motivo / canal */}
-                <div className="w-[92px] shrink-0 hidden md:block">
-                  <p className="text-[11px] text-foreground/80 leading-tight truncate">{item.motivo}</p>
-                  <span
-                    className={cn(
-                      "mt-0.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium",
-                      canalCfg.fundo,
-                      canalCfg.cor
-                    )}
-                  >
-                    <CanalIcon className="h-3 w-3" />
+                <div className="w-[124px] shrink-0 hidden md:block">
+                  <p className="text-[11px] font-medium text-foreground/80 leading-tight truncate">{item.motivo}</p>
+                  <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2 py-1 text-[11px] font-medium text-foreground">
+                    <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
                     {canalCfg.label}
                   </span>
                   {(item.mensagensNovas || 0) > 0 && (
-                    <span className="mt-0.5 block w-fit rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                      {item.mensagensNovas} mensagen{item.mensagensNovas === 1 ? "s" : "s"} nova{item.mensagensNovas === 1 ? "" : "s"}
+                    <span className="mt-1 block w-fit rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                      {item.mensagensNovas === 1
+                        ? "1 mensagem nova"
+                        : `${item.mensagensNovas} mensagens novas`}
                     </span>
                   )}
                 </div>
@@ -414,7 +408,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                     <button
                       type="button"
                       onClick={(event) => event.stopPropagation()}
-                      className="h-6 w-6 shrink-0 rounded-md flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted transition-all"
+                      className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                       aria-label="Mais opções"
                     >
                       <MoreVertical className="h-4 w-4" />
