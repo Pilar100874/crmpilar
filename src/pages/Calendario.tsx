@@ -2764,6 +2764,35 @@ export default function Calendario() {
     };
   });
 
+  const barraSuperiorRef = useRef<HTMLDivElement | null>(null);
+  const [barraAltura, setBarraAltura] = useState(0);
+  const [menuLargura, setMenuLargura] = useState(0);
+
+  useEffect(() => {
+    const el = barraSuperiorRef.current;
+    if (!el) return;
+    const atualizar = () => setBarraAltura(el.offsetHeight);
+    atualizar();
+    const observer = new ResizeObserver(atualizar);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Largura do menu lateral quando travado (fixed) para a barra cobri-lo por cima
+  useEffect(() => {
+    const medirMenu = () => {
+      const el = document.querySelector<HTMLElement>("[data-main-sidebar]");
+      setMenuLargura(el && el.classList.contains("fixed") ? el.offsetWidth : 0);
+    };
+    medirMenu();
+    window.addEventListener("resize", medirMenu);
+    const intervalo = window.setInterval(medirMenu, 1000);
+    return () => {
+      window.removeEventListener("resize", medirMenu);
+      window.clearInterval(intervalo);
+    };
+  }, []);
+
   return (
     <DndContext
       sensors={sensors}
@@ -2771,9 +2800,15 @@ export default function Calendario() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-background font-cardBody">
-      <div className="sticky top-0 z-20 border-b border-border/60 bg-background/95 backdrop-blur-sm">
-        <div className="border-b border-border/50 px-3 py-3 sm:px-5 lg:px-6">
+      <div className="flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
+      <div
+        ref={barraSuperiorRef}
+        className="fixed top-0 left-0 right-0 z-[600] border-b border-border/60 bg-background/95 backdrop-blur-sm"
+      >
+        <div
+          className="border-b border-border/50 py-3 pr-3 sm:pr-5 lg:pr-6"
+          style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <h1 className="font-cardTitle text-xl font-bold text-foreground sm:text-2xl">Minha agenda</h1>
