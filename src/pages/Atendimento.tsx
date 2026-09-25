@@ -5805,34 +5805,41 @@ ${recentMessages}
 
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Tab Navigation - Expandable Icons */}
+          {/* Tab Navigation - pílulas com contadores (estilo "Fila do dia") */}
           <div className={`px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20 ${clienteCabecalho && !isMobile ? "hidden" : ""}`}>
-            <ExpandableTabs
-              tabs={[
-                { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
-                { 
-                  title: "Chats", 
-                  icon: MessageSquare, 
-                  badge: quantidadeCardsChat
-                },
-                { title: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
-                { title: "E-mails", icon: Inbox, badge: quantidadeCardsEmail },
-                { title: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
-                { title: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
-              ]}
-              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : activeTab === "visita" ? 5 : null}
-              onChange={(index) => {
-                if (index === 0) trocarAba("agenda");
-                else if (index === 1) trocarAba("chat");
-                else if (index === 2) trocarAba("tel");
-                else if (index === 3) trocarAba("email");
-                else if (index === 4) trocarAba("orcamento");
-                else if (index === 5) trocarAba("visita");
-              }}
-              activeColor="text-primary"
-              className="w-full justify-center"
-              hideTitles
-            />
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { id: "agenda", label: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
+                { id: "chat", label: "Chats", icon: MessageSquare, badge: quantidadeCardsChat },
+                { id: "tel", label: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
+                { id: "email", label: "E-mails", icon: Inbox, badge: quantidadeCardsEmail },
+                { id: "orcamento", label: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
+                { id: "visita", label: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => trocarAba(tab.id)}
+                    className={`flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary/10 text-primary font-semibold"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                    {tab.badge > 0 && (
+                      <span className={`text-[11px] font-bold ${isActive ? "text-primary" : "text-foreground"}`}>
+                        {tab.badge > 99 ? "99+" : tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Tel Tab - contatos com telefone */}
