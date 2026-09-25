@@ -13,3 +13,7 @@
 - [x] Exibir os indicadores com ícone e número no mesmo padrão.
 - [x] Remover o ícone do canal ao lado de Finalizar.
 - [x] Validar Agenda, Chat e compilação.
+- [x] Remodelar somente o topo do Calendário conforme a referência enviada.
+- [x] Criar a faixa de Atrasados, Hoje e próximos dias com contagens reais.
+- [x] Reposicionar busca, filtros, responsáveis, modos e ação de agendamento.
+- [ ] Validar visualmente o novo Calendário no computador e em tela estreita.
