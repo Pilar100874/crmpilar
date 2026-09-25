@@ -5843,17 +5843,6 @@ ${recentMessages}
             {/* Ações na barra superior ("Minha agenda") via portal */}
             {barraSlot && createPortal(
               <>
-                <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-2 py-1">
-                  <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
-                  <span className="text-xs font-medium text-foreground hidden lg:inline">Usar agenda</span>
-                  <Switch
-                    checked={usarAgenda}
-                    onCheckedChange={setUsarAgenda}
-                    aria-label="Usar agenda"
-                    className="scale-90"
-                  />
-                </div>
-                {seletorEquipe}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
