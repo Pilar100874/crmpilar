@@ -750,11 +750,16 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   // Filtra os menus baseado nas permissões do grupo de acesso
+  // A nova versão herda a permissão do painel atual para aparecer imediatamente
+  // aos grupos que já podem acessar Chats. Ela também pode receber permissão própria.
+  const podeVerMenu = (id: string) =>
+    podeVer(id) || (id === "Painel Atendimento" && podeVer("Painel Chats"));
+
   const visibleMenus = customizedItems
     .map((item) => {
       // Remove os submenus que o grupo de acesso não permite ver
       if (item.subItems && item.subItems.length > 0) {
-        return { ...item, subItems: item.subItems.filter((sub: any) => podeVer(sub.id)) };
+        return { ...item, subItems: item.subItems.filter((sub: any) => podeVerMenu(sub.id)) };
       }
       return item;
     })
@@ -773,7 +778,7 @@ export default function Layout({ children }: LayoutProps) {
         return podeVer(item.id) && (item.subItems.length > 0 || Boolean(item.url));
       }
 
-      return podeVer(item.id);
+      return podeVerMenu(item.id);
     })
     .map((item) => item);
 
