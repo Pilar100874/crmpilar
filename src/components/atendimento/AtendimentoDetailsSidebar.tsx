@@ -16,9 +16,10 @@ function initialWidth() {
 interface AtendimentoDetailsSidebarProps {
   children: ReactNode;
   className?: string;
+  fixedWidth?: number;
 }
 
-export function AtendimentoDetailsSidebar({ children, className }: AtendimentoDetailsSidebarProps) {
+export function AtendimentoDetailsSidebar({ children, className, fixedWidth }: AtendimentoDetailsSidebarProps) {
   const [width, setWidth] = useState(initialWidth);
   const [resizing, setResizing] = useState(false);
 
@@ -42,10 +43,10 @@ export function AtendimentoDetailsSidebar({ children, className }: AtendimentoDe
   return (
     <aside
       className={cn("relative flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-card", className)}
-      style={{ width }}
+      style={{ width: fixedWidth ?? width }}
       aria-label="Cadastro e vínculos"
     >
-      <button
+      {!fixedWidth && <button
         type="button"
         aria-label="Ajustar largura do painel"
         title="Arraste para ajustar a largura"
@@ -56,7 +57,7 @@ export function AtendimentoDetailsSidebar({ children, className }: AtendimentoDe
         className="absolute inset-y-0 left-0 z-20 flex w-3 cursor-col-resize touch-none items-center justify-center text-muted-foreground opacity-0 transition-opacity hover:bg-muted/70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <GripVertical className="h-4 w-4" />
-      </button>
+      </button>}
       {children}
     </aside>
   );
