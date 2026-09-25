@@ -5432,11 +5432,12 @@ ${recentMessages}
 
             {/* Cadastro e vínculos em painel lateral sobreposto no celular */}
             {mobileView === "details" && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 aria-label="Fechar cadastro"
                 onClick={() => setMobileView("main")}
-                className="absolute inset-0 z-30 bg-foreground/20"
+                className="absolute inset-0 z-30 h-auto w-auto rounded-none bg-foreground/20 p-0 hover:bg-foreground/25"
               />
             )}
             <aside
