@@ -2902,7 +2902,9 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 py-2 pr-3 sm:pr-5 lg:pr-6" style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}>
+        {/* Barra de navegação/filtros movida para dentro do calendário (área de conteúdo) */}
+
+        <div className="hidden flex-wrap items-center justify-between gap-2 py-2 pr-3 sm:pr-5 lg:pr-6" style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
