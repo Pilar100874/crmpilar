@@ -434,28 +434,7 @@ export function getEffectiveMainCustomization(
   }
 
   if (missing.length === 0) return migrated;
-
-  // Mantém novos subitens dentro da mesma categoria do menu-base, mesmo
-  // quando a personalização do usuário foi salva antes de eles existirem.
-  const missingIds = new Set(missing.map((node) => node.kind === "program" ? node.programId : ""));
-  const roots = migrated.roots.map((root) => {
-    if (root.kind !== "container") return root;
-    const baseId = root.id.startsWith("c-") ? root.id.slice(2) : root.id;
-    const baseParent = base.find((item) => item.id === baseId);
-    if (!baseParent?.subItems) return root;
-    const childrenToAdd = baseParent.subItems
-      .filter((item) => missingIds.has(item.id))
-      .map((item): CustomNode => ({ kind: "program", programId: item.id }));
-    childrenToAdd.forEach((node) => {
-      if (node.kind === "program") missingIds.delete(node.programId);
-    });
-    return childrenToAdd.length > 0
-      ? { ...root, children: [...root.children, ...childrenToAdd] }
-      : root;
-  });
-
-  const remaining = missing.filter((node) => node.kind === "program" && missingIds.has(node.programId));
-  return { ...migrated, roots: [...roots, ...remaining] };
+  return { ...migrated, roots: [...migrated.roots, ...missing] };
 }
 
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {

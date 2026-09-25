@@ -41,7 +41,6 @@ export const menuStructure: MenuCategory[] = [
     icon: LucideIcons.MessageSquare,
     subItems: [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: LucideIcons.MessageSquare },
-      { id: "Painel Atendimento", title: "Painel de Atendimento", url: "/painel-atendimento", icon: LucideIcons.ContactRound },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: LucideIcons.Activity },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: LucideIcons.TestTube2 },
       { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: LucideIcons.Settings },

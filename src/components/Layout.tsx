@@ -47,7 +47,6 @@ import {
   LifeBuoy,
   RefreshCw,
   AppWindow,
-  ContactRound,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -157,7 +156,6 @@ export const menuItems: MenuItem[] = [
     icon: MessageSquare,
     subItems: [
       { id: "Painel Chats", title: "Painel de Chats", url: "/atendimento", icon: MessageSquare },
-      { id: "Painel Atendimento", title: "Painel de Atendimento", url: "/painel-atendimento", icon: ContactRound },
       { id: "Agentes IA", title: "Agentes IA", url: "/agentes-chat", icon: LucideIcons.Bot },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
@@ -750,16 +748,11 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   // Filtra os menus baseado nas permissões do grupo de acesso
-  // A nova versão herda a permissão do painel atual para aparecer imediatamente
-  // aos grupos que já podem acessar Chats. Ela também pode receber permissão própria.
-  const podeVerMenu = (id: string) =>
-    podeVer(id) || (id === "Painel Atendimento" && podeVer("Painel Chats"));
-
   const visibleMenus = customizedItems
     .map((item) => {
       // Remove os submenus que o grupo de acesso não permite ver
       if (item.subItems && item.subItems.length > 0) {
-        return { ...item, subItems: item.subItems.filter((sub: any) => podeVerMenu(sub.id)) };
+        return { ...item, subItems: item.subItems.filter((sub: any) => podeVer(sub.id)) };
       }
       return item;
     })
@@ -778,7 +771,7 @@ export default function Layout({ children }: LayoutProps) {
         return podeVer(item.id) && (item.subItems.length > 0 || Boolean(item.url));
       }
 
-      return podeVerMenu(item.id);
+      return podeVer(item.id);
     })
     .map((item) => item);
 

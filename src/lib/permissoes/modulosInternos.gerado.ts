@@ -44,20 +44,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Visita"
     }
   ],
-  "Painel Atendimento": [
-    {
-      "id": "todos",
-      "label": "Tudo"
-    },
-    {
-      "id": "agendados",
-      "label": "Agendados"
-    },
-    {
-      "id": "recebidos",
-      "label": "Recebidos"
-    }
-  ],
   "Config Atendimento": [
     {
       "id": "ferramentas",

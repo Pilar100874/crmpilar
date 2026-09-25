@@ -21,7 +21,6 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Chats / Atendimento
   { id: "Atendimento", label: "Chats (Categoria)", category: "Chats" },
   { id: "Painel Chats", label: "Painel de Chats", category: "Chats" },
-  { id: "Painel Atendimento", label: "Painel de Atendimento", category: "Chats" },
   { id: "Monitor de Filas", label: "Monitor de Filas", category: "Chats" },
   { id: "Monitor de Funcionários", label: "Monitor de Funcionários", category: "Chats" },
   { id: "Teste Roteamento", label: "Teste de Roteamento", category: "Chats" },
