@@ -87,7 +87,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-sm text-muted-foreground">Canais disponíveis:</span>
         {canais.map((c) => {
           const Icon = c.icon;
           const ativo = abaAtiva === c.aba;
@@ -96,13 +95,14 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
               key={c.aba}
               type="button"
               onClick={() => onTrocarCanal(c.aba)}
+              title={c.label}
+              aria-label={c.label}
               className={cn(
-                "flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors",
+                "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
                 ativo ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40",
               )}
             >
               <Icon className={cn("h-4 w-4", c.cor)} />
-              {c.label}
             </button>
           );
         })}
