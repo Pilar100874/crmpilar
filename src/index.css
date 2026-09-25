@@ -1178,3 +1178,6 @@ html,
 body {
   overscroll-behavior-y: none;
 }
+
+/* Calendário embutido abaixo do cabeçalho do cliente não reserva espaço da barra fixa */
+.cabecalho-cliente-ativo .calendario-raiz { padding-top: 0 !important; }

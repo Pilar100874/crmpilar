@@ -2806,7 +2806,7 @@ export default function Calendario() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
+      <div className="calendario-raiz flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
       <div
         ref={barraSuperiorRef}
         className="fixed top-0 left-0 right-0 z-[600] border-b border-border/60 bg-background/95 backdrop-blur-sm"
