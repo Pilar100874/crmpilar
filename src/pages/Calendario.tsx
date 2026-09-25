@@ -2943,18 +2943,6 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         </div>
         )}
 
-        {/* Aba para reexpandir a faixa de dias quando recolhida */}
-        {diasRecolhidos && (
-          <button
-            type="button"
-            onClick={alternarDias}
-            title="Mostrar dias"
-            aria-label="Mostrar dias"
-            className="absolute -bottom-5 left-1/2 z-10 flex h-5 w-14 -translate-x-1/2 items-center justify-center rounded-b-lg bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90"
-          >
-            <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        )}
 
         {/* Dialog de filtros (compartilhado) */}
         <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
