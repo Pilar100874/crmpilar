@@ -50,6 +50,10 @@ interface Task {
     nome?: string;
     email?: string;
     telefone?: string;
+    customer_empresas?: Array<{
+      is_primary?: boolean;
+      empresas?: { nome_fantasia?: string; nome?: string };
+    }>;
   };
 }
 
