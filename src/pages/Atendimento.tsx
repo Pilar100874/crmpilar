@@ -5122,7 +5122,7 @@ ${recentMessages}
           )}
 
           {/* Mobile Content Area */}
-          <div className="flex-1 overflow-hidden relative">
+          <div key={activeTab} className="flex-1 overflow-hidden relative animate-wipe-in">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
             {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && (
               <div className="absolute inset-0 z-20 bg-background overflow-hidden">

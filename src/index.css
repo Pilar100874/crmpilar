@@ -1181,3 +1181,12 @@ body {
 
 /* Calendário embutido abaixo do cabeçalho do cliente não reserva espaço da barra fixa */
 .cabecalho-cliente-ativo .calendario-raiz, .atendimento-com-barra .calendario-raiz { padding-top: 0 !important; }
+
+/* ============ Efeito wipe ao abrir quadros (atendimento) ============ */
+@keyframes wipe-in {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+.animate-wipe-in {
+  animation: wipe-in 0.28s ease-out both;
+}
