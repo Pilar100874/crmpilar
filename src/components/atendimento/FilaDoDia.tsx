@@ -9,6 +9,8 @@ import {
   MessageCircle,
   CalendarClock,
   Inbox,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -72,9 +74,11 @@ interface FilaDoDiaProps {
   onConfigurarRegra: () => void;
   vazioTexto?: string;
   headerExtra?: React.ReactNode;
+  painelAberto?: boolean;
+  onTogglePainel?: () => void;
 }
 
-export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra }: FilaDoDiaProps) {
+export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel }: FilaDoDiaProps) {
   const [filtro, setFiltro] = useState<FiltroFila>("tudo");
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const [modoSelecao, setModoSelecao] = useState(false);
@@ -146,6 +150,34 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                 <SelectItem value="nome">Nome</SelectItem>
               </SelectContent>
             </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  aria-label="Mais opções"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={alternarModoSelecao}>
+                  {modoSelecao ? "Cancelar seleção" : "Selecionar contatos"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {onTogglePainel && (
+              <button
+                type="button"
+                onClick={onTogglePainel}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-orange-600 hover:bg-primary/10 transition-colors"
+                title={painelAberto ? "Reduzir fila do dia" : "Ampliar fila do dia"}
+                aria-label={painelAberto ? "Reduzir fila do dia" : "Ampliar fila do dia"}
+              >
+                {painelAberto ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+              </button>
+            )}
             {headerExtra}
           </div>
         </div>
