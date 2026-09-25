@@ -4541,8 +4541,25 @@ ${recentMessages}
     setShowRadialTransferDialog(false);
   };
 
+  // Ampliar/reduzir do painel "Cadastro e vínculos" conforme a aba ativa
+  const painelDetalhesAtivo =
+    activeTab === "chat" ? showClientDetailsChat :
+    activeTab === "agenda" ? showClientDetailsAgenda :
+    activeTab === "email" ? showClientDetailsEmail :
+    activeTab === "orcamento" ? showClientDetailsOrcamento :
+    showClientDetailsFluxo;
+
+  const alternarPainelDetalhes = () => {
+    if (activeTab === "chat") setShowClientDetailsChat((v) => !v);
+    else if (activeTab === "agenda") setShowClientDetailsAgenda((v) => !v);
+    else if (activeTab === "email") setShowClientDetailsEmail((v) => !v);
+    else if (activeTab === "orcamento") setShowClientDetailsOrcamento((v) => !v);
+    else setShowClientDetailsFluxo((v) => !v);
+  };
+
   return (
     <>
+
     {/* Dialog de Chat Privado com Agente */}
     <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0">
