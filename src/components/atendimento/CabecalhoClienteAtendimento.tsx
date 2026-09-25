@@ -35,7 +35,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
   ].filter((c) => c.ok);
 
   return (
-    <div className="flex-shrink-0 border-b border-border bg-card px-5 pt-4" style={{ marginTop: "var(--calendario-barra, 0px)" }}>
+    <div className="flex-shrink-0 border-b border-border bg-card px-5 pt-4">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-muted text-lg font-semibold text-foreground">
           {iniciais(cliente.nome)}
