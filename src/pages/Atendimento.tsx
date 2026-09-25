@@ -3943,6 +3943,100 @@ ${recentMessages}
     orcamentosVisiveis.map((orcamento) => orcamento.empresa_id || `sem-empresa-${orcamento.cliente_id || "geral"}`),
   ).size;
 
+  // Itens unificados da "Fila do dia" (coluna esquerda desktop)
+  const filaItems = useMemo<FilaItem[]>(() => {
+    const lista: FilaItem[] = [];
+
+    // Agendados: tarefas da agenda
+    filteredTasks.forEach((task: any) => {
+      const ce = task.customers?.customer_empresas || [];
+      const principal = ce.find((c: any) => c.is_primary) || ce[0];
+      const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
+      const nome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title || "").nome.replace(/^tarefa\s*[:\-]?\s*/i, "") || "Sem nome";
+      const motivo = parseTituloCartao(task.title || "").nome || task.title || "Retorno";
+      const canal: FilaCanal = task.customers?.telefone
+        ? "whatsapp"
+        : task.customers?.tel
+          ? "telefone"
+          : task.customers?.email
+            ? "email"
+            : "telefone";
+      const agora = new Date();
+      const horaAtual = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
+      const atrasado = (task.diasAtraso || 0) > 0 || (!!task.time && task.time < horaAtual);
+      lista.push({
+        id: `task-${task.id}`,
+        tipo: "agendado",
+        contactId: task.contact_id,
+        nome,
+        empresa: empresaNome,
+        motivo,
+        canal,
+        horario: task.time || "",
+        atrasado,
+        selecionado: selectedTaskId === task.id,
+        bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
+        onClick: () => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setActiveTab("agenda");
+          setSelectedTaskId(task.id);
+          setSelectedTaskData(task);
+          setSelectedAgendaContato(null);
+          openDetailsPanel(setShowClientDetailsAgenda);
+          setAgendaViewMode("default");
+          setDiscadorModo(null);
+        },
+      });
+    });
+
+    // Recebidos: conversas aguardando atendimento
+    filteredConversations
+      .filter((conv) => conv.chat_status === "em_fila" || conv.chat_status === "novo")
+      .forEach((conv) => {
+        const phone = normalizePhone(conv.customer?.telefone);
+        const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
+        lista.push({
+          id: `conv-${conv.id}`,
+          tipo: "recebido",
+          contactId: conv.customer_id,
+          nome: conv.customer?.nome || "Sem nome",
+          empresa: empresaNome,
+          motivo: "Mensagem recebida",
+          canal: "whatsapp",
+          horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
+          mensagensNovas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0,
+          selecionado: selectedConversation === conv.id,
+          onClick: () => {
+            if (bloquearTrocaClientePendente(conv.customer_id)) return;
+            setActiveTab("chat");
+            setSelectedConversation(conv.id);
+            openDetailsPanel(setShowClientDetailsChat);
+          },
+        });
+      });
+
+    // Recebidos: e-mails não lidos
+    filteredEmails
+      .filter((email) => !email.read)
+      .forEach((email) => {
+        lista.push({
+          id: `email-${email.id}`,
+          tipo: "recebido",
+          nome: (email as any).from_name || email.from_email || "Sem nome",
+          motivo: "E-mail recebido",
+          canal: "email",
+          horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
+          selecionado: selectedEmailId === email.id,
+          onClick: () => {
+            setActiveTab("email");
+            setSelectedEmailId(email.id);
+          },
+        });
+      });
+
+    return lista;
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento]);
+
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
