@@ -5437,6 +5437,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
+            onOcultar={() => setShowClientDetailsChat(false)}
                 />
               )}
               {activeTab === "agenda" && selectedTaskData && (
@@ -5465,6 +5466,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+            onOcultar={() => setShowClientDetailsAgenda(false)}
                 />
               )}
               {activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && (
@@ -5484,6 +5486,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+            onOcultar={() => setShowClientDetailsAgenda(false)}
                 />
               )}
               {activeTab === "email" && selectedEmailData && (
@@ -5521,6 +5524,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
+            onOcultar={() => setShowClientDetailsEmail(false)}
                 />
               )}
               {activeTab === "orcamento" && selectedOrcamentoData && (
@@ -5555,6 +5559,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+            onOcultar={() => setShowClientDetailsOrcamento(false)}
                 />
               )}
               {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === "default" && selectedTelContato && (
@@ -5577,6 +5582,7 @@ ${recentMessages}
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
+            onOcultar={() => setShowClientDetailsFluxo(false)}
                 />
               )}
             </div>
@@ -7356,9 +7362,38 @@ ${recentMessages}
       </div>
       )}
 
+      {/* Botão flutuante para reabrir o painel de detalhes quando estiver oculto (desktop) */}
+      {!isMobile && !orcamentoSheetOpen && (() => {
+        const painelOculto =
+          (activeTab === "chat" && selectedConv && !showClientDetailsChat) ||
+          (activeTab === "agenda" && (selectedTaskData || selectedAgendaContato) && !showClientDetailsAgenda && agendaViewMode === 'default') ||
+          ((activeTab === "tel" || activeTab === "visita") && selectedTelContato && !showClientDetailsFluxo) ||
+          (activeTab === "email" && (contatoEmailDetalhe || selectedEmailData) && !showClientDetailsEmail) ||
+          (activeTab === "orcamento" && contatoOrcamentoDetalhe && !showClientDetailsOrcamento);
+        if (!painelOculto) return null;
+        const reabrir = () => {
+          if (activeTab === "chat") setShowClientDetailsChat(true);
+          else if (activeTab === "agenda") setShowClientDetailsAgenda(true);
+          else if (activeTab === "tel" || activeTab === "visita") setShowClientDetailsFluxo(true);
+          else if (activeTab === "email") setShowClientDetailsEmail(true);
+          else if (activeTab === "orcamento") setShowClientDetailsOrcamento(true);
+        };
+        return (
+          <button
+            type="button"
+            onClick={reabrir}
+            title="Mostrar detalhes"
+            aria-label="Mostrar detalhes"
+            className="fixed right-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-l-lg border border-r-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        );
+      })()}
+
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -7384,13 +7419,14 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
+            onOcultar={() => setShowClientDetailsChat(false)}
           />
         </div>
       )}
 
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
@@ -7416,12 +7452,13 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+            onOcultar={() => setShowClientDetailsAgenda(false)}
           />
         </div>
       )}
 
       {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedAgendaContato.nome}
@@ -7438,13 +7475,14 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+            onOcultar={() => setShowClientDetailsAgenda(false)}
           />
         </div>
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
@@ -7469,12 +7507,13 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
+            onOcultar={() => setShowClientDetailsFluxo(false)}
           />
         </div>
       )}
 
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTelContato.nome}
@@ -7494,13 +7533,14 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
+            onOcultar={() => setShowClientDetailsFluxo(false)}
           />
         </div>
       )}
 
       {/* Detalhes do cliente ao clicar no card na aba E-mail */}
       {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="email"
             nome={contatoEmailDetalhe.nome}
@@ -7521,13 +7561,14 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
+            onOcultar={() => setShowClientDetailsEmail(false)}
           />
         </div>
       )}
 
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
@@ -7562,6 +7603,7 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
+            onOcultar={() => setShowClientDetailsEmail(false)}
           />
         </div>
       )}
@@ -7685,7 +7727,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
       {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
@@ -7706,13 +7748,14 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+            onOcultar={() => setShowClientDetailsOrcamento(false)}
           />
         </div>
       )}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
-        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:z-[650] lg:w-[400px] lg:shadow-2xl`}>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}
@@ -7744,6 +7787,7 @@ ${recentMessages}
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+            onOcultar={() => setShowClientDetailsOrcamento(false)}
           />
         </div>
       )}
