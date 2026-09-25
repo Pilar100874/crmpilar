@@ -165,6 +165,7 @@ export default {
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "tv-blink": "tv-blink 0.9s ease-in-out infinite",
+        "wipe-in": "wipe-in 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },
   },
