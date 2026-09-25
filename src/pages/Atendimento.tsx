@@ -35,6 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
+import { FinalizarProximoContatoInline } from "@/components/atendimento/FinalizarProximoContatoInline";
 import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
@@ -5685,7 +5686,13 @@ ${recentMessages}
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
-        <div className="h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative">
+        <div className="atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative" style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
+        {/* Mantém a barra "Minha agenda" visível em todas as abas */}
+        {activeTab !== "agenda" && (
+          <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
+            <Suspense fallback={null}><ModuloCalendario /></Suspense>
+          </div>
+        )}
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <Button
@@ -6764,10 +6771,10 @@ ${recentMessages}
                       <PanelLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     </Button>
                   )}
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                  <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center ${clienteCabecalho ? "hidden" : ""}`}>
                     <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   </div>
-                  <div>
+                  <div className={clienteCabecalho ? "hidden" : ""}>
                     <h3 className="font-semibold text-xs md:text-sm">
                       {selectedConv.customer?.nome || "Cliente"}
                     </h3>
@@ -7328,6 +7335,16 @@ ${recentMessages}
               )}
             </div>
           </div>
+        )}
+        {clienteCabecalho?.id && !isMobile && (activeTab === "chat" || activeTab === "email") && usuarioId && estabelecimentoId && (
+          <FinalizarProximoContatoInline
+            key={`${clienteCabecalho.id}-${activeTab}`}
+            contato={{ id: clienteCabecalho.id, nome: clienteCabecalho.nome }}
+            canalInicial={activeTab === "email" ? "email" : "whatsapp"}
+            usuarioId={usuarioId}
+            estabelecimentoId={estabelecimentoId}
+            onFinalizado={() => void loadTodayTasks()}
+          />
         )}
       </div>
       )}

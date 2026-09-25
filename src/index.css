@@ -1180,4 +1180,4 @@ body {
 }
 
 /* Calendário embutido abaixo do cabeçalho do cliente não reserva espaço da barra fixa */
-.cabecalho-cliente-ativo .calendario-raiz { padding-top: 0 !important; }
+.cabecalho-cliente-ativo .calendario-raiz, .atendimento-com-barra .calendario-raiz { padding-top: 0 !important; }
