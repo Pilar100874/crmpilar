@@ -6449,6 +6449,7 @@ ${recentMessages}
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
                         setSelectedAgendaContato(null);
+                         setFluxoInitialIndex(Math.max(0, desktopQueueTasks.findIndex((item: any) => item.id === task.id)));
                         openDetailsPanel(setShowClientDetailsAgenda);
                         setAgendaViewMode('default');
                         setDiscadorModo(null);
@@ -7278,6 +7279,37 @@ ${recentMessages}
               </Button>
             </div>
           </div>
+        ) : activeTab === "agenda" && selectedTaskData && agendaViewMode === 'default' ? (
+          <FluxoAtendimentoPanel
+            tasks={desktopQueueTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onTaskCompleted={loadTodayTasks}
+            onClose={() => {
+              setSelectedTaskId(null);
+              setSelectedTaskData(null);
+            }}
+            onCurrentTaskChange={(task) => {
+              setSelectedTaskData(task);
+              setSelectedTaskId(task?.id || null);
+            }}
+            showDetails={showClientDetailsAgenda}
+            onToggleDetails={() => setShowClientDetailsAgenda(!showClientDetailsAgenda)}
+            initialTaskIndex={fluxoInitialIndex}
+            onNavigateToItem={(type, id) => {
+              if (type === 'chat') {
+                setActiveTab('chat');
+                setSelectedConversation(id);
+              } else if (type === 'email') {
+                setActiveTab('email');
+                setSelectedEmailId(id);
+              } else {
+                setActiveTab('orcamento');
+                setSelectedOrcamentoId(id);
+                setOrcamentoSheetOpen(true);
+              }
+            }}
+          />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
           <EnvioMassaPanel
