@@ -2797,13 +2797,16 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
     if (barraAltura > 0) document.documentElement.style.setProperty("--calendario-barra", `${barraAltura}px`);
   }, [barraAltura]);
   useEffect(() => {
+    // Conta instâncias montadas: o calendário central do Atendimento desmonta ao trocar de canal,
+    // mas a barra superior continua — só remove a variável quando não sobrar nenhuma instância.
+    (window as any).__calendarioInstancias = ((window as any).__calendarioInstancias || 0) + 1;
     return () => {
-      const t = window.setTimeout(() => {
-        if (!document.querySelector("[data-calendario-barra]")) {
+      (window as any).__calendarioInstancias = Math.max(0, ((window as any).__calendarioInstancias || 1) - 1);
+      window.setTimeout(() => {
+        if (!(window as any).__calendarioInstancias) {
           document.documentElement.style.removeProperty("--calendario-barra");
         }
       }, 300);
-      void t;
     };
   }, []);
 
