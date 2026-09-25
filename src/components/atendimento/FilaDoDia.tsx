@@ -25,6 +25,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -68,6 +73,13 @@ function iniciais(nome: string): string {
     .toUpperCase();
 }
 
+export interface AssumirContatosConfig {
+  grupos: { titulo: string; itens: { id: string; nome: string }[] }[];
+  assumidos: string[];
+  onAlternar: (id: string, marcado: boolean) => void;
+  onLimpar: () => void;
+}
+
 interface FilaDoDiaProps {
   items: FilaItem[];
   onEnvioMassa: (idsSelecionados: string[]) => void;
@@ -76,10 +88,18 @@ interface FilaDoDiaProps {
   headerExtra?: React.ReactNode;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
+  filtro?: FiltroFila;
+  onFiltroChange?: (filtro: FiltroFila) => void;
+  assumirContatos?: AssumirContatosConfig;
 }
 
-export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel }: FilaDoDiaProps) {
-  const [filtro, setFiltro] = useState<FiltroFila>("tudo");
+export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos }: FilaDoDiaProps) {
+  const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
+  const filtro = filtroProp ?? filtroInterno;
+  const setFiltro = (valor: FiltroFila) => {
+    setFiltroInterno(valor);
+    onFiltroChange?.(valor);
+  };
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -165,6 +185,46 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   {modoSelecao ? "Cancelar seleção" : "Selecionar contatos"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
+                {assumirContatos && assumirContatos.grupos.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        {assumirContatos.assumidos.length === 0
+                          ? "Assumir contatos de..."
+                          : `Assumindo ${assumirContatos.assumidos.length} pessoa${assumirContatos.assumidos.length > 1 ? "s" : ""}`}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="max-h-80 w-64 overflow-y-auto">
+                        {assumirContatos.assumidos.length > 0 && (
+                          <DropdownMenuItem onClick={assumirContatos.onLimpar}>Limpar seleção</DropdownMenuItem>
+                        )}
+                        {assumirContatos.grupos.map((grupo) => (
+                          <div key={grupo.titulo}>
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {grupo.titulo}
+                            </DropdownMenuLabel>
+                            {grupo.itens.map((pessoa) => (
+                              <label
+                                key={pessoa.id}
+                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-accent"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <Checkbox
+                                  checked={assumirContatos.assumidos.includes(pessoa.id)}
+                                  onCheckedChange={(valor) => assumirContatos.onAlternar(pessoa.id, valor === true)}
+                                />
+                                <span className="truncate">{pessoa.nome}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ))}
+                        <p className="px-2 pt-2 text-[10px] text-muted-foreground">
+                          Seus contatos continuam aparecendo. Ao marcar um gerente, os vendedores dele também entram.
+                        </p>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             {onTogglePainel && (
