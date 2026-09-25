@@ -35,7 +35,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
-import { FinalizarProximoContatoInline } from "@/components/atendimento/FinalizarProximoContatoInline";
 import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
@@ -6639,16 +6638,6 @@ ${recentMessages}
               )}
             </div>
           </div>
-        )}
-        {clienteCabecalho?.id && !isMobile && (activeTab === "chat" || activeTab === "email") && usuarioId && estabelecimentoId && (
-          <FinalizarProximoContatoInline
-            key={`${clienteCabecalho.id}-${activeTab}`}
-            contato={{ id: clienteCabecalho.id, nome: clienteCabecalho.nome }}
-            canalInicial={activeTab === "email" ? "email" : "whatsapp"}
-            usuarioId={usuarioId}
-            estabelecimentoId={estabelecimentoId}
-            onFinalizado={() => void loadTodayTasks()}
-          />
         )}
       </div>
       )}
