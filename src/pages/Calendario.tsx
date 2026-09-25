@@ -2889,7 +2889,7 @@ export default function Calendario() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-5 lg:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2 pr-3 sm:pr-5 lg:pr-6" style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
