@@ -35,6 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
+import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
 import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
@@ -77,7 +78,7 @@ import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoC
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
-import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
+import { abrirHistoricoDoContato, ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -6645,6 +6646,15 @@ ${recentMessages}
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+        {clienteCabecalho && !isMobile && (
+          <CabecalhoClienteAtendimento
+            cliente={clienteCabecalho}
+            abaAtiva={activeTab}
+            onTrocarCanal={trocarAba}
+            onVerCadastro={clienteCabecalho.id ? () => setEditingContatoId(clienteCabecalho.id) : undefined}
+            onHistorico={clienteCabecalho.id ? () => abrirHistoricoDoContato({ customerId: clienteCabecalho.id, nome: clienteCabecalho.nome }) : undefined}
+          />
+        )}
         {/* Extras da empresa (localização/qualificação) em tela central */}
         {extrasEmpresa && (
           <EmpresaExtrasOverlay
