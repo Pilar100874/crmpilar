@@ -3971,7 +3971,7 @@ ${recentMessages}
         empresa: empresaNome,
         motivo,
         canal,
-        horario: task.time || "",
+        horario: (task.time || "").slice(0, 5),
         atrasado,
         selecionado: selectedTaskId === task.id,
         bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
