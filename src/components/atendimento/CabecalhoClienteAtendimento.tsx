@@ -41,6 +41,18 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
   return (
     <div className="flex-shrink-0 border-b border-border bg-card px-5 pt-4">
       <div className="flex items-start gap-4">
+        {onToggleFila && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 flex-shrink-0"
+            onClick={onToggleFila}
+            title={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
+            aria-label={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
+          >
+            {filaAberta ? <PanelLeftClose className="h-4 w-4 text-orange-600" /> : <PanelLeftOpen className="h-4 w-4 text-orange-600" />}
+          </Button>
+        )}
         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-muted text-lg font-semibold text-foreground">
           {iniciais(cliente.nome)}
         </div>
@@ -60,18 +72,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
           <MoreVertical className="h-4 w-4" />
         </Button>
-        {onToggleFila && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onToggleFila}
-            title={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
-            aria-label={filaAberta ? "Recolher fila do dia" : "Ampliar fila do dia"}
-          >
-            {filaAberta ? <PanelLeftClose className="h-4 w-4 text-orange-600" /> : <PanelLeftOpen className="h-4 w-4 text-orange-600" />}
-          </Button>
-        )}
         {onTogglePainel && (
           <Button
             variant="ghost"
