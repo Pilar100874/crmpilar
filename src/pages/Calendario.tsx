@@ -368,8 +368,8 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
+  const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
@@ -2869,7 +2869,11 @@ export default function Calendario() {
                 <button
                   type="button"
                   key={resumo.date.toISOString()}
-                  onClick={() => setCurrentDate(resumo.date)}
+                  onClick={() => {
+                    setCurrentDate(resumo.date);
+                    // Abre o calendário na área central (aba Agenda do Atendimento) no dia clicado
+                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString() } }));
+                  }}
                   className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:px-6 ${selecionado ? "bg-primary/10" : ""}`}
                 >
                   <span>

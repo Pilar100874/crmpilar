@@ -190,7 +190,24 @@ export default function Atendimento() {
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedTaskData, setSelectedTaskData] = useState<any>(null);
   const [selectedEmailData, setSelectedEmailData] = useState<any>(null);
+  // Data escolhida na barra "Minha agenda" para abrir o calendário na área central
+  const [dataAgendaCentral, setDataAgendaCentral] = useState<Date | null>(null);
   const clientePendenteTrocaAbaRef = useRef<string | null>(null);
+
+  // Clique numa data da barra superior abre o calendário central nessa data
+  useEffect(() => {
+    const abrirData = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.data) return;
+      setActiveTab("agenda");
+      setAgendaViewMode("default");
+      setDataAgendaCentral(new Date(detail.data));
+    };
+    window.addEventListener("calendario:abrir-data", abrirData);
+    return () => window.removeEventListener("calendario:abrir-data", abrirData);
+  }, []);
+
+
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -291,6 +308,14 @@ export default function Atendimento() {
   
   // Tab states
   const [activeTab, setActiveTab] = useState("agenda");
+
+  // Limpa a data inicial depois que o calendário central já montou com ela
+  useEffect(() => {
+    if (activeTab === "agenda" && dataAgendaCentral) {
+      const t = window.setTimeout(() => setDataAgendaCentral(null), 0);
+      return () => window.clearTimeout(t);
+    }
+  }, [activeTab, dataAgendaCentral]);
   // Flag "Usar agenda": ligada usa os contatos da agenda do dia; desligada usa os contatos vinculados ao usuário
   const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -6575,7 +6600,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario />
+                    <ModuloCalendario dataInicial={dataAgendaCentral ?? undefined} />
                   </Suspense>
                   <Button
                     size="sm"
