@@ -5803,17 +5803,17 @@ ${recentMessages}
             <Suspense fallback={null}><ModuloCalendario /></Suspense>
           </div>
         )}
-        {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
+        {/* Abinha para reabrir a Fila do dia quando encolhida (igual ao painel de detalhes) */}
         {!showConversationsList && !orcamentoSheetOpen && (
-          <Button
-            size="sm"
-            variant="ghost"
+          <button
+            type="button"
             onClick={() => setShowConversationsList(true)}
-            className="absolute top-3 left-3 z-50 h-9 w-9 p-0 rounded-full bg-background/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50"
-            title="Abrir painel"
+            title="Abrir Fila do dia"
+            aria-label="Abrir Fila do dia"
+            className="fixed left-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-r-lg border border-l-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
           >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
+            <ChevronRight className="h-4 w-4" />
+          </button>
         )}
         {/* Conversation List */}
       <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
