@@ -2923,7 +2923,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                         onClick={(event) => { event.stopPropagation(); setViewMode("week"); }}
                         className={`rounded px-2 py-1 ${viewMode === "week" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
                       >Semana</span>
-                    </span>
+                      </span>
+                    </>
                   )}
                 </button>
               );
