@@ -2792,10 +2792,20 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   }, []);
 
   // Expõe a altura da barra fixa para telas que embutem o calendário (ex.: Atendimento)
+  // Não zera ao remontar (troca de canal) para evitar "pulo"/pisca do layout.
   useEffect(() => {
-    document.documentElement.style.setProperty("--calendario-barra", `${barraAltura}px`);
-    return () => { document.documentElement.style.removeProperty("--calendario-barra"); };
+    if (barraAltura > 0) document.documentElement.style.setProperty("--calendario-barra", `${barraAltura}px`);
   }, [barraAltura]);
+  useEffect(() => {
+    return () => {
+      const t = window.setTimeout(() => {
+        if (!document.querySelector("[data-calendario-barra]")) {
+          document.documentElement.style.removeProperty("--calendario-barra");
+        }
+      }, 300);
+      void t;
+    };
+  }, []);
 
   // Largura do menu lateral quando travado (fixed) para a barra cobri-lo por cima
   useEffect(() => {
