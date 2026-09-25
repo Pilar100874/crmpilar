@@ -7,7 +7,7 @@
 - [x] Implementar atendimento responsivo em desktop, tablet e celular.
 - [x] Integrar cadastro e vínculos no painel contextual.
 - [x] Integrar finalização/reagendamento e envio em massa.
-- [ ] Validar nos tamanhos definidos e corrigir erros.
+- [x] Validar nos tamanhos definidos e corrigir erros.
 
 - [x] Tornar os cartões do Atendimento compactos em duas linhas.
 - [x] Mover o controle de compactação para antes de “Meus contatos”.
