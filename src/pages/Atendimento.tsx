@@ -4058,7 +4058,9 @@ ${recentMessages}
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
           selecionado: selectedEmailId === email.id,
           onClick: () => {
+            const remetente = email.from_email || "";
             setActiveTab("email");
+            setContatoEmailSelecionado({ id: (email as any).customer_id || `email-${remetente}`, nome: (email as any).from_name || remetente || "Sem nome", email: remetente });
             setSelectedEmailId(email.id);
             setHistoricoCliente(null);
           },
