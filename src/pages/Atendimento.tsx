@@ -4191,6 +4191,12 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
+  useEffect(() => {
+    dispararWipe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
