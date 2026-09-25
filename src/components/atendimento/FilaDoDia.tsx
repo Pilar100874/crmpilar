@@ -185,6 +185,46 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   {modoSelecao ? "Cancelar seleção" : "Selecionar contatos"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
+                {assumirContatos && assumirContatos.grupos.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        {assumirContatos.assumidos.length === 0
+                          ? "Assumir contatos de..."
+                          : `Assumindo ${assumirContatos.assumidos.length} pessoa${assumirContatos.assumidos.length > 1 ? "s" : ""}`}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="max-h-80 w-64 overflow-y-auto">
+                        {assumirContatos.assumidos.length > 0 && (
+                          <DropdownMenuItem onClick={assumirContatos.onLimpar}>Limpar seleção</DropdownMenuItem>
+                        )}
+                        {assumirContatos.grupos.map((grupo) => (
+                          <div key={grupo.titulo}>
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {grupo.titulo}
+                            </DropdownMenuLabel>
+                            {grupo.itens.map((pessoa) => (
+                              <label
+                                key={pessoa.id}
+                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-accent"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <Checkbox
+                                  checked={assumirContatos.assumidos.includes(pessoa.id)}
+                                  onCheckedChange={(valor) => assumirContatos.onAlternar(pessoa.id, valor === true)}
+                                />
+                                <span className="truncate">{pessoa.nome}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ))}
+                        <p className="px-2 pt-2 text-[10px] text-muted-foreground">
+                          Seus contatos continuam aparecendo. Ao marcar um gerente, os vendedores dele também entram.
+                        </p>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             {onTogglePainel && (
