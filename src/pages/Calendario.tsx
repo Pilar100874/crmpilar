@@ -368,9 +368,9 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
+export default function Calendario({ dataInicial, viewModeInicial }: { dataInicial?: Date; viewModeInicial?: ViewMode }) {
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -2619,7 +2619,8 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
 
   // Renderizar visualização de lista
   const renderListView = () => {
-    const today = new Date();
+    // A lista ancora na data selecionada (barra de dias), não necessariamente em hoje
+    const today = currentDate;
     const tomorrow = addDays(today, 1);
     const nextWeekStart = addDays(today, 1);
     const nextWeekEnd = addWeeks(today, 1);
@@ -2659,7 +2660,7 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
       <div className="grid w-full max-w-full grid-cols-1 gap-3 overflow-x-hidden sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 [&>div]:min-w-0">
         <div>
           <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
-            <h3 className="font-semibold text-xs sm:text-sm uppercase">HOJE</h3>
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">{isSameDay(currentDate, new Date()) ? "HOJE" : format(currentDate, "EEE d 'de' MMM", { locale: ptBR })}</h3>
             <p className="text-xs text-muted-foreground">{todayTasks.length} tarefa{todayTasks.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="space-y-2">
@@ -2681,7 +2682,7 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
 
         <div>
           <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
-            <h3 className="font-semibold text-xs sm:text-sm uppercase">AMANHÃ</h3>
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">{isSameDay(tomorrow, new Date()) ? "AMANHÃ" : format(tomorrow, "EEE d 'de' MMM", { locale: ptBR })}</h3>
             <p className="text-xs text-muted-foreground">{tomorrowTasks.length} tarefa{tomorrowTasks.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="space-y-2">
@@ -2871,8 +2872,9 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
                   key={resumo.date.toISOString()}
                   onClick={() => {
                     setCurrentDate(resumo.date);
-                    // Abre o calendário na área central (aba Agenda do Atendimento) no dia clicado
-                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString() } }));
+                    setViewMode("list");
+                    // Abre o calendário na área central (aba Agenda do Atendimento) em lista no dia clicado
+                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "list" } }));
                   }}
                   className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:px-6 ${selecionado ? "bg-primary/10" : ""}`}
                 >
@@ -2898,68 +2900,6 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
                 </button>
               );
             })}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 py-2 pr-3 sm:pr-5 lg:pr-6" style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">Hoje</Button>
-            <Button variant="ghost" size="icon" onClick={handleNext} className="h-8 w-8">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <span className="ml-1 hidden text-xs font-semibold capitalize text-foreground sm:inline">
-              {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM", { locale: ptBR })}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {isAdmin && usuarios.length > 0 && (
-              <Select
-                value={selectedUserIds.length === 1 ? selectedUserIds[0] : selectedUserIds.length > 1 ? "multiple" : "all"}
-                onValueChange={(value) => {
-                  if (value === "all") setSelectedUserIds([]);
-                  else if (value !== "multiple") setSelectedUserIds([value]);
-                }}
-              >
-                <SelectTrigger className="h-8 w-[150px] text-xs sm:w-[180px]">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-3.5 w-3.5" />
-                    <SelectValue placeholder="Todos os usuários">
-                      {selectedUserIds.length === 0
-                        ? "Todos os usuários"
-                        : selectedUserIds.length === 1
-                          ? usuarios.find(usuario => usuario.auth_user_id === selectedUserIds[0])?.nome || "Usuário"
-                          : `${selectedUserIds.length} usuários`}
-                    </SelectValue>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os usuários</SelectItem>
-                  {usuarios.filter(usuario => usuario.auth_user_id).map(usuario => usuario.auth_user_id ? (
-                    <SelectItem key={usuario.id} value={usuario.auth_user_id}>
-                      <div className="flex items-center gap-2"><User className="h-4 w-4" />{usuario.nome}</div>
-                    </SelectItem>
-                  ) : null)}
-                </SelectContent>
-              </Select>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => setShowFilterDialog(true)} className="h-8 gap-2 px-3 text-xs">
-              <Filter className="h-3.5 w-3.5" />
-              Filtros
-              {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && (
-                <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">{selectedOrigens.length + selectedUserIds.length}</Badge>
-              )}
-            </Button>
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-auto">
-              <TabsList className="h-8 bg-muted/60">
-                <TabsTrigger value="day" className="px-2 text-[11px]">Dia</TabsTrigger>
-                <TabsTrigger value="month" className="px-2 text-[11px]">Mês</TabsTrigger>
-                <TabsTrigger value="table" className="px-2 text-[11px]">Tabela</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </div>
 
@@ -3295,6 +3235,68 @@ export default function Calendario({ dataInicial }: { dataInicial?: Date }) {
 
       {/* Content */}
       <div className="flex-1 overflow-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4">
+        {/* Navegação e filtros do calendário (dentro da área central) */}
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:mb-3">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">Hoje</Button>
+            <Button variant="ghost" size="icon" onClick={handleNext} className="h-8 w-8">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <span className="ml-1 hidden text-xs font-semibold capitalize text-foreground sm:inline">
+              {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM", { locale: ptBR })}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {isAdmin && usuarios.length > 0 && (
+              <Select
+                value={selectedUserIds.length === 1 ? selectedUserIds[0] : selectedUserIds.length > 1 ? "multiple" : "all"}
+                onValueChange={(value) => {
+                  if (value === "all") setSelectedUserIds([]);
+                  else if (value !== "multiple") setSelectedUserIds([value]);
+                }}
+              >
+                <SelectTrigger className="h-8 w-[150px] text-xs sm:w-[180px]">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5" />
+                    <SelectValue placeholder="Todos os usuários">
+                      {selectedUserIds.length === 0
+                        ? "Todos os usuários"
+                        : selectedUserIds.length === 1
+                          ? usuarios.find(usuario => usuario.auth_user_id === selectedUserIds[0])?.nome || "Usuário"
+                          : `${selectedUserIds.length} usuários`}
+                    </SelectValue>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os usuários</SelectItem>
+                  {usuarios.filter(usuario => usuario.auth_user_id).map(usuario => usuario.auth_user_id ? (
+                    <SelectItem key={usuario.id} value={usuario.auth_user_id}>
+                      <div className="flex items-center gap-2"><User className="h-4 w-4" />{usuario.nome}</div>
+                    </SelectItem>
+                  ) : null)}
+                </SelectContent>
+              </Select>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setShowFilterDialog(true)} className="h-8 gap-2 px-3 text-xs">
+              <Filter className="h-3.5 w-3.5" />
+              Filtros
+              {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && (
+                <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">{selectedOrigens.length + selectedUserIds.length}</Badge>
+              )}
+            </Button>
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-auto">
+              <TabsList className="h-8 bg-muted/60">
+                <TabsTrigger value="day" className="px-2 text-[11px]">Dia</TabsTrigger>
+                <TabsTrigger value="month" className="px-2 text-[11px]">Mês</TabsTrigger>
+                <TabsTrigger value="table" className="px-2 text-[11px]">Tabela</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
         {viewMode === "month" && renderMonthView()}
         {viewMode === "week" && renderWeekView()}
         {viewMode === "day" && renderDayView()}
