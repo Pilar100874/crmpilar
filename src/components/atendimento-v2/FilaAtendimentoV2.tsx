@@ -49,11 +49,11 @@ export function FilaAtendimentoV2({ itens, selecionado, modoSelecao, selecionado
           <div
             key={item.key}
             className={cn(
-              "group relative flex min-h-[72px] items-center gap-2 px-3 py-2 transition-colors",
-              ativo ? "bg-primary/10" : "bg-card hover:bg-muted/50",
+              "group relative flex min-h-[78px] items-center gap-2 px-3 py-2.5 transition-colors",
+              ativo ? "bg-accent" : "bg-card hover:bg-muted/50",
             )}
           >
-            {ativo && <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" />}
+            {ativo && <span className="absolute inset-y-0 left-0 w-1 bg-primary" />}
             {modoSelecao && (
               <Checkbox
                 checked={selecionados.has(item.key)}

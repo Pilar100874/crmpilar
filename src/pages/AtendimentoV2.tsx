@@ -79,7 +79,7 @@ export default function AtendimentoV2() {
   const [massaAberta, setMassaAberta] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const dados = useAtendimentoV2Data(dataSelecionada);
-  const tablet = !isMobile && largura < 1280;
+  const tablet = !isMobile && largura < 1024;
 
   useEffect(() => {
     if (tablet) setCadastroAberto(false);
@@ -128,6 +128,17 @@ export default function AtendimentoV2() {
     if (ordem === "horario") lista = [...lista].sort((a, b) => a.horario.localeCompare(b.horario));
     return lista;
   }, [busca, dados.fila, filtro, ordem]);
+
+  useEffect(() => {
+    if (selecionado && dados.fila.some((item) => item.key === selecionado.key)) return;
+    const primeiro = filaFiltrada[0];
+    if (!primeiro) {
+      setSelecionado(null);
+      return;
+    }
+    setSelecionado(primeiro);
+    setCanal(primeiro.canal);
+  }, [dados.fila, filaFiltrada, selecionado]);
 
   const selecionarItem = (item: AtendimentoV2FilaItem) => {
     if (modoSelecao) {
@@ -264,21 +275,21 @@ export default function AtendimentoV2() {
     <div className="flex h-[calc(100dvh-4rem)] min-h-0 flex-col overflow-hidden bg-background text-foreground">
       {!isMobile && (
         <>
-          <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4">
-            <h1 className="shrink-0 text-xl font-bold">Minha agenda</h1>
-            <span className="hidden text-sm text-muted-foreground lg:block">{format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
+          <header className="flex h-16 shrink-0 items-center gap-5 border-b border-border bg-card px-5">
+            <h1 className="shrink-0 text-2xl font-bold">Minha agenda</h1>
+            <span className="hidden border-l border-border pl-5 text-base text-foreground lg:block">{format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
             <div className="relative ml-auto w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Buscar contatos, empresas, conversas..." className="h-10 pl-9" />
             </div>
-            <Button className="h-10 gap-2" onClick={() => setAgendarAberto(true)}><Plus className="h-4 w-4" /> Agendar</Button>
+            <Button className="h-11 min-w-28 gap-2" onClick={() => setAgendarAberto(true)}><Plus className="h-4 w-4" /> Agendar</Button>
             {tablet && <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setCadastroAberto(true)} title="Abrir cadastro e vínculos"><PanelRightOpen className="h-4 w-4" /></Button>}
           </header>
-          <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-card p-2">
+          <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-card px-4 py-2.5">
             <DataCard data={subDays(new Date(), 1)} quantidade={dados.fila.filter((item) => item.atrasado).length} atrasados ativo={false} onClick={() => setDataSelecionada(new Date())} />
             {datas.map((data) => <DataCard key={data.toISOString()} data={data} quantidade={format(data, "yyyy-MM-dd") === format(dataSelecionada, "yyyy-MM-dd") ? dados.fila.length : 0} ativo={format(data, "yyyy-MM-dd") === format(dataSelecionada, "yyyy-MM-dd")} onClick={() => setDataSelecionada(data)} />)}
           </div>
-          <main className="grid min-h-0 flex-1" style={{ gridTemplateColumns: tablet ? "350px minmax(0,1fr)" : cadastroAberto ? `410px minmax(440px,1fr) ${larguraCadastro}px` : "410px minmax(440px,1fr)" }}>
+          <main className="grid min-h-0 flex-1" style={{ gridTemplateColumns: tablet ? "350px minmax(0,1fr)" : cadastroAberto ? `minmax(320px,28%) minmax(430px,1fr) ${larguraCadastro}px` : "minmax(340px,32%) minmax(440px,1fr)" }}>
             {fila}
             <section className="relative min-w-0">
               {atendimento}

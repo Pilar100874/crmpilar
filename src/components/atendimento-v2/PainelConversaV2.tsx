@@ -66,27 +66,27 @@ export function PainelConversaV2({ item, canal, mensagens, enviando, onCanalChan
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <header className="shrink-0 border-b border-border bg-card px-4 py-3">
+      <header className="shrink-0 border-b border-border bg-card px-5 py-4">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
             {item.nome.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-lg font-bold text-foreground">{item.nome}</h2>
+            <h2 className="truncate text-xl font-bold text-foreground">{item.nome}</h2>
             <p className="truncate text-sm text-muted-foreground">{empresa || "Sem empresa vinculada"}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={onCadastro} className="h-11 gap-2">
+          <Button variant="outline" size="sm" onClick={onCadastro} className="h-11 gap-2 px-4">
             <UserRoundCog className="h-4 w-4" />
             <span className="hidden sm:inline">Cadastro</span>
           </Button>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {canais.map(({ id, label, icon: Icone }) => (
             <Button
               key={id}
-              variant={canal === id ? "default" : "outline"}
+              variant="outline"
               onClick={() => onCanalChange(id)}
-              className="h-11 gap-2"
+              className={cn("h-11 gap-2", canal === id && "border-primary bg-accent text-primary")}
             >
               <Icone className="h-4 w-4" /> {label}
             </Button>
