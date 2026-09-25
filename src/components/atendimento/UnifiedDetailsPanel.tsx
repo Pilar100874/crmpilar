@@ -450,11 +450,13 @@ export function UnifiedDetailsPanel({
             )}
 
             {blocoExtras}
+            {blocoHistorico}
           </>
         ) : (
           <>
             {blocoEmpresas}
             {blocoExtras}
+            {blocoHistorico}
           </>
         )}
       </div>
