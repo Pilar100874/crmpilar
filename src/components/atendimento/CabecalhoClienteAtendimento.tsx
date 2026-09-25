@@ -27,7 +27,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
