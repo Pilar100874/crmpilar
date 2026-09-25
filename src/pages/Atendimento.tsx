@@ -7775,21 +7775,6 @@ ${recentMessages}
         </AlertDialogContent>
       </AlertDialog>
 
-      <FinalizarAtendimentoDialog
-        open={!!finalizarCtx}
-        onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
-        contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
-        canal={(finalizarCtx?.canal as any) || "telefone"}
-        usuarioId={usuarioId}
-        estabelecimentoId={estabelecimentoId}
-        obrigatorio={finalizarCtx?.obrigatorio}
-        onFinalizado={() => {
-          const depois = finalizarCtx?.depois;
-          setFinalizarCtx(null);
-          void loadTodayTasks();
-          depois?.();
-        }}
-      />
       <ComposeEmailDialog
         open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
         onOpenChange={(open) => {
@@ -7818,6 +7803,21 @@ ${recentMessages}
     </AtendimentoCardsDensityProvider>
     
     {/* Global Dialogs - render regardless of mobile/desktop */}
+    <FinalizarAtendimentoDialog
+      open={!!finalizarCtx}
+      onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
+      contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
+      canal={(finalizarCtx?.canal as any) || "telefone"}
+      usuarioId={usuarioId}
+      estabelecimentoId={estabelecimentoId}
+      obrigatorio={finalizarCtx?.obrigatorio}
+      onFinalizado={() => {
+        const depois = finalizarCtx?.depois;
+        setFinalizarCtx(null);
+        void loadTodayTasks();
+        depois?.();
+      }}
+    />
     <DiscadorModoDialog
       open={showDiscadorModo}
       onOpenChange={setShowDiscadorModo}
