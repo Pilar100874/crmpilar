@@ -1,5 +1,5 @@
 import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck, Expand, PanelRightClose } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck, Expand, PanelRightClose, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
-import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
+import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa, abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
@@ -373,6 +373,17 @@ export function UnifiedDetailsPanel({
     </div>
   );
 
+  const blocoHistorico = customerId && (
+    <div className="border-t border-border">
+      <button type="button" onClick={() => abrirHistoricoDoContato({ customerId, nome })}
+        className="flex w-full items-center gap-3 border-b border-border/60 py-3 text-left text-sm text-foreground hover:text-primary">
+        <History className="h-4 w-4 text-muted-foreground" />
+        <span className="flex-1">Histórico</span>
+        <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
       <div className="flex-shrink-0 px-4 pt-4">
@@ -439,11 +450,13 @@ export function UnifiedDetailsPanel({
             )}
 
             {blocoExtras}
+            {blocoHistorico}
           </>
         ) : (
           <>
             {blocoEmpresas}
             {blocoExtras}
+            {blocoHistorico}
           </>
         )}
       </div>
