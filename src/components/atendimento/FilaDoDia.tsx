@@ -103,6 +103,16 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
+
+  const alternarCanal = (canal: FilaCanal) => {
+    setCanaisAtivos((anterior) => {
+      const proximo = new Set(anterior);
+      if (proximo.has(canal)) proximo.delete(canal);
+      else proximo.add(canal);
+      return proximo;
+    });
+  };
 
   const totalAgendados = items.filter((item) => item.tipo === "agendado").length;
   const totalRecebidos = items.filter((item) => item.tipo === "recebido").length;
@@ -111,6 +121,8 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
+    if (canaisAtivos.size > 0) lista = lista.filter((item) => canaisAtivos.has(item.canal));
+
 
     const ordenada = [...lista];
     if (ordenacao === "nome") {
