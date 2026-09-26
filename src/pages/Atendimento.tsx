@@ -4089,6 +4089,17 @@ ${recentMessages}
     return lista;
   }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila]);
 
+  // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
+  const filaItemsMobile = useMemo<FilaItem[]>(() =>
+    filaItems.map((item) => ({
+      ...item,
+      onClick: () => {
+        item.onClick();
+        setMobileView("main");
+      },
+    })),
+  [filaItems]);
+
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
@@ -5273,138 +5284,20 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex-1 min-h-0">
-              <MobileListContent
-
-                activeTab={activeTab}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                globalFilter={globalFilter}
-                setGlobalFilter={setGlobalFilter}
-                filteredConversations={filteredConversations}
-                agendaConversations={agendaConversations}
-                otherConversations={otherConversations}
-                agendaContactsWithoutConversation={contatosSemConversa}
-                contatosTelefone={contatosComIndicadores}
-                usarAgenda={usarAgenda}
-                contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
-                 onSelecionarContatoTelefone={(contato) => {
-                   if (bloquearTrocaClientePendente(contato.id)) return;
-                   setSelectedTelContato(contato);
-                   abrirFluxoComContato(contato);
-                 }}
-                onStartConversation={async (contactId, nome, telefone) => {
-                  // Criar conversa para o contato da agenda
-                  await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
-                  setMobileView("main");
-                }}
-                selectedConversation={selectedConversation}
-                setSelectedConversation={(id) => {
-                  if (id) {
-                    const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === id);
-                    if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
-                  }
-                  setSelectedConversation(id);
-                  if (id) openDetailsPanel(setShowClientDetailsChat);
-                }}
-                filteredTasks={filteredTasks}
-                selectedTaskId={selectedTaskId}
-                setSelectedTaskId={(id) => {
-                  if (id) {
-                    const task = todayTasks.find(t => t.id === id);
-                    if (bloquearTrocaClientePendente((task as any)?.contact_id)) return;
-                    setSelectedTaskId(id);
-                    setSelectedTaskData(task);
-                    openDetailsPanel(setShowClientDetailsAgenda);
-                  } else {
-                    setSelectedTaskId(id);
-                  }
-                }}
-                agendaDate={agendaDate}
-                handlePreviousDay={handlePreviousDay}
-                handleNextDay={handleNextDay}
-                handleToday={handleToday}
-                filteredEmails={filteredEmails}
-                contatosEmail={contatosComIndicadores}
-                contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
-                onSelecionarContatoEmail={(contato) => {
-                  if (bloquearTrocaClientePendente(contato.id)) return;
-                  setSelectedEmailId(null);
-                  setSelectedEmailData(null);
-                  setShowComposeEmail(false);
-                  setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
-                  setContatoEmailDetalhe(contato);
-                  openDetailsPanel(setShowClientDetailsEmail);
-                }}
-                selectedEmailId={selectedEmailId}
-                setSelectedEmailId={(id) => {
-                  setSelectedEmailId(id);
-                  if (id) {
-                    const email = userEmails.find(e => e.id === id);
-                    setSelectedEmailData(email);
-                    openDetailsPanel(setShowClientDetailsEmail);
-                  }
-                }}
-                filteredOrcamentos={filteredOrcamentos}
-                orcamentosStatusFilter={orcamentosStatusFilter}
-                setOrcamentosStatusFilter={setOrcamentosStatusFilter}
-                showOnlyMyOrcamentos={showOnlyMyOrcamentos}
-                setShowOnlyMyOrcamentos={setShowOnlyMyOrcamentos}
-                selectedOrcamentoId={selectedOrcamentoId}
-                setSelectedOrcamentoId={(id) => {
-                  setSelectedOrcamentoId(id);
-                  if (id) {
-                    const orc = orcamentos.find(o => o.id === id);
-                    setSelectedOrcamentoData(orc);
-                    setOrcamentoSheetOpen(true);
-                    openDetailsPanel(setShowClientDetailsOrcamento);
-                  }
-                }}
-                setOrcamentoSheetOpen={(open) => {
-                  setOrcamentoSheetOpen(open);
-                  if (open) setMobileView("main");
-                }}
-                onNovoOrcamentoClick={() => {
-                  if (orcamentoSheetOpen) {
-                    setShowNovoOrcamentoConfirm(true);
-                  } else {
-                    setSelectedOrcamentoId(null);
-                    setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
-                    setOrcamentoSheetOpen(true);
-                    setMobileView("main");
-                  }
-                }}
-                showPredictiveDialer={() => void abrirDiscador()}
-                setDiscadorModo={setDiscadorModo}
-                atendente={atendente}
-                usuarioId={usuarioId}
-                loadAtendente={loadAtendente}
-                getTimeAgo={getTimeAgo}
-                emailFolder={emailFolder}
-                setEmailFolder={setEmailFolder}
-                setShowComposeEmail={setShowComposeEmail}
-                customerVinculos={customerVinculos}
-                vinculosCarregados={vinculosCarregados}
-                orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
-                orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
-                orcamentos={orcamentos}
-                setActiveTab={trocarAba}
-                emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
-                chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
-                indicadoresPorContato={indicadoresPorContato}
-                agendaViewMode={agendaViewMode}
-                setAgendaViewMode={setAgendaViewMode}
-                setFluxoInitialIndex={setFluxoInitialIndex}
-                setShowConfigDatas={setShowConfigDatas}
-                setShowEnvioMassaWizard={setShowEnvioMassaWizard}
-                onRefreshEmails={() => loadUserEmails()}
-                onShowCustomerSearch={() => {
-                  if (activeTab === "agenda") setShowCustomerSearchForTask(true);
-                  else if (activeTab === "chat") setShowCustomerSearchForChat(true);
-                  else if (activeTab === "email") setShowCustomerSearchForEmail(true);
-                  else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
-                }}
-              />
+              <div className="flex-1 min-h-0 flex flex-col">
+                <FilaDoDia
+                  items={filaItemsMobile}
+                  vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+                  onEnvioMassa={() => {
+                    setActiveTab("agenda");
+                    setAgendaViewMode("default");
+                    setShowEnvioMassaWizard(true);
+                  }}
+                  onConfigurarRegra={() => setShowEnvioMassa(true)}
+                  filtro={filtroFila}
+                  onFiltroChange={aoTrocarFiltroFila}
+                  assumirContatos={assumirContatosConfig}
+                />
               </div>
             </div>
 
