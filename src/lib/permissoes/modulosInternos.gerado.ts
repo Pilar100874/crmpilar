@@ -20,6 +20,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
   ],
   "Painel Chats": [
     {
+      "id": "list",
+      "label": "Fila do dia"
+    },
+    {
+      "id": "main",
+      "label": "Atendimento"
+    },
+    {
+      "id": "details",
+      "label": "Cadastro"
+    },
+    {
       "id": "agenda",
       "label": "Agenda"
     },

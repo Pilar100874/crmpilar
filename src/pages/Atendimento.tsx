@@ -190,7 +190,7 @@ export default function Atendimento() {
   const pendenciasAtendimento = usePendenciasAtendimento();
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
-    if (isMobile || isTablet) {
+    if (isMobile) {
       setVisible(true);
       setMobileView("details");
       if (isTablet && showConversationsList) {
@@ -5074,7 +5074,7 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
-      {(isMobile || isTablet) ? (
+      {isMobile ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
           {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
@@ -5741,6 +5741,33 @@ ${recentMessages}
               )}
             </div>
           </div>
+
+          {/* Abas principais do celular: Fila / Atendimento / Cadastro */}
+          {!(activeTab === "orcamento" && orcamentoSheetOpen) && (
+            <nav aria-label="Seções do atendimento" className="order-last flex-shrink-0 grid grid-cols-3 border-t border-border bg-card pb-safe">
+              {([
+                { id: "list", label: "Fila do dia", icon: CalendarIcon },
+                { id: "main", label: "Atendimento", icon: MessageSquare },
+                { id: "details", label: "Cadastro", icon: User },
+              ] as const).map((t) => {
+                const Icon = t.icon;
+                const ativo = mobileView === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setMobileView(t.id)}
+                    aria-current={ativo ? "page" : undefined}
+                    className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {t.label}
+                    <span className={`mt-0.5 h-0.5 w-8 rounded-full ${ativo ? "bg-orange-600" : "bg-transparent"}`} />
+                  </button>
+                );
+              })}
+            </nav>
+          )}
 
           {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
           {mobileView === "list" && !((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
