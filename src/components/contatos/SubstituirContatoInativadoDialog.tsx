@@ -27,7 +27,7 @@ export async function carregarSubstituicaoContato(contatoId: string, estabelecim
 
   const empresaIds = vinc.map((v: any) => v.empresa_id);
   const { data: outros } = await (supabase as any)
-    .from("customer_empresas").select("empresa_id, customer_id, customers(id, name, ativo)")
+    .from("customer_empresas").select("empresa_id, customer_id, customers(id, nome, ativo)")
     .in("empresa_id", empresaIds).neq("customer_id", contatoId);
 
   return vinc.map((v: any) => ({
@@ -35,7 +35,7 @@ export async function carregarSubstituicaoContato(contatoId: string, estabelecim
     empresaNome: v.empresas?.nome_fantasia || v.empresas?.nome || "Empresa",
     candidatos: (outros || [])
       .filter((o: any) => o.empresa_id === v.empresa_id && o.customers && o.customers.ativo !== false)
-      .map((o: any) => ({ id: o.customers.id, name: o.customers.name })),
+      .map((o: any) => ({ id: o.customers.id, name: o.customers.nome })),
   }));
 }
 
@@ -69,15 +69,15 @@ export function SubstituirContatoInativadoDialog({ open, contato, empresas, esta
     try {
       const { data: novo, error: errC } = await (supabase as any)
         .from("customers")
-        .insert({ name: dados.nome.trim(), telefone: dados.telefone.trim() || null, estabelecimento_id: estabelecimentoId, ativo: true })
-        .select("id, name").single();
+        .insert({ nome: dados.nome.trim(), email: "", telefone: dados.telefone.trim() || null, estabelecimento_id: estabelecimentoId, ativo: true })
+        .select("id, nome").single();
       if (errC) throw errC;
       const { error: errV } = await (supabase as any)
         .from("customer_empresas")
         .insert({ customer_id: novo.id, empresa_id: empresaId });
       if (errV) throw errV;
-      setCriados(s => ({ ...s, [empresaId]: { id: novo.id, name: novo.name } }));
-      toast.success(`Contato ${novo.name} cadastrado e vinculado à empresa`);
+      setCriados(s => ({ ...s, [empresaId]: { id: novo.id, name: novo.nome } }));
+      toast.success(`Contato ${novo.nome} cadastrado e vinculado à empresa`);
     } catch (e: any) {
       console.error('Erro ao cadastrar novo contato:', e);
       toast.error(e?.message || "Erro ao cadastrar novo contato");
