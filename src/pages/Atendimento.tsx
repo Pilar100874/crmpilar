@@ -3994,8 +3994,18 @@ ${recentMessages}
   const filaItems = useMemo<FilaItem[]>(() => {
     const lista: FilaItem[] = [];
 
-    // Agendados: tarefas da agenda
-    filteredTasks.forEach((task: any) => {
+    // Agendados: tarefas da agenda.
+    // Na aba "Tudo", mostra só um cartão por contato (o mais urgente), não um por tarefa.
+    const vistosTudo = new Set<string>();
+    const tarefasDaFila = filtroFila === "todos"
+      ? filteredTasks.filter((task: any) => {
+          const chave = task.contact_id || task.id;
+          if (vistosTudo.has(chave)) return false;
+          vistosTudo.add(chave);
+          return true;
+        })
+      : filteredTasks;
+    tarefasDaFila.forEach((task: any) => {
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
