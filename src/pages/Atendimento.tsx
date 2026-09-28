@@ -4116,9 +4116,12 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: conversas aguardando atendimento
+    // Recebidos: conversas aguardando atendimento.
+    // Na aba "Tudo", pula conversas de contatos que já têm cartão na lista.
+    const idsNaLista = new Set(lista.map((item) => item.contactId).filter(Boolean));
     filteredConversations
       .filter((conv) => conv.chat_status === "em_fila" || conv.chat_status === "novo")
+      .filter((conv) => filtroFila !== "tudo" || !conv.customer_id || !idsNaLista.has(conv.customer_id))
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
@@ -4166,7 +4169,7 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos]);
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
