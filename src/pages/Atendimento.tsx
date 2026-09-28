@@ -3782,6 +3782,16 @@ ${recentMessages}
     });
   }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails, contatoEmailSelecionado]);
 
+  // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
+  const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
+    conv.chat_status !== "encerrado" &&
+    (!conv.lastMessage?.sender || conv.lastMessage.sender === "customer")
+  ), [conversations]);
+
+  const emailsRecebidosNaoRespondidos = useMemo(() => userEmails.filter((email) =>
+    !email.read && (email.folder === "inbox" || !email.folder)
+  ), [userEmails]);
+
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
     let result = orcamentos;
@@ -4120,11 +4130,8 @@ ${recentMessages}
     });
 
     // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas.
-    (filtroFila === "recebidos" ? filteredConversations : [])
+    (filtroFila === "recebidos" ? conversasRecebidasNaoRespondidas : [])
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
-      .filter((conv) => conv.chat_status !== "encerrado")
-      // Não respondidas: a última mensagem é do cliente
-      .filter((conv) => !conv.lastMessage?.sender || conv.lastMessage.sender === "customer")
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
@@ -4150,8 +4157,7 @@ ${recentMessages}
       });
 
     // Recebidos: e-mails recebidos e não respondidos
-    (filtroFila === "recebidos" ? filteredEmails : [])
-      .filter((email) => !email.read)
+    (filtroFila === "recebidos" ? emailsRecebidosNaoRespondidos : [])
       .forEach((email) => {
         lista.push({
           id: `email-${email.id}`,
@@ -4172,17 +4178,15 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
     agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
-    recebidos:
-      filteredConversations.filter((conv) => conv.chat_status !== "encerrado" && (!conv.lastMessage?.sender || conv.lastMessage.sender === "customer")).length +
-      filteredEmails.filter((email) => !email.read).length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, filteredConversations, filteredEmails]);
+    recebidos: conversasRecebidasNaoRespondidas.length + emailsRecebidosNaoRespondidos.length,
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
