@@ -559,7 +559,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     console.log("userIdToSave:", userIdToSave);
     console.log("editingTaskId:", editingTaskId);
     
-    onSave({
+    const payload = {
       id: editingTaskId || undefined,
       contactId: selectedContact.id,
       contactName: selectedContact.name,
@@ -570,8 +570,51 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       observation,
       isAllDay,
       userId: userIdToSave,
-    });
+    };
 
+    if (editingTaskId) {
+      onSave(payload);
+      onOpenChange(false);
+      return;
+    }
+
+    void (async () => {
+      let q = supabase
+        .from("calendario_tarefas")
+        .select("id, date, time, title")
+        .eq("contact_id", selectedContact.id)
+        .in("status", ["pending", "pendente"]);
+      if (userIdToSave) q = q.eq("user_id", userIdToSave);
+      const { data: existentes } = await q;
+      if (existentes && existentes.length > 0) {
+        setTarefasDoContato(existentes as any[]);
+        setPayloadDuplicado(payload);
+        return;
+      }
+      onSave(payload);
+      onOpenChange(false);
+    })();
+  };
+
+  const [tarefasDoContato, setTarefasDoContato] = useState<any[]>([]);
+  const [payloadDuplicado, setPayloadDuplicado] = useState<any>(null);
+
+  const resolverDuplicada = async (trocar: boolean) => {
+    const payload = payloadDuplicado;
+    if (!payload) return;
+    if (trocar && tarefasDoContato.length) {
+      const { error } = await supabase
+        .from("calendario_tarefas")
+        .delete()
+        .in("id", tarefasDoContato.map((t) => t.id));
+      if (error) {
+        toast.error("Não foi possível remover a tarefa anterior");
+        return;
+      }
+    }
+    setPayloadDuplicado(null);
+    setTarefasDoContato([]);
+    onSave(payload);
     onOpenChange(false);
   };
 
@@ -1276,6 +1319,32 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           <AlertDialogCancel onClick={handleCancelConflict} className="w-full mt-0" asChild>
             <Button variant="outline" size="sm">Cancelar</Button>
           </AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={!!payloadDuplicado} onOpenChange={(o) => { if (!o) { setPayloadDuplicado(null); setTarefasDoContato([]); } }}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Este contato já tem tarefa na agenda</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 text-sm">
+              {tarefasDoContato.map((t) => (
+                <div key={t.id} className="rounded-md border px-3 py-2">
+                  <div className="font-medium text-foreground">{t.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.date ? format(new Date(`${t.date}T00:00:00`), "dd/MM/yyyy") : ""} {t.time ? `às ${String(t.time).slice(0, 5)}` : "Dia todo"}
+                  </div>
+                </div>
+              ))}
+              <p>O que deseja fazer?</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button size="sm" className="w-full" onClick={() => void resolverDuplicada(true)}>Trocar pela nova tarefa</Button>
+          <Button size="sm" variant="secondary" className="w-full" onClick={() => void resolverDuplicada(false)}>Manter as duas</Button>
+          <AlertDialogCancel asChild><Button size="sm" variant="outline" className="w-full mt-0">Cancelar</Button></AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

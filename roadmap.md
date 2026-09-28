@@ -22,7 +22,7 @@
 - [x] Contato temporário ao criar empresa, substituído pelo real
 - [x] Tarefa de acompanhamento ao vincular contato a gerente
 - [x] Cor por tipo nos cartões da Fila do dia
-- [ ] Ícones de canais clicáveis no cartão da fila + lista dos últimos 5 orçamentos
-- [ ] Cor diferente para contatos assumidos
-- [ ] Perguntar "manter as duas" ao criar segunda tarefa
-- [ ] Filtro agenda/todos no envio em massa
+- [x] Ícones de canais clicáveis no cartão da fila + lista dos últimos 5 orçamentos
+- [x] Cor diferente para contatos assumidos
+- [x] Perguntar "manter as duas" ao criar segunda tarefa
+- [x] Filtro agenda/todos no envio em massa

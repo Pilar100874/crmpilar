@@ -26,6 +26,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<EnvioMassaFilters>({});
   const [permissions, setPermissions] = useState<CampaignPermissions | null>(null);
+  const [fonte, setFonte] = useState<'agenda' | 'todos'>('agenda');
 
   // Filter contacts by channel
   const contactsByChannel = useMemo(() => {
@@ -171,7 +172,16 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
       if (tasksError) throw tasksError;
 
       // Extract unique contact IDs from today's tasks
-      const contactIds = [...new Set((tasksData || []).map(t => t.contact_id).filter(Boolean))];
+      let contactIds = [...new Set((tasksData || []).map(t => t.contact_id).filter(Boolean))];
+      if (fonte === 'todos') {
+        const { data: todos } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('ativo', true)
+          .limit(1000);
+        contactIds = (todos || []).map((c: any) => c.id);
+      }
 
       if (contactIds.length === 0) {
         setContacts([]);
@@ -314,7 +324,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
   useEffect(() => {
     fetchContacts();
     fetchSegmentos();
-  }, [estabelecimentoId]);
+  }, [estabelecimentoId, fonte]);
 
   const applyFilters = (newFilters: EnvioMassaFilters) => {
     setFilters(newFilters);
@@ -393,6 +403,8 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
   }, [canal, contactsByChannel]);
 
   return {
+    fonte,
+    setFonte,
     contacts: filteredContacts,
     allContacts: contacts,
     contactsByChannel,

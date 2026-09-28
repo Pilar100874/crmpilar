@@ -4023,6 +4023,28 @@ ${recentMessages}
         atrasado,
         selecionado: selectedTaskId === task.id,
         bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
+        assumido: !!usuarioId && !!task.user_id && task.user_id !== usuarioId,
+        canais: [
+          ...(task.customers?.telefone ? ["whatsapp" as FilaCanal] : []),
+          ...(task.customers?.tel ? ["telefone" as FilaCanal] : []),
+          ...(task.customers?.email ? ["email" as FilaCanal] : []),
+          "visita" as FilaCanal,
+        ],
+        onCanal: (c: FilaCanal) => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setSelectedTaskId(task.id);
+          setSelectedTaskData(task);
+          setHistoricoCliente(null);
+          setActiveTab(c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+        },
+        onOrcamento: (orcId: string) => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          const orc: any = orcamentos.find((o: any) => o.id === orcId);
+          setHistoricoCliente(null);
+          setActiveTab("orcamento");
+          setSelectedOrcamentoId(orcId);
+          if (orc) { setSelectedOrcamentoData(orc); setContatoOrcamentoDetalhe(orc); }
+        },
         onClick: () => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           setActiveTab("agenda");
@@ -4087,7 +4109,7 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila]);
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
