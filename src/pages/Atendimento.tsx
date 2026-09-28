@@ -3580,7 +3580,6 @@ ${recentMessages}
   const [filtroFila, setFiltroFila] = useState<"tudo" | "agendados" | "recebidos">(() => (usarAgenda ? "agendados" : "tudo"));
   const aoTrocarFiltroFila = (valor: "tudo" | "agendados" | "recebidos") => {
     setFiltroFila(valor);
-    setUsarAgenda(valor === "agendados");
   };
 
   // Base de contatos das abas Tel / Chats / E-mails
