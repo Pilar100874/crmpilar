@@ -87,6 +87,15 @@ export function StepFilter({
     <div className="flex flex-col h-full">
       {/* Content */}
       <div className="flex-1 space-y-4 min-h-0 overflow-hidden flex flex-col">
+        {onFonteChange && (
+          <div className="flex gap-2">
+            {([['agenda', 'Contatos da agenda de hoje'], ['todos', 'Todos os contatos']] as const).map(([v, l]) => (
+              <Button key={v} type="button" size="sm" variant={fonte === v ? 'default' : 'outline'} onClick={() => onFonteChange(v)} className="flex-1">
+                {l}
+              </Button>
+            ))}
+          </div>
+        )}
         {/* Resumo Anti-Bloqueio */}
         {blockedContacts.length > 0 && (
           <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
