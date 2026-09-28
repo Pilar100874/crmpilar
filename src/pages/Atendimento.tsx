@@ -4149,8 +4149,8 @@ ${recentMessages}
         });
       });
 
-    // Recebidos: e-mails não lidos
-    filteredEmails
+    // Recebidos: e-mails recebidos e não respondidos
+    (filtroFila === "recebidos" ? filteredEmails : [])
       .filter((email) => !email.read)
       .forEach((email) => {
         lista.push({
