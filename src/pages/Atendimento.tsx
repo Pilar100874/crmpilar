@@ -4120,7 +4120,8 @@ ${recentMessages}
     // Na aba "Tudo", pula conversas de contatos que já têm cartão na lista.
     const idsNaLista = new Set(lista.map((item) => item.contactId).filter(Boolean));
     filteredConversations
-      .filter((conv) => conv.chat_status === "em_fila" || conv.chat_status === "novo")
+      // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
+      .filter((conv) => conv.chat_status !== "encerrado")
       .filter((conv) => filtroFila !== "tudo" || !conv.customer_id || !idsNaLista.has(conv.customer_id))
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
