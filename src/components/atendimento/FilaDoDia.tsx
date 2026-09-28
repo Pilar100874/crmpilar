@@ -380,13 +380,15 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   }
                   item.onClick();
                 }}
+                title={item.tipo === "recebido" ? "Recebido" : "Agendado"}
                 className={cn(
-                  "group relative flex items-center gap-3 px-3 py-3.5 border-b border-border/20 cursor-pointer transition-colors",
+                  "group relative flex items-center gap-3 px-3 py-3.5 border-b border-border/20 cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
+                  item.tipo === "recebido" ? "before:bg-success" : "before:bg-primary/60",
                   item.selecionado
-                    ? "bg-orange-500/[0.08] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-orange-500"
+                    ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
                   marcado && "bg-orange-500/[0.08]",
-                  item.bloqueado && "opacity-50"
+                  item.bloqueado && "opacity-50 grayscale"
                 )}
               >
                 <Checkbox

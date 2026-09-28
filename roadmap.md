@@ -17,3 +17,12 @@
 - [x] Criar a faixa de Atrasados, Hoje e próximos dias com contagens reais.
 - [x] Reposicionar busca, filtros, responsáveis, modos e ação de agendamento.
 - [x] Validar visualmente o novo Calendário no computador e em tela estreita.
+
+## Regras de empresas e contatos (28/09)
+- [x] Contato temporário ao criar empresa, substituído pelo real
+- [x] Tarefa de acompanhamento ao vincular contato a gerente
+- [x] Cor por tipo nos cartões da Fila do dia
+- [ ] Ícones de canais clicáveis no cartão da fila + lista dos últimos 5 orçamentos
+- [ ] Cor diferente para contatos assumidos
+- [ ] Perguntar "manter as duas" ao criar segunda tarefa
+- [ ] Filtro agenda/todos no envio em massa
