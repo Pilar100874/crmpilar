@@ -3375,8 +3375,8 @@ ${recentMessages}
     return emails;
   }, [todayTasks]);
 
-  // Contatos vinculados ao usuário/equipe escolhida (usados quando a flag está desligada)
-  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
+  // Contatos vinculados ao usuário/equipe escolhida (usados em "Tudo" e para filtrar "Agendados")
+  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, true);
   const idsContatosVinculados = useMemo(() => new Set(contatosVinculados.map((c) => c.id)), [contatosVinculados]);
 
   const filteredConversations = useMemo(() => {
