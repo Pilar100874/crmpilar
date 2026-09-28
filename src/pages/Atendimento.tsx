@@ -4176,12 +4176,13 @@ ${recentMessages}
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
-    tudo: contatosComIndicadores.length,
+    // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
+    tudo: contatosVinculados.length,
     agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
     recebidos:
       filteredConversations.filter((conv) => conv.chat_status !== "encerrado" && (!conv.lastMessage?.sender || conv.lastMessage.sender === "customer")).length +
       filteredEmails.filter((email) => !email.read).length,
-  }), [contatosComIndicadores, filteredTasks, idsContatosVinculados, filteredConversations, filteredEmails]);
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, filteredConversations, filteredEmails]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
