@@ -4119,13 +4119,12 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: conversas aguardando atendimento.
-    // Na aba "Tudo", pula conversas de contatos que já têm cartão na lista.
-    const idsNaLista = new Set(lista.map((item) => item.contactId).filter(Boolean));
-    filteredConversations
+    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas.
+    (filtroFila === "recebidos" ? filteredConversations : [])
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
       .filter((conv) => conv.chat_status !== "encerrado")
-      .filter((conv) => filtroFila !== "tudo" || !conv.customer_id || !idsNaLista.has(conv.customer_id))
+      // Não respondidas: a última mensagem é do cliente
+      .filter((conv) => !conv.lastMessage?.sender || conv.lastMessage.sender === "customer")
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
