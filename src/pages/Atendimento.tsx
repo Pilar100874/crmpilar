@@ -103,6 +103,7 @@ interface Conversation {
   lastMessage?: {
     text: string;
     created_at: string;
+    sender?: string;
   };
   customerCompanies?: any[];
   customerLinkedUsers?: Array<{
@@ -2922,7 +2923,7 @@ ${recentMessages}
         // Get last message for each conversation using a lateral join approach
         const { data: lastMessages } = await supabase
           .from("messages")
-          .select("conversation_id, text, created_at")
+          .select("conversation_id, text, created_at, sender")
           .in("conversation_id", convIds)
           .order("created_at", { ascending: false });
 
