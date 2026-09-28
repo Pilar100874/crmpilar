@@ -103,6 +103,7 @@ interface Conversation {
   lastMessage?: {
     text: string;
     created_at: string;
+    sender?: string;
   };
   customerCompanies?: any[];
   customerLinkedUsers?: Array<{
@@ -2922,7 +2923,7 @@ ${recentMessages}
         // Get last message for each conversation using a lateral join approach
         const { data: lastMessages } = await supabase
           .from("messages")
-          .select("conversation_id, text, created_at")
+          .select("conversation_id, text, created_at, sender")
           .in("conversation_id", convIds)
           .order("created_at", { ascending: false });
 
@@ -3374,8 +3375,8 @@ ${recentMessages}
     return emails;
   }, [todayTasks]);
 
-  // Contatos vinculados ao usuário/equipe escolhida (usados quando a flag está desligada)
-  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
+  // Contatos vinculados ao usuário/equipe escolhida (usados em "Tudo" e para filtrar "Agendados")
+  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, true);
   const idsContatosVinculados = useMemo(() => new Set(contatosVinculados.map((c) => c.id)), [contatosVinculados]);
 
   const filteredConversations = useMemo(() => {
@@ -4051,8 +4052,10 @@ ${recentMessages}
       });
     }
 
-    // Agendados: tarefas da agenda
-    if (filtroFila !== "tudo") filteredTasks.forEach((task: any) => {
+    // Agendados: tarefas da agenda, somente de contatos vinculados ao(s) usuário(s) visíveis
+    if (filtroFila === "agendados") filteredTasks
+      .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
+      .forEach((task: any) => {
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4116,13 +4119,12 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: conversas aguardando atendimento.
-    // Na aba "Tudo", pula conversas de contatos que já têm cartão na lista.
-    const idsNaLista = new Set(lista.map((item) => item.contactId).filter(Boolean));
-    filteredConversations
+    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas.
+    (filtroFila === "recebidos" ? filteredConversations : [])
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
       .filter((conv) => conv.chat_status !== "encerrado")
-      .filter((conv) => filtroFila !== "tudo" || !conv.customer_id || !idsNaLista.has(conv.customer_id))
+      // Não respondidas: a última mensagem é do cliente
+      .filter((conv) => !conv.lastMessage?.sender || conv.lastMessage.sender === "customer")
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
@@ -4147,8 +4149,8 @@ ${recentMessages}
         });
       });
 
-    // Recebidos: e-mails não lidos
-    filteredEmails
+    // Recebidos: e-mails recebidos e não respondidos
+    (filtroFila === "recebidos" ? filteredEmails : [])
       .filter((email) => !email.read)
       .forEach((email) => {
         lista.push({
@@ -4170,7 +4172,7 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores]);
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
