@@ -89,6 +89,7 @@ export interface AssumirContatosConfig {
 
 interface FilaDoDiaProps {
   items: FilaItem[];
+  tablet?: boolean;
   onEnvioMassa: (idsSelecionados: string[]) => void;
   onConfigurarRegra: () => void;
   vazioTexto?: string;
@@ -102,7 +103,7 @@ interface FilaDoDiaProps {
   totais?: { tudo: number; agendados: number; recebidos: number };
 }
 
-export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
@@ -190,7 +191,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
   ];
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-background">
+    <div className="flex min-w-0 flex-col flex-1 min-h-0 overflow-x-hidden bg-background">
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
@@ -280,7 +281,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-1.5 mt-2.5">
+        <div className={cn("flex items-center gap-1.5 mt-2.5", tablet && "flex-wrap")}>
           {chips.map((chip) => {
             const ativo = filtro === chip.id;
             return (
@@ -348,7 +349,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
         </div>
 
         {/* Seleção e envio em massa */}
-        <div className="flex items-center gap-2 mt-2.5">
+        <div className={cn("flex items-center gap-2 mt-2.5", tablet && "flex-wrap")}>
           <button
             type="button"
             onClick={alternarModoSelecao}
@@ -371,7 +372,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
             variant="outline"
             size="sm"
             onClick={() => onEnvioMassa(Array.from(selecionados))}
-            className="h-9 gap-1.5 rounded-lg text-xs"
+            className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
           >
             <Send className="h-3.5 w-3.5" />
             Envio em massa
@@ -408,7 +409,8 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                 }}
                 title={item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
-                  "group relative flex items-center gap-3 px-3 py-3.5 border-b border-border/20 cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
+                   "group relative border-b border-border/20 cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
+                   tablet ? "grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-3" : "flex items-center gap-3 px-3 py-3.5",
                   item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary/60",
                   item.assumido && !item.selecionado && "bg-info/[0.05]",
                   item.selecionado
@@ -422,20 +424,20 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   checked={marcado}
                   onCheckedChange={() => alternarSelecao(item.id)}
                   onClick={(event) => event.stopPropagation()}
-                  className="shrink-0 border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                   className={cn("shrink-0 border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500", tablet && "mt-2")}
                 />
 
                 {/* Contato: avatar + nome em cima, pílula do canal embaixo */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="h-11 w-11 shrink-0 rounded-full bg-muted flex items-center justify-center text-[13px] font-bold text-foreground/70">
+                 <div className={cn("flex flex-1 min-w-0", tablet ? "items-start gap-2" : "items-center gap-3")}>
+                   <div className={cn("shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-foreground/70", tablet ? "h-9 w-9 text-xs" : "h-11 w-11 text-[13px]")}>
                     {iniciais(item.nome)}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-foreground leading-tight truncate">
+                   <div className="min-w-0 flex-1">
+                     <p className={cn("text-[14px] font-semibold text-foreground leading-tight", tablet ? "break-words" : "truncate")}>
                       {item.nome}
                     </p>
                     {item.empresa && (
-                      <p className="text-[11px] text-muted-foreground truncate leading-tight">{item.empresa}</p>
+                       <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
                     )}
                     <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm">
                       <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
@@ -470,7 +472,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                 </div>
 
                 {/* Horário em destaque */}
-                <div className="shrink-0 text-right">
+                 <div className={cn("shrink-0 text-right", tablet && "col-start-2 row-start-2 pr-1")}>
                   <p
                     className={cn(
                       "text-[17px] font-extrabold leading-tight tabular-nums",
@@ -490,7 +492,7 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                     <button
                       type="button"
                       onClick={(event) => event.stopPropagation()}
-                      className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                       className={cn("h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors", tablet && "col-start-3 row-start-1")}
                       aria-label="Mais opções"
                     >
                       <MoreVertical className="h-4 w-4" />

@@ -1,5 +1,8 @@
 # Roteiro
 
+- [x] Ajustar cartões da Fila do dia no tablet sem cortar dados ou ações.
+- [x] Conferir visualmente a fila em tablet vertical e horizontal.
+
 - [x] Tornar os cartões do Atendimento compactos em duas linhas.
 - [x] Mover o controle de compactação para antes de “Meus contatos”.
 - [x] Exigir a seleção de um contato antes de criar uma tarefa pela Agenda.
