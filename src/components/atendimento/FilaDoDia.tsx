@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
   Mail,
@@ -48,6 +50,12 @@ export interface FilaItem {
   mensagensNovas?: number;
   selecionado?: boolean;
   bloqueado?: boolean;
+  /** Tarefa de outro usuário assumido (cor diferente). */
+  assumido?: boolean;
+  /** Canais que o contato tem cadastrados. */
+  canais?: FilaCanal[];
+  onCanal?: (canal: FilaCanal) => void;
+  onOrcamento?: (orcamentoId: string) => void;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
 }
@@ -371,8 +379,8 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
             const CanalIcon = canalCfg.icon;
             const marcado = selecionados.has(item.id);
             return (
+              <div key={item.id}>
               <div
-                key={item.id}
                 onClick={() => {
                   if (modoSelecao) {
                     alternarSelecao(item.id);
@@ -380,10 +388,11 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                   }
                   item.onClick();
                 }}
-                title={item.tipo === "recebido" ? "Recebido" : "Agendado"}
+                title={item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
                   "group relative flex items-center gap-3 px-3 py-3.5 border-b border-border/20 cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
-                  item.tipo === "recebido" ? "before:bg-success" : "before:bg-primary/60",
+                  item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary/60",
+                  item.assumido && !item.selecionado && "bg-info/[0.05]",
                   item.selecionado
                     ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
@@ -414,6 +423,24 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                       <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
                       {canalCfg.label}
                     </span>
+                    {item.contactId && (item.canais?.length || 0) > 0 && (
+                      <div className="mt-1 flex items-center gap-1">
+                        {item.canais!.map((c) => {
+                          const cfg = CANAL_CONFIG[c];
+                          const Ic = cfg.icon;
+                          return (
+                            <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); item.onCanal?.(c); }}
+                              className={cn("h-6 w-6 rounded-full flex items-center justify-center", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
+                              <Ic className="h-3 w-3" />
+                            </button>
+                          );
+                        })}
+                        <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); }}
+                          className={cn("h-6 w-6 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
+                          <FileText className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                     {(item.mensagensNovas || 0) > 0 && (
                       <span className="ml-1.5 inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
                         {item.mensagensNovas === 1
@@ -462,6 +489,22 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+              {item.contactId && orcAberto === item.contactId && (
+                <div className="border-b border-border/20 bg-muted/30 px-4 py-2 space-y-1">
+                  {orcCarregando ? (
+                    <p className="text-[11px] text-muted-foreground">Carregando orçamentos...</p>
+                  ) : orcLista.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground">Nenhum orçamento deste contato.</p>
+                  ) : orcLista.map((o) => (
+                    <button key={o.id} type="button" onClick={() => item.onOrcamento?.(o.id)}
+                      className="flex w-full items-center justify-between rounded-md px-2 py-1 text-[11px] hover:bg-muted">
+                      <span>{new Date(o.created_at).toLocaleDateString("pt-BR")} · {o.status || o.etapa || "—"}</span>
+                      <span className="font-semibold tabular-nums">{Number(o.valor_total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               </div>
             );
           })
