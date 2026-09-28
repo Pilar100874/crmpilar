@@ -84,8 +84,8 @@ export function EnvioMassaWizardContent({
   const { 
     contacts,
     segmentos, 
-    applyFilters 
-    fonte, setFonte,
+    applyFilters,
+    fonte, setFonte
   } = useContactsFilter(estabelecimentoId, state.canal);
 
   const { 

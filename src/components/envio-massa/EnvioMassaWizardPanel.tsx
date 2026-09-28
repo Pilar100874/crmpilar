@@ -88,8 +88,8 @@ export function EnvioMassaWizardPanel({
     segmentos, 
     loading: loadingContacts,
     filters,
-    applyFilters 
-    fonte, setFonte,
+    applyFilters,
+    fonte, setFonte
   } = useContactsFilter(estabelecimentoId, state.canal);
 
   const { 
