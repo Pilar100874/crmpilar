@@ -25,6 +25,8 @@ interface StepFilterProps {
   onBack: () => void;
   onNext: () => void;
   canal: CanalEnvio | null;
+  fonte?: 'agenda' | 'todos';
+  onFonteChange?: (fonte: 'agenda' | 'todos') => void;
 }
 
 export function StepFilter({
@@ -36,7 +38,9 @@ export function StepFilter({
   onSelectContacts,
   onBack,
   onNext,
-  canal
+  canal,
+  fonte,
+  onFonteChange,
 }: StepFilterProps) {
   const [localFilters, setLocalFilters] = useState<EnvioMassaFilters>(filters);
   const [accordionValue, setAccordionValue] = useState<string>("filters");

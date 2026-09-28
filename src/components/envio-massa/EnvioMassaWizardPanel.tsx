@@ -89,6 +89,7 @@ export function EnvioMassaWizardPanel({
     loading: loadingContacts,
     filters,
     applyFilters 
+    fonte, setFonte,
   } = useContactsFilter(estabelecimentoId, state.canal);
 
   const { 
@@ -431,6 +432,8 @@ export function EnvioMassaWizardPanel({
 
           {state.step === 'filter' && (
             <StepFilter
+              fonte={fonte}
+              onFonteChange={setFonte}
               contacts={contacts}
               selectedContacts={state.selectedContacts}
               segmentos={segmentos}
