@@ -3994,8 +3994,25 @@ ${recentMessages}
   const filaItems = useMemo<FilaItem[]>(() => {
     const lista: FilaItem[] = [];
 
-    // Agendados: tarefas da agenda
-    filteredTasks.forEach((task: any) => {
+    // Agendados: tarefas da agenda.
+    // Na aba "Tudo", mostra só um cartão por contato (o mais urgente), não um por tarefa.
+    const vistosTudo = new Set<string>();
+    const agoraRef = new Date();
+    const horaAtualRef = `${String(agoraRef.getHours()).padStart(2, "0")}:${String(agoraRef.getMinutes()).padStart(2, "0")}`;
+    const urgencia = (task: any) => {
+      const atrasado = (task.diasAtraso || 0) > 0 || (!!task.time && task.time < horaAtualRef);
+      return `${atrasado ? 0 : 1}-${String(999 - Math.min(task.diasAtraso || 0, 999)).padStart(3, "0")}-${task.time || "99:99"}`;
+    };
+    const tarefasOrdenadas = [...filteredTasks].sort((a: any, b: any) => urgencia(a).localeCompare(urgencia(b)));
+    const tarefasDaFila = filtroFila === "tudo"
+      ? tarefasOrdenadas.filter((task: any) => {
+          const chave = task.contact_id || task.id;
+          if (vistosTudo.has(chave)) return false;
+          vistosTudo.add(chave);
+          return true;
+        })
+      : filteredTasks;
+    tarefasDaFila.forEach((task: any) => {
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
