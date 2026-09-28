@@ -3994,25 +3994,65 @@ ${recentMessages}
   const filaItems = useMemo<FilaItem[]>(() => {
     const lista: FilaItem[] = [];
 
-    // Agendados: tarefas da agenda.
-    // Na aba "Tudo", mostra só um cartão por contato (o mais urgente), não um por tarefa.
-    const vistosTudo = new Set<string>();
-    const agoraRef = new Date();
-    const horaAtualRef = `${String(agoraRef.getHours()).padStart(2, "0")}:${String(agoraRef.getMinutes()).padStart(2, "0")}`;
-    const urgencia = (task: any) => {
-      const atrasado = (task.diasAtraso || 0) > 0 || (!!task.time && task.time < horaAtualRef);
-      return `${atrasado ? 0 : 1}-${String(999 - Math.min(task.diasAtraso || 0, 999)).padStart(3, "0")}-${task.time || "99:99"}`;
-    };
-    const tarefasOrdenadas = [...filteredTasks].sort((a: any, b: any) => urgencia(a).localeCompare(urgencia(b)));
-    const tarefasDaFila = filtroFila === "tudo"
-      ? tarefasOrdenadas.filter((task: any) => {
-          const chave = task.contact_id || task.id;
-          if (vistosTudo.has(chave)) return false;
-          vistosTudo.add(chave);
-          return true;
-        })
-      : filteredTasks;
-    tarefasDaFila.forEach((task: any) => {
+    // Aba "Tudo": todos os contatos vinculados ao usuário (ou aos usuários que ele está vendo),
+    // um cartão por contato — não por tarefa.
+    if (filtroFila === "tudo") {
+      contatosComIndicadores.forEach((contato) => {
+        const ce = contato.companies || [];
+        const principal = ce.find((c: any) => c.is_primary) || ce[0];
+        const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
+        const canal: FilaCanal = contato.telefone
+          ? "whatsapp"
+          : contato.tel
+            ? "telefone"
+            : contato.email
+              ? "email"
+              : "telefone";
+        lista.push({
+          id: `contato-${contato.id}`,
+          tipo: "agendado",
+          contactId: contato.id,
+          nome: contato.nome,
+          empresa: empresaNome,
+          motivo: contato.referencia || "Meu contato",
+          canal,
+          horario: (contato.horario || "").slice(0, 5),
+          atrasado: (contato.diasAtraso || 0) > 0,
+          bloqueado: pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
+          canais: [
+            ...(contato.telefone ? ["whatsapp" as FilaCanal] : []),
+            ...(contato.tel ? ["telefone" as FilaCanal] : []),
+            ...(contato.email ? ["email" as FilaCanal] : []),
+            "visita" as FilaCanal,
+          ],
+          onCanal: (c: FilaCanal) => {
+            if (bloquearTrocaClientePendente(contato.id)) return;
+            setHistoricoCliente(null);
+            setActiveTab(c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+          },
+          onOrcamento: (orcId: string) => {
+            if (bloquearTrocaClientePendente(contato.id)) return;
+            const orc: any = orcamentos.find((o: any) => o.id === orcId);
+            setHistoricoCliente(null);
+            setActiveTab("orcamento");
+            setSelectedOrcamentoId(orcId);
+            if (orc) { setSelectedOrcamentoData(orc); setContatoOrcamentoDetalhe(orc); }
+          },
+          onClick: () => {
+            if (bloquearTrocaClientePendente(contato.id)) return;
+            setActiveTab("agenda");
+            setSelectedAgendaContato(null);
+            openDetailsPanel(setShowClientDetailsAgenda);
+            setAgendaViewMode("default");
+            setDiscadorModo(null);
+            setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
+          },
+        });
+      });
+    }
+
+    // Agendados: tarefas da agenda
+    if (filtroFila !== "tudo") filteredTasks.forEach((task: any) => {
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4076,9 +4116,12 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: conversas aguardando atendimento
+    // Recebidos: conversas aguardando atendimento.
+    // Na aba "Tudo", pula conversas de contatos que já têm cartão na lista.
+    const idsNaLista = new Set(lista.map((item) => item.contactId).filter(Boolean));
     filteredConversations
       .filter((conv) => conv.chat_status === "em_fila" || conv.chat_status === "novo")
+      .filter((conv) => filtroFila !== "tudo" || !conv.customer_id || !idsNaLista.has(conv.customer_id))
       .forEach((conv) => {
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
@@ -4126,7 +4169,7 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos]);
+  }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
