@@ -4004,7 +4004,7 @@ ${recentMessages}
       return `${atrasado ? 0 : 1}-${String(999 - Math.min(task.diasAtraso || 0, 999)).padStart(3, "0")}-${task.time || "99:99"}`;
     };
     const tarefasOrdenadas = [...filteredTasks].sort((a: any, b: any) => urgencia(a).localeCompare(urgencia(b)));
-    const tarefasDaFila = filtroFila === "todos"
+    const tarefasDaFila = filtroFila === "tudo"
       ? tarefasOrdenadas.filter((task: any) => {
           const chave = task.contact_id || task.id;
           if (vistosTudo.has(chave)) return false;
