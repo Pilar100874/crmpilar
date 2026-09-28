@@ -2861,6 +2861,17 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               </div>
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
+              {diasRecolhidos && (
+                <Button
+                  size="sm"
+                  onClick={() => { setSelectedDate(null); setShowTaskDialog(true); }}
+                  className="h-9 gap-1"
+                  aria-label="Agendar"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Agendar</span>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
