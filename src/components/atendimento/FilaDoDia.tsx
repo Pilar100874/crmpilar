@@ -102,6 +102,22 @@ interface FilaDoDiaProps {
 
 export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
+  const [orcAberto, setOrcAberto] = useState<string | null>(null);
+  const [orcLista, setOrcLista] = useState<any[]>([]);
+  const [orcCarregando, setOrcCarregando] = useState(false);
+  const alternarOrcamentos = async (contactId: string) => {
+    if (orcAberto === contactId) { setOrcAberto(null); return; }
+    setOrcAberto(contactId);
+    setOrcCarregando(true);
+    const { data } = await supabase
+      .from("orcamentos")
+      .select("id, created_at, status, etapa, valor_total")
+      .eq("cliente_id", contactId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    setOrcLista(data || []);
+    setOrcCarregando(false);
+  };
   const filtro = filtroProp ?? filtroInterno;
   const setFiltro = (valor: FiltroFila) => {
     setFiltroInterno(valor);
