@@ -4052,8 +4052,10 @@ ${recentMessages}
       });
     }
 
-    // Agendados: tarefas da agenda
-    if (filtroFila !== "tudo") filteredTasks.forEach((task: any) => {
+    // Agendados: tarefas da agenda, somente de contatos vinculados ao(s) usuário(s) visíveis
+    if (filtroFila === "agendados") filteredTasks
+      .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
+      .forEach((task: any) => {
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
