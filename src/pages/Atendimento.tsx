@@ -4174,6 +4174,15 @@ ${recentMessages}
     return lista;
   }, [filteredTasks, filteredConversations, filteredEmails, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
+  // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
+  const totaisFila = useMemo(() => ({
+    tudo: contatosComIndicadores.length,
+    agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
+    recebidos:
+      filteredConversations.filter((conv) => conv.chat_status !== "encerrado" && (!conv.lastMessage?.sender || conv.lastMessage.sender === "customer")).length +
+      filteredEmails.filter((email) => !email.read).length,
+  }), [contatosComIndicadores, filteredTasks, idsContatosVinculados, filteredConversations, filteredEmails]);
+
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
     filaItems.map((item) => ({
@@ -5382,6 +5391,7 @@ ${recentMessages}
                   filtro={filtroFila}
                   onFiltroChange={aoTrocarFiltroFila}
                   assumirContatos={assumirContatosConfig}
+                  totais={totaisFila}
                 />
               </div>
             </div>
@@ -5927,6 +5937,7 @@ ${recentMessages}
           filtro={filtroFila}
           onFiltroChange={aoTrocarFiltroFila}
           assumirContatos={assumirContatosConfig}
+          totais={totaisFila}
         />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}

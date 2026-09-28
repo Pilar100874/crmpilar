@@ -98,9 +98,11 @@ interface FilaDoDiaProps {
   filtro?: FiltroFila;
   onFiltroChange?: (filtro: FiltroFila) => void;
   assumirContatos?: AssumirContatosConfig;
+  /** Totais fixos de cada aba (não dependem da aba ativa). */
+  totais?: { tudo: number; agendados: number; recebidos: number };
 }
 
-export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos }: FilaDoDiaProps) {
+export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
@@ -182,9 +184,9 @@ export function FilaDoDia({ items, onEnvioMassa, onConfigurarRegra, vazioTexto, 
   };
 
   const chips: { id: FiltroFila; label: string; total: number }[] = [
-    { id: "tudo", label: "Tudo", total: items.length },
-    { id: "agendados", label: "Agendados", total: totalAgendados },
-    { id: "recebidos", label: "Recebidos", total: totalRecebidos },
+    { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
+    { id: "agendados", label: "Agendados", total: totais?.agendados ?? totalAgendados },
+    { id: "recebidos", label: "Recebidos", total: totais?.recebidos ?? totalRecebidos },
   ];
 
   return (
