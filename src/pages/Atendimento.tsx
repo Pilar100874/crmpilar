@@ -5890,9 +5890,9 @@ ${recentMessages}
           ? 'hidden' 
           : showConversationsList 
             ? isSmallTablet 
-              ? 'w-40' 
+              ? 'w-[320px] shrink-0' 
               : isTablet 
-                ? 'w-48'
+                ? 'w-[340px] shrink-0'
                 : 'w-72 lg:w-80' 
             : 'w-0 border-r-0'
       }`}>
@@ -5931,6 +5931,7 @@ ${recentMessages}
         {/* Fila do dia - lista unificada (visual da referência) */}
         <FilaDoDia
           items={filaItems}
+          tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
           onEnvioMassa={() => {
             setActiveTab("agenda");
