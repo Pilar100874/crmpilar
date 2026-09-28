@@ -403,6 +403,8 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
   }, [canal, contactsByChannel]);
 
   return {
+    fonte,
+    setFonte,
     contacts: filteredContacts,
     allContacts: contacts,
     contactsByChannel,
