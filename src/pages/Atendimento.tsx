@@ -282,6 +282,7 @@ export default function Atendimento() {
   // Discador: popup de escolha do modo e modo ativo dentro do Fluxo de Atendimento
   const [showDiscadorModo, setShowDiscadorModo] = useState(false);
   const [discadorModo, setDiscadorModo] = useState<'previa' | 'sequencial' | null>(null);
+  const [discadorContatos, setDiscadorContatos] = useState<string[] | null>(null);
   
   // Tool trigger state (for radial menu -> ChatInput communication)
   const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
@@ -4524,6 +4525,28 @@ ${recentMessages}
     }
   };
 
+  // Ligação sequencial a partir dos contatos selecionados na Fila do dia
+  const tasksDiscador = useMemo(() => {
+    if (!discadorContatos) return filteredTasks;
+    const set = new Set(discadorContatos);
+    return filteredTasks.filter((t: any) => set.has(t.customer_id ?? t.customers?.id));
+  }, [filteredTasks, discadorContatos]);
+
+  const iniciarLigacaoSelecionados = (ids: string[]) => {
+    if (ids.length === 0) {
+      toast.error("Selecione os contatos primeiro");
+      return;
+    }
+    const set = new Set(ids);
+    const comTarefa = filteredTasks.filter((t: any) => set.has(t.customer_id ?? t.customers?.id) && t.customers?.telefone);
+    if (comTarefa.length === 0) {
+      toast.error("Nenhum contato selecionado com telefone e tarefa para ligar");
+      return;
+    }
+    setDiscadorContatos(ids);
+    void abrirDiscador();
+  };
+
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
     switch (item.id) {
       case "chat":
@@ -5386,7 +5409,7 @@ ${recentMessages}
                   }`}
                 >
                   <FluxoAtendimentoPanel
-                    tasks={filteredTasks}
+                    tasks={tasksDiscador}
                     estabelecimentoId={estabelecimentoId}
                     usuarioId={usuarioId}
                     onTaskCompleted={loadTodayTasks}
@@ -5514,6 +5537,7 @@ ${recentMessages}
                 <FilaDoDia
                   items={filaItemsMobile}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+                  onLigacaoSequencial={iniciarLigacaoSelecionados}
                   onEnvioMassa={() => {
                     setActiveTab("agenda");
                     setAgendaViewMode("default");
@@ -6078,6 +6102,7 @@ ${recentMessages}
           items={filaItems}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
+          onLigacaoSequencial={iniciarLigacaoSelecionados}
           onEnvioMassa={() => {
             setActiveTab("agenda");
             setAgendaViewMode("default");
@@ -7420,7 +7445,7 @@ ${recentMessages}
     <DiscadorModoDialog
       open={showDiscadorModo}
       onOpenChange={setShowDiscadorModo}
-      totalContatos={filteredTasks.filter(t => t.customers?.telefone).length}
+      totalContatos={tasksDiscador.filter(t => t.customers?.telefone).length}
       onSelect={(modo) => {
         setDiscadorModo(modo);
         setShowDiscadorModo(false);

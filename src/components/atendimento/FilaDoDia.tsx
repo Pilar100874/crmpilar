@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarCheck, CalendarDays, FileText, History } from "lucide-react";
+import { CalendarCheck, CalendarDays, FileText, History, PhoneCall } from "lucide-react";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { supabase } from "@/integrations/supabase/client";
