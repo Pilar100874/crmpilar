@@ -3846,6 +3846,21 @@ ${recentMessages}
 
   // Cliente do cartão selecionado — alimenta o cabeçalho com os canais disponíveis.
   const clienteCabecalho = useMemo(() => {
+    const base: any = clienteCabecalhoBase;
+    if (!base) return null;
+    // Completa os canais com o cadastro do contato para os botões não sumirem ao trocar de aba.
+    const cad: any = base.id ? contatosComIndicadores.find((c: any) => c.id === base.id) : null;
+    if (!cad) return base;
+    return {
+      ...base,
+      telefone: base.telefone || cad.telefone || cad.whatsapp || null,
+      tel: base.tel || cad.tel || null,
+      email: base.email || cad.email || null,
+      empresa: base.empresa || (cad.companies || []).find((x: any) => x?.is_primary)?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome || null,
+    };
+  }, [clienteCabecalhoBase, contatosComIndicadores]);
+
+  const clienteCabecalhoBase = useMemo(() => {
     const empresaDe = (lista: any[] | undefined) => {
       const e = (lista || []).find((x: any) => x?.is_primary) || (lista || [])[0];
       return e?.empresas?.nome_fantasia || e?.empresas?.nome || null;
