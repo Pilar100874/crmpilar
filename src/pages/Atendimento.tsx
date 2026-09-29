@@ -3534,15 +3534,6 @@ ${recentMessages}
     localStorage.setItem("atendimento_cards_compactos", cardsCompactos ? "true" : "false");
   }, [cardsCompactos]);
 
-  // Barra de próximo contato: aparece quando há interação sem próxima data
-  const contatoPendenteBarra = useMemo(() => {
-    const id = pendenciasAtendimento[0];
-    if (!id) return null;
-    const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
-    const nome = cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente";
-    return { id, nome };
-  }, [pendenciasAtendimento, contatosBase, clienteCabecalho]);
-
   // Pedido de finalização vindo do botão "Finalizar" do cartão
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
@@ -3930,6 +3921,16 @@ ${recentMessages}
       empresa: base.empresa || (cad.companies || []).find((x: any) => x?.is_primary)?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome || null,
     };
   }, [clienteCabecalhoBase, contatosBase]);
+
+  // Barra de próximo contato: aparece quando há interação sem próxima data
+  const contatoPendenteBarra = useMemo(() => {
+    const id = pendenciasAtendimento[0];
+    if (!id) return null;
+    const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
+    const nome = cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente";
+    return { id, nome };
+  }, [pendenciasAtendimento, contatosBase, clienteCabecalho]);
+
 
 
   // Update counters based on filtered data
