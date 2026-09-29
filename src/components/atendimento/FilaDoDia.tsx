@@ -64,11 +64,11 @@ export interface FilaItem {
 type FiltroFila = "tudo" | "agendados" | "recebidos";
 type OrdenacaoFila = "prioridade" | "horario" | "nome";
 
-const CANAL_CONFIG: Record<FilaCanal, { label: string; icon: typeof Phone; cor: string; fundo: string; fundoEscuro: string }> = {
-  telefone: { label: "Telefone", icon: Phone, cor: "text-primary", fundo: "bg-primary/10", fundoEscuro: "bg-primary/30" },
-  whatsapp: { label: "WhatsApp", icon: MessageCircle, cor: "text-success", fundo: "bg-success/10", fundoEscuro: "bg-success/30" },
-  email: { label: "E-mail", icon: Mail, cor: "text-info", fundo: "bg-info/10", fundoEscuro: "bg-info/30" },
-  visita: { label: "Visita", icon: MapPin, cor: "text-purple-500", fundo: "bg-purple-500/10", fundoEscuro: "bg-purple-500/30" },
+const CANAL_CONFIG: Record<FilaCanal, { label: string; icon: typeof Phone; cor: string; fundo: string; borda: string }> = {
+  telefone: { label: "Telefone", icon: Phone, cor: "text-primary", fundo: "bg-primary/10", borda: "border-primary" },
+  whatsapp: { label: "WhatsApp", icon: MessageCircle, cor: "text-success", fundo: "bg-success/10", borda: "border-success" },
+  email: { label: "E-mail", icon: Mail, cor: "text-info", fundo: "bg-info/10", borda: "border-info" },
+  visita: { label: "Visita", icon: MapPin, cor: "text-purple-500", fundo: "bg-purple-500/10", borda: "border-purple-500" },
 };
 
 function iniciais(nome: string): string {
