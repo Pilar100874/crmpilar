@@ -442,14 +442,14 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     {item.empresa && (
                        <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
                     )}
-                    {item.contactId && (item.canais?.length || 0) > 0 && (
+                    {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
                       <div className="mt-1 flex items-center gap-1">
-                        {item.canais!.map((c) => {
+                        {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
                           const cfg = CANAL_CONFIG[c];
                           const Ic = cfg.icon;
                           const destaque = filtro !== "tudo" && c === item.canal;
                           return (
-                            <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); item.onCanal?.(c); }}
+                            <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); if (item.tipo === "recebido" && c === item.canal) { item.onClick(); } else { item.onCanal?.(c); } }}
                               className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
                               <Ic className="h-3 w-3" />
                             </button>
