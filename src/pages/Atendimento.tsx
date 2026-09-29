@@ -181,6 +181,7 @@ export default function Atendimento() {
     return () => ro.disconnect();
   });
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
+  const [orcamentosCliente, setOrcamentosCliente] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
@@ -4340,6 +4341,11 @@ ${recentMessages}
     }
   }
 
+  // Fecha a lista de orçamentos ao trocar de cliente
+  useEffect(() => {
+    setOrcamentosCliente((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
+  }, [(clienteCabecalho as any)?.id]);
+
   // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
   useEffect(() => {
     dispararWipe();
@@ -6006,10 +6012,20 @@ ${recentMessages}
           <div ref={cabecalhoRef}>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
-            abaAtiva={activeTab}
-            onTrocarCanal={(aba) => { setHistoricoCliente(null); trocarAba(aba); }}
+            abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
+            onTrocarCanal={(aba) => {
+              setHistoricoCliente(null);
+              if (aba === "orcamento") {
+                const id = (clienteCabecalho as any)?.id;
+                setOrcamentosCliente(orcamentosCliente || !id ? null : { id, nome: clienteCabecalho?.nome || "Cliente" });
+                return;
+              }
+              setOrcamentosCliente(null);
+              trocarAba(aba);
+            }}
             historicoAtivo={!!historicoCliente}
             onHistorico={() => {
+              setOrcamentosCliente(null);
               const id = (clienteCabecalho as any)?.id;
               setHistoricoCliente(historicoCliente ? null : { customerId: id || undefined, nome: clienteCabecalho?.nome });
             }}
@@ -6029,6 +6045,66 @@ ${recentMessages}
             onClose={() => setExtrasEmpresa(null)}
           />
         )}
+        {/* Últimos orçamentos do cliente em tela central */}
+        {orcamentosCliente && clienteCabecalho && !isMobile && (() => {
+          const lista = (orcamentos as any[])
+            .filter((o) => o.cliente_id === orcamentosCliente.id)
+            .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+            .slice(0, 10);
+          const empresaId = lista[0]?.empresa_id || null;
+          return (
+            <div style={{ top: alturaCabecalho }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+              <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">Últimos orçamentos</p>
+                  <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Novo orçamento
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setOrcamentosCliente(null)}>
+                    <X className="h-4 w-4 mr-1" /> Fechar
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2">
+                {lista.length === 0 && (
+                  <p className="py-10 text-center text-sm text-muted-foreground">Nenhum orçamento para este cliente.</p>
+                )}
+                {lista.map((o: any) => (
+                  <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+                    <Receipt className="h-5 w-5 text-warning flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold">
+                        {o.numero ? `Nº ${o.numero}` : `#${String(o.id).slice(0, 8).toUpperCase()}`}
+                        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{o.etapa || o.status || "orçamento"}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {o.created_at ? format(new Date(o.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : ""}
+                        {o.itens?.length ? ` · ${o.itens.length} ${o.itens.length === 1 ? "item" : "itens"}` : ""}
+                      </p>
+                    </div>
+                    <p className="text-sm font-bold text-foreground">
+                      {Number(o.valor_total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setOrcamentosCliente(null);
+                        setActiveTab('orcamento');
+                        setSelectedOrcamentoId(o.id);
+                        setSelectedOrcamentoData(o);
+                        setOrcamentoSheetOpen(true);
+                      }}>Abrir</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setConfirmDuplicateOrcamento(o.id)}>Duplicar</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setConfirmDeleteOrcamento(o.id)}>Excluir</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
           <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
