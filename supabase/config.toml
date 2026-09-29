@@ -17,10 +17,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.fetch-emails]
-verify_jwt = true
+verify_jwt = false
 
 [functions.extract-orcamento-items]
 verify_jwt = false
@@ -224,16 +224,16 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.gmail-auth-start]
-verify_jwt = true
+verify_jwt = false
 
 [functions.gmail-auth-callback]
 verify_jwt = false
 
 [functions.gmail-fetch-emails]
-verify_jwt = true
+verify_jwt = false
 
 [functions.gmail-send-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.test-email-connection]
 verify_jwt = false
