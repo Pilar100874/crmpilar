@@ -3962,33 +3962,22 @@ ${recentMessages}
   }, [conversations]);
 
   const indicadoresPorContato = useMemo(() => {
-    const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
-    const contatos = new Map<string, any>();
-    contatosBase.forEach((contato) => contatos.set(contato.id, contato));
-    todayTasks.forEach((task: any) => {
-      if (task.contact_id) contatos.set(task.contact_id, task.customers || contatos.get(task.contact_id));
-    });
-    conversations.forEach((conversa: any) => {
-      if (conversa.customer_id) contatos.set(conversa.customer_id, conversa.customer || contatos.get(conversa.customer_id));
-    });
-
-    contatos.forEach((contato, contatoId) => {
-      const empresas = contato?.customer_empresas || contato?.companies || [];
-      const empresaIds = empresas.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id).filter(Boolean);
-      const tarefas = todayTasks.filter((task: any) => task.contact_id === contatoId && !["concluido", "cancelado", "completed"].includes(task.status));
-      const { maior: diasAtraso, data: dataAtraso } = tarefas.reduce((acc: { maior: number; data?: string }, task: any) => {
+    const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; horarioAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
+...
+      const { maior: diasAtraso, data: dataAtraso, horario: horarioAtraso } = tarefas.reduce((acc: { maior: number; data?: string; horario?: string }, task: any) => {
         if (!task.data_original) return acc;
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         const original = new Date(task.data_original);
         original.setHours(0, 0, 0, 0);
         const dias = Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000));
-        if (dias > acc.maior) return { maior: dias, data: format(original, "dd/MM") };
+        if (dias > acc.maior) return { maior: dias, data: format(original, "dd/MM"), horario: (task.time || "").slice(0, 5) || undefined };
         return acc;
-      }, { maior: 0, data: undefined as string | undefined });
+      }, { maior: 0, data: undefined as string | undefined, horario: undefined as string | undefined });
       mapa.set(contatoId, {
         diasAtraso,
         dataAtraso: diasAtraso > 0 ? dataAtraso : undefined,
+        horarioAtraso: diasAtraso > 0 ? horarioAtraso : undefined,
         emailsNaoLidos: emailsNaoLidosPerEmail[String(contato?.email || "").toLowerCase()] || 0,
         chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(contato?.telefone)] || 0,
         orcamentosAbertos: (orcamentosAbertosPerCustomer[contatoId] || 0)

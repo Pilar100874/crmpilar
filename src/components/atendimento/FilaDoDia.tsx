@@ -467,8 +467,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     )}
                     {item.atrasado && (
                       <p className="mt-0.5 text-[9px] font-semibold text-destructive leading-none whitespace-nowrap">
-                        {item.horario || "--:--"}
-                        {item.data ? ` · ${item.data}` : ""} · Atrasado
+                        Atrasado{item.data ? ` · ${item.data}` : ""} · {item.horario || "--:--"}
                       </p>
                     )}
                     {(item.mensagensNovas || 0) > 0 && (
@@ -479,18 +478,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                       </span>
                     )}
                   </div>
-                </div>
-
-                {/* Horário em destaque */}
-                 <div className={cn("shrink-0 text-right", tablet && "col-start-2 row-start-2 pr-1")}>
-                  <p
-                    className={cn(
-                      "text-[17px] font-extrabold leading-tight tabular-nums",
-                      item.atrasado ? "text-destructive" : "text-foreground"
-                    )}
-                  >
-                    {item.horario || "--:--"}
-                  </p>
                 </div>
 
                 {/* Menu */}
