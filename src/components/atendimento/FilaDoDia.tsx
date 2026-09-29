@@ -58,6 +58,7 @@ export interface FilaItem {
   canais?: FilaCanal[];
   onCanal?: (canal: FilaCanal) => void;
   onOrcamento?: (orcamentoId: string) => void;
+  onOrcamentosCentro?: (contactId: string, nome: string) => void;
   onHistorico?: () => void;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
