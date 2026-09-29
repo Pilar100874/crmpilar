@@ -1307,7 +1307,7 @@ export default function ChatInput({
       {/* Main container with elegant styling */}
       <div className="relative overflow-visible">
         {/* Main input container */}
-        <div className="relative z-10 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible">
+        <div className="relative z-10 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible [@media(pointer:fine)and(min-width:1025px)]:pr-14">
           {/* Input row */}
           <div className="flex items-end gap-2 overflow-visible relative z-10">
             {/* Expandable Tools Menu - positioned to expand upward */}
