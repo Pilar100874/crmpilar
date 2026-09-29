@@ -153,7 +153,7 @@ export default {
           "50%": { opacity: "0.35", filter: "brightness(1.4)" },
         },
         "wipe-in": {
-          "0%": { clipPath: "inset(0 100% 0 0)", opacity: "0.6" },
+          "0%": { clipPath: "inset(0 0 100% 0)", opacity: "0.6" },
           "100%": { clipPath: "inset(0 0 0 0)", opacity: "1" },
         },
       },
