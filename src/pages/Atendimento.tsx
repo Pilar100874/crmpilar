@@ -3962,7 +3962,7 @@ ${recentMessages}
   }, [conversations]);
 
   const indicadoresPorContato = useMemo(() => {
-    const mapa = new Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
+    const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
     const contatos = new Map<string, any>();
     contatosBase.forEach((contato) => contatos.set(contato.id, contato));
     todayTasks.forEach((task: any) => {
