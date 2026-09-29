@@ -169,9 +169,13 @@ export default function Atendimento() {
     const el = quadroCentralRef.current;
     if (!el) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
-    el.classList.remove("animate-wipe-in");
-    void el.offsetWidth;
-    el.classList.add("animate-wipe-in");
+    // Anima só o conteúdo central, nunca o cabeçalho/barras superiores
+    Array.from(el.children).forEach((filho) => {
+      if (filho === cabecalhoRef.current) return;
+      filho.classList.remove("animate-wipe-in");
+      void (filho as HTMLElement).offsetWidth;
+      filho.classList.add("animate-wipe-in");
+    });
   };
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
@@ -4071,7 +4075,8 @@ ${recentMessages}
           },
           onHistorico: () => {
             if (bloquearTrocaClientePendente(contato.id)) return;
-            setActiveTab("agenda");
+            setAgendaContato(null);
+            setOrcamentosCliente(null);
             setSelectedAgendaContato(contato);
             setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
           },
@@ -4159,7 +4164,8 @@ ${recentMessages}
         },
         onHistorico: () => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
-          setActiveTab("agenda");
+          setAgendaContato(null);
+          setOrcamentosCliente(null);
           setSelectedTaskId(task.id);
           setSelectedTaskData(task);
           setHistoricoCliente({ customerId: task.contact_id, nome });
@@ -4394,7 +4400,7 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
 
-  if (loading) {
+  if (loading || loadingFerramentas) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
