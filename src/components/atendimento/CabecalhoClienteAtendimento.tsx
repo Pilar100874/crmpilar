@@ -99,9 +99,9 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         )}
         {onAgenda && (
           <button type="button" onClick={onAgenda} title="Agenda" aria-label="Agenda"
-            className={cn("flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors",
+            className={cn("flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
               agendaAtiva ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40")}>
-            <CalendarDays className="h-4 w-4 text-primary" /> Agenda
+            <CalendarDays className="h-4 w-4 text-primary" />
           </button>
         )}
         {canais.map((c) => {
