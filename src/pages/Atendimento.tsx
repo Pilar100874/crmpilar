@@ -5926,7 +5926,7 @@ ${recentMessages}
           {!(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <nav aria-label="Seções do atendimento" className="order-last flex-shrink-0 grid grid-cols-3 border-t border-border bg-card pb-safe">
               {([
-                { id: "list", label: "Fila do dia", icon: CalendarIcon },
+                { id: "list", label: "Contatos", icon: CalendarIcon },
                 { id: "main", label: "Atendimento", icon: MessageSquare },
                 { id: "details", label: "Cadastro", icon: User },
               ] as const).map((t) => {
@@ -6065,8 +6065,8 @@ ${recentMessages}
           <button
             type="button"
             onClick={() => setShowConversationsList(true)}
-            title="Abrir Fila do dia"
-            aria-label="Abrir Fila do dia"
+            title="Abrir Contatos"
+            aria-label="Abrir Contatos"
             className="fixed left-0 top-1/2 z-[640] -translate-y-1/2 flex h-16 w-7 items-center justify-center rounded-r-lg border border-l-0 border-border bg-card shadow-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30"
           >
             <ChevronRight className="h-4 w-4" />

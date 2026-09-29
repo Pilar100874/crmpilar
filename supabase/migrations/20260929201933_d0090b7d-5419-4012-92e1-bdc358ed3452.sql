@@ -1,0 +1,1 @@
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS bot_atendimento_id uuid REFERENCES public.chat_agents(id) ON DELETE SET NULL, ADD COLUMN IF NOT EXISTS bot_atendimento_ativo boolean NOT NULL DEFAULT false;
