@@ -4525,24 +4525,41 @@ ${recentMessages}
     }
   };
 
-  // Ligação sequencial a partir dos contatos selecionados na Fila do dia
+  // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
+  const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
   const tasksDiscador = useMemo(() => {
     if (!discadorContatos) return filteredTasks;
-    const set = new Set(discadorContatos);
-    return filteredTasks.filter((t: any) => set.has(t.customer_id ?? t.customers?.id));
-  }, [filteredTasks, discadorContatos]);
+    return tasksSelecionadas ?? [];
+  }, [filteredTasks, discadorContatos, tasksSelecionadas]);
 
-  const iniciarLigacaoSelecionados = (ids: string[]) => {
+  const iniciarLigacaoSelecionados = async (ids: string[]) => {
     if (ids.length === 0) {
-      toast.error("Selecione os contatos primeiro");
+      toast.error("Selecione os contatos da lista primeiro");
       return;
     }
-    const set = new Set(ids);
-    const comTarefa = filteredTasks.filter((t: any) => set.has(t.customer_id ?? t.customers?.id) && t.customers?.telefone);
-    if (comTarefa.length === 0) {
-      toast.error("Nenhum contato selecionado com telefone e tarefa para ligar");
+    const { data: clientes } = await supabase
+      .from("customers")
+      .select("id, nome, email, telefone")
+      .in("id", ids);
+    const hoje = new Date().toLocaleDateString("en-CA");
+    const lista = ids
+      .map((id) => {
+        const tarefa = filteredTasks.find((t: any) => (t.contact_id ?? t.customers?.id) === id);
+        if (tarefa) return tarefa;
+        const c = (clientes || []).find((x: any) => x.id === id);
+        if (!c) return null;
+        return {
+          id: `contato-${id}`, contact_id: id, contact_name: c.nome, title: "Ligação",
+          date: hoje, origem: "ligacao", status: "pending",
+          customers: { id, nome: c.nome, email: c.email, telefone: c.telefone },
+        };
+      })
+      .filter((t: any) => t && t.customers?.telefone);
+    if (lista.length === 0) {
+      toast.error("Nenhum contato selecionado tem telefone");
       return;
     }
+    setTasksSelecionadas(lista);
     setDiscadorContatos(ids);
     void abrirDiscador();
   };

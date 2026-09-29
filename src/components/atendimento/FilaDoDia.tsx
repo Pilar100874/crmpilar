@@ -384,7 +384,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
             size="sm"
             disabled={selecionados.size === 0}
             title={selecionados.size === 0 ? "Selecione os contatos primeiro" : undefined}
-            onClick={() => onEnvioMassa(Array.from(selecionados))}
+            onClick={() => onEnvioMassa(visiveis.filter((i) => selecionados.has(i.id)).map((i) => i.id))}
             className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
           >
             <Send className="h-3.5 w-3.5" />
@@ -397,8 +397,9 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
               disabled={selecionados.size === 0}
               title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Ligação sequencial"}
               onClick={() => {
-                const ids = items
+                const ids = visiveis
                   .filter((i) => selecionados.has(i.id) && i.contactId)
+                  
                   .map((i) => i.contactId as string);
                 onLigacaoSequencial(Array.from(new Set(ids)));
               }}
