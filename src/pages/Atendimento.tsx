@@ -3962,7 +3962,7 @@ ${recentMessages}
   }, [conversations]);
 
   const indicadoresPorContato = useMemo(() => {
-    const mapa = new Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
+    const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
     const contatos = new Map<string, any>();
     contatosBase.forEach((contato) => contatos.set(contato.id, contato));
     todayTasks.forEach((task: any) => {
@@ -3976,16 +3976,19 @@ ${recentMessages}
       const empresas = contato?.customer_empresas || contato?.companies || [];
       const empresaIds = empresas.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id).filter(Boolean);
       const tarefas = todayTasks.filter((task: any) => task.contact_id === contatoId && !["concluido", "cancelado", "completed"].includes(task.status));
-      const diasAtraso = tarefas.reduce((maior: number, task: any) => {
-        if (!task.data_original) return maior;
+      const { maior: diasAtraso, data: dataAtraso } = tarefas.reduce((acc: { maior: number; data?: string }, task: any) => {
+        if (!task.data_original) return acc;
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         const original = new Date(task.data_original);
         original.setHours(0, 0, 0, 0);
-        return Math.max(maior, Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000)));
-      }, 0);
+        const dias = Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000));
+        if (dias > acc.maior) return { maior: dias, data: format(original, "dd/MM") };
+        return acc;
+      }, { maior: 0, data: undefined as string | undefined });
       mapa.set(contatoId, {
         diasAtraso,
+        dataAtraso: diasAtraso > 0 ? dataAtraso : undefined,
         emailsNaoLidos: emailsNaoLidosPerEmail[String(contato?.email || "").toLowerCase()] || 0,
         chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(contato?.telefone)] || 0,
         orcamentosAbertos: (orcamentosAbertosPerCustomer[contatoId] || 0)
@@ -4044,6 +4047,7 @@ ${recentMessages}
           motivo: contato.referencia || "Meu contato",
           canal,
           horario: (contato.horario || "").slice(0, 5),
+          data: contato.dataAtraso || undefined,
           atrasado: (contato.diasAtraso || 0) > 0,
           bloqueado: pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
           canais: [
@@ -4113,6 +4117,7 @@ ${recentMessages}
         motivo,
         canal,
         horario: (task.time || "").slice(0, 5),
+        data: task.data_original ? format(new Date(task.data_original), "dd/MM") : undefined,
         atrasado,
         selecionado: selectedTaskId === task.id,
         bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),

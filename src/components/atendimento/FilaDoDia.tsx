@@ -46,6 +46,8 @@ export interface FilaItem {
   motivo: string;
   canal: FilaCanal;
   horario?: string;
+  /** Data do agendamento atrasado (dd/MM). */
+  data?: string;
   atrasado?: boolean;
   mensagensNovas?: number;
   selecionado?: boolean;
@@ -464,7 +466,10 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                       </div>
                     )}
                     {item.atrasado && (
-                      <p className="mt-0.5 text-[9px] font-semibold text-destructive leading-none whitespace-nowrap">Atrasado</p>
+                      <p className="mt-0.5 text-[9px] font-semibold text-destructive leading-none whitespace-nowrap">
+                        {item.horario || "--:--"}
+                        {item.data ? ` · ${item.data}` : ""} · Atrasado
+                      </p>
                     )}
                     {(item.mensagensNovas || 0) > 0 && (
                       <span className="ml-1.5 inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
