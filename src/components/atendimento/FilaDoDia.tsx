@@ -46,6 +46,8 @@ export interface FilaItem {
   motivo: string;
   canal: FilaCanal;
   horario?: string;
+  /** Data do agendamento atrasado (dd/MM). */
+  data?: string;
   atrasado?: boolean;
   mensagensNovas?: number;
   selecionado?: boolean;
