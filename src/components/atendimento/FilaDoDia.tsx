@@ -201,6 +201,28 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     });
   };
 
+  const selecionarTodos = () => setSelecionados(new Set(visiveis.map((i) => i.id)));
+  const limparSelecao = () => setSelecionados(new Set());
+
+  /** Seleciona itens visíveis por filtros (canal e/ou data). */
+  const selecionarPorFiltro = (opcoes: { canal?: FilaCanal; data?: "hoje" | "atrasados" | "futuros" }) => {
+    const filtrados = visiveis.filter((item) => {
+      if (opcoes.canal && item.canal !== opcoes.canal) return false;
+      if (opcoes.data === "hoje" && (item.atrasado || item.data)) return false;
+      if (opcoes.data === "atrasados" && !item.atrasado) return false;
+      if (opcoes.data === "futuros" && (item.atrasado || !item.data)) return false;
+      return true;
+    });
+    setSelecionados((anterior) => {
+      const proximo = new Set(anterior);
+      filtrados.forEach((i) => proximo.add(i.id));
+      return proximo;
+    });
+    if (!modoSelecao) setModoSelecao(true);
+  };
+
+  const todosSelecionados = visiveis.length > 0 && visiveis.every((i) => selecionados.has(i.id));
+
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
     { id: "agendados", label: "Agendados", total: totais?.agendados ?? totalAgendados },
@@ -402,52 +424,81 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
 
         {/* Seleção e envio em massa */}
         <div className={cn("flex items-center gap-2 mt-2.5", tablet && "flex-wrap")}>
-          <button
-            type="button"
-            onClick={alternarModoSelecao}
-            className={cn(
-              "flex h-9 flex-1 items-center justify-between gap-2 rounded-lg border px-3 text-xs font-medium transition-colors",
-              modoSelecao
-                ? "border-primary/50 bg-primary/5 text-primary"
-                : "border-border/60 bg-card text-foreground hover:bg-muted/50"
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <Checkbox checked={modoSelecao} className="pointer-events-none" />
-              {modoSelecao && selecionados.size > 0
-                ? `${selecionados.size} selecionado${selecionados.size > 1 ? "s" : ""}`
-                : "Selecionar contatos"}
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex h-9 flex-1 items-center justify-between gap-2 rounded-lg border px-3 text-xs font-medium transition-colors",
+                  modoSelecao
+                    ? "border-primary/50 bg-primary/5 text-primary"
+                    : "border-border/60 bg-card text-foreground hover:bg-muted/50"
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <Checkbox
+                    checked={todosSelecionados}
+                    onCheckedChange={(v) => (v ? selecionarTodos() : limparSelecao())}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {selecionados.size > 0
+                    ? `${selecionados.size} selecionado${selecionados.size > 1 ? "s" : ""}`
+                    : "Selecionar contatos"}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Selecionar contatos</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => { if (!modoSelecao) setModoSelecao(true); selecionarTodos(); }}>
+                Selecionar todos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={limparSelecao}>Limpar seleção</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Por canal</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "whatsapp" })}>WhatsApp</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "telefone" })}>Telefone</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "email" })}>E-mail</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "visita" })}>Visita</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Por data</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "hoje" })}>Hoje</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "atrasados" })}>Atrasados</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "futuros" })}>Próximos dias</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             disabled={selecionados.size === 0}
-            title={selecionados.size === 0 ? "Selecione os contatos primeiro" : undefined}
+            title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Envio em massa"}
             onClick={() => onEnvioMassa(visiveis.filter((i) => selecionados.has(i.id)).map((i) => i.id))}
-            className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
+            className="h-9 w-9 shrink-0 rounded-lg"
           >
-            <Send className="h-3.5 w-3.5" />
-            Envio em massa
+            <Send className="h-4 w-4" />
           </Button>
           {onLigacaoSequencial && (
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               disabled={selecionados.size === 0}
               title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Ligação sequencial"}
               onClick={() => {
                 const ids = visiveis
                   .filter((i) => selecionados.has(i.id) && i.contactId)
-                  
                   .map((i) => i.contactId as string);
                 onLigacaoSequencial(Array.from(new Set(ids)));
               }}
-              className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
+              className="h-9 w-9 shrink-0 rounded-lg"
             >
-              <PhoneCall className="h-3.5 w-3.5" />
-              Ligação
+              <PhoneCall className="h-4 w-4" />
             </Button>
           )}
         </div>
