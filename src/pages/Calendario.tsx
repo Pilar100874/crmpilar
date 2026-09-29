@@ -2764,7 +2764,10 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
     const date = addDays(hoje, index);
     return {
       date,
-      count: tarefasPendentes.filter(task => isSameDay(task.date, date)).length,
+      count: tarefasPendentes.filter(task =>
+        isSameDay(task.date, date) &&
+        !(index === 0 && !!task.time && task.time < horaAgora)
+      ).length,
       label: index === 0 ? "Hoje" : format(date, "EEE", { locale: ptBR }).replace(".", ""),
     };
   });
