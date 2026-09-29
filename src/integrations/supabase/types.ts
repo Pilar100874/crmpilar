@@ -29411,7 +29411,7 @@ export type Database = {
             foreignKeyName: "usuarios_bot_atendimento_id_fkey"
             columns: ["bot_atendimento_id"]
             isOneToOne: false
-            referencedRelation: "chat_agents"
+            referencedRelation: "bot_flows"
             referencedColumns: ["id"]
           },
           {

@@ -28,7 +28,7 @@ export function useBotUsuario() {
       setUsuarioId(u.id);
       setBotId(u.bot_atendimento_id ?? null);
       setAtivo(!!u.bot_atendimento_ativo);
-      let q = supabase.from("chat_agents").select("id, nome").eq("ativo", true).order("ordem");
+      let q = (supabase as any).from("bot_flows").select("id, nome:name").eq("active", true).order("name");
       if (u.estabelecimento_id) q = q.eq("estabelecimento_id", u.estabelecimento_id);
       const { data: lista } = await q;
       if (vivo) setBots((lista ?? []) as BotOpcao[]);
