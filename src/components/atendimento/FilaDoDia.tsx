@@ -161,7 +161,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
-    if (canaisAtivos.size > 0) lista = lista.filter((item) => canaisAtivos.has(item.canal));
+    if (canaisAtivos.size > 0) lista = lista.filter((item) => temCanalItem(item, canaisAtivos));
 
 
     const ordenada = [...lista];
@@ -207,7 +207,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
   /** Seleciona itens visíveis por filtros (canal e/ou data). */
   const selecionarPorFiltro = (opcoes: { canal?: FilaCanal; data?: "hoje" | "atrasados" | "futuros" }) => {
     const filtrados = visiveis.filter((item) => {
-      if (opcoes.canal && item.canal !== opcoes.canal) return false;
+      if (opcoes.canal && !temCanalItem(item, new Set([opcoes.canal]))) return false;
       if (opcoes.data === "hoje" && (item.atrasado || item.data)) return false;
       if (opcoes.data === "atrasados" && !item.atrasado) return false;
       if (opcoes.data === "futuros" && (item.atrasado || !item.data)) return false;
@@ -390,7 +390,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
             const cfg = CANAL_CONFIG[canal];
             const Icone = cfg.icon;
             const ativo = canaisAtivos.has(canal);
-            const total = items.filter((item) => item.canal === canal).length;
+            const total = baseAba.filter((item) => temCanalItem(item, new Set([canal]))).length;
             return (
               <button
                 key={canal}
