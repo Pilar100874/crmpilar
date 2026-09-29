@@ -5860,6 +5860,21 @@ ${recentMessages}
                 />
               )}
             </div>
+            {/* Barra de próximo contato / finalizar atendimento - celular */}
+            {contatoPendenteBarra && usuarioId && estabelecimentoId && (
+              <BarraProximoContato
+                contato={contatoPendenteBarra}
+                pendentes={contatosPendentesBarra}
+                onTrocarContato={setContatoFinalizarId}
+                focoToken={focoBarra}
+                simultaneo={modoSimultaneo}
+                onSimultaneo={setModoSimultaneo}
+                canal={canalDaAba(activeTab) || "telefone"}
+                usuarioId={usuarioId}
+                estabelecimentoId={estabelecimentoId}
+                onFinalizado={() => { void loadTodayTasks(); }}
+              />
+            )}
           </div>
 
           {/* Abas principais do celular: Fila / Atendimento / Cadastro */}

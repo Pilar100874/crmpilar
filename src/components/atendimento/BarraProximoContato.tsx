@@ -115,7 +115,7 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
   return (
     <div
       style={{ minHeight: ALTURA_BARRA_PROXIMO }}
-      className="absolute inset-x-0 bottom-0 z-[130] flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card px-3 py-1.5 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]"
+      className="absolute inset-x-0 bottom-0 z-[130] flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 pr-16 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]"
     >
       {pendentes.length > 1 && (
         <div className="flex items-center gap-1 overflow-x-auto">
@@ -140,7 +140,7 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
         ) : (
           <>
             <Input ref={dataRef} type="date" value={data} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setData(e.target.value)} className="h-8 w-[140px] shrink-0 text-xs transition-shadow" />
-            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="h-8 min-w-0 flex-1 text-xs" />
+            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="hidden h-8 min-w-0 flex-1 text-xs sm:block" />
           </>
         )}
         <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[10px] text-muted-foreground" title="Permite abrir outro cliente sem finalizar este. Todos continuam obrigatórios.">
