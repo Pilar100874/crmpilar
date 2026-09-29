@@ -479,7 +479,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
             size="icon"
             disabled={selecionados.size === 0}
             title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Envio em massa"}
-            onClick={() => onEnvioMassa(visiveis.filter((i) => selecionados.has(i.id)).map((i) => i.id))}
+            onClick={() => onEnvioMassa(Array.from(new Set(visiveis.filter((i) => selecionados.has(i.id) && i.contactId).map((i) => i.contactId as string))))}
             className="h-9 w-9 shrink-0 rounded-lg"
           >
             <Send className="h-4 w-4" />

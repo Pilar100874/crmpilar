@@ -25,6 +25,7 @@ import {
 interface EnvioMassaWizardContentProps {
   onClose: () => void;
   onComplete?: () => void;
+  contatosIniciais?: string[];
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
@@ -47,7 +48,8 @@ const getInitialState = (): EnvioMassaState => ({
 
 export function EnvioMassaWizardContent({ 
   onClose,
-  onComplete 
+  onComplete,
+  contatosIniciais = []
 }: EnvioMassaWizardContentProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
@@ -87,6 +89,19 @@ export function EnvioMassaWizardContent({
     applyFilters,
     fonte, setFonte
   } = useContactsFilter(estabelecimentoId, state.canal);
+
+  // Contatos já selecionados na lista de Contatos: força "todos" e pré-seleciona
+  const chaveIniciais = contatosIniciais.join(',');
+  useEffect(() => {
+    if (contatosIniciais.length > 0 && fonte !== 'todos') setFonte('todos');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveIniciais]);
+  useEffect(() => {
+    if (contatosIniciais.length === 0 || !state.canal) return;
+    const ids = new Set(contatosIniciais);
+    setState(prev => ({ ...prev, selectedContacts: contacts.filter(c => ids.has(c.id)) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacts, state.canal, chaveIniciais]);
 
   const { 
     replies: quickReplies, 

@@ -427,6 +427,7 @@ export default function Atendimento() {
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
   const [showEnvioMassaWizard, setShowEnvioMassaWizard] = useState(false);
+  const [idsEnvioMassa, setIdsEnvioMassa] = useState<string[]>([]);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
   const [fluxoInitialIndex, setFluxoInitialIndex] = useState(0);
@@ -5557,7 +5558,10 @@ ${recentMessages}
                   items={filaItemsMobile}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                   onLigacaoSequencial={iniciarLigacaoSelecionados}
-                  onEnvioMassa={() => {
+                  onEnvioMassa={(ids: string[]) => {
+                    setIdsEnvioMassa(ids);
+                    setHistoricoCliente(null);
+                    setAgendaContato(null);
                     setActiveTab("agenda");
                     setAgendaViewMode("default");
                     setShowEnvioMassaWizard(true);
@@ -6122,7 +6126,10 @@ ${recentMessages}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
           onLigacaoSequencial={iniciarLigacaoSelecionados}
-          onEnvioMassa={() => {
+          onEnvioMassa={(ids: string[]) => {
+                    setIdsEnvioMassa(ids);
+                    setHistoricoCliente(null);
+                    setAgendaContato(null);
             setActiveTab("agenda");
             setAgendaViewMode("default");
             setShowEnvioMassaWizard(true);
@@ -6420,7 +6427,8 @@ ${recentMessages}
           /* Envio em massa aberto na tela central (onde fica o calendário) */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <EnvioMassaWizardContent
-              onClose={() => setShowEnvioMassaWizard(false)}
+              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              contatosIniciais={idsEnvioMassa}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -6793,7 +6801,7 @@ ${recentMessages}
         ) : (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <FluxoAtendimentoPanel
-            tasks={filteredTasks}
+            tasks={tasksDiscador}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
@@ -6865,7 +6873,8 @@ ${recentMessages}
           /* Envio em Massa Wizard */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <EnvioMassaWizardContent
-              onClose={() => setShowEnvioMassaWizard(false)}
+              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              contatosIniciais={idsEnvioMassa}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -6959,7 +6968,8 @@ ${recentMessages}
               {activeTab === "agenda" && showEnvioMassaWizard && (
                 <div className="hidden lg:block w-full h-full absolute inset-0">
                   <EnvioMassaWizardContent
-                    onClose={() => setShowEnvioMassaWizard(false)}
+                    onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              contatosIniciais={idsEnvioMassa}
                     onComplete={loadTodayTasks}
                   />
                 </div>
@@ -7468,6 +7478,9 @@ ${recentMessages}
       onSelect={(modo) => {
         setDiscadorModo(modo);
         setShowDiscadorModo(false);
+        setHistoricoCliente(null);
+        setAgendaContato(null);
+        setShowEnvioMassaWizard(false);
         setActiveTab("tel");
         setShowConversationsList(true);
         setMobileView("main");
@@ -7500,7 +7513,8 @@ ${recentMessages}
     {showEnvioMassaWizard && (
       <div className="lg:hidden">
         <EnvioMassaWizardPanel
-          onClose={() => setShowEnvioMassaWizard(false)}
+          onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              contatosIniciais={idsEnvioMassa}
           onComplete={loadTodayTasks}
         />
       </div>
