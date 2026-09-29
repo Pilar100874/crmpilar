@@ -182,6 +182,8 @@ export default function Atendimento() {
   });
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosCliente] = useState<{ id: string; nome: string } | null>(null);
+  const [orcClienteFiltroStatus, setOrcClienteFiltroStatus] = useState<string>("todos");
+  const [orcClienteFiltroData, setOrcClienteFiltroData] = useState<{ de: string; ate: string }>({ de: "", ate: "" });
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
@@ -4068,6 +4070,13 @@ ${recentMessages}
             setActiveTab("agenda");
             setSelectedAgendaContato(contato);
             setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
+          },
+          onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
+            if (bloquearTrocaClientePendente(contatoId)) return;
+            setHistoricoCliente(null);
+            setOrcClienteFiltroStatus("todos");
+            setOrcClienteFiltroData({ de: "", ate: "" });
+            setOrcamentosCliente({ id: contatoId, nome: contatoNome });
           },
           onOrcamento: (orcId: string) => {
             if (bloquearTrocaClientePendente(contato.id)) return;
