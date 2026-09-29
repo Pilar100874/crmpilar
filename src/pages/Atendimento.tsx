@@ -4432,6 +4432,12 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
+  const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
+  const tasksDiscador = useMemo(() => {
+    if (!discadorContatos) return filteredTasks;
+    return tasksSelecionadas ?? [];
+  }, [filteredTasks, discadorContatos, tasksSelecionadas]);
+
   const cargaInicialPendente = !tempoCargaEsgotado && (!tarefasIniciaisProntas || !contatosIniciaisProntos);
   if (loading || loadingFerramentas || cargaInicialPendente) {
     return (
@@ -4526,11 +4532,6 @@ ${recentMessages}
   };
 
   // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
-  const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
-  const tasksDiscador = useMemo(() => {
-    if (!discadorContatos) return filteredTasks;
-    return tasksSelecionadas ?? [];
-  }, [filteredTasks, discadorContatos, tasksSelecionadas]);
 
   const iniciarLigacaoSelecionados = async (ids: string[]) => {
     if (ids.length === 0) {
