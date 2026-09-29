@@ -68,7 +68,7 @@ export function BarraProximoContato({ contato, canal, usuarioId, estabelecimento
   return (
     <div
       style={{ height: ALTURA_BARRA_PROXIMO }}
-      className="absolute inset-x-0 bottom-0 z-[1100] flex items-center gap-2 border-t border-destructive/30 bg-card px-3 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]"
+      className="absolute inset-x-0 bottom-0 z-[130] flex items-center gap-2 border-t border-destructive/30 bg-card px-3 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]"
     >
       <CalendarCheck className="h-5 w-5 shrink-0 text-destructive" />
       <div className="min-w-0 shrink">
