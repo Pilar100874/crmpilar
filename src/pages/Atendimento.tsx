@@ -3885,7 +3885,7 @@ ${recentMessages}
     const base: any = clienteCabecalhoBase;
     if (!base) return null;
     // Completa os canais com o cadastro do contato para os botões não sumirem ao trocar de aba.
-    const cad: any = base.id ? contatosComIndicadores.find((c: any) => c.id === base.id) : null;
+    const cad: any = base.id ? contatosBase.find((c: any) => c.id === base.id) : null;
     if (!cad) return base;
     return {
       ...base,
@@ -3894,7 +3894,7 @@ ${recentMessages}
       email: base.email || cad.email || null,
       empresa: base.empresa || (cad.companies || []).find((x: any) => x?.is_primary)?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome || null,
     };
-  }, [clienteCabecalhoBase, contatosComIndicadores]);
+  }, [clienteCabecalhoBase, contatosBase]);
 
 
   // Update counters based on filtered data
