@@ -179,6 +179,9 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     return ordenada;
   }, [items, filtro, ordenacao, canaisAtivos]);
 
+  // Cada aba tem sua própria lista: ao trocar de aba, limpa a seleção
+  useEffect(() => { setSelecionados(new Set()); }, [filtro]);
+
   const alternarSelecao = (id: string) => {
     setSelecionados((anterior) => {
       const proximo = new Set(anterior);
