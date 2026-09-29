@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText, History } from "lucide-react";
+import { CalendarDays, FileText, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
@@ -59,6 +59,7 @@ export interface FilaItem {
   onCanal?: (canal: FilaCanal) => void;
   onOrcamento?: (orcamentoId: string) => void;
   onOrcamentosCentro?: (contactId: string, nome: string) => void;
+  onAgendaCentro?: (contactId: string, nome: string) => void;
   onHistorico?: () => void;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
@@ -458,6 +459,12 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                           <button type="button" title="Histórico" onClick={(e) => { e.stopPropagation(); item.onHistorico?.(); }}
                             className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
                             <History className="h-3 w-3" />
+                          </button>
+                        )}
+                        {item.onAgendaCentro && (
+                          <button type="button" title="Agenda" onClick={(e) => { e.stopPropagation(); item.onAgendaCentro?.(item.contactId!, item.nome); }}
+                            className="h-6 w-6 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
+                            <CalendarDays className="h-3 w-3" />
                           </button>
                         )}
                         <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); item.onOrcamentosCentro?.(item.contactId, item.nome); }}

@@ -36,6 +36,7 @@ import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
+import { AgendaContatoPanel } from "@/components/atendimento/AgendaContatoPanel";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
 import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
@@ -182,6 +183,7 @@ export default function Atendimento() {
   });
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosCliente] = useState<{ id: string; nome: string } | null>(null);
+  const [agendaContato, setAgendaContato] = useState<{ id: string; nome: string } | null>(null);
   const [orcClienteFiltroStatus, setOrcClienteFiltroStatus] = useState<string>("todos");
   const [orcClienteFiltroData, setOrcClienteFiltroData] = useState<{ de: string; ate: string }>({ de: "", ate: "" });
   const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
@@ -4071,11 +4073,18 @@ ${recentMessages}
             setSelectedAgendaContato(contato);
             setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
           },
+          onAgendaCentro: (contatoId: string, contatoNome: string) => {
+            if (bloquearTrocaClientePendente(contatoId)) return;
+            setHistoricoCliente(null);
+            setOrcamentosCliente(null);
+            setAgendaContato({ id: contatoId, nome: contatoNome });
+          },
           onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
             if (bloquearTrocaClientePendente(contatoId)) return;
             setHistoricoCliente(null);
             setOrcClienteFiltroStatus("todos");
             setOrcClienteFiltroData({ de: "", ate: "" });
+            setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
           },
           onOrcamento: (orcId: string) => {
@@ -4153,12 +4162,19 @@ ${recentMessages}
           setSelectedTaskData(task);
           setHistoricoCliente({ customerId: task.contact_id, nome });
         },
+        onAgendaCentro: (contatoId: string, contatoNome: string) => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setHistoricoCliente(null);
+          setOrcamentosCliente(null);
+          setAgendaContato({ id: contatoId, nome: contatoNome });
+        },
         onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           setHistoricoCliente(null);
           setOrcClienteFiltroStatus("todos");
           setOrcClienteFiltroData({ de: "", ate: "" });
-          setOrcamentosCliente({ id: contatoId, nome: contatoNome });
+          setAgendaContato(null);
+            setOrcamentosCliente({ id: contatoId, nome: contatoNome });
         },
         onOrcamento: (orcId: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
@@ -6039,6 +6055,7 @@ ${recentMessages}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
             onTrocarCanal={(aba) => {
               setHistoricoCliente(null);
+              setAgendaContato(null);
               if (aba === "orcamento") {
                 const id = (clienteCabecalho as any)?.id;
                 setOrcamentosCliente(orcamentosCliente || !id ? null : { id, nome: clienteCabecalho?.nome || "Cliente" });
@@ -6048,8 +6065,16 @@ ${recentMessages}
               trocarAba(aba);
             }}
             historicoAtivo={!!historicoCliente}
+            agendaAtiva={!!agendaContato}
+            onAgenda={() => {
+              setHistoricoCliente(null);
+              setOrcamentosCliente(null);
+              const id = (clienteCabecalho as any)?.id;
+              setAgendaContato(agendaContato || !id ? null : { id, nome: clienteCabecalho?.nome || "Cliente" });
+            }}
             onHistorico={() => {
               setOrcamentosCliente(null);
+              setAgendaContato(null);
               const id = (clienteCabecalho as any)?.id;
               setHistoricoCliente(historicoCliente ? null : { customerId: id || undefined, nome: clienteCabecalho?.nome });
             }}
@@ -6187,6 +6212,9 @@ ${recentMessages}
             </div>
           );
         })()}
+        {agendaContato && !isMobile && (
+          <AgendaContatoPanel key={agendaContato.id} contactId={agendaContato.id} nome={agendaContato.nome} top={clienteCabecalho ? alturaCabecalho : 0} onClose={() => setAgendaContato(null)} />
+        )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
           <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
