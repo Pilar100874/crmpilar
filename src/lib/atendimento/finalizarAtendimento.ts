@@ -14,7 +14,7 @@ export const ROTULO_CANAL: Record<CanalAtendimento, string> = {
 };
 
 /** Canais em que o resumo da conversa é obrigatório. */
-export const CANAIS_RESUMO_OBRIGATORIO: CanalAtendimento[] = ["telefone", "presencial"];
+export const CANAIS_RESUMO_OBRIGATORIO: CanalAtendimento[] = [];
 
 export function canalDaAba(aba: string): CanalAtendimento | null {
   if (aba === "chat") return "whatsapp";
@@ -104,7 +104,7 @@ interface FinalizarParams {
   /** Tarefa do dia que está sendo atendida (quando conhecida). */
   tarefaAtualId?: string | null;
   /** Quando já existe um contato futuro: manter a data antiga ou usar a nova. */
-  escolha?: "nova" | "antiga";
+  escolha?: "nova" | "antiga" | "ambas";
 }
 
 /**
@@ -208,7 +208,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
     if (resto.length) await supabase.from("calendario_tarefas").delete().in("id", resto.map((r) => r.id));
     void manter;
   } else {
-    if (lista.length) await supabase.from("calendario_tarefas").delete().in("id", lista.map((r) => r.id));
+    if (lista.length && p.escolha !== "ambas") await supabase.from("calendario_tarefas").delete().in("id", lista.map((r) => r.id));
     const { error: novaErr } = await supabase.from("calendario_tarefas").insert({
       user_id: usuarioInternoId,
       estabelecimento_id: p.estabelecimentoId,

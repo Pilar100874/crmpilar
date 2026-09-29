@@ -367,9 +367,9 @@ export function FluxoAtendimentoPanel({
     return false;
   };
 
-  const canProceed = selectedFlag !== null && proximaData !== null && observacao.trim() !== "";
+  const canProceed = selectedFlag !== null;
 
-  const salvarAtendimento = async (escolha?: "nova" | "antiga") => {
+  const salvarAtendimento = async (escolha?: "nova" | "antiga" | "ambas") => {
     if (!currentTask) return;
     setIsSaving(true);
     try {
@@ -406,23 +406,15 @@ export function FluxoAtendimentoPanel({
   };
 
   const handleSaveAndNext = async () => {
-    if (!currentTask) return;
-    if (!observacao.trim()) {
-      toast.error('Descreva o que foi conversado');
-      return;
-    }
-    if (!canProceed) return;
-    const futura = await buscarProximoContatoFuturo(currentTask.contact_id, usuarioId);
-    if (futura && futura.date !== format(proximaData, 'yyyy-MM-dd')) {
-      setConflito(futura);
-      return;
-    }
-    await salvarAtendimento(futura ? "antiga" : undefined);
+    if (!currentTask || !canProceed) return;
+    // O próximo contato é definido na barra inferior do quadro central.
+    marcarPendencia(currentTask.contact_id);
+    toast.info('Defina o próximo contato na barra abaixo para finalizar o atendimento.');
   };
 
   const handleSkip = () => {
     if (currentTask?.contact_id && lerPendencias().includes(currentTask.contact_id)) {
-      toast.error('Finalize este atendimento (o que foi conversado e próximo contato) antes de ir para o próximo.');
+      toast.error('Finalize este atendimento (próximo contato na barra abaixo) antes de ir para o próximo.');
       return;
     }
     if (isLastTask) {
@@ -729,7 +721,7 @@ export function FluxoAtendimentoPanel({
                 return (
                   <button
                     key={flag.id}
-                    onClick={() => setSelectedFlag(flag.id)}
+                    onClick={() => { setSelectedFlag(flag.id); marcarPendencia(currentTask?.contact_id); }}
                     className={cn(
                       "flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium transition-all",
                       isSelected 
@@ -750,72 +742,6 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
-          {/* Observação - linha separada */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">O que foi conversado *</label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                className={cn(
-                  "h-6 px-2 gap-1 text-[10px] rounded",
-                  isRecording && "text-destructive bg-destructive/10"
-                )}
-              >
-                {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
-                {isRecording ? "Parar" : "Voz"}
-              </Button>
-            </div>
-            <Textarea
-              value={observacao}
-              onChange={(e) => { setObservacao(e.target.value); if (e.target.value.trim()) marcarPendencia(currentTask?.contact_id); }}
-              placeholder="Detalhes..."
-              rows={2}
-              className="resize-none rounded-lg text-xs min-h-[60px]"
-            />
-          </div>
-
-          {/* Data próximo contato */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Próximo Contato</label>
-            <div className="flex gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 justify-start gap-2 h-9 rounded-lg text-xs font-normal"
-                  >
-                    <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {format(proximaData, "dd/MM/yyyy", { locale: ptBR })}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={proximaData}
-                    onSelect={(date) => date && setProximaData(date)}
-                    disabled={(date) => date < new Date()}
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-              {/* Atalhos de data inline */}
-              <div className="flex gap-1">
-                {[1, 3, 7, 15].map(days => (
-                  <Button
-                    key={days}
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 w-9 text-[10px] px-0"
-                    onClick={() => setProximaData(addDays(new Date(), days))}
-                  >
-                    {days}d
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
         </TabsContent>
         
       </Tabs>

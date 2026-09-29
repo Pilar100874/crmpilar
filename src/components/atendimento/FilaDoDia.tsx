@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, FileText, History } from "lucide-react";
+import { CalendarCheck, CalendarDays, FileText, History } from "lucide-react";
+import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
+import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
@@ -132,6 +134,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
     onFiltroChange?.(valor);
   };
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
+  const pendencias = usePendenciasAtendimento();
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
@@ -420,7 +423,8 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
                   marcado && "bg-orange-500/[0.08]",
-                  item.bloqueado && "opacity-50 grayscale"
+                  (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
+                  item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
                 )}
               >
                 <Checkbox
@@ -441,6 +445,13 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     </p>
                     {item.empresa && (
                        <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
+                    )}
+                    {item.contactId && pendencias.includes(item.contactId) && (
+                      <button type="button" title="Finalizar atendimento (próximo contato)"
+                        onClick={(e) => { e.stopPropagation(); pedirFinalizacao({ customerId: item.contactId!, nome: item.nome }); }}
+                        className="mt-1 inline-flex h-6 items-center gap-1 rounded-md border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive hover:bg-destructive/20">
+                        <CalendarCheck className="h-3 w-3" /> Finalizar atendimento
+                      </button>
                     )}
                     {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
                       <div className="mt-1 flex items-center gap-1">
