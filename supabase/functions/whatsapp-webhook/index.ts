@@ -1141,31 +1141,16 @@ serve(async (req) => {
               .limit(1)
               .maybeSingle();
             if (dono?.bot_atendimento_id) {
-              const { data: ultimas } = await supabase
-                .from("messages")
-                .select("sender, text")
-                .eq("conversation_id", conversationId)
-                .order("created_at", { ascending: false })
-                .limit(11);
-              const historico = (ultimas ?? [])
-                .slice(1)
-                .reverse()
-                .filter((m: any) => m.text)
-                .map((m: any) => ({ role: m.sender === "customer" ? "user" : "assistant", content: m.text }));
-              const { data: r, error: e } = await supabase.functions.invoke("chat-agent-execute", {
-                body: {
-                  agent_id: dono.bot_atendimento_id,
-                  mensagem_cliente: body,
-                  historico_chat: historico,
-                  conversation_id: conversationId,
-                },
-              });
-              if (e) throw e;
-              if (r?.resposta) {
-                await onResponse(String(r.resposta));
-                return new Response(JSON.stringify({ success: true, bot_usuario: dono.id }), {
-                  headers: { ...corsHeaders, "Content-Type": "application/json" },
-                });
+              // Usa o bot (fluxo da tela Criar bot) escolhido pelo usuário dono do contato.
+              const { data: botUsuario } = await supabase
+                .from("bot_flows")
+                .select("*")
+                .eq("id", dono.bot_atendimento_id)
+                .maybeSingle();
+              if (botUsuario?.flow_data?.nodes) {
+                console.log("[BOT USUÁRIO] Usando bot do usuário:", { usuario: dono.id, bot: botUsuario.name });
+                flowData = botUsuario;
+                isBotActive = true;
               }
             }
           }
