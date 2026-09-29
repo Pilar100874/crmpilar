@@ -209,7 +209,23 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-foreground">Fila do dia</h2>
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="text-lg font-bold text-foreground">Contatos</h2>
+            {botUsuario.botAtual && (
+              <label
+                className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground"
+                title={`Bot: ${botUsuario.botAtual.nome}`}
+              >
+                <Bot className="h-3.5 w-3.5 shrink-0" />
+                <Switch
+                  checked={botUsuario.ativo}
+                  onCheckedChange={(v) => void botUsuario.alternarAtivo(v)}
+                  aria-label="Ativar bot de atendimento"
+                  className="scale-75"
+                />
+              </label>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] text-muted-foreground hidden xl:inline">Ordenar por:</span>
             <Select value={ordenacao} onValueChange={(valor) => setOrdenacao(valor as OrdenacaoFila)}>
@@ -237,6 +253,25 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
                   {modoSelecao ? "Cancelar seleção" : "Selecionar contatos"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-80 w-60 overflow-y-auto">
+                    <DropdownMenuItem onClick={() => void botUsuario.escolherBot(null)}>
+                      {!botUsuario.botId ? "✓ " : ""}Nenhum bot
+                    </DropdownMenuItem>
+                    {botUsuario.bots.length === 0 && (
+                      <p className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum bot cadastrado</p>
+                    )}
+                    {botUsuario.bots.map((b) => (
+                      <DropdownMenuItem key={b.id} onClick={() => void botUsuario.escolherBot(b.id)}>
+                        {botUsuario.botId === b.id ? "✓ " : ""}
+                        {b.nome}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 {assumirContatos && assumirContatos.grupos.length > 0 && (
                   <>
                     <DropdownMenuSeparator />
