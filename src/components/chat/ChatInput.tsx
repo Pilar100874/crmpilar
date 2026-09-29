@@ -1307,7 +1307,7 @@ export default function ChatInput({
       {/* Main container with elegant styling */}
       <div className="relative overflow-visible">
         {/* Main input container */}
-        <div className="relative z-10 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible [@media(pointer:fine)and(min-width:1025px)]:pr-14">
+        <div className="relative z-10 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible">
           {/* Input row */}
           <div className="flex items-end gap-2 overflow-visible relative z-10">
             {/* Expandable Tools Menu - positioned to expand upward */}
@@ -1396,11 +1396,12 @@ export default function ChatInput({
               disabled={!message.trim() || disabled} 
               size="icon"
               className={cn(
-                "rounded-full h-10 w-10",
+                "rounded-full h-10 w-10 shrink-0",
                 "bg-primary hover:bg-primary/90",
                 "shadow-md hover:shadow-lg",
                 "transition-all duration-200",
-                "disabled:opacity-40"
+                "disabled:opacity-40",
+                "[@media(pointer:fine)and(min-width:1025px)]:mr-16"
               )}
             >
               <Send className="h-4 w-4" />
