@@ -1114,6 +1114,67 @@ serve(async (req) => {
       }
     }
 
+    // ====== Bot pessoal do usuário: responde enquanto ninguém assumiu o chat ======
+    if (conversationId && customerId && body) {
+      try {
+        const { data: conv } = await supabase
+          .from("conversations")
+          .select("assignee_id, atendente_atual_id, chat_status")
+          .eq("id", conversationId)
+          .maybeSingle();
+        const assumido =
+          !!conv?.assignee_id || !!conv?.atendente_atual_id || conv?.chat_status === "em_atendimento";
+        if (!assumido) {
+          const { data: vinculos } = await supabase
+            .from("customer_vinculos")
+            .select("usuario_id")
+            .eq("customer_id", customerId)
+            .not("usuario_id", "is", null);
+          const ids = (vinculos ?? []).map((v: any) => v.usuario_id);
+          if (ids.length > 0) {
+            const { data: dono } = await supabase
+              .from("usuarios")
+              .select("id, bot_atendimento_id")
+              .in("id", ids)
+              .eq("bot_atendimento_ativo", true)
+              .not("bot_atendimento_id", "is", null)
+              .limit(1)
+              .maybeSingle();
+            if (dono?.bot_atendimento_id) {
+              const { data: ultimas } = await supabase
+                .from("messages")
+                .select("sender, text")
+                .eq("conversation_id", conversationId)
+                .order("created_at", { ascending: false })
+                .limit(11);
+              const historico = (ultimas ?? [])
+                .slice(1)
+                .reverse()
+                .filter((m: any) => m.text)
+                .map((m: any) => ({ role: m.sender === "customer" ? "user" : "assistant", content: m.text }));
+              const { data: r, error: e } = await supabase.functions.invoke("chat-agent-execute", {
+                body: {
+                  agent_id: dono.bot_atendimento_id,
+                  mensagem_cliente: body,
+                  historico_chat: historico,
+                  conversation_id: conversationId,
+                },
+              });
+              if (e) throw e;
+              if (r?.resposta) {
+                await onResponse(String(r.resposta));
+                return new Response(JSON.stringify({ success: true, bot_usuario: dono.id }), {
+                  headers: { ...corsHeaders, "Content-Type": "application/json" },
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[BOT USUÁRIO] Falha, seguindo fluxo normal:", err);
+      }
+    }
+
     // ====== Verificar se bot está ativo ======
     if (!isBotActive) {
       console.log("[ATENDIMENTO] Bot está pausado para esta conversa. Mensagem salva mas bot não responderá.");
