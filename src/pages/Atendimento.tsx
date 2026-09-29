@@ -4400,7 +4400,7 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
 
-  if (loading) {
+  if (loading || loadingFerramentas) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
