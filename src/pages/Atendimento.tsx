@@ -6070,7 +6070,7 @@ ${recentMessages}
           />
         )}
         {/* Últimos orçamentos do cliente em tela central */}
-        {orcamentosCliente && clienteCabecalho && !isMobile && (() => {
+        {orcamentosCliente && !isMobile && (() => {
           const OPCOES_ETAPA = [
             { valor: "orcamento", rotulo: "Orçamento" },
             { valor: "negociacao", rotulo: "Negociação" },
@@ -6097,7 +6097,7 @@ ${recentMessages}
             .slice(0, 10);
           const empresaId = lista[0]?.empresa_id || null;
           return (
-            <div style={{ top: alturaCabecalho }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+            <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
               <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">Últimos orçamentos</p>
