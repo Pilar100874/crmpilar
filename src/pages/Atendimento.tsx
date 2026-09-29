@@ -4566,6 +4566,7 @@ ${recentMessages}
         setShowConversationsList(true);
         break;
       case "dialer":
+        setDiscadorContatos(null);
         void abrirDiscador();
         break;
       // Tools submenu items - ações diretas
