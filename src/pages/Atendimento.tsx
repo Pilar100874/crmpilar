@@ -4153,6 +4153,13 @@ ${recentMessages}
           setSelectedTaskData(task);
           setHistoricoCliente({ customerId: task.contact_id, nome });
         },
+        onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setHistoricoCliente(null);
+          setOrcClienteFiltroStatus("todos");
+          setOrcClienteFiltroData({ de: "", ate: "" });
+          setOrcamentosCliente({ id: contatoId, nome: contatoNome });
+        },
         onOrcamento: (orcId: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           const orc: any = orcamentos.find((o: any) => o.id === orcId);
