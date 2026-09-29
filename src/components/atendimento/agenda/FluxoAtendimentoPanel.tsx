@@ -721,7 +721,7 @@ export function FluxoAtendimentoPanel({
                 return (
                   <button
                     key={flag.id}
-                    onClick={() => setSelectedFlag(flag.id)}
+                    onClick={() => { setSelectedFlag(flag.id); marcarPendencia(currentTask?.contact_id); }}
                     className={cn(
                       "flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium transition-all",
                       isSelected 
