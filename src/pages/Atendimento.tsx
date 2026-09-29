@@ -217,6 +217,7 @@ export default function Atendimento() {
   // Data escolhida na barra "Minha agenda" para abrir o calendário na área central
   const [dataAgendaCentral, setDataAgendaCentral] = useState<Date | null>(null);
   const [modoAgendaCentral, setModoAgendaCentral] = useState<string | null>(null);
+  const [agendaCentralKey, setAgendaCentralKey] = useState(0);
   const clientePendenteTrocaAbaRef = useRef<string | null>(null);
 
   // Clique numa data da barra superior abre o calendário central nessa data
@@ -227,7 +228,8 @@ export default function Atendimento() {
       setActiveTab("agenda");
       setAgendaViewMode("default");
       setDataAgendaCentral(new Date(detail.data));
-      setModoAgendaCentral(detail.modo === "list" ? "list" : null);
+      setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : null);
+      setAgendaCentralKey((k) => k + 1);
     };
     window.addEventListener("calendario:abrir-data", abrirData);
     return () => window.removeEventListener("calendario:abrir-data", abrirData);
@@ -6834,7 +6836,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario dataInicial={dataAgendaCentral ?? undefined} viewModeInicial={modoAgendaCentral as any} />
+                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? undefined} viewModeInicial={modoAgendaCentral as any} />
                   </Suspense>
                 </div>
               )}

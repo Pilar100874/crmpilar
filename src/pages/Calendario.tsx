@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -2888,7 +2888,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
 
         {!diasRecolhidos && (
         <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
-          <div className="grid min-w-[720px] grid-cols-[140px_repeat(5,minmax(110px,1fr))]">
+          <div className="grid min-w-[720px] grid-cols-[200px_repeat(5,minmax(110px,1fr))]">
             <button
               type="button"
               onClick={() => setViewMode("list")}
@@ -2898,7 +2898,30 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                 <span className="block text-xs font-medium text-foreground">Atrasados</span>
                 <span className="mt-1 block font-cardTitle text-xl font-bold text-destructive">{tarefasAtrasadas}</span>
               </span>
-              <Clock3 className="h-5 w-5 text-destructive/70" />
+              <span className="grid grid-cols-2 gap-1">
+                {([
+                  { modo: "list", Icone: ListIcon, rotulo: "Lista" },
+                  { modo: "day", Icone: CalendarDays, rotulo: "Dia" },
+                  { modo: "week", Icone: CalendarRange, rotulo: "Semana" },
+                  { modo: "month", Icone: Calendar, rotulo: "Mês" },
+                ] as const).map(({ modo, Icone, rotulo }) => (
+                  <span
+                    key={modo}
+                    role="button"
+                    tabIndex={0}
+                    title={`Ver em ${rotulo}`}
+                    aria-label={`Ver em ${rotulo}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setViewMode(modo);
+                      window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: new Date().toISOString(), modo } }));
+                    }}
+                    className={`flex h-6 w-6 items-center justify-center rounded border border-border/60 transition-colors hover:bg-primary/10 hover:text-primary ${viewMode === modo ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                  >
+                    <Icone className="h-3.5 w-3.5" />
+                  </span>
+                ))}
+              </span>
             </button>
             {resumoDias.map((resumo, index) => {
               const selecionado = isSameDay(currentDate, resumo.date);
