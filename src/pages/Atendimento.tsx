@@ -152,6 +152,11 @@ export default function Atendimento() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  // Primeira carga: só mostra a tela quando fila, tarefas e contatos estiverem prontos
+  const [tarefasIniciaisProntas, setTarefasIniciaisProntas] = useState(false);
+  const [contatosIniciaisProntos, setContatosIniciaisProntos] = useState(false);
+  const [tempoCargaEsgotado, setTempoCargaEsgotado] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setTempoCargaEsgotado(true), 8000); return () => clearTimeout(t); }, []);
   
   // Mobile view state: "list" | "main" | "details"
   const [mobileView, setMobileView] = useState<"list" | "main" | "details">("list");
@@ -170,7 +175,9 @@ export default function Atendimento() {
     if (!el) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
     // Anima só o conteúdo central, nunca o cabeçalho/barras superiores
-    Array.from(el.children).forEach((filho) => {
+    const paineis = Array.from(el.querySelectorAll(":scope > [data-painel-centro]"));
+    const alvos = paineis.length ? paineis : Array.from(el.children);
+    alvos.forEach((filho) => {
       if (filho === cabecalhoRef.current) return;
       filho.classList.remove("animate-wipe-in");
       void (filho as HTMLElement).offsetWidth;
@@ -1658,6 +1665,8 @@ export default function Atendimento() {
       setTodayTasksCount(sortedTasks.length);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
+    } finally {
+      setTarefasIniciaisProntas(true);
     }
   };
 
@@ -3387,7 +3396,12 @@ ${recentMessages}
   }, [todayTasks]);
 
   // Contatos vinculados ao usuário/equipe escolhida (usados em "Tudo" e para filtrar "Agendados")
-  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, true);
+  const { contatos: contatosVinculados, carregando: carregandoContatosVinculados } = useContatosVinculados(idsVisiveis, true);
+  const contatosJaCarregaramRef = useRef(false);
+  useEffect(() => {
+    if (carregandoContatosVinculados) { contatosJaCarregaramRef.current = true; return; }
+    if (contatosJaCarregaramRef.current) setContatosIniciaisProntos(true);
+  }, [carregandoContatosVinculados]);
   const idsContatosVinculados = useMemo(() => new Set(contatosVinculados.map((c) => c.id)), [contatosVinculados]);
 
   const filteredConversations = useMemo(() => {
@@ -4398,9 +4412,10 @@ ${recentMessages}
   useEffect(() => {
     dispararWipe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
+  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
-  if (loading || loadingFerramentas) {
+  const cargaInicialPendente = !tempoCargaEsgotado && (!tarefasIniciaisProntas || !contatosIniciaisProntos);
+  if (loading || loadingFerramentas || cargaInicialPendente) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -6130,7 +6145,7 @@ ${recentMessages}
             .slice(0, 10);
           const empresaId = lista[0]?.empresa_id || null;
           return (
-            <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+            <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
               <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">Últimos orçamentos</p>
@@ -6225,7 +6240,7 @@ ${recentMessages}
         )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+          <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>

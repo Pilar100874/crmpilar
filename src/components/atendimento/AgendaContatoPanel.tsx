@@ -65,7 +65,7 @@ export function AgendaContatoPanel({ contactId, nome, onClose, top = 0 }: Props)
     `${format(parseISO(t.date), "EEE, dd/MM/yyyy", { locale: ptBR })}${t.time ? ` · ${t.time.slice(0, 5)}` : ""}`;
 
   return (
-    <div style={{ top }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+    <div data-painel-centro style={{ top }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-sm font-semibold"><CalendarDays className="h-4 w-4 text-primary" /> Agenda do contato</h3>
