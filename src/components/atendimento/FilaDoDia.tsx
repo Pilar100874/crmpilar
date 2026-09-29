@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarCheck, CalendarDays, FileText, History, PhoneCall } from "lucide-react";
+import { Bot, CalendarCheck, CalendarDays, FileText, History, PhoneCall } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,6 +153,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     });
   };
 
+  const botUsuario = useBotUsuario();
   const totalAgendados = items.filter((item) => item.tipo === "agendado").length;
   const totalRecebidos = items.filter((item) => item.tipo === "recebido").length;
 
