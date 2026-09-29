@@ -2755,7 +2755,11 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
 
   const hoje = startOfDay(new Date());
   const tarefasPendentes = tasks.filter(task => task.status === "pending");
-  const tarefasAtrasadas = tarefasPendentes.filter(task => isBefore(startOfDay(task.date), hoje)).length;
+  const horaAgora = format(new Date(), "HH:mm");
+  const tarefasAtrasadas = tarefasPendentes.filter(task =>
+    isBefore(startOfDay(task.date), hoje) ||
+    (isSameDay(task.date, hoje) && !!task.time && task.time < horaAgora)
+  ).length;
   const resumoDias = Array.from({ length: 5 }, (_, index) => {
     const date = addDays(hoje, index);
     return {
