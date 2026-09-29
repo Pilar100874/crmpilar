@@ -114,6 +114,12 @@ interface FilaDoDiaProps {
   totais?: { tudo: number; agendados: number; recebidos: number };
 }
 
+/** O item pertence ao canal se for o canal de origem ou se o contato tiver esse canal disponível. */
+function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
+  if (canais.has(item.canal)) return true;
+  return (item.canais || []).some((c) => canais.has(c));
+}
+
 export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequencial, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
@@ -156,6 +162,12 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
   const botUsuario = useBotUsuario();
   const totalAgendados = items.filter((item) => item.tipo === "agendado").length;
   const totalRecebidos = items.filter((item) => item.tipo === "recebido").length;
+
+  const baseAba = useMemo(() => {
+    if (filtro === "agendados") return items.filter((item) => item.tipo === "agendado");
+    if (filtro === "recebidos") return items.filter((item) => item.tipo === "recebido");
+    return items;
+  }, [items, filtro]);
 
   const visiveis = useMemo(() => {
     let lista = items;
