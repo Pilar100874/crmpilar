@@ -30,10 +30,12 @@ interface Props {
   usuarioId: string;
   estabelecimentoId: string;
   onFinalizado?: () => void;
+  /** No celular: renderiza no fluxo (acima da navegação), sem sobrepor a barra do chat. */
+  emFluxo?: boolean;
 }
 
 /** Barra fixa na parte de baixo do quadro central: define o próximo contato e finaliza. */
-export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, focoToken, simultaneo, onSimultaneo, canal, usuarioId, estabelecimentoId, onFinalizado }: Props) {
+export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, focoToken, simultaneo, onSimultaneo, canal, usuarioId, estabelecimentoId, onFinalizado, emFluxo }: Props) {
   const [data, setData] = useState(format(addDays(new Date(), 3), "yyyy-MM-dd"));
   const [obs, setObs] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -115,7 +117,10 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
   return (
     <div
       style={{ minHeight: ALTURA_BARRA_PROXIMO }}
-      className="absolute inset-x-0 bottom-0 z-[130] flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 pr-16 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]"
+      className={cn(
+        "flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 pr-16 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]",
+        emFluxo ? "relative w-full flex-shrink-0" : "absolute inset-x-0 bottom-0 z-[130]"
+      )}
     >
       {pendentes.length > 1 && (
         <div className="flex items-center gap-1 overflow-x-auto">
