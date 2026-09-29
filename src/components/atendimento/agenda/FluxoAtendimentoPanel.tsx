@@ -369,7 +369,7 @@ export function FluxoAtendimentoPanel({
 
   const canProceed = selectedFlag !== null && proximaData !== null && observacao.trim() !== "";
 
-  const salvarAtendimento = async (escolha?: "nova" | "antiga") => {
+  const salvarAtendimento = async (escolha?: "nova" | "antiga" | "ambas") => {
     if (!currentTask) return;
     setIsSaving(true);
     try {

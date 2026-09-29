@@ -31,7 +31,7 @@ export function ConflitoDataDialog({
 }: {
   futura: TarefaFutura | null;
   nova: Date;
-  onEscolher: (escolha: "nova" | "antiga") => void;
+  onEscolher: (escolha: "nova" | "antiga" | "ambas") => void;
   onCancelar: () => void;
 }) {
   return (
@@ -40,14 +40,14 @@ export function ConflitoDataDialog({
         <DialogHeader>
           <DialogTitle>Já existe um próximo contato</DialogTitle>
           <DialogDescription>
-            Só pode haver uma data futura por cliente. Qual data deseja usar?
+            Este contato já tem uma tarefa marcada para {futura ? format(parseISO(futura.date), "dd/MM/yyyy") : ""}. Deseja criar uma nova tarefa ou modificar a data da existente?
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
-          <Button variant="outline" onClick={() => onEscolher("antiga")}>
-            Manter a atual ({futura ? format(parseISO(futura.date), "dd/MM/yyyy") : ""})
+          <Button variant="outline" onClick={() => onEscolher("ambas")}>
+            Criar nova tarefa ({format(nova, "dd/MM/yyyy")})
           </Button>
-          <Button onClick={() => onEscolher("nova")}>Usar a nova ({format(nova, "dd/MM/yyyy")})</Button>
+          <Button onClick={() => onEscolher("nova")}>Modificar a data para {format(nova, "dd/MM/yyyy")}</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -102,7 +102,7 @@ export function FinalizarAtendimentoDialog({
       .then(({ data: cfg }) => setData(addDays(new Date(), cfg?.dias_padrao ?? 3)));
   }, [open, canal, estabelecimentoId]);
 
-  const concluir = async (escolha?: "nova" | "antiga") => {
+  const concluir = async (escolha?: "nova" | "antiga" | "ambas") => {
     if (!contato) return;
     setSalvando(true);
     try {

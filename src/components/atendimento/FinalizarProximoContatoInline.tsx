@@ -39,7 +39,7 @@ export function FinalizarProximoContatoInline({ contato, canalInicial, usuarioId
 
   const data = quando ? new Date(quando) : null;
 
-  const executar = async (escolha?: "nova" | "antiga") => {
+  const executar = async (escolha?: "nova" | "antiga" | "ambas") => {
     if (!data) return;
     setSalvando(true);
     try {
