@@ -32,7 +32,7 @@ const iniciais = (nome: string) =>
 export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, historicoAtivo, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
-    { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!(cliente.tel || cliente.telefone) },
+    { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
     { aba: "email", label: "E-mail", icon: Mail, cor: "text-info", ok: !!cliente.email },
     { aba: "visita", label: "Visita", icon: MapPin, cor: "text-accent-foreground", ok: true },
     { aba: "orcamento", label: "Orçamento", icon: FileText, cor: "text-muted-foreground", ok: true },
