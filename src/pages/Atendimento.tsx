@@ -5860,22 +5860,24 @@ ${recentMessages}
                 />
               )}
             </div>
-            {/* Barra de próximo contato / finalizar atendimento - celular */}
-            {contatoPendenteBarra && usuarioId && estabelecimentoId && (
-              <BarraProximoContato
-                contato={contatoPendenteBarra}
-                pendentes={contatosPendentesBarra}
-                onTrocarContato={setContatoFinalizarId}
-                focoToken={focoBarra}
-                simultaneo={modoSimultaneo}
-                onSimultaneo={setModoSimultaneo}
-                canal={canalDaAba(activeTab) || "telefone"}
-                usuarioId={usuarioId}
-                estabelecimentoId={estabelecimentoId}
-                onFinalizado={() => { void loadTodayTasks(); }}
-              />
-            )}
           </div>
+
+          {/* Barra de próximo contato / finalizar atendimento - celular (no fluxo, acima da navegação e sem cobrir o chat) */}
+          {contatoPendenteBarra && usuarioId && estabelecimentoId && (
+            <BarraProximoContato
+              emFluxo
+              contato={contatoPendenteBarra}
+              pendentes={contatosPendentesBarra}
+              onTrocarContato={setContatoFinalizarId}
+              focoToken={focoBarra}
+              simultaneo={modoSimultaneo}
+              onSimultaneo={setModoSimultaneo}
+              canal={canalDaAba(activeTab) || "telefone"}
+              usuarioId={usuarioId}
+              estabelecimentoId={estabelecimentoId}
+              onFinalizado={() => { void loadTodayTasks(); }}
+            />
+          )}
 
           {/* Abas principais do celular: Fila / Atendimento / Cadastro */}
           {!(activeTab === "orcamento" && orcamentoSheetOpen) && (
