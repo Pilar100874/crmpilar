@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarCheck, CalendarDays, FileText, History } from "lucide-react";
+import { CalendarCheck, CalendarDays, FileText, History, PhoneCall } from "lucide-react";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +98,8 @@ interface FilaDoDiaProps {
   items: FilaItem[];
   tablet?: boolean;
   onEnvioMassa: (idsSelecionados: string[]) => void;
+  /** Ligação sequencial/aprovação com os contatos selecionados (ids de contato). */
+  onLigacaoSequencial?: (contactIds: string[]) => void;
   onConfigurarRegra: () => void;
   vazioTexto?: string;
   headerExtra?: React.ReactNode;
@@ -110,7 +112,7 @@ interface FilaDoDiaProps {
   totais?: { tudo: number; agendados: number; recebidos: number };
 }
 
-export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequencial, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
@@ -380,12 +382,32 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
           <Button
             variant="outline"
             size="sm"
+            disabled={selecionados.size === 0}
+            title={selecionados.size === 0 ? "Selecione os contatos primeiro" : undefined}
             onClick={() => onEnvioMassa(Array.from(selecionados))}
             className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
           >
             <Send className="h-3.5 w-3.5" />
             Envio em massa
           </Button>
+          {onLigacaoSequencial && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selecionados.size === 0}
+              title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Ligação sequencial"}
+              onClick={() => {
+                const ids = items
+                  .filter((i) => selecionados.has(i.id) && i.contactId)
+                  .map((i) => i.contactId as string);
+                onLigacaoSequencial(Array.from(new Set(ids)));
+              }}
+              className={cn("h-9 gap-1.5 rounded-lg text-xs", tablet && "shrink-0")}
+            >
+              <PhoneCall className="h-3.5 w-3.5" />
+              Ligação
+            </Button>
+          )}
         </div>
       </div>
 
