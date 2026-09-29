@@ -65,6 +65,7 @@ import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
+import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendimento/BarraProximoContato";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
@@ -3533,6 +3534,15 @@ ${recentMessages}
     localStorage.setItem("atendimento_cards_compactos", cardsCompactos ? "true" : "false");
   }, [cardsCompactos]);
 
+  // Barra de próximo contato: aparece quando há interação sem próxima data
+  const contatoPendenteBarra = useMemo(() => {
+    const id = pendenciasAtendimento[0];
+    if (!id) return null;
+    const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
+    const nome = cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente";
+    return { id, nome };
+  }, [pendenciasAtendimento, contatosBase, clienteCabecalho]);
+
   // Pedido de finalização vindo do botão "Finalizar" do cartão
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
@@ -6070,7 +6080,16 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div ref={quadroCentralRef} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+        {contatoPendenteBarra && usuarioId && estabelecimentoId && (
+          <BarraProximoContato
+            contato={contatoPendenteBarra}
+            canal={canalDaAba(activeTab) || "telefone"}
+            usuarioId={usuarioId}
+            estabelecimentoId={estabelecimentoId}
+            onFinalizado={() => { void loadTodayTasks(); }}
+          />
+        )}
         {clienteCabecalho && !isMobile && (
           <div ref={cabecalhoRef}>
           <CabecalhoClienteAtendimento
@@ -6145,7 +6164,7 @@ ${recentMessages}
             .slice(0, 10);
           const empresaId = lista[0]?.empresa_id || null;
           return (
-            <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+            <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
               <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">Últimos orçamentos</p>
@@ -6240,7 +6259,7 @@ ${recentMessages}
         )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+          <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>

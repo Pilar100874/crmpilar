@@ -134,6 +134,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
     onFiltroChange?.(valor);
   };
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
+  const pendencias = usePendenciasAtendimento();
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
