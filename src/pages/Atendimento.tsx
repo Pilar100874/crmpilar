@@ -204,7 +204,6 @@ export default function Atendimento() {
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(false);
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
-  const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
   const pendenciasAtendimento = usePendenciasAtendimento();
   const [modoSimultaneo, setModoSimultaneo] = useModoSimultaneo();
   const [contatoFinalizarId, setContatoFinalizarId] = useState<string | null>(null);
@@ -7941,7 +7940,7 @@ function MobileListContent({
           const isSameSegment = task.contact_id && !isLinkedToUser && 
             customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
           const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
-          const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
+          const taskBloqueada = !lerModoSimultaneo() && pendenciasAtendimento.length > 0 && !taskPendente;
           
           return (
           <div
