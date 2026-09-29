@@ -64,11 +64,11 @@ export interface FilaItem {
 type FiltroFila = "tudo" | "agendados" | "recebidos";
 type OrdenacaoFila = "prioridade" | "horario" | "nome";
 
-const CANAL_CONFIG: Record<FilaCanal, { label: string; icon: typeof Phone; cor: string; fundo: string }> = {
-  telefone: { label: "Telefone", icon: Phone, cor: "text-primary", fundo: "bg-primary/10" },
-  whatsapp: { label: "WhatsApp", icon: MessageCircle, cor: "text-success", fundo: "bg-success/10" },
-  email: { label: "E-mail", icon: Mail, cor: "text-info", fundo: "bg-info/10" },
-  visita: { label: "Visita", icon: MapPin, cor: "text-purple-500", fundo: "bg-purple-500/10" },
+const CANAL_CONFIG: Record<FilaCanal, { label: string; icon: typeof Phone; cor: string; fundo: string; fundoEscuro: string }> = {
+  telefone: { label: "Telefone", icon: Phone, cor: "text-primary", fundo: "bg-primary/10", fundoEscuro: "bg-primary/30" },
+  whatsapp: { label: "WhatsApp", icon: MessageCircle, cor: "text-success", fundo: "bg-success/10", fundoEscuro: "bg-success/30" },
+  email: { label: "E-mail", icon: Mail, cor: "text-info", fundo: "bg-info/10", fundoEscuro: "bg-info/30" },
+  visita: { label: "Visita", icon: MapPin, cor: "text-purple-500", fundo: "bg-purple-500/10", fundoEscuro: "bg-purple-500/30" },
 };
 
 function iniciais(nome: string): string {
@@ -395,8 +395,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
           </div>
         ) : (
           visiveis.map((item) => {
-            const canalCfg = CANAL_CONFIG[item.canal];
-            const CanalIcon = canalCfg.icon;
             const marcado = selecionados.has(item.id);
             return (
               <div key={item.id}>
@@ -428,7 +426,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                    className={cn("shrink-0 border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500", tablet && "mt-2")}
                 />
 
-                {/* Contato: avatar + nome em cima, pílula do canal embaixo */}
+                {/* Contato: avatar + nome em cima */}
                  <div className={cn("flex flex-1 min-w-0", tablet ? "items-start gap-2" : "items-center gap-3")}>
                    <div className={cn("shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-foreground/70", tablet ? "h-9 w-9 text-xs" : "h-11 w-11 text-[13px]")}>
                     {iniciais(item.nome)}
@@ -440,18 +438,15 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     {item.empresa && (
                        <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
                     )}
-                    <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm">
-                      <CanalIcon className={cn("h-3.5 w-3.5", canalCfg.cor)} />
-                      {canalCfg.label}
-                    </span>
                     {item.contactId && (item.canais?.length || 0) > 0 && (
                       <div className="mt-1 flex items-center gap-1">
                         {item.canais!.map((c) => {
                           const cfg = CANAL_CONFIG[c];
                           const Ic = cfg.icon;
+                          const destaque = filtro !== "tudo" && c === item.canal;
                           return (
                             <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); item.onCanal?.(c); }}
-                              className={cn("h-6 w-6 rounded-full flex items-center justify-center", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
+                              className={cn("h-6 w-6 rounded-full flex items-center justify-center", destaque ? cfg.fundoEscuro : cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
                               <Ic className="h-3 w-3" />
                             </button>
                           );
