@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CalendarCheck, CalendarDays, FileText, History } from "lucide-react";
-import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
+import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -135,6 +135,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
   };
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const pendencias = usePendenciasAtendimento();
+  const [simultaneo] = useModoSimultaneo();
   const [modoSelecao, setModoSelecao] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
@@ -423,7 +424,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                     ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
                   marcado && "bg-orange-500/[0.08]",
-                  (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
+                  !simultaneo && (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
                 )}
               >

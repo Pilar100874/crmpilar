@@ -64,7 +64,7 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
-import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
+import { useModoSimultaneo, lerModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendimento/BarraProximoContato";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
@@ -206,6 +206,9 @@ export default function Atendimento() {
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
   const pendenciasAtendimento = usePendenciasAtendimento();
+  const [modoSimultaneo, setModoSimultaneo] = useModoSimultaneo();
+  const [contatoFinalizarId, setContatoFinalizarId] = useState<string | null>(null);
+  const [focoBarra, setFocoBarra] = useState(0);
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
     if (isMobile) {
@@ -3541,8 +3544,8 @@ ${recentMessages}
     const h = (e: Event) => {
       const d = (e as CustomEvent).detail as { customerId: string; nome?: string };
       if (!d?.customerId) return;
-      const aba = activeTabRef.current;
-      setFinalizarCtx({ id: d.customerId, nome: d.nome || "Cliente", canal: canalDaAba(aba) || "telefone" });
+      setContatoFinalizarId(d.customerId);
+      setFocoBarra((n) => n + 1);
     };
     window.addEventListener(EVENTO_FINALIZAR, h);
     return () => window.removeEventListener(EVENTO_FINALIZAR, h);
@@ -3924,12 +3927,16 @@ ${recentMessages}
 
   // Barra de próximo contato: aparece quando há interação sem próxima data
   const contatoPendenteBarra = useMemo(() => {
-    const id = pendenciasAtendimento[0];
+    const id = (contatoFinalizarId && pendenciasAtendimento.includes(contatoFinalizarId)) ? contatoFinalizarId : pendenciasAtendimento[0];
     if (!id) return null;
     const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
     const nome = cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente";
     return { id, nome };
-  }, [pendenciasAtendimento, contatosBase, clienteCabecalho]);
+  }, [pendenciasAtendimento, contatosBase, clienteCabecalho, contatoFinalizarId]);
+  const contatosPendentesBarra = useMemo(() => pendenciasAtendimento.map((id) => {
+    const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
+    return { id, nome: cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente" };
+  }), [pendenciasAtendimento, contatosBase, clienteCabecalho]);
 
 
 
@@ -4087,7 +4094,7 @@ ${recentMessages}
             : (contato.horario || "").slice(0, 5),
           data: contato.dataAtraso || undefined,
           atrasado: (contato.diasAtraso || 0) > 0,
-          bloqueado: pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
+          bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
           canais: [
             ...(contato.telefone ? ["whatsapp" as FilaCanal] : []),
             ...(contato.tel ? ["telefone" as FilaCanal] : []),
@@ -4173,7 +4180,7 @@ ${recentMessages}
         data: task.data_original ? format(new Date(task.data_original), "dd/MM") : undefined,
         atrasado,
         selecionado: selectedTaskId === task.id,
-        bloqueado: pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
+        bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
         assumido: !!usuarioId && !!task.user_id && task.user_id !== usuarioId,
         canais: [
           ...(task.customers?.telefone ? ["whatsapp" as FilaCanal] : []),
@@ -4280,7 +4287,7 @@ ${recentMessages}
       });
 
     return lista;
-  }, [filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
@@ -4480,10 +4487,12 @@ ${recentMessages}
   // Bloqueia a seleção de outro cliente enquanto houver atendimento pendente de finalização.
   // Trocar de aba é permitido; clicar em outro cliente abre a janela de finalizar.
   const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+    if (modoSimultaneo) return false;
     const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
     if (!pendenteId) return false;
-    const nome = contatosBase.find((c) => c.id === pendenteId)?.nome || "Cliente";
-    setFinalizarCtx({ id: pendenteId, nome, canal: canalDaAba(activeTab) || "telefone", obrigatorio: true });
+    setContatoFinalizarId(pendenteId);
+    setFocoBarra((n) => n + 1);
+    toast.info("Finalize o atendimento atual ou ative \"Atender simultâneo\" na barra de baixo");
     return true;
   };
 
@@ -6085,6 +6094,11 @@ ${recentMessages}
         {contatoPendenteBarra && usuarioId && estabelecimentoId && (
           <BarraProximoContato
             contato={contatoPendenteBarra}
+            pendentes={contatosPendentesBarra}
+            onTrocarContato={setContatoFinalizarId}
+            focoToken={focoBarra}
+            simultaneo={modoSimultaneo}
+            onSimultaneo={setModoSimultaneo}
             canal={canalDaAba(activeTab) || "telefone"}
             usuarioId={usuarioId}
             estabelecimentoId={estabelecimentoId}
@@ -7360,21 +7374,6 @@ ${recentMessages}
         </AlertDialogContent>
       </AlertDialog>
 
-      <FinalizarAtendimentoDialog
-        open={!!finalizarCtx}
-        onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
-        contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
-        canal={(finalizarCtx?.canal as any) || "telefone"}
-        usuarioId={usuarioId}
-        estabelecimentoId={estabelecimentoId}
-        obrigatorio={finalizarCtx?.obrigatorio}
-        onFinalizado={() => {
-          const depois = finalizarCtx?.depois;
-          setFinalizarCtx(null);
-          void loadTodayTasks();
-          depois?.();
-        }}
-      />
       <ComposeEmailDialog
         open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
         onOpenChange={(open) => {
@@ -7599,6 +7598,7 @@ function MobileListContent({
   const cardsCompactos = useAtendimentoCardsCompactos();
   const pendenciasAtendimento = usePendenciasAtendimento();
   const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+    if (lerModoSimultaneo()) return false;
     const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
     if (!pendenteId) return false;
     pedirFinalizacao({ customerId: pendenteId, nome: "Cliente" });
