@@ -4341,6 +4341,11 @@ ${recentMessages}
     }
   }
 
+  // Fecha a lista de orçamentos ao trocar de cliente
+  useEffect(() => {
+    setOrcamentosCliente((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
+  }, [(clienteCabecalho as any)?.id]);
+
   // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
   useEffect(() => {
     dispararWipe();
