@@ -3963,7 +3963,19 @@ ${recentMessages}
 
   const indicadoresPorContato = useMemo(() => {
     const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; horarioAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
-...
+    const contatos = new Map<string, any>();
+    contatosBase.forEach((contato) => contatos.set(contato.id, contato));
+    todayTasks.forEach((task: any) => {
+      if (task.contact_id) contatos.set(task.contact_id, task.customers || contatos.get(task.contact_id));
+    });
+    conversations.forEach((conversa: any) => {
+      if (conversa.customer_id) contatos.set(conversa.customer_id, conversa.customer || contatos.get(conversa.customer_id));
+    });
+
+    contatos.forEach((contato, contatoId) => {
+      const empresas = contato?.customer_empresas || contato?.companies || [];
+      const empresaIds = empresas.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id).filter(Boolean);
+      const tarefas = todayTasks.filter((task: any) => task.contact_id === contatoId && !["concluido", "cancelado", "completed"].includes(task.status));
       const { maior: diasAtraso, data: dataAtraso, horario: horarioAtraso } = tarefas.reduce((acc: { maior: number; data?: string; horario?: string }, task: any) => {
         if (!task.data_original) return acc;
         const hoje = new Date();
