@@ -6071,8 +6071,28 @@ ${recentMessages}
         )}
         {/* Últimos orçamentos do cliente em tela central */}
         {orcamentosCliente && clienteCabecalho && !isMobile && (() => {
+          const OPCOES_ETAPA = [
+            { valor: "orcamento", rotulo: "Orçamento" },
+            { valor: "negociacao", rotulo: "Negociação" },
+            { valor: "aprovacao_gerencia", rotulo: "Aprovação Gerência" },
+            { valor: "perdido", rotulo: "Perdido" },
+            { valor: "finalizado", rotulo: "Finalizado" },
+          ];
+          const temFiltroData = !!orcClienteFiltroData.de || !!orcClienteFiltroData.ate;
+          const temFiltro = orcClienteFiltroStatus !== "todos" || temFiltroData;
           const lista = (orcamentos as any[])
             .filter((o) => o.cliente_id === orcamentosCliente.id)
+            .filter((o) => orcClienteFiltroStatus === "todos"
+              || o.etapa === orcClienteFiltroStatus
+              || (!o.etapa && o.status === orcClienteFiltroStatus))
+            .filter((o) => {
+              if (!temFiltroData) return true;
+              const data = new Date(o.created_at);
+              if (!o.created_at || isNaN(data.getTime())) return !orcClienteFiltroData.de && !orcClienteFiltroData.ate ? true : false;
+              if (orcClienteFiltroData.de && data < startOfDay(new Date(`${orcClienteFiltroData.de}T00:00:00`))) return false;
+              if (orcClienteFiltroData.ate && data > endOfDay(new Date(`${orcClienteFiltroData.ate}T00:00:00`))) return false;
+              return true;
+            })
             .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
             .slice(0, 10);
           const empresaId = lista[0]?.empresa_id || null;
@@ -6091,6 +6111,44 @@ ${recentMessages}
                     <X className="h-4 w-4 mr-1" /> Fechar
                   </Button>
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
+                <Select value={orcClienteFiltroStatus} onValueChange={setOrcClienteFiltroStatus}>
+                  <SelectTrigger className="h-8 w-[190px] rounded-lg text-xs bg-card border-border/60">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    {OPCOES_ETAPA.map((etapa) => (
+                      <SelectItem key={etapa.valor} value={etapa.valor}>{etapa.rotulo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="date"
+                  value={orcClienteFiltroData.de}
+                  onChange={(e) => setOrcClienteFiltroData((atual) => ({ ...atual, de: e.target.value }))}
+                  className="h-8 w-[150px] rounded-lg text-xs bg-card"
+                  aria-label="Data inicial"
+                />
+                <span className="text-xs text-muted-foreground">até</span>
+                <Input
+                  type="date"
+                  value={orcClienteFiltroData.ate}
+                  onChange={(e) => setOrcClienteFiltroData((atual) => ({ ...atual, ate: e.target.value }))}
+                  className="h-8 w-[150px] rounded-lg text-xs bg-card"
+                  aria-label="Data final"
+                />
+                {temFiltro && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => { setOrcClienteFiltroStatus("todos"); setOrcClienteFiltroData({ de: "", ate: "" }); }}
+                  >
+                    Limpar filtros
+                  </Button>
+                )}
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2">
                 {lista.length === 0 && (
