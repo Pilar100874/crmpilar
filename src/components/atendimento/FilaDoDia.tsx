@@ -201,6 +201,30 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     });
   };
 
+  const hojeISO = new Date().toLocaleDateString("en-CA");
+
+  const selecionarTodos = () => setSelecionados(new Set(visiveis.map((i) => i.id)));
+  const limparSelecao = () => setSelecionados(new Set());
+
+  /** Seleciona itens visíveis por filtros (canal e/ou data). */
+  const selecionarPorFiltro = (opcoes: { canal?: FilaCanal; data?: "hoje" | "atrasados" | "futuros" }) => {
+    const filtrados = visiveis.filter((item) => {
+      if (opcoes.canal && item.canal !== opcoes.canal) return false;
+      if (opcoes.data === "hoje" && (item.atrasado || item.data)) return false;
+      if (opcoes.data === "atrasados" && !item.atrasado) return false;
+      if (opcoes.data === "futuros" && (item.atrasado || !item.data)) return false;
+      return true;
+    });
+    setSelecionados((anterior) => {
+      const proximo = new Set(anterior);
+      filtrados.forEach((i) => proximo.add(i.id));
+      return proximo;
+    });
+    if (!modoSelecao) setModoSelecao(true);
+  };
+
+  const todosSelecionados = visiveis.length > 0 && visiveis.every((i) => selecionados.has(i.id));
+
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
     { id: "agendados", label: "Agendados", total: totais?.agendados ?? totalAgendados },
