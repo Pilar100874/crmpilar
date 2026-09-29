@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText } from "lucide-react";
+import { FileText, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
@@ -56,6 +56,7 @@ export interface FilaItem {
   canais?: FilaCanal[];
   onCanal?: (canal: FilaCanal) => void;
   onOrcamento?: (orcamentoId: string) => void;
+  onHistorico?: () => void;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
 }
@@ -455,6 +456,12 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                             </button>
                           );
                         })}
+                        {item.onHistorico && (
+                          <button type="button" title="Histórico" onClick={(e) => { e.stopPropagation(); item.onHistorico?.(); }}
+                            className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
+                            <History className="h-3 w-3" />
+                          </button>
+                        )}
                         <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); }}
                           className={cn("h-6 w-6 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
                           <FileText className="h-3 w-3" />

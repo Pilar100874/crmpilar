@@ -4037,8 +4037,13 @@ ${recentMessages}
           ],
           onCanal: (c: FilaCanal) => {
             if (bloquearTrocaClientePendente(contato.id)) return;
-            setHistoricoCliente(null);
-            setActiveTab(c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+            abrirCanalDoContato(contato.id, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+          },
+          onHistorico: () => {
+            if (bloquearTrocaClientePendente(contato.id)) return;
+            setActiveTab("agenda");
+            setSelectedAgendaContato(contato);
+            setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
           },
           onOrcamento: (orcId: string) => {
             if (bloquearTrocaClientePendente(contato.id)) return;
@@ -4051,7 +4056,9 @@ ${recentMessages}
           onClick: () => {
             if (bloquearTrocaClientePendente(contato.id)) return;
             setActiveTab("agenda");
-            setSelectedAgendaContato(null);
+            setSelectedTaskId(null);
+            setSelectedTaskData(null);
+            setSelectedAgendaContato(contato);
             openDetailsPanel(setShowClientDetailsAgenda);
             setAgendaViewMode("default");
             setDiscadorModo(null);
@@ -4103,8 +4110,14 @@ ${recentMessages}
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           setSelectedTaskId(task.id);
           setSelectedTaskData(task);
-          setHistoricoCliente(null);
-          setActiveTab(c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+          abrirCanalDoContato(task.contact_id, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
+        },
+        onHistorico: () => {
+          if (bloquearTrocaClientePendente(task.contact_id)) return;
+          setActiveTab("agenda");
+          setSelectedTaskId(task.id);
+          setSelectedTaskData(task);
+          setHistoricoCliente({ customerId: task.contact_id, nome });
         },
         onOrcamento: (orcId: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
@@ -4249,7 +4262,19 @@ ${recentMessages}
     const clienteId = clientePendenteTrocaAbaRef.current;
     clientePendenteTrocaAbaRef.current = null;
     if (!clienteId) return;
-    const novaAba = activeTab;
+    aplicarClienteNaAba(clienteId, activeTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Abre o conteúdo do canal escolhido para o cliente (cabeçalho central ou botões do cartão).
+  const abrirCanalDoContato = (clienteId: string, aba: string) => {
+    setHistoricoCliente(null);
+    if (aba === activeTab) { aplicarClienteNaAba(clienteId, aba); return; }
+    clientePendenteTrocaAbaRef.current = clienteId;
+    setActiveTab(aba);
+  };
+
+  function aplicarClienteNaAba(clienteId: string, novaAba: string) {
     setMobileView('main');
     if (novaAba !== 'tel' && novaAba !== 'visita') { setAgendaViewMode('default'); setDiscadorModo(null); }
 
@@ -4297,8 +4322,7 @@ ${recentMessages}
         openDetailsPanel(setShowClientDetailsOrcamento);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }
 
   // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
   useEffect(() => {
@@ -4346,7 +4370,7 @@ ${recentMessages}
   const trocarAba = (novaAba: string) => {
     if (novaAba === activeTab) { setActiveTab(novaAba); return; }
     let clienteId: string | null = null;
-    if (activeTab === 'agenda') clienteId = (selectedTaskData as any)?.contact_id ?? null;
+    if (activeTab === 'agenda') clienteId = (selectedTaskData as any)?.contact_id ?? selectedAgendaContato?.id ?? null;
     else if (activeTab === 'chat') {
       const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
       clienteId = (conv as any)?.customer_id ?? null;
