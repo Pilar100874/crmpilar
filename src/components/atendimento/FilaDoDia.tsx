@@ -201,8 +201,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     });
   };
 
-  const hojeISO = new Date().toLocaleDateString("en-CA");
-
   const selecionarTodos = () => setSelecionados(new Set(visiveis.map((i) => i.id)));
   const limparSelecao = () => setSelecionados(new Set());
 
