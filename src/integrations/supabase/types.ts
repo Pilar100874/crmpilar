@@ -29253,6 +29253,8 @@ export type Database = {
           auth_user_id: string | null
           automacao_ambiente_celular: string | null
           automacao_ambiente_tablet: string | null
+          bot_atendimento_ativo: boolean
+          bot_atendimento_id: string | null
           comando_voz_habilitado: boolean
           created_at: string | null
           email: string | null
@@ -29299,6 +29301,8 @@ export type Database = {
           auth_user_id?: string | null
           automacao_ambiente_celular?: string | null
           automacao_ambiente_tablet?: string | null
+          bot_atendimento_ativo?: boolean
+          bot_atendimento_id?: string | null
           comando_voz_habilitado?: boolean
           created_at?: string | null
           email?: string | null
@@ -29345,6 +29349,8 @@ export type Database = {
           auth_user_id?: string | null
           automacao_ambiente_celular?: string | null
           automacao_ambiente_tablet?: string | null
+          bot_atendimento_ativo?: boolean
+          bot_atendimento_id?: string | null
           comando_voz_habilitado?: boolean
           created_at?: string | null
           email?: string | null
@@ -29399,6 +29405,13 @@ export type Database = {
             columns: ["automacao_ambiente_tablet"]
             isOneToOne: false
             referencedRelation: "automacao_ambientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_bot_atendimento_id_fkey"
+            columns: ["bot_atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
             referencedColumns: ["id"]
           },
           {
