@@ -170,7 +170,9 @@ export default function Atendimento() {
     if (!el) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
     // Anima só o conteúdo central, nunca o cabeçalho/barras superiores
-    Array.from(el.children).forEach((filho) => {
+    const paineis = Array.from(el.querySelectorAll(":scope > [data-painel-centro]"));
+    const alvos = paineis.length ? paineis : Array.from(el.children);
+    alvos.forEach((filho) => {
       if (filho === cabecalhoRef.current) return;
       filho.classList.remove("animate-wipe-in");
       void (filho as HTMLElement).offsetWidth;
@@ -4398,7 +4400,7 @@ ${recentMessages}
   useEffect(() => {
     dispararWipe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode]);
+  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
   if (loading || loadingFerramentas) {
     return (
@@ -6130,7 +6132,7 @@ ${recentMessages}
             .slice(0, 10);
           const empresaId = lista[0]?.empresa_id || null;
           return (
-            <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+            <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
               <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">Últimos orçamentos</p>
@@ -6225,7 +6227,7 @@ ${recentMessages}
         )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
+          <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>
