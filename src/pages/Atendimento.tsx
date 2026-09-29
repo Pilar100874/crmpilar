@@ -4035,7 +4035,9 @@ ${recentMessages}
           empresa: empresaNome,
           motivo: contato.referencia || "Meu contato",
           canal,
-          horario: (contato.horario || "").slice(0, 5),
+          horario: (contato.diasAtraso || 0) > 0
+            ? (contato.horarioAtraso || (contato.horario || "").slice(0, 5))
+            : (contato.horario || "").slice(0, 5),
           data: contato.dataAtraso || undefined,
           atrasado: (contato.diasAtraso || 0) > 0,
           bloqueado: pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
