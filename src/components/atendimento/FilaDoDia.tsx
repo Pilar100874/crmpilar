@@ -446,7 +446,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onConfigurarReg
                           const destaque = filtro !== "tudo" && c === item.canal;
                           return (
                             <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); item.onCanal?.(c); }}
-                              className={cn("h-6 w-6 rounded-full flex items-center justify-center", destaque ? cfg.fundoEscuro : cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
+                              className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
                               <Ic className="h-3 w-3" />
                             </button>
                           );
