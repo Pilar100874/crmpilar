@@ -583,7 +583,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         .from("calendario_tarefas")
         .select("id, date, time, title")
         .eq("contact_id", selectedContact.id)
-        .in("status", ["pending", "pendente"]);
+        .in("status", ["pending", "pendente"])
+        .gte("date", new Date().toLocaleDateString("en-CA"));
       if (userIdToSave) q = q.eq("user_id", userIdToSave);
       const { data: existentes } = await q;
       if (existentes && existentes.length > 0) {
