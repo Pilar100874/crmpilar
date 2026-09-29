@@ -21,12 +21,13 @@ interface Props {
   contactId: string;
   nome: string;
   onClose: () => void;
+  top?: number;
 }
 
 const concluida = (s: string) => ["completed", "concluida", "concluído", "concluida", "done"].includes((s || "").toLowerCase());
 
 /** Agenda do contato: próximos agendamentos e, opcionalmente, a sequência completa de tarefas. */
-export function AgendaContatoPanel({ contactId, nome, onClose }: Props) {
+export function AgendaContatoPanel({ contactId, nome, onClose, top = 0 }: Props) {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [mostrarSequencia, setMostrarSequencia] = useState(() => localStorage.getItem("agendaContato.sequencia") !== "0");
@@ -64,7 +65,7 @@ export function AgendaContatoPanel({ contactId, nome, onClose }: Props) {
     `${format(parseISO(t.date), "EEE, dd/MM/yyyy", { locale: ptBR })}${t.time ? ` · ${t.time.slice(0, 5)}` : ""}`;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 top-[var(--cabecalho-altura,0px)] z-30 flex flex-col bg-background">
+    <div style={{ top }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-sm font-semibold"><CalendarDays className="h-4 w-4 text-primary" /> Agenda do contato</h3>

@@ -19,6 +19,8 @@ interface Props {
   onTrocarCanal: (aba: string) => void;
   onHistorico?: () => void;
   historicoAtivo?: boolean;
+  onAgenda?: () => void;
+  agendaAtiva?: boolean;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
   filaAberta?: boolean;
@@ -29,7 +31,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, historicoAtivo, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, historicoAtivo, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
@@ -95,9 +97,16 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             <History className="h-4 w-4 text-orange-600" />
           </button>
         )}
+        {onAgenda && (
+          <button type="button" onClick={onAgenda} title="Agenda" aria-label="Agenda"
+            className={cn("flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors",
+              agendaAtiva ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40")}>
+            <CalendarDays className="h-4 w-4 text-primary" /> Agenda
+          </button>
+        )}
         {canais.map((c) => {
           const Icon = c.icon;
-          const ativo = !historicoAtivo && abaAtiva === c.aba;
+          const ativo = !historicoAtivo && !agendaAtiva && abaAtiva === c.aba;
           return (
             <button
               key={c.aba}
