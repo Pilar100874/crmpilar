@@ -7000,7 +7000,7 @@ ${recentMessages}
           />
           </div>
           </div>
-        ) : (activeTab === "tel" || activeTab === "visita") && selectedTelContato ? (
+        ) : (activeTab === "tel" || activeTab === "visita") && selectedTelContato && !fluxoPersistente ? (
           <div className="flex flex-1 flex-col bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="min-w-0">
