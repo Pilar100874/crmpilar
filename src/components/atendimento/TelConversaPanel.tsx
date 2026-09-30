@@ -37,7 +37,6 @@ export default function TelConversaPanel({ customerId, telefones, estabeleciment
   const [gravacoes, setGravacoes] = useState<Gravacao[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
-  const [resultadoId, setResultadoId] = useState<string | null>(() => lerResultadoPendente(customerId)?.flagId ?? null);
   const [resultadoNome, setResultadoNome] = useState(() => lerResultadoPendente(customerId)?.nome ?? "");
   const [excluir, setExcluir] = useState<{ tipo: "anotacao" | "gravacao"; id: string; caminho?: string } | null>(null);
   const recRef = useRef<any>(null);
@@ -67,7 +66,6 @@ export default function TelConversaPanel({ customerId, telefones, estabeleciment
 
   useEffect(() => { setTexto(""); void carregar(); }, [carregar]);
   useEffect(() => {
-    setResultadoId(lerResultadoPendente(customerId)?.flagId ?? null);
     setResultadoNome(lerResultadoPendente(customerId)?.nome ?? "");
     void supabase.from("atendimento_flags").select("id, nome")
       .eq("estabelecimento_id", estabelecimentoId).eq("ativo", true).order("ordem")
@@ -129,7 +127,6 @@ export default function TelConversaPanel({ customerId, telefones, estabeleciment
 
   const selecionarResultado = (nome: string) => {
     const flagId = flags.find((flag) => flag.nome.toLowerCase() === nome.toLowerCase())?.id ?? null;
-    setResultadoId(flagId);
     setResultadoNome(nome);
     salvarResultadoPendente(customerId, { flagId, nome });
   };
