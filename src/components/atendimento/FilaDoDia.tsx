@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bot, CalendarCheck, CalendarDays, FileText, History, PhoneCall } from "lucide-react";
+import { Bot, CalendarCheck, CalendarDays, FileText, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -102,6 +102,9 @@ interface FilaDoDiaProps {
   onEnvioMassa: (idsSelecionados: string[]) => void;
   /** Ligação sequencial/aprovação com os contatos selecionados (ids de contato). */
   onLigacaoSequencial?: (contactIds: string[]) => void;
+  /** Modo do discador em execução (null = parado). */
+  discadorAtivo?: "previa" | "sequencial" | null;
+  onPararDiscador?: () => void;
   onConfigurarRegra: () => void;
   vazioTexto?: string;
   headerExtra?: React.ReactNode;
@@ -120,7 +123,7 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
   return (item.canais || []).some((c) => canais.has(c));
 }
 
-export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequencial, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequencial, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
@@ -496,7 +499,18 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
           >
             <Send className="h-4 w-4" />
           </Button>
-          {onLigacaoSequencial && (
+          {onLigacaoSequencial && (discadorAtivo ? (
+            <Button
+              variant="default"
+              size="icon"
+              title={`Discador rodando (${discadorAtivo === "sequencial" ? "sequencial" : "aprovação uma a uma"}) — clique para parar`}
+              onClick={() => onPararDiscador?.()}
+              className="relative h-9 w-9 shrink-0 rounded-lg ring-2 ring-primary/40 ring-offset-1 animate-pulse"
+            >
+              {discadorAtivo === "sequencial" ? <ListOrdered className="h-4 w-4" /> : <PhoneForwarded className="h-4 w-4" />}
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            </Button>
+          ) : (
             <Button
               variant="outline"
               size="icon"
@@ -512,7 +526,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
             >
               <PhoneCall className="h-4 w-4" />
             </Button>
-          )}
+          ))}
         </div>
       </div>
 

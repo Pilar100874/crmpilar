@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal } from "@/components/atendimento/FilaDoDia";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
+import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
+import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -4440,6 +4442,29 @@ ${recentMessages}
   }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
   const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
+  const [chamadaRecebida, setChamadaRecebida] = useState<{ numero: string; discadorParado: boolean } | null>(null);
+  const discadorRodandoRef = useRef(false);
+  discadorRodandoRef.current = agendaViewMode === 'fluxo' && !!discadorModo;
+  useEffect(() => {
+    let ultimo = { numero: "", em: 0 };
+    const h = (e: Event) => {
+      const numero = String((e as CustomEvent).detail?.numero || "");
+      if (!numero || numero === "Desconhecido") return;
+      const agora = Date.now();
+      if (ultimo.numero.slice(-8) === numero.replace(/\D/g, "").slice(-8) && agora - ultimo.em < 15000) return;
+      ultimo = { numero: numero.replace(/\D/g, ""), em: agora };
+      let parado = false;
+      if (discadorRodandoRef.current && lerPararAoReceber()) {
+        setDiscadorModo(null);
+        setAgendaViewMode('default');
+        setFluxoCurrentTask(null);
+        parado = true;
+      }
+      setChamadaRecebida({ numero, discadorParado: parado });
+    };
+    window.addEventListener('pilar:chamada-recebida', h);
+    return () => window.removeEventListener('pilar:chamada-recebida', h);
+  }, []);
   const tasksDiscador = useMemo(() => {
     if (!discadorContatos) return filteredTasks;
     return tasksSelecionadas ?? [];
@@ -4570,6 +4595,26 @@ ${recentMessages}
     setTasksSelecionadas(lista);
     setDiscadorContatos(ids);
     void abrirDiscador();
+  };
+
+  const pararDiscador = () => {
+    setDiscadorModo(null);
+    setAgendaViewMode('default');
+    setFluxoCurrentTask(null);
+    setFluxoInitialIndex(0);
+    setTasksSelecionadas(null);
+  };
+
+  const abrirContatoBinado = (c: ContatoBinado, pausar: boolean) => {
+    if (pausar) setModoSimultaneo(true);
+    setChamadaRecebida(null);
+    const existente: any = contatosComIndicadores.find((x: any) => x.id === c.id);
+    setHistoricoCliente(null);
+    setAgendaContato(null);
+    setAgendaViewMode('default');
+    setSelectedTelContato(existente || ({ id: c.id, nome: c.nome, tel: c.tel, telefone: c.telefone, email: c.email, companies: [] } as any));
+    setActiveTab('tel');
+    setMobileView('main');
   };
 
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
@@ -5564,6 +5609,8 @@ ${recentMessages}
                   items={filaItemsMobile}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                   onLigacaoSequencial={iniciarLigacaoSelecionados}
+                  discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
+                  onPararDiscador={pararDiscador}
                   onEnvioMassa={(ids: string[]) => {
                     setIdsEnvioMassa(ids);
                     setHistoricoCliente(null);
@@ -6132,6 +6179,8 @@ ${recentMessages}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
           onLigacaoSequencial={iniciarLigacaoSelecionados}
+                  discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
+                  onPararDiscador={pararDiscador}
           onEnvioMassa={(ids: string[]) => {
                     setIdsEnvioMassa(ids);
                     setHistoricoCliente(null);
@@ -7495,6 +7544,14 @@ ${recentMessages}
     </AtendimentoCardsDensityProvider>
     
     {/* Global Dialogs - render regardless of mobile/desktop */}
+    <ChamadaRecebidaDialog
+      numero={chamadaRecebida?.numero ?? null}
+      discadorParado={!!chamadaRecebida?.discadorParado}
+      estabelecimentoId={estabelecimentoId}
+      temPendencias={!modoSimultaneo && pendenciasAtendimento.length > 0}
+      onClose={() => setChamadaRecebida(null)}
+      onAbrir={abrirContatoBinado}
+    />
     <DiscadorModoDialog
       open={showDiscadorModo}
       onOpenChange={setShowDiscadorModo}

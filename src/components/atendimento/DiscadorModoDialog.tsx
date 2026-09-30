@@ -1,5 +1,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Phone, PhoneForwarded, ListOrdered } from "lucide-react";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+
+export const CHAVE_PARAR_AO_RECEBER = "discador.pararAoReceber";
+export const lerPararAoReceber = () => localStorage.getItem(CHAVE_PARAR_AO_RECEBER) !== "0";
 
 interface DiscadorModoDialogProps {
   open: boolean;
@@ -15,6 +20,7 @@ interface DiscadorModoDialogProps {
  * a próxima ligação só sai depois de Finalizar ou Pular o atendimento atual.
  */
 export function DiscadorModoDialog({ open, onOpenChange, totalContatos, onSelect }: DiscadorModoDialogProps) {
+  const [pararAoReceber, setPararAoReceber] = useState(lerPararAoReceber);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
@@ -56,6 +62,11 @@ export function DiscadorModoDialog({ open, onOpenChange, totalContatos, onSelect
               Acabou uma, liga para outra: ao <strong>Finalizar</strong> ou <strong>Pular</strong>, a próxima ligação sai automaticamente.
             </p>
           </button>
+
+          <label className="flex items-center justify-between gap-2 rounded-lg border border-border/60 p-3 text-sm">
+            <span>Parar o discador ao receber uma ligação</span>
+            <Switch checked={pararAoReceber} onCheckedChange={(v) => { setPararAoReceber(v); localStorage.setItem(CHAVE_PARAR_AO_RECEBER, v ? "1" : "0"); }} />
+          </label>
 
           <p className="text-[11px] text-muted-foreground text-center">
             Nos dois modos, a próxima ligação só acontece depois de Finalizar ou Pular o atendimento atual.
