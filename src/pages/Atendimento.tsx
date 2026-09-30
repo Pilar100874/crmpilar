@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal } from "@/components/atendimento/FilaDoDia";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
+import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
 import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
 import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
@@ -5670,7 +5671,11 @@ ${recentMessages}
                 mobileView === "main" ? "translate-x-0" : mobileView === "list" ? "translate-x-full" : "-translate-x-full"
               }`}
             >
-              {activeTab === "tel" && !fluxoPersistente && selectedTelContato ? (
+              {activeTab === "visita" && !fluxoPersistente && selectedTelContato ? (
+                <div className="flex h-full min-h-0 flex-col bg-card">
+                  <VisitaFormularioPanel key={selectedTelContato.id} customerId={selectedTelContato.id} estabelecimentoId={estabelecimentoId} />
+                </div>
+              ) : activeTab === "tel" && !fluxoPersistente && selectedTelContato ? (
                 <div className="flex h-full min-h-0 flex-col bg-card">
                   <TelConversaPanel customerId={selectedTelContato.id} telefones={[selectedTelContato.tel, selectedTelContato.telefone]} estabelecimentoId={estabelecimentoId} />
                 </div>
@@ -7018,6 +7023,9 @@ ${recentMessages}
                 telefones={[selectedTelContato.tel, selectedTelContato.telefone]}
                 estabelecimentoId={estabelecimentoId}
               />
+            )}
+            {activeTab === "visita" && (
+              <VisitaFormularioPanel key={selectedTelContato.id} customerId={selectedTelContato.id} estabelecimentoId={estabelecimentoId} />
             )}
           </div>
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (

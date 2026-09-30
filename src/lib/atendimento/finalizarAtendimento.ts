@@ -263,7 +263,7 @@ export const EVENTO_PENDENCIAS = "atendimento:pendencias-alteradas";
 export const EVENTO_RESULTADO = "atendimento:resultado-selecionado";
 
 export interface ResultadoPendente {
-  flagId: string;
+  flagId: string | null;
   nome: string;
 }
 

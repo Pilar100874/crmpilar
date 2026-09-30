@@ -1,5 +1,8 @@
 # Roteiro
 
+- [x] Telefone: somente Não atendeu, Ocupado e Atendeu, com ícones e relato condicionado.
+- [x] Visita: trocar resultado por formulário preenchível na tela central.
+
 - [x] Ajustar cartões da Fila do dia no tablet sem cortar dados ou ações.
 - [x] Conferir visualmente a fila em tablet vertical e horizontal.
 
