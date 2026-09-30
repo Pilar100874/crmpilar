@@ -3903,6 +3903,11 @@ ${recentMessages}
       const c: any = (selectedConv as any).customer || {};
       return { id: (selectedConv as any).customer_id || c.id, nome: c.nome || "Cliente", empresa: empresaDe(c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email };
     }
+    if (activeTab === "tel" && agendaViewMode === 'fluxo' && discadorModo && fluxoCurrentTask) {
+      const t: any = fluxoCurrentTask;
+      const c: any = contatosBase.find((contato: any) => contato.id === t.contact_id) || t.customers || {};
+      return { id: t.contact_id || c.id, nome: c.nome || t.contact_name || "Cliente", empresa: empresaDe(c.companies || c.customer_empresas), telefone: c.telefone, tel: c.tel, email: c.email };
+    }
     if ((activeTab === "tel" || activeTab === "visita") && selectedTelContato) {
       const c: any = selectedTelContato;
       return { id: c.id, nome: c.nome, empresa: empresaDe(c.companies), telefone: c.telefone, tel: c.tel, email: c.email, proximoContato: c.horario ? `Hoje, ${c.horario}` : null, atrasado: (c.diasAtraso || 0) > 0 };
@@ -3912,7 +3917,7 @@ ${recentMessages}
       return { id: c.id, nome: c.nome, email: c.email, telefone: c.telefone, tel: c.tel };
     }
     return null;
-  }, [activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado]);
+  }, [activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado, agendaViewMode, discadorModo, fluxoCurrentTask, contatosBase]);
 
   const clienteCabecalho = useMemo(() => {
     const base: any = clienteCabecalhoBase;
@@ -4377,7 +4382,6 @@ ${recentMessages}
   };
 
   function aplicarClienteNaAba(clienteId: string, novaAba: string) {
-    setMobileView('main');
     // Não encerra o discador ao trocar de aba — ele continua rodando em segundo plano.
 
     if (novaAba === 'agenda') {
@@ -4403,7 +4407,7 @@ ${recentMessages}
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
       if (contato) {
         setSelectedTelContato(contato);
-        abrirFluxoComContato(contato);
+        if (!(novaAba === 'tel' && discadorModo && agendaViewMode === 'fluxo')) abrirFluxoComContato(contato);
       }
     } else if (novaAba === 'email') {
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
@@ -4424,6 +4428,9 @@ ${recentMessages}
         openDetailsPanel(setShowClientDetailsOrcamento);
       }
     }
+    // Os canais do cabeçalho abrem o conteúdo central; o cadastro só abre pelo botão de detalhes.
+    // openDetailsPanel pode ter colocado o celular em "details" durante a seleção do canal.
+    if (isMobile) setMobileView('main');
   }
 
   // Fecha a lista de orçamentos ao trocar de cliente
@@ -4501,7 +4508,12 @@ ${recentMessages}
     setFluxoInitialIndex(index >= 0 ? index : 0);
     setDiscadorModo(null);
     setAgendaViewMode('fluxo');
-    openDetailsPanel(setShowClientDetailsFluxo);
+    if (isMobile) {
+      setShowClientDetailsFluxo(false);
+      setMobileView('main');
+    } else {
+      openDetailsPanel(setShowClientDetailsFluxo);
+    }
   };
 
   // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino).
@@ -5469,17 +5481,35 @@ ${recentMessages}
             </div>
           )}
 
+          {mobileView === "main" && clienteCabecalho && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
+            <div className="shrink-0 border-b border-border bg-card px-2 py-1">
+              <div className="flex items-center justify-center gap-1 overflow-x-auto">
+                <CabecalhoClienteAtendimento
+                  cliente={clienteCabecalho}
+                  abaAtiva={activeTab}
+                  compacto
+                  onTrocarCanal={(aba) => { setHistoricoCliente(null); setAgendaContato(null); trocarAba(aba); }}
+                  onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
+                  historicoAtivo={!!historicoCliente}
+                  onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
+                  agendaAtiva={!!agendaContato}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen (fica montado ao navegar em outras abas) */}
-            {(fluxoPersistente || (activeTab === "visita" && agendaViewMode === 'fluxo')) && (
-              <div className={`absolute inset-0 z-20 bg-background overflow-hidden ${(activeTab === "tel" || activeTab === "visita") ? "" : "hidden"}`}>
+            {(fluxoPersistente || ((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo')) && (
+              <div className={`absolute inset-0 z-20 bg-background overflow-hidden ${(activeTab === "tel" || activeTab === "visita") && mobileView === "main" ? "" : "hidden"}`}>
                 {/* Fluxo Panel */}
                 <div 
-                  className={`absolute inset-0 transition-transform duration-300 ease-out ${
+                  className={`absolute inset-0 flex flex-col transition-transform duration-300 ease-out ${
                     showClientDetailsFluxo ? '-translate-x-full' : 'translate-x-0'
                   }`}
                 >
+                  <div className="min-h-0 flex-[3] overflow-hidden">
                   <FluxoAtendimentoPanel
                     tasks={tasksDiscador}
                     estabelecimentoId={estabelecimentoId}
@@ -5516,6 +5546,12 @@ ${recentMessages}
                       }
                     }}
                   />
+                  </div>
+                  {activeTab === "tel" && (fluxoCurrentTask as any)?.contact_id && (
+                    <div className="min-h-0 flex-[2] border-t border-border bg-card">
+                      <TelConversaPanel key={(fluxoCurrentTask as any).contact_id} customerId={(fluxoCurrentTask as any).contact_id} telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]} />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Details Panel - Mobile Fluxo */}
@@ -5634,7 +5670,11 @@ ${recentMessages}
                 mobileView === "main" ? "translate-x-0" : mobileView === "list" ? "translate-x-full" : "-translate-x-full"
               }`}
             >
-              {activeTab === "email" ? (
+              {activeTab === "tel" && !fluxoPersistente && selectedTelContato ? (
+                <div className="flex h-full min-h-0 flex-col bg-card">
+                  <TelConversaPanel customerId={selectedTelContato.id} telefones={[selectedTelContato.tel, selectedTelContato.telefone]} />
+                </div>
+              ) : activeTab === "email" ? (
                 <AtendimentoEmailPanel
                   contato={contatoEmailSelecionado}
                   emails={filteredEmails}
@@ -6505,9 +6545,10 @@ ${recentMessages}
             }}
           />
           </div>
-          {(fluxoCurrentTask as any)?.contact_id && (
+           {activeTab === "tel" && (fluxoCurrentTask as any)?.contact_id && (
             <div className="flex min-h-0 flex-[2] flex-col border-t border-border bg-card">
               <TelConversaPanel
+                 key={(fluxoCurrentTask as any).contact_id}
                 customerId={(fluxoCurrentTask as any).contact_id}
                 telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]}
               />
@@ -7602,7 +7643,7 @@ ${recentMessages}
           size="sm"
           variant="default"
           className="h-7 px-2 text-xs"
-          onClick={() => setActiveTab("tel")}
+          onClick={() => { setHistoricoCliente(null); setAgendaContato(null); setActiveTab("tel"); setMobileView("main"); }}
         >
           Voltar
         </Button>

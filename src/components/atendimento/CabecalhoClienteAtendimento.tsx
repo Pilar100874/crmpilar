@@ -17,6 +17,7 @@ interface Props {
   cliente: ClienteCabecalho;
   abaAtiva: string;
   onTrocarCanal: (aba: string) => void;
+  compacto?: boolean;
   onHistorico?: () => void;
   historicoAtivo?: boolean;
   onAgenda?: () => void;
@@ -31,7 +32,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, onHistorico, historicoAtivo, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
@@ -41,8 +42,8 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
   ].filter((c) => c.ok);
 
   return (
-    <div className="flex-shrink-0 border-b border-border bg-card px-5 pt-4">
-      <div className="flex items-start gap-4">
+    <div className={cn("flex-shrink-0 border-b border-border bg-card", compacto ? "px-2 py-1" : "px-5 pt-4")}>
+      {!compacto && <div className="flex items-start gap-4">
         {onToggleFila && (
           <Button
             variant="ghost"
@@ -80,9 +81,9 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             {painelAberto ? <PanelRightClose className="h-4 w-4 text-orange-600" /> : <PanelRightOpen className="h-4 w-4 text-orange-600" />}
           </Button>
         )}
-      </div>
+      </div>}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className={cn("flex items-center gap-2", compacto ? "overflow-x-auto" : "mt-4 flex-wrap")}>
         {onHistorico && (
           <button
             type="button"
