@@ -4382,7 +4382,6 @@ ${recentMessages}
   };
 
   function aplicarClienteNaAba(clienteId: string, novaAba: string) {
-    setMobileView('main');
     // Não encerra o discador ao trocar de aba — ele continua rodando em segundo plano.
 
     if (novaAba === 'agenda') {
@@ -4409,7 +4408,6 @@ ${recentMessages}
       if (contato) {
         setSelectedTelContato(contato);
         if (!(novaAba === 'tel' && discadorModo && agendaViewMode === 'fluxo')) abrirFluxoComContato(contato);
-        if (novaAba === 'tel' && isMobile) setMobileView('main');
       }
     } else if (novaAba === 'email') {
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
@@ -4430,6 +4428,9 @@ ${recentMessages}
         openDetailsPanel(setShowClientDetailsOrcamento);
       }
     }
+    // Os canais do cabeçalho abrem o conteúdo central; o cadastro só abre pelo botão de detalhes.
+    // openDetailsPanel pode ter colocado o celular em "details" durante a seleção do canal.
+    if (isMobile) setMobileView('main');
   }
 
   // Fecha a lista de orçamentos ao trocar de cliente
