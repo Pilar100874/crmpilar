@@ -62,7 +62,7 @@ export function VisitaFormularioPanel({ customerId, estabelecimentoId }: { custo
         toast.error(`Campo obrigatório: ${campo.rotulo}`);
         return;
       }
-      if (c.tipo !== "foto" && typeof valor === "string" && valor.length > 1000) {
+      if (campo.tipo !== "foto" && typeof valor === "string" && valor.length > 1000) {
         toast.error(`${campo.rotulo}: limite de 1000 caracteres`);
         return;
       }
