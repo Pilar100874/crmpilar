@@ -530,6 +530,39 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
+          {/* Resultado fica sempre no topo, inclusive durante o discador. */}
+          <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
+              {!selectedFlag && (
+                <span className="flex items-center gap-1 text-[10px] text-destructive">
+                  <AlertCircle className="h-3 w-3" /> Obrigatório
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {flags.map((flag) => {
+                const isSelected = selectedFlag === flag.id;
+                return (
+                  <Button
+                    key={flag.id}
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedFlag(flag.id);
+                      marcarPendencia(currentTask?.contact_id);
+                    }}
+                    className="h-8 min-w-0 gap-1.5 px-2 text-xs"
+                  >
+                    {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                    <span className="truncate">{flag.nome}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Discador: ligação pelo PABX (o ramal toca primeiro; ao atender, o PABX disca o cliente) */}
           {discadorModo && (
             <div className={cn(
@@ -704,44 +737,6 @@ export function FluxoAtendimentoPanel({
               </CollapsibleContent>
             </Collapsible>
           )}
-
-          {/* Flags de resultado - grid compacto */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Resultado</label>
-              {!selectedFlag && (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> Obrigatório
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              {flags.map(flag => {
-                const isSelected = selectedFlag === flag.id;
-                return (
-                  <button
-                    key={flag.id}
-                    onClick={() => { setSelectedFlag(flag.id); marcarPendencia(currentTask?.contact_id); }}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium transition-all",
-                      isSelected 
-                        ? "text-white shadow-sm" 
-                        : "bg-muted/50 border hover:shadow-sm"
-                    )}
-                    style={{
-                      backgroundColor: isSelected ? flag.cor : undefined,
-                      borderColor: isSelected ? flag.cor : flag.cor + '40',
-                      color: isSelected ? 'white' : flag.cor,
-                    }}
-                  >
-                    {isSelected && <Check className="h-3 w-3" />}
-                    <span className="truncate">{flag.nome}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
         </TabsContent>
         
       </Tabs>
