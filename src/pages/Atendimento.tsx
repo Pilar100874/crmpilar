@@ -4524,7 +4524,10 @@ ${recentMessages}
 
   // Bloqueia a seleção de outro cliente enquanto houver atendimento pendente de finalização.
   // Trocar de aba é permitido; clicar em outro cliente abre a janela de finalizar.
-  const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+  // Declarada como `function` (içada) porque os useMemo da fila ficam antes do
+  // retorno antecipado de carregamento — com `const`, os closures memoizados
+  // ficavam com a referência não inicializada e o clique no cartão quebrava.
+  function bloquearTrocaClientePendente(novoClienteId: string | null | undefined): boolean {
     if (modoSimultaneo) return false;
     const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
     if (!pendenteId) return false;
@@ -4532,7 +4535,7 @@ ${recentMessages}
     setFocoBarra((n) => n + 1);
     toast.info("Finalize o atendimento atual ou ative \"Atender simultâneo\" na barra de baixo");
     return true;
-  };
+  }
 
   const abrirDiscador = async () => {
     try {
