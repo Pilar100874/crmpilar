@@ -2726,6 +2726,30 @@ export type Database = {
         }
         Relationships: []
       }
+      anotacoes_ligacao: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          texto: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          texto: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          texto?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       api_endpoints: {
         Row: {
           active: boolean | null

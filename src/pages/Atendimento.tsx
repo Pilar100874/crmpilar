@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal } from "@/components/atendimento/FilaDoDia";
+import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -4287,8 +4288,13 @@ ${recentMessages}
         });
       });
 
+    // Discador ativo: destaca o card do contato que está sendo ligado
+    const contatoLigando = discadorModo && agendaViewMode === 'fluxo' ? (fluxoCurrentTask as any)?.contact_id : null;
+    if (contatoLigando) {
+      return lista.map((item) => (item.contactId === contatoLigando ? { ...item, selecionado: true } : { ...item, selecionado: false }));
+    }
     return lista;
-  }, [filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
@@ -5420,7 +5426,7 @@ ${recentMessages}
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
-            {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && (
+            {((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' && (
               <div className="absolute inset-0 z-20 bg-background overflow-hidden">
                 {/* Fluxo Panel */}
                 <div 
@@ -5954,7 +5960,7 @@ ${recentMessages}
           )}
 
           {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
-          {mobileView === "list" && !((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
+          {mobileView === "list" && !(((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
@@ -6798,8 +6804,10 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
+        ) : ((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
+          <div className="flex flex-1 min-h-0 flex-col">
+          <div className="flex min-h-0 flex-[3] flex-col overflow-hidden">
           <FluxoAtendimentoPanel
             tasks={tasksDiscador}
             estabelecimentoId={estabelecimentoId}
@@ -6842,6 +6850,16 @@ ${recentMessages}
               }
             }}
           />
+          </div>
+          {activeTab === "tel" && (fluxoCurrentTask as any)?.contact_id && (
+            <div className="flex min-h-0 flex-[2] flex-col border-t border-border bg-card">
+              <TelConversaPanel
+                customerId={(fluxoCurrentTask as any).contact_id}
+                telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]}
+              />
+            </div>
+          )}
+          </div>
         ) : (activeTab === "tel" || activeTab === "visita") && selectedTelContato ? (
           <div className="flex flex-1 flex-col bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -6859,6 +6877,12 @@ ${recentMessages}
                 {showClientDetailsFluxo ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             </div>
+            {activeTab === "tel" && (
+              <TelConversaPanel
+                customerId={selectedTelContato.id}
+                telefones={[selectedTelContato.tel, selectedTelContato.telefone]}
+              />
+            )}
           </div>
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
@@ -7078,7 +7102,7 @@ ${recentMessages}
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
-      {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
+      {!orcamentoSheetOpen && ((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
           <UnifiedDetailsPanel
             type="agenda"
