@@ -7589,7 +7589,7 @@ ${recentMessages}
     
     {/* Barra flutuante do discador: aparece quando ele roda e você navega em outras abas */}
     {fluxoPersistente && activeTab !== "tel" && (
-      <div className="fixed bottom-24 right-4 z-[70] flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-lg">
+      <div className="fixed bottom-4 left-4 z-[70] flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-lg">
         <span className="relative flex h-2.5 w-2.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-60" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
