@@ -258,7 +258,40 @@ export async function inativarClienteDoFluxo(p: {
 
 // ---------- Pendências: cliente com interação sem próxima data ----------
 const CHAVE_PENDENTES = "atendimento_pendentes_finalizar";
+const CHAVE_RESULTADOS = "atendimento_resultados_pendentes";
 export const EVENTO_PENDENCIAS = "atendimento:pendencias-alteradas";
+export const EVENTO_RESULTADO = "atendimento:resultado-selecionado";
+
+export interface ResultadoPendente {
+  flagId: string;
+  nome: string;
+}
+
+export function lerResultadoPendente(contactId?: string | null): ResultadoPendente | null {
+  if (!contactId) return null;
+  try {
+    const resultados = JSON.parse(localStorage.getItem(CHAVE_RESULTADOS) || "{}") as Record<string, ResultadoPendente>;
+    return resultados[contactId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function salvarResultadoPendente(contactId: string, resultado: ResultadoPendente) {
+  let resultados: Record<string, ResultadoPendente> = {};
+  try { resultados = JSON.parse(localStorage.getItem(CHAVE_RESULTADOS) || "{}"); } catch { /* reinicia dados inválidos */ }
+  localStorage.setItem(CHAVE_RESULTADOS, JSON.stringify({ ...resultados, [contactId]: resultado }));
+  marcarPendencia(contactId);
+  window.dispatchEvent(new CustomEvent(EVENTO_RESULTADO, { detail: { contactId, ...resultado } }));
+}
+
+function limparResultadoPendente(contactId: string) {
+  try {
+    const resultados = JSON.parse(localStorage.getItem(CHAVE_RESULTADOS) || "{}") as Record<string, ResultadoPendente>;
+    delete resultados[contactId];
+    localStorage.setItem(CHAVE_RESULTADOS, JSON.stringify(resultados));
+  } catch { localStorage.removeItem(CHAVE_RESULTADOS); }
+}
 
 export function lerPendencias(): string[] {
   try {
@@ -277,6 +310,7 @@ export function marcarPendencia(contactId?: string | null) {
   if (!atual.includes(contactId)) salvar([...atual, contactId]);
 }
 export function limparPendencia(contactId: string) {
+  limparResultadoPendente(contactId);
   salvar(lerPendencias().filter((id) => id !== contactId));
 }
 
