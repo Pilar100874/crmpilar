@@ -5549,7 +5549,7 @@ ${recentMessages}
                   </div>
                   {activeTab === "tel" && (fluxoCurrentTask as any)?.contact_id && (
                     <div className="min-h-0 flex-[2] border-t border-border bg-card">
-                      <TelConversaPanel key={(fluxoCurrentTask as any).contact_id} customerId={(fluxoCurrentTask as any).contact_id} telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]} />
+                      <TelConversaPanel key={(fluxoCurrentTask as any).contact_id} customerId={(fluxoCurrentTask as any).contact_id} telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]} estabelecimentoId={estabelecimentoId} />
                     </div>
                   )}
                 </div>
@@ -5672,7 +5672,7 @@ ${recentMessages}
             >
               {activeTab === "tel" && !fluxoPersistente && selectedTelContato ? (
                 <div className="flex h-full min-h-0 flex-col bg-card">
-                  <TelConversaPanel customerId={selectedTelContato.id} telefones={[selectedTelContato.tel, selectedTelContato.telefone]} />
+                  <TelConversaPanel customerId={selectedTelContato.id} telefones={[selectedTelContato.tel, selectedTelContato.telefone]} estabelecimentoId={estabelecimentoId} />
                 </div>
               ) : activeTab === "email" ? (
                 <AtendimentoEmailPanel
@@ -6551,6 +6551,7 @@ ${recentMessages}
                  key={(fluxoCurrentTask as any).contact_id}
                 customerId={(fluxoCurrentTask as any).contact_id}
                 telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]}
+                 estabelecimentoId={estabelecimentoId}
               />
             </div>
           )}
@@ -7015,6 +7016,7 @@ ${recentMessages}
               <TelConversaPanel
                 customerId={selectedTelContato.id}
                 telefones={[selectedTelContato.tel, selectedTelContato.telefone]}
+                estabelecimentoId={estabelecimentoId}
               />
             )}
           </div>

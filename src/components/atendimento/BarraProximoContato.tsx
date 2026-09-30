@@ -11,6 +11,7 @@ import {
   buscarProximoContatoFuturo,
   finalizarAtendimento,
   inativarClienteDoFluxo,
+  lerResultadoPendente,
   limparPendencia,
   type CanalAtendimento,
   type TarefaFutura,
@@ -73,8 +74,13 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
     if (!dataObj) return;
     setSalvando(true);
     try {
+      const resultado = lerResultadoPendente(contato.id);
       const res: any = await finalizarAtendimento({
-        contactId: contato.id, contactName: contato.nome, canal, observacao: obs,
+        contactId: contato.id,
+        contactName: contato.nome,
+        canal,
+        flagId: resultado?.flagId,
+        observacao: [resultado?.nome, obs.trim()].filter(Boolean).join(" - "),
         proximaData: dataObj, usuarioId, estabelecimentoId, escolha,
       });
       limparPendencia(contato.id);

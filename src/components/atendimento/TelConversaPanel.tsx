@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Save, Trash2, Disc3, PhoneIncoming, PhoneOutgoing, Loader2 } from "lucide-react";
+import { AlertCircle, Check, Mic, MicOff, Save, Trash2, Disc3, PhoneIncoming, PhoneOutgoing, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { lerResultadoPendente, salvarResultadoPendente } from "@/lib/atendimento/finalizarAtendimento";
 
 const BUCKET = "gravacoes-chamadas";
 const db = supabase as any;
@@ -12,22 +13,26 @@ const db = supabase as any;
 interface Props {
   customerId: string;
   telefones: (string | null | undefined)[];
+  estabelecimentoId: string;
 }
 
 interface Anotacao { id: string; texto: string; created_at: string }
 interface Gravacao { id: string; numero: string | null; direcao: string; inicio: string; duracao_seg: number; caminho: string }
+interface AtendimentoFlag { id: string; nome: string }
 
 const digitos = (v?: string | null) => (v || "").replace(/\D/g, "");
 const fmtDur = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 /** Aba Telefone: campo "o que foi conversado" (digitado ou por voz) e gravações do contato. */
-export default function TelConversaPanel({ customerId, telefones }: Props) {
+export default function TelConversaPanel({ customerId, telefones, estabelecimentoId }: Props) {
   const [texto, setTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [ouvindo, setOuvindo] = useState(false);
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
   const [gravacoes, setGravacoes] = useState<Gravacao[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
+  const [resultadoId, setResultadoId] = useState<string | null>(() => lerResultadoPendente(customerId)?.flagId ?? null);
   const [excluir, setExcluir] = useState<{ tipo: "anotacao" | "gravacao"; id: string; caminho?: string } | null>(null);
   const recRef = useRef<any>(null);
   const baseRef = useRef("");
@@ -55,6 +60,12 @@ export default function TelConversaPanel({ customerId, telefones }: Props) {
   }, [customerId, chaveTel]);
 
   useEffect(() => { setTexto(""); void carregar(); }, [carregar]);
+  useEffect(() => {
+    setResultadoId(lerResultadoPendente(customerId)?.flagId ?? null);
+    void supabase.from("atendimento_flags").select("id, nome")
+      .eq("estabelecimento_id", estabelecimentoId).eq("ativo", true).order("ordem")
+      .then(({ data }) => setFlags(data ?? []));
+  }, [customerId, estabelecimentoId]);
   useEffect(() => () => recRef.current?.stop?.(), []);
 
   const alternarVoz = () => {
@@ -109,10 +120,43 @@ export default function TelConversaPanel({ customerId, telefones }: Props) {
     void carregar();
   };
 
+  const selecionarResultado = (flag: AtendimentoFlag) => {
+    setResultadoId(flag.id);
+    salvarResultadoPendente(customerId, { flagId: flag.id, nome: flag.nome });
+  };
+
+  const resultado = flags.find((flag) => flag.id === resultadoId);
+  const resultadoNormalizado = resultado?.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() ?? "";
+  const permiteRelato = !!resultado && !["nao atendeu", "ocupado", "caixa postal"].some((nome) => resultadoNormalizado.includes(nome));
+
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-2 p-3 overflow-hidden">
-      {/* Campo "o que foi conversado" compacto, sempre visível */}
-      <div className="shrink-0 rounded-lg border border-border bg-muted/20 p-2 space-y-1.5">
+      <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
+          {!resultadoId && <span className="flex items-center gap-1 text-[10px] text-destructive"><AlertCircle className="h-3 w-3" /> Obrigatório</span>}
+        </div>
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+          {flags.map((flag) => {
+            const selecionado = resultadoId === flag.id;
+            return (
+              <Button key={flag.id} type="button" variant={selecionado ? "default" : "outline"} size="sm"
+                onClick={() => selecionarResultado(flag)} className="h-8 min-w-0 gap-1.5 px-2 text-xs">
+                {selecionado && <Check className="h-3 w-3 shrink-0" />}
+                <span className="truncate">{flag.nome}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {!resultadoId && (
+        <div className="shrink-0 rounded-lg border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">
+          Selecione o resultado para continuar o atendimento.
+        </div>
+      )}
+
+      {permiteRelato && <div className="shrink-0 rounded-lg border border-border bg-muted/20 p-2 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <label className="text-xs font-semibold text-muted-foreground">O que foi conversado</label>
           <div className="flex items-center gap-1.5">
@@ -129,7 +173,7 @@ export default function TelConversaPanel({ customerId, telefones }: Props) {
         <Textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={2}
           className="min-h-[44px] resize-none text-sm"
           placeholder="Digite ou toque no microfone para ditar..." />
-      </div>
+      </div>}
 
       {/* Conversas e gravações lado a lado, cada uma com rolagem própria */}
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-2">

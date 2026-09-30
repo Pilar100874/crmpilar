@@ -1,4 +1,4 @@
-import { marcarPendencia, lerPendencias } from "@/lib/atendimento/finalizarAtendimento";
+import { EVENTO_RESULTADO, lerResultadoPendente, marcarPendencia, lerPendencias } from "@/lib/atendimento/finalizarAtendimento";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,12 +155,21 @@ export function FluxoAtendimentoPanel({
   }, [tipoContato, configDatas]);
 
   useEffect(() => {
-    setSelectedFlag(null);
+    setSelectedFlag(lerResultadoPendente(currentTask?.contact_id)?.flagId ?? null);
     setObservacao("");
     setShowContactArea(false);
     setContactMessage("");
     setEmailSubject("");
-  }, [currentIndex]);
+  }, [currentIndex, currentTask?.contact_id]);
+
+  useEffect(() => {
+    const receberResultado = (event: Event) => {
+      const detalhe = (event as CustomEvent<{ contactId: string; flagId: string }>).detail;
+      if (detalhe?.contactId === currentTask?.contact_id) setSelectedFlag(detalhe.flagId);
+    };
+    window.addEventListener(EVENTO_RESULTADO, receberResultado);
+    return () => window.removeEventListener(EVENTO_RESULTADO, receberResultado);
+  }, [currentTask?.contact_id]);
 
   const discarParaAtual = async () => {
     const tarefa = tasks[currentIndex];
@@ -531,7 +540,7 @@ export function FluxoAtendimentoPanel({
           </div>
 
           {/* Resultado fica sempre no topo, inclusive durante o discador. */}
-          <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
+          {tipoContato === "presencial" && <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
               {!selectedFlag && (
@@ -561,7 +570,7 @@ export function FluxoAtendimentoPanel({
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Discador: ligação pelo PABX (o ramal toca primeiro; ao atender, o PABX disca o cliente) */}
           {discadorModo && (
