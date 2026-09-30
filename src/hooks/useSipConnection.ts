@@ -437,6 +437,10 @@ export const useSipConnection = () => {
       viaDiscador,
     };
 
+    if (!viaDiscador) {
+      window.dispatchEvent(new CustomEvent('pilar:chamada-recebida', { detail: { numero: origem } }));
+    }
+
     // Campainha: toque diferenciado para chamadas do discador.
     iniciarToqueEntrada(viaDiscador ? 'discador' : 'padrao');
 

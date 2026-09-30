@@ -70,6 +70,7 @@ export const IncomingCallNotification = () => {
           // Verificar se é uma chamada recebida (entrante)
           if (call.direcao === "entrante" && call.status === "ringing") {
             setIncomingCall(call);
+            window.dispatchEvent(new CustomEvent('pilar:chamada-recebida', { detail: { numero: call.numero_origem } }));
             
             // Tocar som de notificação (opcional)
             const audio = new Audio("/notification.mp3");
