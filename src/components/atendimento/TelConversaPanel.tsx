@@ -110,65 +110,79 @@ export default function TelConversaPanel({ customerId, telefones }: Props) {
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
-      <div className="space-y-2">
-        <label className="text-xs font-semibold text-muted-foreground">O que foi conversado</label>
-        <Textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={4}
-          placeholder="Digite ou toque no microfone para ditar..." />
-        <div className="flex items-center gap-2">
-          <Button type="button" size="sm" variant={ouvindo ? "destructive" : "outline"} onClick={alternarVoz}>
-            {ouvindo ? <MicOff className="h-4 w-4 mr-1" /> : <Mic className="h-4 w-4 mr-1" />}
-            {ouvindo ? "Parar ditado" : "Ditar"}
-          </Button>
-          <Button type="button" size="sm" onClick={salvar} disabled={!texto.trim() || salvando}>
-            {salvando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-            Salvar
-          </Button>
+    <div className="flex-1 min-h-0 flex flex-col gap-2 p-3 overflow-hidden">
+      {/* Campo "o que foi conversado" compacto, sempre visível */}
+      <div className="shrink-0 rounded-lg border border-border bg-muted/20 p-2 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-semibold text-muted-foreground">O que foi conversado</label>
+          <div className="flex items-center gap-1.5">
+            <Button type="button" size="sm" variant={ouvindo ? "destructive" : "outline"} className="h-7 px-2 text-xs" onClick={alternarVoz}>
+              {ouvindo ? <MicOff className="h-3.5 w-3.5 mr-1" /> : <Mic className="h-3.5 w-3.5 mr-1" />}
+              {ouvindo ? "Parar" : "Ditar"}
+            </Button>
+            <Button type="button" size="sm" className="h-7 px-2 text-xs" onClick={salvar} disabled={!texto.trim() || salvando}>
+              {salvando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+              Salvar
+            </Button>
+          </div>
         </div>
+        <Textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={2}
+          className="min-h-[44px] resize-none text-sm"
+          placeholder="Digite ou toque no microfone para ditar..." />
       </div>
 
-      {anotacoes.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-muted-foreground">Conversas registradas</p>
-          {anotacoes.map((a) => (
-            <div key={a.id} className="flex gap-2 rounded-lg border border-border bg-muted/30 p-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
-                <p className="text-sm whitespace-pre-wrap">{a.texto}</p>
-              </div>
-              <button type="button" title="Excluir" onClick={() => setExcluir({ tipo: "anotacao", id: a.id })}
-                className="self-start text-muted-foreground hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-1.5">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-          <Disc3 className="h-3.5 w-3.5" /> Gravações ({gravacoes.length})
-        </p>
-        {gravacoes.length === 0 && (
-          <p className="text-xs text-muted-foreground">Nenhuma gravação deste contato. Ative a gravação no Pilar Fone durante a ligação.</p>
-        )}
-        {gravacoes.map((g) => {
-          const Icone = g.direcao === "entrada" ? PhoneIncoming : PhoneOutgoing;
-          return (
-            <div key={g.id} className="rounded-lg border border-border p-2 space-y-1">
-              <div className="flex items-center gap-2">
-                <Icone className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="flex-1 text-xs">{new Date(g.inicio).toLocaleString("pt-BR")} · {fmtDur(g.duracao_seg)}</span>
-                <button type="button" title="Excluir gravação" onClick={() => setExcluir({ tipo: "gravacao", id: g.id, caminho: g.caminho })}
-                  className="text-muted-foreground hover:text-destructive">
+      {/* Conversas e gravações lado a lado, cada uma com rolagem própria */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="min-h-0 flex flex-col rounded-lg border border-border">
+          <p className="shrink-0 px-2 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border">
+            Conversas registradas ({anotacoes.length})
+          </p>
+          <div className="flex-1 min-h-0 overflow-y-auto p-1.5 space-y-1.5">
+            {anotacoes.length === 0 && (
+              <p className="text-xs text-muted-foreground p-1">Nenhuma conversa registrada ainda.</p>
+            )}
+            {anotacoes.map((a) => (
+              <div key={a.id} className="flex gap-2 rounded-lg border border-border bg-muted/30 p-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
+                  <p className="text-sm whitespace-pre-wrap">{a.texto}</p>
+                </div>
+                <button type="button" title="Excluir" onClick={() => setExcluir({ tipo: "anotacao", id: a.id })}
+                  className="self-start text-muted-foreground hover:text-destructive">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-              {urls[g.id] ? <audio controls preload="none" src={urls[g.id]} className="h-9 w-full" /> :
-                <p className="text-[11px] text-muted-foreground">Áudio indisponível.</p>}
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        </div>
+
+        <div className="min-h-0 flex flex-col rounded-lg border border-border">
+          <p className="shrink-0 flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border">
+            <Disc3 className="h-3.5 w-3.5" /> Gravações ({gravacoes.length})
+          </p>
+          <div className="flex-1 min-h-0 overflow-y-auto p-1.5 space-y-1.5">
+            {gravacoes.length === 0 && (
+              <p className="text-xs text-muted-foreground p-1">Nenhuma gravação deste contato. Ative a gravação no Pilar Fone durante a ligação.</p>
+            )}
+            {gravacoes.map((g) => {
+              const Icone = g.direcao === "entrada" ? PhoneIncoming : PhoneOutgoing;
+              return (
+                <div key={g.id} className="rounded-lg border border-border p-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Icone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="flex-1 text-xs">{new Date(g.inicio).toLocaleString("pt-BR")} · {fmtDur(g.duracao_seg)}</span>
+                    <button type="button" title="Excluir gravação" onClick={() => setExcluir({ tipo: "gravacao", id: g.id, caminho: g.caminho })}
+                      className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {urls[g.id] ? <audio controls preload="none" src={urls[g.id]} className="h-8 w-full" /> :
+                    <p className="text-[11px] text-muted-foreground">Áudio indisponível.</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <DeleteConfirmDialog open={!!excluir} onOpenChange={(o) => !o && setExcluir(null)}
