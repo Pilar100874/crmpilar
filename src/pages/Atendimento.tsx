@@ -4145,8 +4145,6 @@ ${recentMessages}
             setSelectedTaskData(null);
             setSelectedAgendaContato(contato);
             openDetailsPanel(setShowClientDetailsAgenda);
-            setAgendaViewMode("default");
-            setDiscadorModo(null);
             setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
           },
         });
@@ -4235,8 +4233,6 @@ ${recentMessages}
           setSelectedTaskData(task);
           setSelectedAgendaContato(null);
           openDetailsPanel(setShowClientDetailsAgenda);
-          setAgendaViewMode("default");
-          setDiscadorModo(null);
           setHistoricoCliente(task.contact_id ? { customerId: task.contact_id, nome } : null);
         },
       });
@@ -4382,7 +4378,7 @@ ${recentMessages}
 
   function aplicarClienteNaAba(clienteId: string, novaAba: string) {
     setMobileView('main');
-    if (novaAba !== 'tel' && novaAba !== 'visita') { setAgendaViewMode('default'); setDiscadorModo(null); }
+    // Não encerra o discador ao trocar de aba — ele continua rodando em segundo plano.
 
     if (novaAba === 'agenda') {
       const task = filteredTasks.find((t: any) => t.contact_id === clienteId);
@@ -4445,6 +4441,8 @@ ${recentMessages}
   const [chamadaRecebida, setChamadaRecebida] = useState<{ numero: string; discadorParado: boolean } | null>(null);
   const discadorRodandoRef = useRef(false);
   discadorRodandoRef.current = agendaViewMode === 'fluxo' && !!discadorModo;
+  // Discador persistente: continua montado (e rodando) mesmo ao navegar em outras abas.
+  const fluxoPersistente = agendaViewMode === 'fluxo' && !!discadorModo;
   useEffect(() => {
     let ultimo = { numero: "", em: 0 };
     const h = (e: Event) => {
@@ -5473,9 +5471,9 @@ ${recentMessages}
 
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
-            {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
-            {((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' && (
-              <div className="absolute inset-0 z-20 bg-background overflow-hidden">
+            {/* Fluxo de Atendimento Panel - Mobile Fullscreen (fica montado ao navegar em outras abas) */}
+            {(fluxoPersistente || (activeTab === "visita" && agendaViewMode === 'fluxo')) && (
+              <div className={`absolute inset-0 z-20 bg-background overflow-hidden ${(activeTab === "tel" || activeTab === "visita") ? "" : "hidden"}`}>
                 {/* Fluxo Panel */}
                 <div 
                   className={`absolute inset-0 transition-transform duration-300 ease-out ${
@@ -5500,8 +5498,6 @@ ${recentMessages}
                     onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
                     initialTaskIndex={fluxoInitialIndex}
                     onNavigateToItem={(type, id) => {
-                      setAgendaViewMode('default');
-                      setDiscadorModo(null);
                       if (type === 'chat') {
                         setActiveTab('chat');
                         setSelectedConversation(id);
@@ -6464,6 +6460,61 @@ ${recentMessages}
           </div>
         )}
         {/* Listas Panel - Tem prioridade sobre outros conteúdos */}
+        {/* Discador persistente: continua montado (escondido) ao navegar em outras abas */}
+        {fluxoPersistente && (
+          <div className={activeTab === "tel" ? "flex flex-1 min-h-0 flex-col" : "hidden"}>
+          <div className="flex min-h-0 flex-[3] flex-col overflow-hidden">
+          <FluxoAtendimentoPanel
+            tasks={tasksDiscador}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onTaskCompleted={loadTodayTasks}
+            discadorModo={discadorModo}
+            tipoContatoFixo="telefone"
+            onClose={() => {
+              setAgendaViewMode('default');
+              setFluxoCurrentTask(null);
+              setFluxoInitialIndex(0);
+              setDiscadorModo(null);
+            }}
+            onCurrentTaskChange={(task) => {
+              setFluxoCurrentTask((prev: any) => {
+                if (task && (prev as any)?.id !== (task as any).id) {
+                  openDetailsPanel(setShowClientDetailsFluxo);
+                }
+                return (prev as any)?.id === (task as any)?.id ? prev : task;
+              });
+            }}
+            showDetails={showClientDetailsFluxo}
+            onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
+            initialTaskIndex={fluxoInitialIndex}
+            onNavigateToItem={(type, id) => {
+              if (type === 'chat') {
+                setActiveTab('chat');
+                setSelectedConversation(id);
+              } else if (type === 'orcamento') {
+                setActiveTab('orcamento');
+                setSelectedOrcamentoId(id);
+                const orc = orcamentos.find(o => o.id === id);
+                if (orc) setSelectedOrcamentoData(orc);
+                setOrcamentoSheetOpen(true);
+              } else if (type === 'email') {
+                setActiveTab('email');
+                setSelectedEmailId(id);
+              }
+            }}
+          />
+          </div>
+          {(fluxoCurrentTask as any)?.contact_id && (
+            <div className="flex min-h-0 flex-[2] flex-col border-t border-border bg-card">
+              <TelConversaPanel
+                customerId={(fluxoCurrentTask as any).contact_id}
+                telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]}
+              />
+            </div>
+          )}
+          </div>
+        )}
         {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
             onClose={() => {
@@ -6856,7 +6907,7 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : ((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
+        ) : activeTab === "visita" && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <div className="flex flex-1 min-h-0 flex-col">
           <div className="flex min-h-0 flex-[3] flex-col overflow-hidden">
@@ -6885,8 +6936,6 @@ ${recentMessages}
             onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
             initialTaskIndex={fluxoInitialIndex}
             onNavigateToItem={(type, id) => {
-              setAgendaViewMode('default');
-              setDiscadorModo(null);
               if (type === 'chat') {
                 setActiveTab('chat');
                 setSelectedConversation(id);
@@ -6903,14 +6952,6 @@ ${recentMessages}
             }}
           />
           </div>
-          {activeTab === "tel" && (fluxoCurrentTask as any)?.contact_id && (
-            <div className="flex min-h-0 flex-[2] flex-col border-t border-border bg-card">
-              <TelConversaPanel
-                customerId={(fluxoCurrentTask as any).contact_id}
-                telefones={[(fluxoCurrentTask as any).customers?.tel, (fluxoCurrentTask as any).customers?.telefone]}
-              />
-            </div>
-          )}
           </div>
         ) : (activeTab === "tel" || activeTab === "visita") && selectedTelContato ? (
           <div className="flex flex-1 flex-col bg-card">
@@ -7546,6 +7587,37 @@ ${recentMessages}
     </RadialMenu>
     </AtendimentoCardsDensityProvider>
     
+    {/* Barra flutuante do discador: aparece quando ele roda e você navega em outras abas */}
+    {fluxoPersistente && activeTab !== "tel" && (
+      <div className="fixed bottom-24 right-4 z-[70] flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-lg">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-60" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
+        </span>
+        <PhoneCall className="h-4 w-4 text-muted-foreground" />
+        <span className="max-w-[180px] truncate text-xs font-medium">
+          Discador · {(fluxoCurrentTask as any)?.contact_name || (fluxoCurrentTask as any)?.customers?.nome || "em andamento"}
+        </span>
+        <Button
+          size="sm"
+          variant="default"
+          className="h-7 px-2 text-xs"
+          onClick={() => setActiveTab("tel")}
+        >
+          Voltar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 w-7 p-0 text-destructive"
+          title="Parar discador"
+          onClick={pararDiscador}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    )}
+
     {/* Global Dialogs - render regardless of mobile/desktop */}
     <ChamadaRecebidaDialog
       numero={chamadaRecebida?.numero ?? null}
