@@ -27,6 +27,7 @@ import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
 import { EmbeddedChatPanel } from "./EmbeddedChatPanel";
 import { EmbeddedEmailPanel } from "./EmbeddedEmailPanel";
 import { ConflitoDataDialog } from "../FinalizarAtendimentoDialog";
+import { VisitaFormularioPanel } from "../VisitaFormularioPanel";
 import {
   buscarProximoContatoFuturo,
   finalizarAtendimento,
@@ -106,6 +107,7 @@ export function FluxoAtendimentoPanel({
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
   const [configDatas, setConfigDatas] = useState<ConfigProximaData[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
+  const [selectedResultadoNome, setSelectedResultadoNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const tipoContato: string = tipoContatoFixo;
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
@@ -156,6 +158,7 @@ export function FluxoAtendimentoPanel({
 
   useEffect(() => {
     setSelectedFlag(lerResultadoPendente(currentTask?.contact_id)?.flagId ?? null);
+    setSelectedResultadoNome(lerResultadoPendente(currentTask?.contact_id)?.nome ?? "");
     setObservacao("");
     setShowContactArea(false);
     setContactMessage("");
@@ -164,8 +167,11 @@ export function FluxoAtendimentoPanel({
 
   useEffect(() => {
     const receberResultado = (event: Event) => {
-      const detalhe = (event as CustomEvent<{ contactId: string; flagId: string }>).detail;
-      if (detalhe?.contactId === currentTask?.contact_id) setSelectedFlag(detalhe.flagId);
+      const detalhe = (event as CustomEvent<{ contactId: string; flagId: string | null; nome: string }>).detail;
+      if (detalhe?.contactId === currentTask?.contact_id) {
+        setSelectedFlag(detalhe.flagId);
+        setSelectedResultadoNome(detalhe.nome);
+      }
     };
     window.addEventListener(EVENTO_RESULTADO, receberResultado);
     return () => window.removeEventListener(EVENTO_RESULTADO, receberResultado);
@@ -376,7 +382,7 @@ export function FluxoAtendimentoPanel({
     return false;
   };
 
-  const canProceed = selectedFlag !== null;
+  const canProceed = tipoContato === "presencial" || !!selectedResultadoNome;
 
   const salvarAtendimento = async (escolha?: "nova" | "antiga" | "ambas") => {
     if (!currentTask) return;
@@ -539,38 +545,9 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
-          {/* Resultado fica sempre no topo, inclusive durante o discador. */}
-          {tipoContato === "presencial" && <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
-              {!selectedFlag && (
-                <span className="flex items-center gap-1 text-[10px] text-destructive">
-                  <AlertCircle className="h-3 w-3" /> Obrigatório
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-              {flags.map((flag) => {
-                const isSelected = selectedFlag === flag.id;
-                return (
-                  <Button
-                    key={flag.id}
-                    type="button"
-                    variant={isSelected ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setSelectedFlag(flag.id);
-                      marcarPendencia(currentTask?.contact_id);
-                    }}
-                    className="h-8 min-w-0 gap-1.5 px-2 text-xs"
-                  >
-                    {isSelected && <Check className="h-3 w-3 shrink-0" />}
-                    <span className="truncate">{flag.nome}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>}
+           {tipoContato === "presencial" && currentTask.contact_id && (
+             <VisitaFormularioPanel key={currentTask.contact_id} customerId={currentTask.contact_id} estabelecimentoId={estabelecimentoId} />
+           )}
 
           {/* Discador: ligação pelo PABX (o ramal toca primeiro; ao atender, o PABX disca o cliente) */}
           {discadorModo && (
