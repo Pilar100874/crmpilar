@@ -468,7 +468,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
           </div>
 
           {/* Início */}
-          <div className="flex-shrink-0 border-t border-border/40 bg-card px-4 py-3">
+          <div className="flex-shrink-0 border-t border-border/40 bg-card py-3 pl-4 pr-16">
             {canal === "telefone" && (
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {([
