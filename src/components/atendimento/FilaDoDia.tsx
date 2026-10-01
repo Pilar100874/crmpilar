@@ -99,7 +99,9 @@ export interface AssumirContatosConfig {
 interface FilaDoDiaProps {
   items: FilaItem[];
   tablet?: boolean;
-  onEnvioMassa: (idsSelecionados: string[]) => void;
+  onEnvioMassa?: (idsSelecionados: string[]) => void;
+  /** Abre a tela de disparo em massa (canal + seleção de contatos). */
+  onDisparoMassa?: () => void;
   /** Ligação sequencial/aprovação com os contatos selecionados (ids de contato). */
   onLigacaoSequencial?: (contactIds: string[]) => void;
   /** Modo do discador em execução (null = parado). */
@@ -123,7 +125,7 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
   return (item.canais || []).some((c) => canais.has(c));
 }
 
-export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequencial, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
@@ -149,8 +151,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
   const [ordenacao, setOrdenacao] = useState<OrdenacaoFila>("prioridade");
   const pendencias = usePendenciasAtendimento();
   const [simultaneo] = useModoSimultaneo();
-  const [modoSelecao, setModoSelecao] = useState(false);
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
 
   const alternarCanal = (canal: FilaCanal) => {
@@ -196,47 +196,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
     }
     return ordenada;
   }, [items, filtro, ordenacao, canaisAtivos]);
-
-  // Cada aba tem sua própria lista: ao trocar de aba, limpa a seleção
-  useEffect(() => { setSelecionados(new Set()); }, [filtro]);
-
-  const alternarSelecao = (id: string) => {
-    setSelecionados((anterior) => {
-      const proximo = new Set(anterior);
-      if (proximo.has(id)) proximo.delete(id);
-      else proximo.add(id);
-      return proximo;
-    });
-  };
-
-  const alternarModoSelecao = () => {
-    setModoSelecao((valor) => {
-      if (valor) setSelecionados(new Set());
-      return !valor;
-    });
-  };
-
-  const selecionarTodos = () => setSelecionados(new Set(visiveis.map((i) => i.id)));
-  const limparSelecao = () => setSelecionados(new Set());
-
-  /** Seleciona itens visíveis por filtros (canal e/ou data). */
-  const selecionarPorFiltro = (opcoes: { canal?: FilaCanal; data?: "hoje" | "atrasados" | "futuros" }) => {
-    const filtrados = visiveis.filter((item) => {
-      if (opcoes.canal && !temCanalItem(item, new Set([opcoes.canal]))) return false;
-      if (opcoes.data === "hoje" && (item.atrasado || item.data)) return false;
-      if (opcoes.data === "atrasados" && !item.atrasado) return false;
-      if (opcoes.data === "futuros" && (item.atrasado || !item.data)) return false;
-      return true;
-    });
-    setSelecionados((anterior) => {
-      const proximo = new Set(anterior);
-      filtrados.forEach((i) => proximo.add(i.id));
-      return proximo;
-    });
-    if (!modoSelecao) setModoSelecao(true);
-  };
-
-  const todosSelecionados = visiveis.length > 0 && visiveis.every((i) => selecionados.has(i.id));
 
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
@@ -289,9 +248,6 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={alternarModoSelecao}>
-                  {modoSelecao ? "Cancelar seleção" : "Selecionar contatos"}
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
@@ -437,69 +393,22 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
           )}
         </div>
 
-        {/* Seleção e envio em massa */}
-        <div className={cn("flex items-center gap-2 mt-2.5", tablet && "flex-wrap")}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "flex h-9 flex-1 items-center justify-between gap-2 rounded-lg border px-3 text-xs font-medium transition-colors",
-                  modoSelecao
-                    ? "border-primary/50 bg-primary/5 text-primary"
-                    : "border-border/60 bg-card text-foreground hover:bg-muted/50"
-                )}
-              >
-                <span className="flex items-center gap-2">
-                  <Checkbox
-                    checked={todosSelecionados}
-                    onCheckedChange={(v) => (v ? selecionarTodos() : limparSelecao())}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  {selecionados.size > 0
-                    ? `${selecionados.size} selecionado${selecionados.size > 1 ? "s" : ""}`
-                    : "Selecionar contatos"}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Selecionar contatos</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => { if (!modoSelecao) setModoSelecao(true); selecionarTodos(); }}>
-                Selecionar todos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={limparSelecao}>Limpar seleção</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Por canal</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "whatsapp" })}>WhatsApp</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "telefone" })}>Telefone</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "email" })}>E-mail</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ canal: "visita" })}>Visita</DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Por data</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "hoje" })}>Hoje</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "atrasados" })}>Atrasados</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selecionarPorFiltro({ data: "futuros" })}>Próximos dias</DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Disparo em massa: WhatsApp, E-mail ou Telefone */}
+        <div className="flex items-center gap-2 mt-2.5">
           <Button
             variant="outline"
-            size="icon"
-            disabled={selecionados.size === 0}
-            title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Envio em massa"}
-            onClick={() => onEnvioMassa(Array.from(new Set(visiveis.filter((i) => selecionados.has(i.id) && i.contactId).map((i) => i.contactId as string))))}
-            className="h-9 w-9 shrink-0 rounded-lg"
+            onClick={() => onDisparoMassa?.()}
+            className="h-9 flex-1 justify-start gap-2 rounded-lg border-border/60 text-xs font-semibold"
+            title="Disparo em massa por WhatsApp, E-mail ou Telefone"
           >
-            <Send className="h-4 w-4" />
+            <span className="flex items-center -space-x-1">
+              <Send className="h-3.5 w-3.5 text-success" />
+              <Mail className="h-3.5 w-3.5 text-info" />
+              <PhoneCall className="h-3.5 w-3.5 text-primary" />
+            </span>
+            Disparo em massa
           </Button>
-          {onLigacaoSequencial && (discadorAtivo ? (
+          {discadorAtivo && (
             <Button
               variant="default"
               size="icon"
@@ -510,23 +419,7 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
               {discadorAtivo === "sequencial" ? <ListOrdered className="h-4 w-4" /> : <PhoneForwarded className="h-4 w-4" />}
               <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-destructive" />
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={selecionados.size === 0}
-              title={selecionados.size === 0 ? "Selecione os contatos primeiro" : "Ligação sequencial"}
-              onClick={() => {
-                const ids = visiveis
-                  .filter((i) => selecionados.has(i.id) && i.contactId)
-                  .map((i) => i.contactId as string);
-                onLigacaoSequencial(Array.from(new Set(ids)));
-              }}
-              className="h-9 w-9 shrink-0 rounded-lg"
-            >
-              <PhoneCall className="h-4 w-4" />
-            </Button>
-          ))}
+          )}
         </div>
       </div>
 
@@ -544,37 +437,25 @@ export function FilaDoDia({ items, tablet = false, onEnvioMassa, onLigacaoSequen
           </div>
         ) : (
           visiveis.map((item) => {
-            const marcado = selecionados.has(item.id);
             return (
               <div key={item.id}>
               <div
                 onClick={() => {
-                  if (modoSelecao) {
-                    alternarSelecao(item.id);
-                    return;
-                  }
                   item.onClick();
                 }}
                 title={item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
                    "group relative border-b border-border/20 cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
-                   tablet ? "grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-3" : "flex items-center gap-3 px-3 py-3.5",
+                   tablet ? "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-3" : "flex items-center gap-3 px-3 py-3.5",
                   item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary/60",
                   item.assumido && !item.selecionado && "bg-info/[0.05]",
                   item.selecionado
                     ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
-                  marcado && "bg-orange-500/[0.08]",
                   !simultaneo && (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
                 )}
               >
-                <Checkbox
-                  checked={marcado}
-                  onCheckedChange={() => alternarSelecao(item.id)}
-                  onClick={(event) => event.stopPropagation()}
-                   className={cn("shrink-0 border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500", tablet && "mt-2")}
-                />
 
                 {/* Contato: avatar + nome em cima */}
                  <div className={cn("flex flex-1 min-w-0", tablet ? "items-start gap-2" : "items-center gap-3")}>

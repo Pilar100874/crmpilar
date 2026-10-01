@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, ArrowLeft } from "lucide-react";
@@ -26,6 +26,7 @@ interface EnvioMassaWizardPanelProps {
   onClose: () => void;
   onComplete?: () => void;
   contatosIniciais?: string[];
+  canalInicial?: CanalEnvio;
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
@@ -49,11 +50,13 @@ const getInitialState = (): EnvioMassaState => ({
 export function EnvioMassaWizardPanel({ 
   onClose,
   onComplete,
-  contatosIniciais = []
+  contatosIniciais = [],
+  canalInicial
 }: EnvioMassaWizardPanelProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
-  const [state, setState] = useState<EnvioMassaState>(getInitialState());
+  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), canal: canalInicial ?? null }));
+  const pulouParaMontarRef = useRef(false);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
 
@@ -102,7 +105,10 @@ export function EnvioMassaWizardPanel({
   useEffect(() => {
     if (contatosIniciais.length === 0 || !state.canal) return;
     const ids = new Set(contatosIniciais);
-    setState(prev => ({ ...prev, selectedContacts: contacts.filter(c => ids.has(c.id)) }));
+    const escolhidos = contacts.filter(c => ids.has(c.id));
+    const pular = !!canalInicial && !pulouParaMontarRef.current && escolhidos.length > 0;
+    if (pular) pulouParaMontarRef.current = true;
+    setState(prev => ({ ...prev, selectedContacts: escolhidos, ...(pular ? { step: 'compose' as WizardStep } : {}) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts, state.canal, chaveIniciais]);
 

@@ -17,6 +17,7 @@ import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormulario
 import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
 import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
+import { DisparoMassaPanel } from "@/components/atendimento/DisparoMassaPanel";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
@@ -432,6 +433,8 @@ export default function Atendimento() {
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
   const [showEnvioMassaWizard, setShowEnvioMassaWizard] = useState(false);
   const [idsEnvioMassa, setIdsEnvioMassa] = useState<string[]>([]);
+  const [canalEnvioMassa, setCanalEnvioMassa] = useState<"whatsapp" | "email" | undefined>(undefined);
+  const [showDisparoMassa, setShowDisparoMassa] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
   const [fluxoInitialIndex, setFluxoInitialIndex] = useState(0);
@@ -4308,6 +4311,16 @@ ${recentMessages}
     recebidos: conversasRecebidasNaoRespondidas.length + emailsRecebidosNaoRespondidos.length,
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
 
+  // Fontes da tela de disparo em massa (mesmas regras das abas Tudo/Agendados/Recebidos)
+  const fontesDisparo = useMemo(() => ({
+    tudo: contatosVinculados.map((c: any) => c.id),
+    agendados: filteredTasks
+      .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
+      .map((task: any) => ({ id: task.contact_id as string, data: task.date ?? null })),
+    recebidos: conversasRecebidasNaoRespondidas.map((c: any) => c.customer_id).filter(Boolean),
+    recebidosEmails: emailsRecebidosNaoRespondidos.map((e: any) => e.from_email).filter(Boolean),
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
+
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
     filaItems.map((item) => ({
@@ -4548,10 +4561,10 @@ ${recentMessages}
     return true;
   }
 
-  const abrirDiscador = async () => {
+  const validarTelefonia = async (): Promise<boolean> => {
     try {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      if (!auth.user) return false;
       const [{ data: usuario }, { data: telefonia }] = await Promise.all([
         supabase.from("usuarios").select("ramal").eq("auth_user_id", auth.user.id).maybeSingle(),
         supabase.rpc("get_telefonia_estabelecimento"),
@@ -4563,23 +4576,43 @@ ${recentMessages}
         toast.error("Telefonia (PABX) não configurada", {
           description: "Configure o UCM do estabelecimento antes de usar o discador.",
         });
-        return;
+        return false;
       }
       if (!usuario?.ramal) {
         toast.error("Você não tem ramal vinculado", {
           description: "Peça ao administrador para cadastrar um ramal no seu usuário.",
         });
-        return;
+        return false;
       }
-      setShowDiscadorModo(true);
+      return true;
     } catch {
       toast.error("Não foi possível verificar a configuração de telefonia");
+      return false;
     }
   };
 
+  const abrirDiscador = async () => {
+    if (await validarTelefonia()) setShowDiscadorModo(true);
+  };
+
+  const aplicarModoDiscador = (modo: "sequencial" | "previa") => {
+    setDiscadorModo(modo);
+    setShowDiscadorModo(false);
+    setShowDisparoMassa(false);
+    setHistoricoCliente(null);
+    setAgendaContato(null);
+    setShowEnvioMassaWizard(false);
+    setActiveTab("tel");
+    setShowConversationsList(true);
+    setMobileView("main");
+    setFluxoInitialIndex(0);
+    setAgendaViewMode('fluxo');
+  };
+
+
   // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
 
-  const iniciarLigacaoSelecionados = async (ids: string[]) => {
+  const iniciarLigacaoSelecionados = async (ids: string[], modo?: "sequencial" | "previa") => {
     if (ids.length === 0) {
       toast.error("Selecione os contatos da lista primeiro");
       return;
@@ -4606,9 +4639,33 @@ ${recentMessages}
       toast.error("Nenhum contato selecionado tem telefone");
       return;
     }
+    if (modo) {
+      if (!(await validarTelefonia())) return;
+      setTasksSelecionadas(lista);
+      setDiscadorContatos(ids);
+      aplicarModoDiscador(modo);
+      return;
+    }
     setTasksSelecionadas(lista);
     setDiscadorContatos(ids);
     void abrirDiscador();
+  };
+
+  const abrirDisparoMassa = () => {
+    setHistoricoCliente(null);
+    setAgendaContato(null);
+    setShowEnvioMassaWizard(false);
+    setActiveTab("agenda");
+    setAgendaViewMode("default");
+    setMobileView("main");
+    setShowDisparoMassa(true);
+  };
+
+  const iniciarEnvioDoDisparo = (ids: string[], canal: "whatsapp" | "email") => {
+    setIdsEnvioMassa(ids);
+    setCanalEnvioMassa(canal);
+    setShowDisparoMassa(false);
+    setShowEnvioMassaWizard(true);
   };
 
   const pararDiscador = () => {
@@ -5644,17 +5701,9 @@ ${recentMessages}
                 <FilaDoDia
                   items={filaItemsMobile}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
-                  onLigacaoSequencial={iniciarLigacaoSelecionados}
-                  discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
+                                    discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
                   onPararDiscador={pararDiscador}
-                  onEnvioMassa={(ids: string[]) => {
-                    setIdsEnvioMassa(ids);
-                    setHistoricoCliente(null);
-                    setAgendaContato(null);
-                    setActiveTab("agenda");
-                    setAgendaViewMode("default");
-                    setShowEnvioMassaWizard(true);
-                  }}
+                  onDisparoMassa={abrirDisparoMassa}
                   onConfigurarRegra={() => setShowEnvioMassa(true)}
                   filtro={filtroFila}
                   onFiltroChange={aoTrocarFiltroFila}
@@ -6222,17 +6271,9 @@ ${recentMessages}
           items={filaItems}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
-          onLigacaoSequencial={iniciarLigacaoSelecionados}
-                  discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
+                            discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
                   onPararDiscador={pararDiscador}
-          onEnvioMassa={(ids: string[]) => {
-                    setIdsEnvioMassa(ids);
-                    setHistoricoCliente(null);
-                    setAgendaContato(null);
-            setActiveTab("agenda");
-            setAgendaViewMode("default");
-            setShowEnvioMassaWizard(true);
-          }}
+          onDisparoMassa={abrirDisparoMassa}
           onConfigurarRegra={() => setShowEnvioMassa(true)}
           filtro={filtroFila}
           onFiltroChange={aoTrocarFiltroFila}
@@ -6579,12 +6620,22 @@ ${recentMessages}
             }
             defaultTab="contatos"
           />
+        ) : showDisparoMassa && !isMobile ? (
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card animate-wipe-in">
+            <DisparoMassaPanel
+              fontes={fontesDisparo}
+              onClose={() => setShowDisparoMassa(false)}
+              onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
+              onIniciarEnvio={iniciarEnvioDoDisparo}
+            />
+          </div>
         ) : showEnvioMassaWizard && !isMobile ? (
           /* Envio em massa aberto na tela central (onde fica o calendário) */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <EnvioMassaWizardContent
-              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
+              canalInicial={canalEnvioMassa}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -7041,8 +7092,9 @@ ${recentMessages}
           /* Envio em Massa Wizard */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <EnvioMassaWizardContent
-              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+              onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
+              canalInicial={canalEnvioMassa}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -7136,8 +7188,9 @@ ${recentMessages}
               {activeTab === "agenda" && showEnvioMassaWizard && (
                 <div className="hidden lg:block w-full h-full absolute inset-0">
                   <EnvioMassaWizardContent
-                    onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+                    onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
+              canalInicial={canalEnvioMassa}
                     onComplete={loadTodayTasks}
                   />
                 </div>
@@ -7682,18 +7735,7 @@ ${recentMessages}
       open={showDiscadorModo}
       onOpenChange={setShowDiscadorModo}
       totalContatos={tasksDiscador.filter(t => t.customers?.telefone).length}
-      onSelect={(modo) => {
-        setDiscadorModo(modo);
-        setShowDiscadorModo(false);
-        setHistoricoCliente(null);
-        setAgendaContato(null);
-        setShowEnvioMassaWizard(false);
-        setActiveTab("tel");
-        setShowConversationsList(true);
-        setMobileView("main");
-        setFluxoInitialIndex(0);
-        setAgendaViewMode('fluxo');
-      }}
+      onSelect={aplicarModoDiscador}
     />
     <FluxoAtendimentoDialog
       open={showFluxoAtendimento}
@@ -7716,12 +7758,23 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
+    {showDisparoMassa && isMobile && (
+      <div className="fixed inset-0 z-[700] bg-background">
+        <DisparoMassaPanel
+          fontes={fontesDisparo}
+          onClose={() => setShowDisparoMassa(false)}
+          onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
+          onIniciarEnvio={iniciarEnvioDoDisparo}
+        />
+      </div>
+    )}
     {/* Mobile/Tablet: Full screen wizard */}
     {showEnvioMassaWizard && (
       <div className="lg:hidden">
         <EnvioMassaWizardPanel
-          onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); }}
+          onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
+              canalInicial={canalEnvioMassa}
           onComplete={loadTodayTasks}
         />
       </div>
