@@ -380,7 +380,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
                   <button
                     key={a}
                     type="button"
-                    onClick={() => setAba(a)}
+                    onClick={() => { setAba(a); setSelecionados(new Set()); }}
                     className={cn(
                       "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors",
                       ativo ? "bg-primary/10 font-semibold text-primary" : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"

@@ -4298,7 +4298,10 @@ ${recentMessages}
     // Discador ativo: destaca o card do contato que está sendo ligado
     const contatoLigando = discadorModo && agendaViewMode === 'fluxo' ? (fluxoCurrentTask as any)?.contact_id : null;
     if (contatoLigando) {
-      return lista.map((item) => (item.contactId === contatoLigando ? { ...item, selecionado: true } : { ...item, selecionado: false }));
+      const marcada = lista.map((item) => (item.contactId === contatoLigando ? { ...item, selecionado: true } : { ...item, selecionado: false }));
+      // Traz o cartão da ligação atual para o primeiro lugar da fila.
+      marcada.sort((a, b) => (a.contactId === contatoLigando ? -1 : b.contactId === contatoLigando ? 1 : 0));
+      return marcada;
     }
     return lista;
   }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
