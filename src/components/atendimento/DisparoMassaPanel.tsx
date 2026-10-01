@@ -49,6 +49,7 @@ interface Contato {
   usuarios: string[];
   produtos: string[];
   grupos: string[];
+  emailRecebido: boolean;
 }
 
 const CANAIS: { id: CanalDisparo; label: string; desc: string; icon: typeof Phone; cor: string; fundo: string }[] = [
@@ -185,6 +186,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
         compras.set(o.cliente_id, r);
       });
 
+      const emailsSet = new Set(emails);
       const lista: Contato[] = lotes.map((c: any) => {
         const eid = empresaDe(c);
         const e = eid ? empMap.get(eid) : null;
@@ -206,6 +208,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
           usuarios: [...usuarios],
           produtos: [...(compras.get(c.id)?.p || [])],
           grupos: [...(compras.get(c.id)?.g || [])],
+          emailRecebido: !!c.email && emailsSet.has(String(c.email).toLowerCase().trim()),
         };
       }).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
@@ -237,15 +240,10 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
     if (a === "recebidos") return recebidosSet.ids.has(c.id) || contatosEmailRecebido.has(c.id);
     return tudoSet.has(c.id);
   };
-  // contatos encontrados por e-mail recebido
-  const contatosEmailRecebido = useMemo(() => new Set<string>(), []);
-  useEffect(() => {
-    contatosEmailRecebido.clear();
-    // os contatos encontrados por e-mail não estão em nenhuma outra fonte
-    contatos.forEach((c) => {
-      if (!tudoSet.has(c.id) && !datasAgendadas.has(c.id) && !recebidosSet.ids.has(c.id)) contatosEmailRecebido.add(c.id);
-    });
-  }, [contatos, tudoSet, datasAgendadas, recebidosSet, contatosEmailRecebido]);
+  const contatosEmailRecebido = useMemo(
+    () => new Set(contatos.filter((c) => c.emailRecebido).map((c) => c.id)),
+    [contatos]
+  );
 
   const hoje = new Date().toLocaleDateString("en-CA");
   const passaData = (c: Contato) => {
