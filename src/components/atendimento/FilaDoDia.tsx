@@ -452,7 +452,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   item.selecionado
                     ? "bg-orange-500/[0.08] before:bg-orange-500"
                     : "hover:bg-muted/40",
-                  marcado && "bg-orange-500/[0.08]",
                   !simultaneo && (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
                 )}
