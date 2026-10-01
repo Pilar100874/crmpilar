@@ -211,6 +211,16 @@ export default function Atendimento() {
   const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const pendenciasAtendimento = usePendenciasAtendimento();
   const [modoSimultaneo, setModoSimultaneo] = useModoSimultaneo();
+  // Marca quando o modo simultâneo foi ligado automaticamente pela pausa de
+  // uma ligação recebida — nesse caso ele é desligado sozinho ao finalizar
+  // todos os atendimentos pendentes (não fica ligado para sempre).
+  const pausaAutomaticaRef = useRef(false);
+  useEffect(() => {
+    if (pausaAutomaticaRef.current && pendenciasAtendimento.length === 0) {
+      pausaAutomaticaRef.current = false;
+      setModoSimultaneo(false);
+    }
+  }, [pendenciasAtendimento, setModoSimultaneo]);
   const [contatoFinalizarId, setContatoFinalizarId] = useState<string | null>(null);
   const [focoBarra, setFocoBarra] = useState(0);
 
@@ -4680,7 +4690,12 @@ ${recentMessages}
   };
 
   const abrirContatoBinado = (c: ContatoBinado, pausar: boolean) => {
-    if (pausar) setModoSimultaneo(true);
+    if (pausar) {
+      // Pausa automática para atender ligação recebida: o modo simultâneo
+      // é ligado só temporariamente e desligado quando as pendências zerarem.
+      pausaAutomaticaRef.current = true;
+      setModoSimultaneo(true);
+    }
     setChamadaRecebida(null);
     const existente: any = contatosComIndicadores.find((x: any) => x.id === c.id);
     setHistoricoCliente(null);
