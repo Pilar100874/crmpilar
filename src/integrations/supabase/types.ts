@@ -4281,6 +4281,54 @@ export type Database = {
         }
         Relationships: []
       }
+      calendario_regras_automacao: {
+        Row: {
+          acao: string
+          acao_config: Json
+          ativa: boolean
+          condicoes: Json
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          execucoes: number
+          gatilho: string
+          id: string
+          nome: string
+          ultima_execucao: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao: string
+          acao_config?: Json
+          ativa?: boolean
+          condicoes?: Json
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          execucoes?: number
+          gatilho: string
+          id?: string
+          nome: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          acao_config?: Json
+          ativa?: boolean
+          condicoes?: Json
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          execucoes?: number
+          gatilho?: string
+          id?: string
+          nome?: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendario_tarefas: {
         Row: {
           campaign_id: string | null
@@ -31261,6 +31309,16 @@ export type Database = {
       }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
+      executar_regras_agenda: {
+        Args: {
+          _contexto?: Json
+          _customer: string
+          _estab: string
+          _gatilho: string
+          _usuario: string
+        }
+        Returns: number
+      }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       expire_bot_response_tracking: { Args: never; Returns: number }
       ferr_can_access_company: {
@@ -31804,6 +31862,10 @@ export type Database = {
       }
       port_is_gestor: { Args: { _user_id: string }; Returns: boolean }
       port_is_staff: { Args: { _user_id: string }; Returns: boolean }
+      regras_agenda_cliente_por_telefone: {
+        Args: { _estab: string; _num: string }
+        Returns: string
+      }
       ritmo_humano_consumir: {
         Args: { p_est: string; p_sessao?: string }
         Returns: number
@@ -31814,6 +31876,7 @@ export type Database = {
         Returns: Json
       }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
+      verificar_regras_sem_contato: { Args: never; Returns: number }
       visita_haversine_metros: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
