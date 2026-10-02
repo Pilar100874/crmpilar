@@ -31308,6 +31308,10 @@ export type Database = {
         Returns: boolean
       }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
+      disparar_regras_agenda: {
+        Args: { _contexto?: Json; _customer: string; _gatilho: string }
+        Returns: number
+      }
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       executar_regras_agenda: {
         Args: {
