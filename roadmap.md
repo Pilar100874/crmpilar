@@ -34,5 +34,5 @@
 - [x] Filtro agenda/todos no envio em massa
 
 ## Fluxo visual das regras da agenda
-- [ ] Exibir gatilho, regras, possíveis desdobramentos e resultado na agenda em um mapa navegável.
-- [ ] Validar o mapa na tela de configurações.
+- [x] Exibir gatilho, regras, possíveis desdobramentos e resultado na agenda em um mapa navegável.
+- [x] Validar o mapa na tela de configurações.
