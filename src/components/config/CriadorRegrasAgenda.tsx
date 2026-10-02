@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { FluxoVisualRegrasAgenda } from "@/components/config/FluxoVisualRegrasAgenda";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
 import {
@@ -206,6 +207,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
       <Tabs defaultValue="regras" className="mt-3">
         <TabsList>
           <TabsTrigger value="regras">Regras por tela</TabsTrigger>
+          <TabsTrigger value="fluxo"><Network className="mr-1 h-4 w-4" /> Fluxo visual</TabsTrigger>
           <TabsTrigger value="mapa"><Network className="mr-1 h-4 w-4" /> Interferências</TabsTrigger>
         </TabsList>
 
@@ -216,6 +218,10 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
               {regras.filter((r) => telaDe(r) === t).map(cartaoRegra)}
             </div>
           ))}
+        </TabsContent>
+
+        <TabsContent value="fluxo">
+          <FluxoVisualRegrasAgenda regras={regras} onEditar={editar} />
         </TabsContent>
 
         <TabsContent value="mapa" className="space-y-3">
