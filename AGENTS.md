@@ -1,0 +1,1 @@
+- Keep calendar-rule visualization in a read-only component driven by the saved rule catalog; it explains configured paths without claiming that relationships execute chained rules.

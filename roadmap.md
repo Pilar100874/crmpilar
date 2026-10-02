@@ -32,3 +32,7 @@
 - [x] Cor diferente para contatos assumidos
 - [x] Perguntar "manter as duas" ao criar segunda tarefa
 - [x] Filtro agenda/todos no envio em massa
+
+## Fluxo visual das regras da agenda
+- [ ] Exibir gatilho, regras, possíveis desdobramentos e resultado na agenda em um mapa navegável.
+- [ ] Validar o mapa na tela de configurações.
