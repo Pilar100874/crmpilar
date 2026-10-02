@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarioRegrasCRUD } from "@/components/config/CalendarioRegrasCRUD";
+import { RegrasAgendaPorTela } from "@/components/config/RegrasAgendaPorTela";
 import { Calendar, Settings } from "lucide-react";
 
 export default function CalendarioConfig() {
@@ -31,7 +32,8 @@ export default function CalendarioConfig() {
           Regras e automações do seu calendário
         </p>
       </div>
-      <div className="flex-1 overflow-auto p-3 sm:p-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-6 space-y-4">
+        <RegrasAgendaPorTela />
         {estabelecimentoId ? (
           <CalendarioRegrasCRUD estabelecimentoId={estabelecimentoId} />
         ) : (
