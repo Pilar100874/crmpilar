@@ -52,6 +52,7 @@ export const GRUPOS_REGRAS_AGENDA: GrupoRegrasAgenda[] = [
       { gatilho: "Ao arrastar uma tarefa", efeito: "Remarca a tarefa para o novo dia/horário." },
       { gatilho: "Tarefas de hoje com horário vencido", efeito: "Passam a contar como Atrasados." },
       { gatilho: "Regras e automações abaixo", efeito: "Criam tarefas automáticas conforme cada regra cadastrada nesta tela." },
+      { gatilho: "Regras do Criador de regras", efeito: "Cada regra montada no criador (quando X → faça Y) cria, remarca, conclui ou cancela tarefas automaticamente." },
     ],
   },
 ];
