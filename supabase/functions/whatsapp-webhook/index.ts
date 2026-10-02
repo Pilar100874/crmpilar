@@ -3566,6 +3566,21 @@ async function executeNode(
 
   console.log(`[FLOW] Executing node: ${node.id} (${data.type})`);
 
+  // Regras da agenda: gatilho "ao rodar bloco do bot" (não bloqueia o fluxo)
+  try {
+    const estab = context?.vars?.estabelecimento_id;
+    const fone = context?.vars?.phoneNumber || context?.vars?.from;
+    if (estab && fone) {
+      const sbr = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      sbr.rpc("regras_agenda_cliente_por_telefone", { _estab: estab, _num: String(fone) }).then(({ data: cust }: any) => {
+        if (cust) sbr.rpc("executar_regras_agenda", {
+          _estab: estab, _gatilho: "bloco_bot", _customer: cust, _usuario: null,
+          _contexto: { canal: "whatsapp", texto: String(data.label || data.type || ""), bloco: String(data.type || "") },
+        }).then(() => {});
+      });
+    }
+  } catch (_) { /* ignora */ }
+
   const itp = (txt = "") =>
     txt.replace(/\{\{([^}]+)\}\}/g, (_, k) => {
       const key = String(k).trim();
