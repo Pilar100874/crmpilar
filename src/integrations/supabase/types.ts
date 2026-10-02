@@ -4286,14 +4286,20 @@ export type Database = {
           acao: string
           acao_config: Json
           ativa: boolean
+          chave: string | null
           condicoes: Json
           created_at: string
           descricao: string | null
           estabelecimento_id: string
           execucoes: number
+          executor: string
           gatilho: string
           id: string
           nome: string
+          prioridade: number
+          relacoes: Json
+          sistema: boolean
+          tela: string | null
           ultima_execucao: string | null
           updated_at: string
         }
@@ -4301,14 +4307,20 @@ export type Database = {
           acao: string
           acao_config?: Json
           ativa?: boolean
+          chave?: string | null
           condicoes?: Json
           created_at?: string
           descricao?: string | null
           estabelecimento_id: string
           execucoes?: number
+          executor?: string
           gatilho: string
           id?: string
           nome: string
+          prioridade?: number
+          relacoes?: Json
+          sistema?: boolean
+          tela?: string | null
           ultima_execucao?: string | null
           updated_at?: string
         }
@@ -4316,14 +4328,20 @@ export type Database = {
           acao?: string
           acao_config?: Json
           ativa?: boolean
+          chave?: string | null
           condicoes?: Json
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string
           execucoes?: number
+          executor?: string
           gatilho?: string
           id?: string
           nome?: string
+          prioridade?: number
+          relacoes?: Json
+          sistema?: boolean
+          tela?: string | null
           ultima_execucao?: string | null
           updated_at?: string
         }
@@ -31866,6 +31884,10 @@ export type Database = {
       }
       port_is_gestor: { Args: { _user_id: string }; Returns: boolean }
       port_is_staff: { Args: { _user_id: string }; Returns: boolean }
+      regra_sistema_config: {
+        Args: { _chave: string; _estab: string }
+        Returns: Json
+      }
       regras_agenda_cliente_por_telefone: {
         Args: { _estab: string; _num: string }
         Returns: string
@@ -31879,6 +31901,8 @@ export type Database = {
         Args: { p_funil_id: string; p_moves?: Json; p_stages: Json }
         Returns: Json
       }
+      semear_minhas_regras_sistema: { Args: never; Returns: undefined }
+      semear_regras_sistema: { Args: { _estab: string }; Returns: undefined }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
       verificar_regras_sem_contato: { Args: never; Returns: number }
       visita_haversine_metros: {
