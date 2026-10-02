@@ -24,7 +24,7 @@ function NoFluxo({ data }: NodeProps<Node<DadosNo>>) {
         </div>
         {data.editar && <Button className="nodrag h-7 w-7 shrink-0" size="icon" variant="ghost" title="Editar regra" aria-label={`Editar ${data.titulo}`} onClick={data.editar}><Pencil className="h-3.5 w-3.5" /></Button>}
       </div>
-      {data.tipo !== "resultado" && <Handle type="source" position={Position.Right} className="!bg-primary" />}
+      <Handle type="source" position={Position.Right} className="!bg-primary" />
     </div>
   );
 }
@@ -58,7 +58,6 @@ export function FluxoVisualRegrasAgenda({ regras, onEditar }: { regras: RegraVis
     });
     if (origemContato) {
       const origem = origemContato;
-      {
         const y = diretas.length * 170 + 80;
         nos.push({ id: "evento-contato", type: "fluxo", position: { x: 330, y }, data: { tipo: "evento", titulo: "Contato temporário criado", detalhe: "Também dispara as regras de criação de contato" } });
         conectar(`fim-${origem.id}`, "evento-contato", "Pode disparar", true);
@@ -73,7 +72,6 @@ export function FluxoVisualRegrasAgenda({ regras, onEditar }: { regras: RegraVis
           nos.push({ id: `fim-${r.id}`, type: "fluxo", position: { x: 990, y: subY }, data: { tipo: "resultado", titulo: rotuloAcao(r.acao), detalhe: resultado(r), inativa: !r.ativa } });
           conectar(r.id, `fim-${r.id}`);
         });
-      }
     }
     return { nodes: nos, edges: linhas };
   }, [atual, diretas, secundarias, origemContato, onEditar]);
