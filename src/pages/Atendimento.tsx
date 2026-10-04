@@ -4632,7 +4632,7 @@ ${recentMessages}
     }
     const { data: clientes } = await supabase
       .from("customers")
-      .select("id, nome, email, telefone")
+      .select("id, nome, email, telefone, tel")
       .in("id", ids);
     const hoje = new Date().toLocaleDateString("en-CA");
     const lista = ids
