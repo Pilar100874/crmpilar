@@ -4644,10 +4644,10 @@ ${recentMessages}
         return {
           id: `contato-${id}`, contact_id: id, contact_name: c.nome, title: "Ligação",
           date: hoje, origem: "ligacao", status: "pending",
-          customers: { id, nome: c.nome, email: c.email, telefone: c.telefone },
+          customers: { id, nome: c.nome, email: c.email, telefone: c.telefone || c.tel },
         };
       })
-      .filter((t: any) => t && t.customers?.telefone);
+      .filter((t: any) => t && (t.customers?.telefone || t.customers?.tel));
     if (lista.length === 0) {
       toast.error("Nenhum contato selecionado tem telefone");
       return;
