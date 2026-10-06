@@ -495,6 +495,9 @@ export default function Atendimento() {
     if (destino !== 'buscaEmail') setShowCustomerSearchForEmailState(false);
     if (destino !== 'buscaOrcamento') setShowCustomerSearchForOrcamentoState(false);
     if (destino !== 'orcamento') setOrcamentoSheetOpenState(false);
+    setShowComposeEmail(false);
+    setComposeEmailInline(false);
+    if (!discadorRodandoRef.current) setAgendaViewMode('default');
   }
   function setActiveTab(aba: string) {
     fecharConteudoCentral();
