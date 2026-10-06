@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarDays, Clock3, Loader2, MoreVertical, Trash2, X, Edit } from "lucide-react";
@@ -34,15 +33,13 @@ interface Props {
   onDelete: () => void;
   editor?: ReactNode;
   creating?: boolean;
-  /** Altura da barra fixa do topo (título + datas): o painel abre abaixo dela, sem sobrepor. */
-  topOffset?: number;
   onUpdate: (updates: Partial<SidebarTask>) => Promise<boolean>;
 }
 
 interface Contact { id: string; nome: string; telefone: string | null; tel: string | null; email: string | null; empresa?: string }
 
-/** Painel lateral fixo da tarefa, ancorado à direita como a aba de detalhes do cliente. */
-export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating, topOffset = 0 }: Props) {
+/** Painel lateral da tarefa, encaixado à direita como a aba de detalhes do cliente (encolhe o conteúdo central). */
+export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);

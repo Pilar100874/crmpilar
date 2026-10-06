@@ -3339,7 +3339,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
           origem: "manual" as Task["origem"], createdAt: new Date(),
         };
-        return <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios} topOffset={barraAltura}
+        return <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
           onClose={() => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); }}
           onEdit={() => { if (selectedTask) handleEditTask(selectedTask); }}
           onDelete={() => { if (selectedTask) handleDeleteTask(selectedTask.id); }}
