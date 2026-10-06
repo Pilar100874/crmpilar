@@ -56,6 +56,7 @@ interface UnifiedDetailsPanelProps {
 }
 
 export function UnifiedDetailsPanel({ 
+  onOcultar,
   type,
   nome,
   telefone,
