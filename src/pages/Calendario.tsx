@@ -289,6 +289,15 @@ function DraggableTaskCard({
         />
       )}
 
+      {/* Concluir tarefa */}
+      <input
+        type="checkbox"
+        checked={concluida}
+        onChange={onToggle}
+        aria-label={concluida ? "Reabrir tarefa" : "Concluir tarefa"}
+        className="h-4 w-4 shrink-0 cursor-pointer accent-orange-500"
+      />
+
       {/* Avatar com iniciais (também serve de alça para arrastar) */}
       <div
         {...attributes}
