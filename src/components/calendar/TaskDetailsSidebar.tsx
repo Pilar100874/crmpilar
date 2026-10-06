@@ -34,13 +34,15 @@ interface Props {
   onDelete: () => void;
   editor?: ReactNode;
   creating?: boolean;
+  /** Altura da barra fixa do topo (título + datas): o painel abre abaixo dela, sem sobrepor. */
+  topOffset?: number;
   onUpdate: (updates: Partial<SidebarTask>) => Promise<boolean>;
 }
 
 interface Contact { id: string; nome: string; telefone: string | null; tel: string | null; email: string | null; empresa?: string }
 
 /** Painel lateral fixo da tarefa, ancorado à direita como a aba de detalhes do cliente. */
-export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
+export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating, topOffset = 0 }: Props) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -90,7 +92,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
   return createPortal(
-    <aside className="fixed inset-y-0 right-0 z-[700] flex w-full flex-col overflow-hidden border-l border-border bg-card shadow-xl sm:w-80 md:w-64 lg:w-[400px]">
+    <aside className="fixed bottom-0 right-0 z-[700] flex w-full flex-col overflow-hidden border-l border-border bg-card shadow-xl sm:w-80 md:w-64 lg:w-[400px]" style={{ top: topOffset }}>
       <div className="flex items-center gap-3 border-b border-border/60 bg-gradient-to-r from-orange-50 to-transparent px-4 py-3 dark:from-orange-950/20">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
           <CalendarDays className="h-4.5 w-4.5 text-orange-600 dark:text-orange-400" />
