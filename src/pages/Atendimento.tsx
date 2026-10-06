@@ -7300,7 +7300,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -7328,12 +7328,12 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
             onOcultar={() => setShowClientDetailsChat(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
@@ -7361,11 +7361,11 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
             onOcultar={() => setShowClientDetailsAgenda(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedAgendaContato.nome}
@@ -7384,12 +7384,12 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
             onOcultar={() => setShowClientDetailsAgenda(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
       {!orcamentoSheetOpen && ((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
@@ -7416,11 +7416,11 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
             onOcultar={() => setShowClientDetailsFluxo(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTelContato.nome}
@@ -7442,12 +7442,12 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
             onOcultar={() => setShowClientDetailsFluxo(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {/* Detalhes do cliente ao clicar no card na aba E-mail */}
       {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="email"
             nome={contatoEmailDetalhe.nome}
@@ -7470,12 +7470,12 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
             onOcultar={() => setShowClientDetailsEmail(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
@@ -7512,7 +7512,7 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
             onOcultar={() => setShowClientDetailsEmail(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
       
       {/* Novo Contato Dialog */}
@@ -7634,7 +7634,7 @@ ${recentMessages}
 
       {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
       {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border lg:w-[400px] flex-shrink-0`}>
+      <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="orcamento"
             nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
@@ -7657,7 +7657,7 @@ ${recentMessages}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
             onOcultar={() => setShowClientDetailsOrcamento(false)}
           />
-        </div>
+      </PainelCentralDetalhes>
       )}
 
       {/* Client Details Panel - Orçamento */}
