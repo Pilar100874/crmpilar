@@ -467,9 +467,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                      <p className={cn("text-[14px] font-semibold text-foreground leading-tight", tablet ? "break-words" : "truncate")}>
                       {item.nome}
                     </p>
-                    {item.empresa && (
-                       <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
-                    )}
+                     {(item.empresa || item.atrasado) && (
+                        <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[11px] leading-tight">
+                          {item.empresa && (
+                            <span className={cn("min-w-0 text-muted-foreground", tablet ? "break-words" : "truncate")}>{item.empresa}</span>
+                          )}
+                          {item.atrasado && (
+                            <span className="shrink-0 font-semibold text-destructive">
+                              Atrasado{item.data ? ` ${item.data}` : ""}{item.horario ? ` ${item.horario}` : ""}
+                            </span>
+                          )}
+                        </p>
+                     )}
                     {item.contactId && pendencias.includes(item.contactId) && (
                       <button type="button" title="Finalizar atendimento (próximo contato)"
                         onClick={(e) => { e.stopPropagation(); pedirFinalizacao({ customerId: item.contactId!, nome: item.nome }); }}
