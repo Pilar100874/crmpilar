@@ -2693,7 +2693,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
     });
 
     return (
-      <div className="grid w-full max-w-full grid-cols-1 gap-3 overflow-x-hidden sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 [&>div]:min-w-0">
+      <div className="grid w-full max-w-full grid-cols-1 gap-3 overflow-x-hidden sm:grid-cols-2 sm:gap-4 [&>div]:min-w-0">
         <div>
           <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
             <h3 className="font-semibold text-xs sm:text-sm uppercase">{isSameDay(currentDate, new Date()) ? "HOJE" : format(currentDate, "EEE d 'de' MMM", { locale: ptBR })}</h3>
