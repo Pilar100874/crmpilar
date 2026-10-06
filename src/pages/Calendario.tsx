@@ -1772,7 +1772,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       const slotTime = overData.slotTime as string | undefined;
       if (slotTime !== undefined) {
         adjustedTime = slotTime;
-        if (isSameDay(task.date, newDate) && (task.time || "") === slotTime) return;
+        if (isSameDay(task.date, newDate) && ((task.time || "") === slotTime || (slotTime && task.time?.slice(0, 2) === slotTime.slice(0, 2)))) return;
       } else if (calendarioRegras.realocacao_diaria && !isSameDay(task.date, newDate)) {
         adjustedTime = "";
         toast.info("Horário removido - tarefa definida como 'sem horário definido'");
