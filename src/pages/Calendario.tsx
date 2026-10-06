@@ -2029,8 +2029,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       <DraggableTask key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
     );
     return (
-      <div className="overflow-auto rounded-md border border-border/70 bg-background" data-agenda-semana>
-        <div className="min-w-[1050px]">
+      <div className="overflow-y-auto overflow-x-hidden rounded-md border border-border/70 bg-background" data-agenda-semana>
+        <div className="min-w-0 w-full">
           <div className="grid grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/70">
             <div className="border-r border-border/60" />
             {dias.map((dia, i) => (
@@ -2869,8 +2869,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             >
               <Calendar className="h-6 w-6" />
             </Button>
-            <div className="min-w-0 flex-1 overflow-x-auto">
-              <div className="grid min-w-[660px] grid-cols-[120px_repeat(5,minmax(108px,1fr))]">
+            <div className="min-w-0 flex-1 overflow-x-hidden">
+              <div className="grid min-w-0 grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
                   onClick={() => setViewMode("list")}
