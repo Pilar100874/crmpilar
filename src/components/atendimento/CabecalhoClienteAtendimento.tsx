@@ -78,7 +78,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             title={painelAberto ? "Reduzir cadastro e vínculos" : "Ampliar cadastro e vínculos"}
             aria-label={painelAberto ? "Reduzir cadastro e vínculos" : "Ampliar cadastro e vínculos"}
           >
-            {painelAberto ? <PanelRightClose className="h-4 w-4 text-orange-600" /> : <PanelRightOpen className="h-4 w-4 text-orange-600" />}
+            <UserRound className={cn("h-5 w-5", painelAberto ? "text-orange-600" : "text-orange-600/70")} />
           </Button>
         )}
       </div>}
