@@ -2064,6 +2064,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                 {dayTasks.slice(0, 3).map(task => (
                   <DraggableTask
                     key={task.id}
+                    variant="compact"
                     task={task}
                     onClick={(e) => {
                       e?.stopPropagation();
