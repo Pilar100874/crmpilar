@@ -1,16 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, Clock3, Edit, History, Loader2, Mail, MessageSquare, MoreVertical, Phone, Trash2, X } from "lucide-react";
+import { CalendarDays, Clock3, Edit, Loader2, MoreVertical, Trash2, User } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CustomerHistoryTimeline } from "@/components/atendimento/agenda/CustomerHistoryTimeline";
 import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { abrirChatDoContato, abrirHistoricoDoContato, novoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
-import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
+import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 
 interface SidebarTask {
   id: string;
@@ -40,24 +38,20 @@ interface Props {
 
 interface Contact { id: string; nome: string; telefone: string | null; tel: string | null; email: string | null; empresa?: string }
 
-export function TaskDetailsSidebar({ task, origem, usuarios, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
+export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
   useEffect(() => {
     let cancelled = false;
     setContact(null);
-    setShowHistory(false);
     setError(false);
     setLoading(Boolean(task.contactId));
     async function load() {
       try {
-        const id = await getEstabelecimentoId();
+        const id = await getEstabelecimentoIdSafe();
         if (cancelled) return;
-        setEstabelecimentoId(id);
         if (!task.contactId || !id) return;
         const { data, error: queryError } = await supabase.from("customers")
           .select("id, nome, telefone, tel, email, customer_empresas(is_primary, empresas(nome, nome_fantasia))")
@@ -76,15 +70,6 @@ export function TaskDetailsSidebar({ task, origem, usuarios, onClose, onEdit, on
     return () => { cancelled = true; };
   }, [task.contactId, task.id]);
 
-  useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('[role="dialog"], [role="listbox"], [role="menu"]')) return;
-      onClose();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose]);
-
   async function update(updates: Partial<SidebarTask>) {
     setSaving(true);
     try { await onUpdate(updates); } finally { setSaving(false); }
@@ -92,47 +77,59 @@ export function TaskDetailsSidebar({ task, origem, usuarios, onClose, onEdit, on
   const late = task.status === "pending" && (isBefore(task.date, startOfDay(new Date())) || (format(task.date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd") && Boolean(task.time && task.time < format(new Date(), "HH:mm"))));
   const name = contact?.nome || task.contactName || "Sem contato vinculado";
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
-  const phone = contact?.tel || contact?.telefone;
-  const channels = [
-    { label: "WhatsApp", Icon: MessageSquare, enabled: Boolean(contact?.telefone), tone: "bg-success text-success-foreground hover:bg-success/90", action: () => { if (contact?.telefone) { onClose(); abrirChatDoContato({ customerId: contact.id, nome: contact.nome, whatsapp: contact.telefone }); } } },
-    { label: "Ligar", Icon: Phone, enabled: Boolean(phone), tone: "bg-primary text-primary-foreground hover:bg-primary/90", action: () => { if (phone) void ligarPeloPabx(phone, name); } },
-    { label: "E-mail", Icon: Mail, enabled: Boolean(contact?.email), tone: "bg-info text-info-foreground hover:bg-info/90", action: () => { if (contact?.email) { onClose(); novoEmailParaContato({ customerId: contact.id, nome: contact.nome, email: contact.email }); } } },
-  ];
   return (
-    <aside aria-label={creating ? "Nova tarefa" : "Editar tarefa"} className="fixed bottom-0 right-0 top-[var(--calendario-barra,0px)] z-30 flex w-full max-w-[400px] flex-col border-l border-border bg-background shadow-lg">
-      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-4">
-        <h2 className="text-base font-bold">{creating ? "Nova tarefa" : "Editar tarefa"}</h2>
-        <div className="flex items-center gap-1">
-          {!creating && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end"><DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-4 w-4" />Editar tarefa</DropdownMenuItem><DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir tarefa</DropdownMenuItem></DropdownMenuContent>
-          </DropdownMenu>}
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Fechar detalhes da tarefa" onClick={onClose}><X className="h-4 w-4" /></Button>
-        </div>
-      </header>
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
-        {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
-          <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" /><h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>{late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}</div>
-          <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
-        </div>}
-        {editor}
-        {!editor && <section>
-          <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Contato</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => { onClose(); abrirHistoricoDoContato({ customerId: task.contactId, nome: name }); }}>Ver no CRM</Button>}</div>
-          <div className="flex min-w-0 items-center gap-2 rounded-md border border-border p-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">{initials}</div>
-            <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{name}</p>{contact?.empresa && <p className="break-words text-xs text-muted-foreground">{contact.empresa}</p>}{loading && <Loader2 className="mt-1 h-3 w-3 animate-spin text-muted-foreground" />}{error && <p className="text-xs text-destructive">Não foi possível carregar o contato.</p>}</div>
+    <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent side="right" className="w-full overflow-hidden flex flex-col p-0 sm:max-w-2xl">
+        <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
+          <div className="flex items-center gap-3 pr-12">
+            <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <CalendarDays className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="min-w-0">
+              <SheetTitle className="text-lg">{creating ? "Nova Tarefa" : "Editar Tarefa"}</SheetTitle>
+              <p className="text-xs text-muted-foreground">
+                {format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}
+              </p>
+            </div>
+            {!creating && <div className="ml-auto flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-4 w-4" />Editar tarefa</DropdownMenuItem>
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir tarefa</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>}
           </div>
-        </section>}
-        {!creating && <section className="space-y-2">
-          <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
-        </section>}
-        <section><div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Histórico</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => setShowHistory(value => !value)}>{showHistory ? "Recolher" : "Ver todos"}</Button>}</div>
-          {showHistory && estabelecimentoId && task.contactId ? <CustomerHistoryTimeline contactId={task.contactId} estabelecimentoId={estabelecimentoId} /> : <Button variant="ghost" className="h-auto w-full justify-start gap-2 whitespace-normal py-2 text-xs text-muted-foreground" disabled={!task.contactId} onClick={() => setShowHistory(true)}><History className="h-4 w-4 shrink-0" />{task.contactId ? "Histórico do contato" : "Sem contato vinculado"}</Button>}
-        </section>
-      </div>
-      <footer className="shrink-0 space-y-2 border-t border-border bg-background p-3">
-        <div className="grid grid-cols-3 gap-1.5">{channels.map(({ label, Icon, enabled, tone, action }) => <Button key={label} disabled={!enabled} onClick={action} className={`h-9 gap-1 rounded-md px-1 text-xs ${tone}`} title={enabled ? label : `${label}: contato sem dados cadastrados`}><Icon className="h-3.5 w-3.5 shrink-0" />{label}</Button>)}</div>
+        </SheetHeader>
 
-      </footer>
-    </aside>
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
+          {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
+            <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" /><h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>{late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}</div>
+            <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
+          </div>}
+          {editor}
+          {!editor && <section>
+            <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Contato</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => { onClose(); abrirHistoricoDoContato({ customerId: task.contactId, nome: name }); }}>Ver no CRM</Button>}</div>
+            <div className="flex min-w-0 items-center gap-2 rounded-md border border-border p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">{initials}</div>
+              <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{name}</p>{contact?.empresa && <p className="break-words text-xs text-muted-foreground">{contact.empresa}</p>}{loading && <Loader2 className="mt-1 h-3 w-3 animate-spin text-muted-foreground" />}{error && <p className="text-xs text-destructive">Não foi possível carregar o contato.</p>}</div>
+            </div>
+          </section>}
+          {!creating && <section className="space-y-2">
+            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
+          </section>}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
+}
+
+async function getEstabelecimentoIdSafe(): Promise<string | null> {
+  try {
+    const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
+    return await getEstabelecimentoId();
+  } catch { return null; }
 }

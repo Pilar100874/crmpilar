@@ -1059,73 +1059,23 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Origem da tarefa */}
-          <div className={cn("space-y-3 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
+          <div className={cn("space-y-2 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Origem da Tarefa</Label>
-            <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="bot" id="bot" />
-                <Label htmlFor="bot" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
-                  BOT
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="campanha" id="campanha" />
-                <Label htmlFor="campanha" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
-                  Campanha
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ligacao" id="ligacao" />
-                <Label htmlFor="ligacao" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
-                  Ligação
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="visita" id="visita" />
-                <Label htmlFor="visita" className="text-sm cursor-pointer flex items-center gap-2">
-                  <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
-                  Visita
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="email" id="email" />
-                <Label htmlFor="email" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Mail className="w-4 h-4" style={{ color: getOrigemColor("email") }} />
-                  Email
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pedido" id="pedido" />
-                <Label htmlFor="pedido" className="text-sm cursor-pointer flex items-center gap-2">
-                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido") }} />
-                  Pedido
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="chat" id="chat" />
-                <Label htmlFor="chat" className="text-sm cursor-pointer flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
-                  Chat
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="manual" id="manual" />
-                <Label htmlFor="manual" className="text-sm cursor-pointer flex items-center gap-2">
-                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("manual") }} />
-                  Manual
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="novo_contato" id="novo_contato" />
-                <Label htmlFor="novo_contato" className="text-sm cursor-pointer flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("novo_contato") }} />
-                  Novo Contato
-                </Label>
-              </div>
-            </RadioGroup>
+            <Select value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)}>
+              <SelectTrigger className="w-full" aria-label="Origem da tarefa">
+                <SelectValue placeholder="Selecione a origem" />
+              </SelectTrigger>
+              <SelectContent>
+                {origemOptions.map(({ value, label, Icon }) => (
+                  <SelectItem key={value} value={value}>
+                    <span className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" style={{ color: getOrigemColor(value) }} />
+                      {label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             {/* Seletor de tipo de Email */}
             {taskOrigem === 'email' && (
