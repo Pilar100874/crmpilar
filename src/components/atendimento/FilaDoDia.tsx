@@ -486,14 +486,9 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         <CalendarCheck className="h-3 w-3" /> Finalizar atendimento
                       </button>
                     )}
-                    {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido" || item.atrasado) && (
-                      <div className="mt-1 flex flex-wrap items-center gap-1">
-                        {item.atrasado && (
-                          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-destructive/10 px-1.5 text-[9px] font-semibold uppercase tracking-wide text-destructive">
-                            Atrasado{item.data ? ` · ${item.data}` : ""}{item.horario ? ` · ${item.horario}` : ""}
-                          </span>
-                        )}
-                        {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
+                     {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
+                       <div className="mt-1 flex flex-wrap items-center gap-1">
+                         {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
                           const cfg = CANAL_CONFIG[c];
                           const Ic = cfg.icon;
                           const destaque = filtro !== "tudo" && c === item.canal;
