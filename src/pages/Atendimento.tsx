@@ -25,7 +25,7 @@ import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
+import { format, startOfDay, endOfDay, addDays, subDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "@/lib/toast-config";
