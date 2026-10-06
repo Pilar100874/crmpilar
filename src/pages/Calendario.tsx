@@ -249,7 +249,6 @@ function DraggableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getOrigemIcon = (origem: Task['origem']) => getOrigemIconWithColor(origem, "md");
 
   const concluida = task.status === "completed";
   const agora = new Date();
