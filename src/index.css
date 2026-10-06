@@ -217,6 +217,29 @@ All colors MUST be HSL.
     }
   }
 
+  /* No celular, a alça do menu fica perto do rodapé para não cobrir os cartões de contato */
+  @media (max-width: 640px) {
+    .slide-out-menu-tab {
+      top: auto;
+      bottom: 84px;
+      transform: none;
+      width: 28px;
+      height: 60px;
+      right: -28px;
+    }
+    .slide-out-menu-tab.menu-open {
+      right: -28px;
+    }
+    .slide-out-menu-tab:hover {
+      transform: none;
+      width: 28px;
+    }
+    .slide-out-menu-tab svg {
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+
   /* Aumenta o tamanho do texto dos itens do menu lateral para melhor leitura em mobile/tablet */
   @media (max-width: 1024px) {
     .slide-out-menu .text-sm,
