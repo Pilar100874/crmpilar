@@ -1,5 +1,10 @@
 # Roteiro
 
+## Agenda no celular e tablet
+- [ ] Melhorar a leitura dos modos Dia, Mês, Semana e Tabela sem rolagem horizontal.
+- [ ] Manter Tudo, Agendados e Recebidos na mesma linha, com contadores.
+- [ ] Conferir os quatro modos em celular, tablet e computador.
+
 ## Editor único de tarefas
 - [x] Mover a expansão para um ícone após Últimos orçamentos, sem texto nem faixa extra.
 - [x] Renomear Agendar para Tarefa e sugerir o contato selecionado.
