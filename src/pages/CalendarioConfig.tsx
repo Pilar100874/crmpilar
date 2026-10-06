@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarioRegrasCRUD } from "@/components/config/CalendarioRegrasCRUD";
 import { CriadorRegrasAgenda } from "@/components/config/CriadorRegrasAgenda";
 import { Calendar, Settings } from "lucide-react";
 
@@ -33,12 +32,8 @@ export default function CalendarioConfig() {
         </p>
       </div>
       <div className="flex-1 overflow-auto p-3 sm:p-6 space-y-4">
-        {estabelecimentoId && <CriadorRegrasAgenda estabelecimentoId={estabelecimentoId} />}
         {estabelecimentoId ? (
-          <details className="rounded-lg border bg-card p-4">
-            <summary className="cursor-pointer text-sm font-semibold">Ajustes finos das validações do calendário</summary>
-            <div className="mt-3"><CalendarioRegrasCRUD estabelecimentoId={estabelecimentoId} /></div>
-          </details>
+          <CriadorRegrasAgenda estabelecimentoId={estabelecimentoId} />
         ) : (
           <div className="text-sm text-muted-foreground">Carregando estabelecimento...</div>
         )}

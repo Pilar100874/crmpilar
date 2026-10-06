@@ -36,3 +36,8 @@
 ## Fluxo visual das regras da agenda
 - [x] Exibir gatilho, regras, possíveis desdobramentos e resultado na agenda em um mapa navegável.
 - [x] Validar o mapa na tela de configurações.
+
+## Configurações do Calendário unificadas
+- [ ] Unificar regras e validações por tela, sem controles de ativação.
+- [ ] Mostrar interferências ao expandir a regra, sem aba separada.
+- [ ] Preservar ajustes de alertas e conferir a tela.
