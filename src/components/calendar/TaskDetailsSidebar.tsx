@@ -136,7 +136,6 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
           <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
         </section>}
       </div>
-    </aside>,
-    document.body
+    </aside>
   );
 }
