@@ -89,10 +89,10 @@ export function montarPassos(c: Contexto): PassoPrevia[] {
       `${fmt(c.data)} é dia útil, segue.`);
 
     if (c.acao !== "mover") {
-      let fora = false;
-      if (c.horario) { const h = Number(c.horario.split(":")[0]); fora = h < 8 || h >= 18; }
       add("Horário comercial", r.horario_comercial, !c.diaTodo && !!c.horario,
-        fora ? `O horário ${c.horario} está fora do comercial: vai perguntar/ajustar.` : `Vai conferir se ${c.horario} está dentro do horário comercial.`,
+        c.automatica
+          ? `Vai conferir ${c.horario} com o horário de trabalho do usuário; se estiver fora, ajusta automaticamente.`
+          : `Vai conferir ${c.horario} com o horário de trabalho do usuário; se estiver fora, abre uma tela perguntando se quer ajustar.`,
         "Tarefa sem horário ou dia todo — não verifica.");
     }
 
