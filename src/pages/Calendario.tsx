@@ -155,143 +155,52 @@ function DraggableTask({
   };
 
   const concluida = task.status === "completed";
-  const infoLinha = task.description?.trim() || task.contactName?.trim() || "";
-  const tooltip = [
-    task.time ? `${task.time} — ${task.title}` : task.title,
-    task.description?.trim() || undefined,
-    task.contactName?.trim() || undefined,
-    task.userName?.trim() ? `Responsável: ${task.userName.trim()}` : undefined,
-  ].filter(Boolean).join("\n");
-
-  const fundoCard = concluida
-    ? "bg-muted text-muted-foreground"
-    : task.isAllDay
-    ? "bg-secondary/30 text-secondary-foreground"
-    : !userColor
-    ? "bg-primary/10 text-primary"
-    : "text-foreground";
-
-  const acoesHover = (
-    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-      {onEdit && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-5 w-5 hover:bg-background/50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-        >
-          <Edit className="w-3 h-3" />
-        </Button>
-      )}
-      {onDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          <Trash2 className="w-3 h-3" />
-        </Button>
-      )}
-    </div>
-  );
-
-  if (variant === "compact") {
-    return (
-      <div
-        ref={setNodeRef}
-        style={{
-          ...style,
-          ...(userColor && !concluida ? {
-            backgroundColor: toAlpha(userColor, 0.22),
-            borderLeft: `3px solid ${userColor}`,
-            filter: 'brightness(1.02)'
-          } : {})
-        }}
-        title={tooltip}
-        className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${fundoCard} ${
-          !concluida && !task.isAllDay && userColor ? "hover:brightness-110" : concluida ? "" : task.isAllDay ? "hover:bg-secondary/40" : "hover:bg-primary/20"
-        }`}
-      >
-        <div {...attributes} {...listeners} className="cursor-move">
-          <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-        {task.isAllDay && (
-          <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
-        )}
-        {getOrigemIconWithColor(task.origem, "sm")}
-        <span
-          className="truncate flex-1 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.(e);
-          }}
-        >
-          {task.time && `${task.time} `}{task.title}
-          {task.userName && (
-            <span className="ml-1 text-[10px] opacity-60">
-              ({task.userName})
-            </span>
-          )}
-        </span>
-        {acoesHover}
-      </div>
-    );
-  }
+  const prazo = new Date(task.date);
+  if (task.time) {
+    const [hora, minuto] = task.time.split(":").map(Number);
+    prazo.setHours(hora, minuto, 0, 0);
+  } else prazo.setHours(23, 59, 59, 999);
+  const atrasada = !concluida && prazo < new Date();
+  const retorno = task.title.toLowerCase().startsWith("retorno");
+  const tooltip = [task.time, task.title, task.contactName, task.description, task.userName ? `Responsável: ${task.userName}` : null].filter(Boolean).join("\n");
+  const compacto = variant === "compact";
 
   return (
     <div
       ref={setNodeRef}
-      style={{
-        ...style,
-        ...(userColor && !concluida ? {
-          backgroundColor: toAlpha(userColor, 0.18),
-          borderLeft: `3px solid ${userColor}`
-        } : {})
-      }}
+      style={style}
       title={tooltip}
-      className={`group text-xs px-2 py-1.5 rounded ${fundoCard} ${
-        !concluida && !task.isAllDay && userColor ? "hover:brightness-110" : concluida ? "" : task.isAllDay ? "hover:bg-secondary/40" : "hover:bg-primary/20"
-      }`}
+      className={cn(
+        "group relative min-w-0 rounded-md border border-l-4 text-foreground transition-shadow hover:shadow-sm",
+        compacto ? "px-1.5 py-1" : "px-2 py-2",
+        concluida ? "border-border bg-muted text-muted-foreground" : atrasada ? "border-destructive/20 border-l-destructive bg-destructive/5" : retorno ? "border-info/20 border-l-info bg-info/5" : "border-primary/20 border-l-primary bg-primary/5",
+      )}
     >
-      <div className="flex items-start gap-1">
-        <div {...attributes} {...listeners} className="cursor-move pt-0.5">
-          <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-1">
+        <div {...attributes} {...listeners} className="flex min-w-0 cursor-grab items-center gap-1 touch-none active:cursor-grabbing" title="Mover tarefa">
+          {getOrigemIconWithColor(task.origem, "sm") || <CalendarDays className="h-3 w-3 text-primary" />}
+          {atrasada && !compacto && <span className="rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-semibold text-destructive-foreground">Atrasado</span>}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-1 min-w-0">
-            {task.isAllDay && (
-              <Calendar className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: "hsl(0, 85%, 60%)" }} />
-            )}
-            {getOrigemIconWithColor(task.origem, "sm")}
-            {task.time && (
-              <span className={`font-semibold tabular-nums flex-shrink-0 ${concluida ? "text-muted-foreground" : ""}`}>
-                {task.time}
-              </span>
-            )}
-            <span
-              className={`min-w-0 flex-1 font-semibold leading-tight line-clamp-2 break-words cursor-pointer ${concluida ? "line-through text-muted-foreground" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClick?.(e);
-              }}
-            >
-              {task.title}
-            </span>
-          </div>
-          {(infoLinha || task.userName) && (
-            <p className={`truncate text-[11px] leading-tight mt-0.5 ${concluida ? "text-muted-foreground/70" : "text-muted-foreground"}`}>
-              {[infoLinha, task.userName].filter(Boolean).join(" · ")}
-            </p>
-          )}
-        </div>
-        {acoesHover}
+        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{task.time || (task.isAllDay ? "Dia todo" : "Sem hora")}</span>
+        {(onEdit || onDelete) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" aria-label="Opções da tarefa" onClick={(e) => e.stopPropagation()}>
+                <MoreVertical className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onEdit && <DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-3.5 w-3.5" />Editar</DropdownMenuItem>}
+              {onDelete && <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-3.5 w-3.5" />Excluir</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+      <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onClick?.(e); }}>
+        <p className={cn("break-words text-xs font-semibold leading-snug", concluida && "line-through", compacto && "line-clamp-2")}>{task.title}</p>
+        {!compacto && task.contactName && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.contactName}</p>}
+        {!compacto && task.description && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.description}</p>}
+        {!compacto && task.userName && <p className="mt-1 truncate text-[10px] text-muted-foreground/80" title={`Responsável: ${task.userName}`}>{task.userName}</p>}
       </div>
     </div>
   );
@@ -2106,143 +2015,47 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
 
   // Renderizar visualização de semana
   const renderWeekView = () => {
-    const startDate = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const days = [];
-
-    for (let i = 0; i < 7; i++) {
-      const day = addDays(startDate, i);
-      const dayTasks = getTasksForDay(day);
-      const isTodayDate = isToday(day);
-
-      days.push(
-        <DroppableDay 
-          key={i} 
-          date={day}
-          className="md:flex-1 md:min-w-[160px] border-b md:border-r border-border"
-        >
-          {/* Mobile/Tablet: Layout horizontal compacto */}
-          <div className="md:hidden">
-            <div 
-              className={`p-3 flex items-center justify-between ${isTodayDate ? "bg-primary/5" : ""}`}
-            >
-              <div className="flex items-center gap-3">
-                <div 
-                  className={`flex flex-col items-center min-w-[40px] cursor-pointer`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentDate(day);
-                    setViewMode("day");
-                  }}
-                >
-                  <span className="text-xs text-muted-foreground uppercase">
-                    {format(day, "EEE", { locale: ptBR })}
-                  </span>
-                  <span className={`text-lg font-medium ${isTodayDate ? "text-primary" : ""}`}>
-                    {format(day, "d")}
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-wrap gap-1">
-                  {dayTasks.slice(0, 3).map(task => (
-                    <Badge
-                      key={task.id}
-                      variant={task.status === "completed" ? "secondary" : "default"}
-                      className="text-[10px] px-1.5 py-0.5 cursor-pointer truncate max-w-[150px]"
-                      title={[
-                        task.time ? `${task.time} — ${task.title}` : task.title,
-                        task.description?.trim() || undefined,
-                        task.contactName?.trim() || undefined,
-                      ].filter(Boolean).join("\n")}
-                      style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
-                        backgroundColor: userColors[task.userId],
-                        color: 'hsl(var(--primary-foreground))'
-                      } : {}}
-                      onClick={() => handleToggleTaskStatus(task.id)}
-                    >
-                      {task.time && `${task.time} `}{task.title}
-                    </Badge>
-                  ))}
-                  {dayTasks.length > 3 && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
-                      +{dayTasks.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {!isBefore(startOfDay(day), startOfDay(new Date())) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-primary/20 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenNewTask(day);
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Desktop: Layout vertical original */}
-          <div className="hidden md:block">
-            <div 
-              className={`p-2 sm:p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
-            >
-              <div className="text-xs text-muted-foreground uppercase">
-                {format(day, "EEE", { locale: ptBR })}
-              </div>
-              <div className="flex items-center gap-1">
-                <div 
-                  className={`text-base sm:text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentDate(day);
-                    setViewMode("day");
-                  }}
-                  title="Ver dia"
-                >
-                  {format(day, "d")}
-                </div>
-                {!isBefore(startOfDay(day), startOfDay(new Date())) && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-primary/20"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenNewTask(day);
-                    }}
-                    title="Nova tarefa"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[150px] sm:min-h-[300px] md:min-h-[400px]">
-              {dayTasks.map(task => (
-                <DraggableTask
-                  key={task.id}
-                  task={task}
-                  onClick={() => handleToggleTaskStatus(task.id)}
-                  onEdit={() => handleEditTask(task)}
-                  onDelete={() => handleDeleteTask(task.id)}
-                  userColor={task.userId ? userColors[task.userId] : undefined}
-                />
-              ))}
-            </div>
-          </div>
-        </DroppableDay>
-      );
-    }
-
+    const inicio = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
+    const tarefasPorDia = dias.map(getTasksForDay);
+    const renderTarefa = (task: Task) => (
+      <DraggableTask key={task.id} task={task} onClick={() => handleToggleTaskStatus(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
+    );
     return (
-      <div className="border-l border-t border-border">
-        {/* Mobile/Tablet: dias empilhados verticalmente */}
-        <div className="md:hidden flex flex-col">{days}</div>
-        {/* Desktop: dias lado a lado (rolagem horizontal quando a tela é estreita) */}
-        <div className="hidden md:flex overflow-x-auto">{days}</div>
+      <div className="overflow-auto rounded-md border border-border/70 bg-background" data-agenda-semana>
+        <div className="min-w-[1050px]">
+          <div className="grid grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/70">
+            <div className="border-r border-border/60" />
+            {dias.map((dia, i) => (
+              <div key={dia.toISOString()} className={cn("border-r border-border/60 py-2 text-center last:border-r-0", isToday(dia) && "bg-primary/5")}>
+                <p className={cn("text-[10px] font-medium uppercase text-muted-foreground", isToday(dia) && "text-primary")}>{format(dia, "EEEE", { locale: ptBR })}</p>
+                <Button variant="ghost" className={cn("mt-0.5 h-7 gap-2 px-2 text-lg font-semibold", isToday(dia) && "text-primary")} title="Ver dia" onClick={() => { setCurrentDate(dia); setViewMode("day"); }}>
+                  {format(dia, "d")}
+                  {isToday(dia) && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">Hoje</span>}
+                </Button>
+                <p className={cn("mt-0.5 text-[10px] text-muted-foreground", isToday(dia) && "text-primary")}>{tarefasPorDia[i].length} {tarefasPorDia[i].length === 1 ? "tarefa" : "tarefas"}</p>
+              </div>
+            ))}
+          </div>
+          <div className="max-h-[calc(100vh-285px)] min-h-[380px] overflow-y-auto" ref={(el) => { if (el && !el.dataset.iniciado) { el.scrollTop = 8 * 100; el.dataset.iniciado = "true"; } }}>
+            {tarefasPorDia.some(lista => lista.some(t => !t.time || t.isAllDay)) && (
+              <div className="grid grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/60">
+                <span className="border-r border-border/60 px-1 py-2 text-[9px] text-muted-foreground">Sem hora / Dia todo</span>
+                {dias.map((dia, i) => <DroppableSlot key={dia.toISOString()} date={dia} slotTime="" className="space-y-1 border-r border-border/60 p-1 last:border-r-0">{tarefasPorDia[i].filter(t => !t.time || t.isAllDay).map(renderTarefa)}</DroppableSlot>)}
+              </div>
+            )}
+            {Array.from({ length: 24 }, (_, hora) => (
+              <div key={hora} className="grid min-h-[100px] grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/60">
+                <span className="border-r border-border/60 px-1 py-2 text-center text-[11px] tabular-nums text-muted-foreground">{String(hora).padStart(2, "0")}:00</span>
+                {dias.map((dia, i) => (
+                  <DroppableSlot key={dia.toISOString()} date={dia} slotTime={`${String(hora).padStart(2, "0")}:00`} className="space-y-1 border-r border-border/60 p-1 last:border-r-0 hover:bg-muted/30">
+                    {tarefasPorDia[i].filter(t => !t.isAllDay && t.time?.startsWith(String(hora).padStart(2, "0"))).map(renderTarefa)}
+                  </DroppableSlot>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -3443,19 +3256,19 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       })()}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4">
+      <div className="flex-1 overflow-auto px-2 sm:px-3 py-3">
         {/* Navegação e filtros do calendário (dentro da área central) */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:mb-3">
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Dia anterior" title="Dia anterior" className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Dia anterior" title="Dia anterior" className="h-8 w-8 rounded-md border border-border/60 bg-card">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">Hoje</Button>
-            <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Próximo dia" title="Próximo dia" className="h-8 w-8">
+            <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 rounded-md border border-border/60 bg-card px-3 text-xs">Hoje</Button>
+            <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Próximo dia" title="Próximo dia" className="h-8 w-8 rounded-md border border-border/60 bg-card">
               <ChevronRight className="h-4 w-4" />
             </Button>
             <span className="ml-1 hidden text-xs font-semibold capitalize text-foreground sm:inline">
-              {format(currentDate, "d 'de' MMMM", { locale: ptBR })}
+              {format(currentDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </span>
           </div>
 
@@ -3490,7 +3303,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                 </SelectContent>
               </Select>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setShowFilterDialog(true)} className="h-8 gap-2 px-3 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => setShowFilterDialog(true)} className="h-8 gap-2 rounded-md border border-border/60 bg-card px-3 text-xs">
               <Filter className="h-3.5 w-3.5" />
               Filtros
               {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && (
@@ -3500,6 +3313,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-auto">
               <TabsList className="h-8 bg-muted/60">
                 <TabsTrigger value="day" className="px-2 text-[11px]">Dia</TabsTrigger>
+                <TabsTrigger value="week" className="px-2 text-[11px]">Semana</TabsTrigger>
                 <TabsTrigger value="month" className="px-2 text-[11px]">Mês</TabsTrigger>
                 <TabsTrigger value="table" className="px-2 text-[11px]">Tabela</TabsTrigger>
               </TabsList>
