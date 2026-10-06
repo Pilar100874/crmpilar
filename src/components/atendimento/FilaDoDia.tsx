@@ -532,29 +532,51 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   </div>
                 </div>
 
-                {/* Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={(event) => event.stopPropagation()}
-                       className={cn("h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors", tablet && "col-start-3 row-start-1")}
-                      aria-label="Mais opções"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(item.menuItems && item.menuItems.length > 0
-                      ? item.menuItems
-                      : [{ label: "Abrir atendimento", onClick: item.onClick }]
-                    ).map((menuItem) => (
-                      <DropdownMenuItem key={menuItem.label} onClick={menuItem.onClick}>
-                        {menuItem.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Coluna direita: menu e ampliar */}
+                <div className={cn("flex shrink-0 flex-col items-center gap-0.5 self-start", tablet && "col-start-2 row-start-1")}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(event) => event.stopPropagation()}
+                        className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        aria-label="Mais opções"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(item.menuItems && item.menuItems.length > 0
+                        ? item.menuItems
+                        : [{ label: "Abrir atendimento", onClick: item.onClick }]
+                      ).map((menuItem) => (
+                        <DropdownMenuItem key={menuItem.label} onClick={menuItem.onClick}>
+                          {menuItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                    aria-label={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                    aria-expanded={acoesExpandidas.has(item.id)}
+                    aria-controls={`proxima-acao-${item.id}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setAcoesExpandidas((anterior) => {
+                        const proximo = new Set(anterior);
+                        if (proximo.has(item.id)) proximo.delete(item.id);
+                        else proximo.add(item.id);
+                        return proximo;
+                      });
+                    }}
+                    className="h-6 w-6 rounded-full text-muted-foreground"
+                  >
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
+                  </Button>
+                </div>
               </div>
               {item.contactId && orcAberto === item.contactId && (
                 <div className="border-b border-border/20 bg-muted/30 px-4 py-2 space-y-1">
