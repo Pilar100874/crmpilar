@@ -1971,7 +1971,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 )}
               </div>
               {/* Desktop: lista de tarefas */}
-              <div className="hidden sm:block space-y-1 max-h-[80px] md:max-h-[100px] overflow-y-auto">
+              <div className="hidden sm:block space-y-1 overflow-hidden">
                 {dayTasks.slice(0, 3).map(task => (
                   <DraggableTask
                     key={task.id}
@@ -2013,7 +2013,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
 
     return (
-      <div className="border-l border-t border-border overflow-x-auto">
+      <div className="border-l border-t border-border overflow-hidden">
         <div className="grid grid-cols-7 min-w-0">{weekDays}</div>
         {rows}
       </div>
