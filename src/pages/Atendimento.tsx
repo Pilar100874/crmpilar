@@ -235,10 +235,13 @@ export default function Atendimento() {
   }, [pendenciasAtendimento, setModoSimultaneo]);
   const [contatoFinalizarId, setContatoFinalizarId] = useState<string | null>(null);
   const [focoBarra, setFocoBarra] = useState(0);
+  // Celular: as abas "Atendimento" e "Cadastro" só ficam ativas depois de abrir um cartão de contato
+  const [contatoMobileSelecionado, setContatoMobileSelecionado] = useState(false);
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
     if (isMobile) {
       setVisible(true);
+      setContatoMobileSelecionado(true);
       setMobileView("details");
       if (isTablet && showConversationsList) {
         setShowConversationsList(false);
@@ -4447,6 +4450,7 @@ ${recentMessages}
       ...item,
       onClick: () => {
         item.onClick();
+        setContatoMobileSelecionado(true);
         setMobileView("main");
       },
     })),
@@ -4510,6 +4514,7 @@ ${recentMessages}
   // Abre o conteúdo do canal escolhido para o cliente (cabeçalho central ou botões do cartão).
   const abrirCanalDoContato = (clienteId: string, aba: string) => {
     fecharConteudoCentral();
+    setContatoMobileSelecionado(true);
     if (aba === activeTab) { aplicarClienteNaAba(clienteId, aba); return; }
     clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(aba);
@@ -6336,13 +6341,17 @@ ${recentMessages}
               ] as const).map((t) => {
                 const Icon = t.icon;
                 const ativo = mobileView === t.id;
+                const desabilitado = t.id !== "list" && !contatoMobileSelecionado;
                 return (
                   <button
                     key={t.id}
                     type="button"
+                    disabled={desabilitado}
                     onClick={() => setMobileView(t.id)}
                     aria-current={ativo ? "page" : undefined}
-                    className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"}`}
+                    aria-disabled={desabilitado || undefined}
+                    title={desabilitado ? "Abra um contato na lista para liberar esta aba" : undefined}
+                    className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"} ${desabilitado ? "cursor-not-allowed opacity-40" : ""}`}
                   >
                     <Icon className="h-5 w-5" />
                     {t.label}
