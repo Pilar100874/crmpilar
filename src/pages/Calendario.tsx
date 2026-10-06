@@ -122,18 +122,22 @@ function DroppableSlot({ date, slotTime, children, className }: { date: Date; sl
 }
 
 // Componente de tarefa arrastável
-function DraggableTask({ 
-  task, 
-  onClick, 
-  onEdit, 
+// variant "full": card com horário, título completo e segunda linha (descrição/contato/responsável)
+// variant "compact": etiqueta de uma linha (usada na visualização em mês)
+function DraggableTask({
+  task,
+  onClick,
+  onEdit,
   onDelete,
-  userColor
-}: { 
-  task: Task; 
+  userColor,
+  variant = "full"
+}: {
+  task: Task;
   onClick?: (e?: any) => void;
   onEdit?: () => void;
   onDelete?: () => void;
   userColor?: string;
+  variant?: "compact" | "full";
 }) {
   const {
     attributes,
@@ -149,85 +153,150 @@ function DraggableTask({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-  
-  // Debug: verificar se cor está chegando
-  if (task.userId && !userColor) {
-    console.log('[TASK_COLOR] Tarefa sem cor:', { 
-      taskId: task.id.substring(0, 8), 
-      userId: task.userId.substring(0, 8),
-      userColor 
-    });
-  }
 
-  const getOrigemIcon = (origem: Task['origem']) => getOrigemIconWithColor(origem, "sm");
+  const concluida = task.status === "completed";
+  const infoLinha = task.description?.trim() || task.contactName?.trim() || "";
+  const tooltip = [
+    task.time ? `${task.time} — ${task.title}` : task.title,
+    task.description?.trim() || undefined,
+    task.contactName?.trim() || undefined,
+    task.userName?.trim() ? `Responsável: ${task.userName.trim()}` : undefined,
+  ].filter(Boolean).join("\n");
+
+  const fundoCard = concluida
+    ? "bg-muted text-muted-foreground"
+    : task.isAllDay
+    ? "bg-secondary/30 text-secondary-foreground"
+    : !userColor
+    ? "bg-primary/10 text-primary"
+    : "text-foreground";
+
+  const acoesHover = (
+    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      {onEdit && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 hover:bg-background/50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <Edit className="w-3 h-3" />
+        </Button>
+      )}
+      {onDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      )}
+    </div>
+  );
+
+  if (variant === "compact") {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          ...style,
+          ...(userColor && !concluida ? {
+            backgroundColor: toAlpha(userColor, 0.22),
+            borderLeft: `3px solid ${userColor}`,
+            filter: 'brightness(1.02)'
+          } : {})
+        }}
+        title={tooltip}
+        className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${fundoCard} ${
+          !concluida && !task.isAllDay && userColor ? "hover:brightness-110" : concluida ? "" : task.isAllDay ? "hover:bg-secondary/40" : "hover:bg-primary/20"
+        }`}
+      >
+        <div {...attributes} {...listeners} className="cursor-move">
+          <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+        {task.isAllDay && (
+          <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
+        )}
+        {getOrigemIconWithColor(task.origem, "sm")}
+        <span
+          className="truncate flex-1 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick?.(e);
+          }}
+        >
+          {task.time && `${task.time} `}{task.title}
+          {task.userName && (
+            <span className="ml-1 text-[10px] opacity-60">
+              ({task.userName})
+            </span>
+          )}
+        </span>
+        {acoesHover}
+      </div>
+    );
+  }
 
   return (
     <div
       ref={setNodeRef}
       style={{
         ...style,
-        ...(userColor && task.status !== "completed" ? {
-          backgroundColor: toAlpha(userColor, 0.22),
-          borderLeft: `3px solid ${userColor}`,
-          filter: 'brightness(1.02)'
+        ...(userColor && !concluida ? {
+          backgroundColor: toAlpha(userColor, 0.18),
+          borderLeft: `3px solid ${userColor}`
         } : {})
       }}
-      className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${
-        task.status === "completed"
-          ? "bg-muted text-muted-foreground line-through"
-          : task.isAllDay
-          ? "bg-secondary/30 text-secondary-foreground hover:bg-secondary/40"
-          : !userColor ? "bg-primary/10 text-primary hover:bg-primary/20" : "hover:brightness-110"
+      title={tooltip}
+      className={`group text-xs px-2 py-1.5 rounded ${fundoCard} ${
+        !concluida && !task.isAllDay && userColor ? "hover:brightness-110" : concluida ? "" : task.isAllDay ? "hover:bg-secondary/40" : "hover:bg-primary/20"
       }`}
     >
-      <div {...attributes} {...listeners} className="cursor-move">
-        <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-      {task.isAllDay && (
-        <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
-      )}
-      {getOrigemIcon(task.origem)}
-      <span 
-        className="truncate flex-1 cursor-pointer"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick?.(e);
-        }}
-      >
-        {task.time && `${task.time} `}{task.title}
-        {task.userName && (
-          <span className="ml-1 text-[10px] opacity-60">
-            ({task.userName})
-          </span>
-        )}
-      </span>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        {onEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 hover:bg-background/50"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit className="w-3 h-3" />
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        )}
+      <div className="flex items-start gap-1">
+        <div {...attributes} {...listeners} className="cursor-move pt-0.5">
+          <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1 min-w-0">
+            {task.isAllDay && (
+              <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
+            )}
+            {getOrigemIconWithColor(task.origem, "sm")}
+            {task.time && (
+              <span className={`font-semibold tabular-nums flex-shrink-0 ${concluida ? "text-muted-foreground" : ""}`}>
+                {task.time}
+              </span>
+            )}
+            <span
+              className={`truncate font-semibold cursor-pointer ${concluida ? "line-through text-muted-foreground" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick?.(e);
+              }}
+            >
+              {task.title}
+            </span>
+          </div>
+          {infoLinha && (
+            <p className={`truncate text-[11px] leading-tight mt-0.5 ${concluida ? "text-muted-foreground/70" : "text-muted-foreground"}`}>
+              {infoLinha}
+            </p>
+          )}
+          {task.userName && (
+            <p className="text-[10px] text-muted-foreground/80 truncate mt-0.5">
+              {task.userName}
+            </p>
+          )}
+        </div>
+        {acoesHover}
       </div>
     </div>
   );
