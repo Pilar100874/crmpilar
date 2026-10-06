@@ -477,55 +477,40 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         <CalendarCheck className="h-3 w-3" /> Finalizar atendimento
                       </button>
                     )}
-                    {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                    {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido" || item.atrasado) && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        {item.atrasado && (
+                          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-destructive/10 px-1.5 text-[9px] font-semibold uppercase tracking-wide text-destructive">
+                            Atrasado{item.data ? ` · ${item.data}` : ""}{item.horario ? ` · ${item.horario}` : ""}
+                          </span>
+                        )}
                         {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
                           const cfg = CANAL_CONFIG[c];
                           const Ic = cfg.icon;
                           const destaque = filtro !== "tudo" && c === item.canal;
                           return (
                             <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); if (item.tipo === "recebido" && c === item.canal) { item.onClick(); } else { item.onCanal?.(c); } }}
-                              className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
-                              <Ic className="h-3 w-3" />
+                              className={cn("h-5 w-5 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
+                              <Ic className="h-2.5 w-2.5" />
                             </button>
                           );
                         })}
                         {item.onHistorico && (
                           <button type="button" title="Histórico" onClick={(e) => { e.stopPropagation(); item.onHistorico?.(); }}
-                            className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
-                            <History className="h-3 w-3" />
+                            className="h-5 w-5 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
+                            <History className="h-2.5 w-2.5" />
                           </button>
                         )}
                         {item.onAgendaCentro && (
                           <button type="button" title="Agenda" onClick={(e) => { e.stopPropagation(); item.onAgendaCentro?.(item.contactId!, item.nome); }}
-                            className="h-6 w-6 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
-                            <CalendarDays className="h-3 w-3" />
+                            className="h-5 w-5 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
+                            <CalendarDays className="h-2.5 w-2.5" />
                           </button>
                         )}
                         <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); item.onOrcamentosCentro?.(item.contactId, item.nome); }}
-                          className={cn("h-6 w-6 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
-                          <FileText className="h-3 w-3" />
+                          className={cn("h-5 w-5 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
+                          <FileText className="h-2.5 w-2.5" />
                         </button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
-                          aria-label={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
-                          aria-expanded={acoesExpandidas.has(item.id)}
-                          aria-controls={`proxima-acao-${item.id}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setAcoesExpandidas((anterior) => {
-                              const proximo = new Set(anterior);
-                              if (proximo.has(item.id)) proximo.delete(item.id);
-                              else proximo.add(item.id);
-                              return proximo;
-                            });
-                          }}
-                          className="h-6 w-6 rounded-full text-muted-foreground"
-                        >
-                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
-                        </Button>
                       </div>
                     )}
                     {item.atrasado && (
