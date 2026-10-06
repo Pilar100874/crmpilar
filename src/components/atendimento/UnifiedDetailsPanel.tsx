@@ -56,6 +56,7 @@ interface UnifiedDetailsPanelProps {
 }
 
 export function UnifiedDetailsPanel({ 
+  onOcultar,
   type,
   nome,
   telefone,
@@ -298,7 +299,19 @@ export function UnifiedDetailsPanel({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
       {/* PARTE 1 - Nome da Empresa/Cliente */}
-      <div className="p-4 border-b flex-shrink-0">
+      <div className="relative p-4 border-b flex-shrink-0">
+        {onOcultar && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 h-7 w-7"
+            title="Fechar detalhes do cliente"
+            aria-label="Fechar detalhes do cliente"
+            onClick={onOcultar}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-3">
             {getIcon()}
