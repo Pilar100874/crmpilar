@@ -215,8 +215,6 @@ export default function Atendimento() {
   const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
-  const [orcClienteFiltroStatus, setOrcClienteFiltroStatus] = useState<string>("todos");
-  const [orcClienteFiltroData, setOrcClienteFiltroData] = useState<{ de: string; ate: string }>({ de: "", ate: "" });
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
@@ -4253,8 +4251,6 @@ ${recentMessages}
           onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
             if (bloquearTrocaClientePendente(contatoId)) return;
             setHistoricoCliente(null);
-            setOrcClienteFiltroStatus("todos");
-            setOrcClienteFiltroData({ de: "", ate: "" });
             setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
           },
@@ -4343,8 +4339,6 @@ ${recentMessages}
         onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           setHistoricoCliente(null);
-          setOrcClienteFiltroStatus("todos");
-          setOrcClienteFiltroData({ de: "", ate: "" });
           setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
         },
@@ -5677,7 +5671,7 @@ ${recentMessages}
               <div className="flex items-center justify-center gap-1 overflow-x-auto">
                 <CabecalhoClienteAtendimento
                   cliente={clienteCabecalho}
-                  abaAtiva={activeTab}
+                  abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
                     setHistoricoCliente(null);
@@ -6586,36 +6580,12 @@ ${recentMessages}
         )}
         {/* Últimos orçamentos do cliente em tela central */}
         {orcamentosCliente && !isMobile && (() => {
-          const OPCOES_ETAPA = [
-            { valor: "orcamento", rotulo: "Orçamento" },
-            { valor: "negociacao", rotulo: "Negociação" },
-            { valor: "aprovacao_gerencia", rotulo: "Aprovação Gerência" },
-            { valor: "perdido", rotulo: "Perdido" },
-            { valor: "finalizado", rotulo: "Finalizado" },
-          ];
-          const temFiltroData = !!orcClienteFiltroData.de || !!orcClienteFiltroData.ate;
-          const temFiltro = orcClienteFiltroStatus !== "todos" || temFiltroData;
-          const lista = (orcamentos as any[])
-            .filter((o) => o.cliente_id === orcamentosCliente.id)
-            .filter((o) => orcClienteFiltroStatus === "todos"
-              || o.etapa === orcClienteFiltroStatus
-              || (!o.etapa && o.status === orcClienteFiltroStatus))
-            .filter((o) => {
-              if (!temFiltroData) return true;
-              const data = new Date(o.created_at);
-              if (!o.created_at || isNaN(data.getTime())) return !orcClienteFiltroData.de && !orcClienteFiltroData.ate ? true : false;
-              if (orcClienteFiltroData.de && data < startOfDay(new Date(`${orcClienteFiltroData.de}T00:00:00`))) return false;
-              if (orcClienteFiltroData.ate && data > endOfDay(new Date(`${orcClienteFiltroData.ate}T00:00:00`))) return false;
-              return true;
-            })
-            .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
-            .slice(0, 10);
-          const empresaId = lista[0]?.empresa_id || null;
+          const empresaId = orcamentos.find((o: any) => o.cliente_id === orcamentosCliente.id)?.empresa_id || null;
           return (
             <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
               <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">Últimos orçamentos</p>
+                  <p className="truncate text-sm font-bold">Orçamentos do cliente</p>
                   <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -6627,77 +6597,23 @@ ${recentMessages}
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-                <Select value={orcClienteFiltroStatus} onValueChange={setOrcClienteFiltroStatus}>
-                  <SelectTrigger className="h-8 w-[190px] rounded-lg text-xs bg-card border-border/60">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os status</SelectItem>
-                    {OPCOES_ETAPA.map((etapa) => (
-                      <SelectItem key={etapa.valor} value={etapa.valor}>{etapa.rotulo}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="date"
-                  value={orcClienteFiltroData.de}
-                  onChange={(e) => setOrcClienteFiltroData((atual) => ({ ...atual, de: e.target.value }))}
-                  className="h-8 w-[150px] rounded-lg text-xs bg-card"
-                  aria-label="Data inicial"
+              <div className="flex-1 min-h-0 overflow-y-auto p-2">
+                <OrcamentosEmpresaList
+                  orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
+                  tarefasAgenda={filteredTasks}
+                  emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
+                  chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+                  indicadoresPorContato={indicadoresPorContato}
+                  selectedOrcamentoId={selectedOrcamentoId}
+                  onSelectOrcamento={(orcamento) => {
+                    setOrcamentosCliente(null);
+                    setActiveTab("orcamento");
+                    setSelectedOrcamentoId(orcamento.id);
+                    setSelectedOrcamentoData(orcamento);
+                    setContatoOrcamentoDetalhe(orcamento);
+                    setOrcamentoSheetOpen(true);
+                  }}
                 />
-                <span className="text-xs text-muted-foreground">até</span>
-                <Input
-                  type="date"
-                  value={orcClienteFiltroData.ate}
-                  onChange={(e) => setOrcClienteFiltroData((atual) => ({ ...atual, ate: e.target.value }))}
-                  className="h-8 w-[150px] rounded-lg text-xs bg-card"
-                  aria-label="Data final"
-                />
-                {temFiltro && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => { setOrcClienteFiltroStatus("todos"); setOrcClienteFiltroData({ de: "", ate: "" }); }}
-                  >
-                    Limpar filtros
-                  </Button>
-                )}
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2">
-                {lista.length === 0 && (
-                  <p className="py-10 text-center text-sm text-muted-foreground">Nenhum orçamento para este cliente.</p>
-                )}
-                {lista.map((o: any) => (
-                  <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
-                    <Receipt className="h-5 w-5 text-warning flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">
-                        {o.numero ? `Nº ${o.numero}` : `#${String(o.id).slice(0, 8).toUpperCase()}`}
-                        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{o.etapa || o.status || "orçamento"}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {o.created_at ? format(new Date(o.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : ""}
-                        {o.itens?.length ? ` · ${o.itens.length} ${o.itens.length === 1 ? "item" : "itens"}` : ""}
-                      </p>
-                    </div>
-                    <p className="text-sm font-bold text-foreground">
-                      {Number(o.valor_total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setOrcamentosCliente(null);
-                        setActiveTab('orcamento');
-                        setSelectedOrcamentoId(o.id);
-                        setSelectedOrcamentoData(o);
-                        setOrcamentoSheetOpen(true);
-                      }}>Abrir</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setConfirmDuplicateOrcamento(o.id)}>Duplicar</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setConfirmDeleteOrcamento(o.id)}>Excluir</Button>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           );
