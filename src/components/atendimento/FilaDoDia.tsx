@@ -327,16 +327,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtros */}
-        <div className={cn("flex items-center gap-1.5 mt-2.5", tablet && "flex-wrap")}>
+        <div className="mt-2.5 grid min-w-0 grid-cols-[0.7fr_1fr_1fr] gap-1" data-filtros-contatos>
           {chips.map((chip) => {
             const ativo = filtro === chip.id;
             return (
-              <button
+              <Button
                 key={chip.id}
                 type="button"
+                variant="ghost"
+                aria-pressed={ativo}
                 onClick={() => setFiltro(chip.id)}
                 className={cn(
-                  "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors",
+                  "flex h-9 min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-medium transition-colors",
                   ativo
                     ? "bg-primary/10 text-primary font-semibold"
                     : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -345,13 +347,13 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 {chip.label}
                 <span
                   className={cn(
-                    "min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-bold",
+                    "h-5 shrink-0 px-1 rounded-full flex items-center justify-center text-[10px] font-bold",
                     ativo ? "bg-primary text-primary-foreground" : "bg-background text-foreground/70"
                   )}
                 >
                   {chip.total > 99 ? "99+" : chip.total}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>

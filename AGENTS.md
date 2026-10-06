@@ -4,4 +4,5 @@
 - Route central panel openings and tab navigation through one cleanup helper that clears competing visual panels without clearing dialer state or pending services, so navigation displays only the requested content.
 - Keep calendar view selectors outside date tiles and propagate their chosen mode through the shared calendar opening event; date tiles send day mode, so central navigation stays consistent.
 - Render the weekly schedule with shared draggable task cards and hourly drop targets, keeping untimed tasks outside hourly scrolling so no tasks disappear from the initial view.
+- Adapt calendar views to their measured content width with ResizeObserver, not only viewport width, so adjacent panels cannot compress task information into unreadable columns.
 - Use the shared calendar task sidebar as the single create/edit surface, embedding the existing validated task form instead of a modal; preserve persistence, contact navigation and history, and never toggle completion on card clicks.
