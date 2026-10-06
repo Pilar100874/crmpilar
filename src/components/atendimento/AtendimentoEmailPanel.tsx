@@ -105,7 +105,7 @@ export function AtendimentoEmailPanel({
             </Button>
           )}
         </div>
-        <div className="mt-3 flex gap-1 overflow-x-auto pb-1">
+        <div className="mt-3 grid grid-cols-3 gap-1">
           {pastas.map((pasta) => {
             const Icone = pasta.icon;
             return (
@@ -115,12 +115,12 @@ export function AtendimentoEmailPanel({
                 size="sm"
                 onClick={() => onFolderChange(pasta.id)}
                 className={cn(
-                  "h-8 flex-shrink-0 gap-1.5 px-2.5 text-xs",
+                  "h-8 min-w-0 gap-1 px-1.5 text-xs",
                   emailFolder === pasta.id && "bg-primary/10 text-primary",
                 )}
               >
-                <Icone className="h-3.5 w-3.5" />
-                {pasta.label}
+                <Icone className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">{pasta.label}</span>
               </Button>
             );
           })}
