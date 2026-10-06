@@ -215,8 +215,6 @@ export default function Atendimento() {
   const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
-  const [orcClienteFiltroStatus, setOrcClienteFiltroStatus] = useState<string>("todos");
-  const [orcClienteFiltroData, setOrcClienteFiltroData] = useState<{ de: string; ate: string }>({ de: "", ate: "" });
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
@@ -4253,8 +4251,6 @@ ${recentMessages}
           onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
             if (bloquearTrocaClientePendente(contatoId)) return;
             setHistoricoCliente(null);
-            setOrcClienteFiltroStatus("todos");
-            setOrcClienteFiltroData({ de: "", ate: "" });
             setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
           },
@@ -4343,8 +4339,6 @@ ${recentMessages}
         onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
           setHistoricoCliente(null);
-          setOrcClienteFiltroStatus("todos");
-          setOrcClienteFiltroData({ de: "", ate: "" });
           setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
         },
@@ -5677,7 +5671,7 @@ ${recentMessages}
               <div className="flex items-center justify-center gap-1 overflow-x-auto">
                 <CabecalhoClienteAtendimento
                   cliente={clienteCabecalho}
-                  abaAtiva={activeTab}
+                  abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
                     setHistoricoCliente(null);
