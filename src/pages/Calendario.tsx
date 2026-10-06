@@ -1971,7 +1971,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 )}
               </div>
               {/* Desktop: lista de tarefas */}
-              <div className="hidden sm:block space-y-1 max-h-[80px] md:max-h-[100px] overflow-y-auto">
+              <div className="hidden sm:block space-y-1 overflow-hidden">
                 {dayTasks.slice(0, 3).map(task => (
                   <DraggableTask
                     key={task.id}
