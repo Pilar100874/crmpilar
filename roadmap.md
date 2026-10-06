@@ -43,4 +43,4 @@
 - [x] Preservar ajustes de alertas e conferir a tela.
 
 ## Disparo em massa
-- [ ] Manter título e barra de datas do calendário ao abrir o disparo na área central e conferir na tela.
+- [x] Manter título e barra de datas do calendário ao abrir o disparo na área central e conferir na tela.
