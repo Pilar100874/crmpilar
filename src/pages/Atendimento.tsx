@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import type { ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown as ChevronDownAssumir } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -90,6 +91,19 @@ import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOver
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
+
+
+/** Painel de detalhes do cliente em tela central inteira, igual ao painel de tarefas da agenda. */
+function PainelCentralDetalhes({ children }: { children: ReactNode }) {
+  const quadro = typeof document !== "undefined" ? document.querySelector<HTMLElement>("[data-quadro-central]") : null;
+  if (!quadro) return null;
+  return createPortal(
+    <div data-painel-centro className="absolute inset-x-0 top-0 bottom-[var(--barra-proximo,0px)] z-[650] flex flex-col bg-card">
+      {children}
+    </div>,
+    quadro
+  );
+}
 
 interface Conversation {
   id: string;
