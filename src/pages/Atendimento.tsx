@@ -198,12 +198,12 @@ export default function Atendimento() {
     ro.observe(el); setAlturaCabecalho(el.offsetHeight);
     return () => ro.disconnect();
   });
-  const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
-  const [orcamentosCliente, setOrcamentosCliente] = useState<{ id: string; nome: string } | null>(null);
-  const [agendaContato, setAgendaContato] = useState<{ id: string; nome: string } | null>(null);
+  const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
+  const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
+  const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [orcClienteFiltroStatus, setOrcClienteFiltroStatus] = useState<string>("todos");
   const [orcClienteFiltroData, setOrcClienteFiltroData] = useState<{ de: string; ate: string }>({ de: "", ate: "" });
-  const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
+  const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(false);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(false);
@@ -255,7 +255,11 @@ export default function Atendimento() {
       const detail = (event as CustomEvent).detail;
       if (!detail?.data) return;
       setActiveTab("agenda");
-      setAgendaViewMode("default");
+      if (!discadorRodandoRef.current) setAgendaViewMode("default");
+      setSelectedTaskId(null);
+      setSelectedTaskData(null);
+      setSelectedAgendaContato(null);
+      setMobileView("main");
       setDataAgendaCentral(new Date(detail.data));
       setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : null);
       setAgendaCentralKey((k) => k + 1);
@@ -365,7 +369,7 @@ export default function Atendimento() {
   const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
   
   // Tab states
-  const [activeTab, setActiveTab] = useState("agenda");
+  const [activeTab, setActiveTabState] = useState("agenda");
 
   // Limpa a data inicial depois que o calendário central já montou com ela
   useEffect(() => {
@@ -409,7 +413,7 @@ export default function Atendimento() {
   const [currentUsuarioTableId, setCurrentUsuarioTableId] = useState<string | null>(null);
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
-  const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
+  const [orcamentoSheetOpen, setOrcamentoSheetOpenState] = useState(false);
   const [showNovoOrcamentoConfirm, setShowNovoOrcamentoConfirm] = useState(false);
   const [initialEmpresaForOrcamento, setInitialEmpresaForOrcamento] = useState<string | null>(null);
   const [empresaContacts, setEmpresaContacts] = useState<any[]>([]);
@@ -441,10 +445,10 @@ export default function Atendimento() {
   const [showFluxoAtendimento, setShowFluxoAtendimento] = useState(false);
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
-  const [showEnvioMassaWizard, setShowEnvioMassaWizard] = useState(false);
+  const [showEnvioMassaWizard, setShowEnvioMassaWizardState] = useState(false);
   const [idsEnvioMassa, setIdsEnvioMassa] = useState<string[]>([]);
   const [canalEnvioMassa, setCanalEnvioMassa] = useState<"whatsapp" | "email" | undefined>(undefined);
-  const [showDisparoMassa, setShowDisparoMassa] = useState(false);
+  const [showDisparoMassa, setShowDisparoMassaState] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
   const [fluxoInitialIndex, setFluxoInitialIndex] = useState(0);
@@ -472,10 +476,74 @@ export default function Atendimento() {
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
 
   // Customer search/create dialogs
-  const [showCustomerSearchForTask, setShowCustomerSearchForTask] = useState(false);
-  const [showCustomerSearchForChat, setShowCustomerSearchForChat] = useState(false);
-  const [showCustomerSearchForEmail, setShowCustomerSearchForEmail] = useState(false);
-  const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamento] = useState(false);
+  const [showCustomerSearchForTask, setShowCustomerSearchForTaskState] = useState(false);
+  const [showCustomerSearchForChat, setShowCustomerSearchForChatState] = useState(false);
+  const [showCustomerSearchForEmail, setShowCustomerSearchForEmailState] = useState(false);
+  const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamentoState] = useState(false);
+
+  // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
+  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento';
+  function fecharConteudoCentral(destino?: ConteudoCentral) {
+    if (destino !== 'historico') setHistoricoClienteState(null);
+    if (destino !== 'orcamentos') setOrcamentosClienteState(null);
+    if (destino !== 'agendaContato') setAgendaContatoState(null);
+    if (destino !== 'extras') setExtrasEmpresaState(null);
+    if (destino !== 'disparo') setShowDisparoMassaState(false);
+    if (destino !== 'envio') setShowEnvioMassaWizardState(false);
+    if (destino !== 'buscaTarefa') setShowCustomerSearchForTaskState(false);
+    if (destino !== 'buscaChat') setShowCustomerSearchForChatState(false);
+    if (destino !== 'buscaEmail') setShowCustomerSearchForEmailState(false);
+    if (destino !== 'buscaOrcamento') setShowCustomerSearchForOrcamentoState(false);
+    if (destino !== 'orcamento') setOrcamentoSheetOpenState(false);
+  }
+  function setActiveTab(aba: string) {
+    fecharConteudoCentral();
+    setActiveTabState(aba);
+  }
+  function setHistoricoCliente(valor: typeof historicoCliente) {
+    if (valor) fecharConteudoCentral('historico');
+    setHistoricoClienteState(valor);
+  }
+  function setOrcamentosCliente(valor: typeof orcamentosCliente) {
+    if (valor) fecharConteudoCentral('orcamentos');
+    setOrcamentosClienteState(valor);
+  }
+  function setAgendaContato(valor: typeof agendaContato) {
+    if (valor) fecharConteudoCentral('agendaContato');
+    setAgendaContatoState(valor);
+  }
+  function setExtrasEmpresa(valor: typeof extrasEmpresa) {
+    if (valor) fecharConteudoCentral('extras');
+    setExtrasEmpresaState(valor);
+  }
+  function setShowDisparoMassa(valor: boolean) {
+    if (valor) fecharConteudoCentral('disparo');
+    setShowDisparoMassaState(valor);
+  }
+  function setShowEnvioMassaWizard(valor: boolean) {
+    if (valor) fecharConteudoCentral('envio');
+    setShowEnvioMassaWizardState(valor);
+  }
+  function setShowCustomerSearchForTask(valor: boolean) {
+    if (valor) fecharConteudoCentral('buscaTarefa');
+    setShowCustomerSearchForTaskState(valor);
+  }
+  function setShowCustomerSearchForChat(valor: boolean) {
+    if (valor) fecharConteudoCentral('buscaChat');
+    setShowCustomerSearchForChatState(valor);
+  }
+  function setShowCustomerSearchForEmail(valor: boolean) {
+    if (valor) fecharConteudoCentral('buscaEmail');
+    setShowCustomerSearchForEmailState(valor);
+  }
+  function setShowCustomerSearchForOrcamento(valor: boolean) {
+    if (valor) fecharConteudoCentral('buscaOrcamento');
+    setShowCustomerSearchForOrcamentoState(valor);
+  }
+  function setOrcamentoSheetOpen(valor: boolean) {
+    if (valor) fecharConteudoCentral('orcamento');
+    setOrcamentoSheetOpenState(valor);
+  }
 
   // Estados para edição inline de contato/empresa
   const [editingContatoId, setEditingContatoId] = useState<string | null>(null);
@@ -2401,8 +2469,8 @@ export default function Atendimento() {
       setInitialEmpresaForOrcamento(data.empresa_id || null);
     }
     setTimeout(() => {
-      setOrcamentoSheetOpen(true);
       setActiveTab('orcamento');
+      setOrcamentoSheetOpen(true);
     }, 100);
     toast.success(`Orçamento iniciado para ${data.nome || data.nome_fantasia || 'contato'}`);
   };
@@ -4402,7 +4470,7 @@ ${recentMessages}
 
   // Abre o conteúdo do canal escolhido para o cliente (cabeçalho central ou botões do cartão).
   const abrirCanalDoContato = (clienteId: string, aba: string) => {
-    setHistoricoCliente(null);
+    fecharConteudoCentral();
     if (aba === activeTab) { aplicarClienteNaAba(clienteId, aba); return; }
     clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(aba);
@@ -4462,7 +4530,7 @@ ${recentMessages}
 
   // Fecha a lista de orçamentos ao trocar de cliente
   useEffect(() => {
-    setOrcamentosCliente((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
+    setOrcamentosClienteState((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
   }, [(clienteCabecalho as any)?.id]);
 
   // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
@@ -4669,7 +4737,7 @@ ${recentMessages}
     setAgendaContato(null);
     setShowEnvioMassaWizard(false);
     setActiveTab("agenda");
-    setAgendaViewMode("default");
+    if (!discadorModo) setAgendaViewMode("default");
     setMobileView("main");
     setShowDisparoMassa(true);
   };
