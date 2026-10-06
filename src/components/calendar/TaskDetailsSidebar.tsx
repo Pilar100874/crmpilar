@@ -75,7 +75,10 @@ export function TaskDetailsSidebar({ task, origem, usuarios, onClose, onEdit, on
   }, [task.contactId, task.id]);
 
   useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('[role="dialog"], [role="listbox"], [role="menu"]')) return;
+      onClose();
+    };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
