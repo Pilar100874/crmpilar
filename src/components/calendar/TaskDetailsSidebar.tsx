@@ -80,7 +80,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
   return (
     <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent side="right" className="w-full overflow-hidden flex flex-col p-0 sm:max-w-2xl">
+      <SheetContent side="right" className="z-[700] w-full overflow-hidden flex flex-col p-0 sm:max-w-2xl" overlayClassName="z-[700]">
         <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
           <div className="flex items-center gap-3 pr-12">
             <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
