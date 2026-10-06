@@ -5645,9 +5645,7 @@ ${recentMessages}
                     <p className="truncate text-sm font-bold">Histórico do cliente</p>
                     <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setHistoricoCliente(null)} title="Fechar histórico">
-                    <X className="mr-1 h-4 w-4" /> Fechar
-                  </Button>
+
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
                   <CustomerHistoryTimeline
@@ -5688,9 +5686,7 @@ ${recentMessages}
                     <p className="truncate text-sm font-bold">Orçamentos do cliente</p>
                     <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setOrcamentosCliente(null)} title="Fechar orçamentos">
-                    <X className="mr-1 h-4 w-4" /> Fechar
-                  </Button>
+
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   <OrcamentosEmpresaList
@@ -6269,12 +6265,20 @@ ${recentMessages}
                 const ativo = t.kind === "view" ? mobileView === t.id : t.kind === "agenda" ? activeTab === "agenda" : false;
                 const desabilitado = t.kind === "view" && t.id !== "list" && !contatoMobileSelecionado;
                 const onClick = () => {
+                  // Ao trocar de aba, fecha o que estiver aberto (painéis centrais e detalhes).
+                  fecharConteudoCentral();
+                  setShowClientDetailsChat(false);
+                  setShowClientDetailsAgenda(false);
+                  setShowClientDetailsEmail(false);
+                  setShowClientDetailsOrcamento(false);
+                  setShowClientDetailsFluxo(false);
                   if (t.kind === "agenda") {
                     window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }));
                   } else {
                     setMobileView(t.id);
                   }
                 };
+
                 return (
                   <button
                     key={t.id}
@@ -6568,9 +6572,7 @@ ${recentMessages}
                   <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); }}>
                     <Plus className="h-4 w-4 mr-1" /> Novo orçamento
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setOrcamentosCliente(null)}>
-                    <X className="h-4 w-4 mr-1" /> Fechar
-                  </Button>
+
                 </div>
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto p-2">
@@ -6605,10 +6607,6 @@ ${recentMessages}
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>
                 <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setHistoricoCliente(null)} title="Fechar histórico">
-                <X className="h-4 w-4 mr-1" />
-                Fechar
-              </Button>
             </div>
             <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
               <CustomerHistoryTimeline
