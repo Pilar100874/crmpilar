@@ -2995,7 +2995,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                         </span>
                         <span className="mt-1 block font-cardTitle text-2xl font-bold text-foreground">{resumo.count}</span>
                       </span>
-                      {!ultimo && <Calendar className={cn("hidden h-5 w-5 shrink-0 sm:block", index === 0 ? "text-primary" : "text-muted-foreground")} />}
+                      {!ultimo && <Calendar className={cn("hidden h-5 w-5 shrink-0 lg:block", index === 0 ? "text-primary" : "text-muted-foreground")} />}
                     </Button>
                   );
                 })}
