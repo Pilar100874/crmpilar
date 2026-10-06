@@ -6223,7 +6223,7 @@ ${recentMessages}
         /* ========== DESKTOP/TABLET LAYOUT ========== */
         <div className={`atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative transition-opacity duration-200 ${layoutPronto ? "opacity-100" : "opacity-0"}`} style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
-        {activeTab !== "agenda" && (
+        {(activeTab !== "agenda" || showDisparoMassa || showEnvioMassaWizard || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
             <Suspense fallback={null}><ModuloCalendario /></Suspense>
           </div>

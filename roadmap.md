@@ -41,3 +41,6 @@
 - [x] Unificar regras e validações por tela, sem controles de ativação.
 - [x] Mostrar interferências ao expandir a regra, sem aba separada.
 - [x] Preservar ajustes de alertas e conferir a tela.
+
+## Disparo em massa
+- [x] Manter título e barra de datas do calendário ao abrir o disparo na área central e conferir na tela.

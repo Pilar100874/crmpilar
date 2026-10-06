@@ -1,2 +1,3 @@
 - Keep calendar-rule visualization in a read-only component driven by the saved rule catalog; it explains configured paths without claiming that relationships execute chained rules.
 - Present calendar validations and agenda automations through one catalog in the rule builder, merging legacy validations by key and preserving their configuration storage, to avoid duplicate lists and keep execution unchanged.
+- Keep the calendar header host mounted when central agenda content is replaced by mass-dispatch panels, so its shared title and date bar remain available.
