@@ -44,3 +44,4 @@
 
 ## Disparo em massa
 - [x] Manter título e barra de datas do calendário ao abrir o disparo na área central e conferir na tela.
+- [ ] Unificar a substituição de conteúdos centrais ao clicar em datas, disparo, canais e demais atalhos; validar as trocas.
