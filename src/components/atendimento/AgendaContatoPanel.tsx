@@ -76,7 +76,6 @@ export function AgendaContatoPanel({ contactId, nome, onClose, top = 0 }: Props)
             Mostrar sequência de tarefas
             <Switch checked={mostrarSequencia} onCheckedChange={alternarSequencia} />
           </label>
-          <Button size="sm" variant="ghost" onClick={onClose}><X className="h-4 w-4" /> Fechar</Button>
         </div>
       </div>
 

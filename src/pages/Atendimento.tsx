@@ -7174,15 +7174,18 @@ ${recentMessages}
                 <h3 className="truncate text-sm font-semibold">{selectedTelContato.nome}</h3>
                 <p className="truncate text-xs text-muted-foreground">{selectedTelContato.tel}</p>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
-                className="h-8 w-8 p-0"
-                title={showClientDetailsFluxo ? "Ocultar detalhes" : "Mostrar detalhes"}
-              >
-                {showClientDetailsFluxo ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </Button>
+              {activeTab === "tel" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
+                  className="h-8 w-8 p-0"
+                  title={showClientDetailsFluxo ? "Ocultar detalhes" : "Mostrar detalhes"}
+                >
+                  {showClientDetailsFluxo ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              )}
+
             </div>
             {activeTab === "tel" && (
               <TelConversaPanel
