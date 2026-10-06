@@ -6206,7 +6206,7 @@ ${recentMessages}
                       <button
                         key={tab.id}
                         onClick={() => trocarAba(tab.id)}
-                        className={`flex flex-col items-center justify-center py-1.5 px-4 transition-all relative ${
+                        className={`flex min-w-0 flex-1 flex-col items-center justify-center py-1.5 px-0.5 transition-all relative ${
                           isActive
                             ? "text-primary"
                             : "text-muted-foreground hover:text-foreground"
