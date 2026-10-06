@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, Refres
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
+import { TaskDetailsSidebar } from "@/components/calendar/TaskDetailsSidebar";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -196,7 +197,7 @@ function DraggableTask({
           </DropdownMenu>
         )}
       </div>
-      <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onClick?.(e); }}>
+      <div role="button" tabIndex={0} aria-label={`Abrir tarefa: ${task.title}`} className="cursor-pointer" onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onClick?.(e); } }} onClick={(e) => { e.stopPropagation(); onClick?.(e); }}>
         <p className={cn("break-words text-xs font-semibold leading-snug", concluida && "line-through", compacto && "line-clamp-2")}>{task.title}</p>
         {!compacto && task.contactName && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.contactName}</p>}
         {!compacto && task.description && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.description}</p>}
@@ -210,12 +211,14 @@ function DraggableTask({
 function DraggableTaskCard({ 
   task, 
   onToggle,
+  onOpen,
   onEdit,
   onDelete,
   userColor
 }: { 
   task: Task; 
   onToggle: () => void;
+  onOpen: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   userColor?: string;
@@ -295,7 +298,7 @@ function DraggableTaskCard({
       </div>
 
       {/* Título, descrição e origem */}
-      <div className="min-w-0 flex-1">
+      <div role="button" tabIndex={0} aria-label={`Abrir tarefa: ${task.title}`} onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen(); } }} className="min-w-0 flex-1 cursor-pointer">
         <p className={cn("text-[14px] font-semibold leading-tight truncate", concluida ? "line-through text-muted-foreground" : "text-foreground")}>
           {task.title}
         </p>
@@ -406,6 +409,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [filterBy, setFilterBy] = useState<"all" | "my">("my");
@@ -1004,6 +1008,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       if (updates.title) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.origem) dbUpdates.origem = updates.origem;
+      if (updates.userId) dbUpdates.user_id = updates.userId;
       if (updates.campaignId !== undefined) dbUpdates.campaign_id = updates.campaignId;
 
       const { data: linhas, error } = await (supabase as any)
@@ -1954,8 +1959,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                     } : {}}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCurrentDate(currentDay);
-                      setViewMode("day");
+                      setSelectedTaskId(task.id);
                     }}
                   />
                 ))}
@@ -1972,7 +1976,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                     task={task}
                     onClick={(e) => {
                       e?.stopPropagation();
-                      handleToggleTaskStatus(task.id);
+                      setSelectedTaskId(task.id);
                     }}
                     onEdit={() => handleEditTask(task)}
                     onDelete={() => handleDeleteTask(task.id)}
@@ -2019,7 +2023,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
     const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
     const tarefasPorDia = dias.map(getTasksForDay);
     const renderTarefa = (task: Task) => (
-      <DraggableTask key={task.id} task={task} onClick={() => handleToggleTaskStatus(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
+      <DraggableTask key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
     );
     return (
       <div className="overflow-auto rounded-md border border-border/70 bg-background" data-agenda-semana>
@@ -2074,7 +2078,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       <DraggableTask
         key={task.id}
         task={task}
-        onClick={() => handleToggleTaskStatus(task.id)}
+        onClick={() => setSelectedTaskId(task.id)}
         onEdit={() => handleEditTask(task)}
         onDelete={() => handleDeleteTask(task.id)}
         userColor={task.userId ? userColors[task.userId] : undefined}
@@ -2096,7 +2100,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         <div className="flex items-center justify-between gap-2">
           <div 
             className="flex-1 min-w-0 cursor-pointer"
-            onClick={() => handleToggleTaskStatus(task.id)}
+            onClick={() => setSelectedTaskId(task.id)}
           >
             <div className="font-medium text-sm truncate">{task.title}</div>
             {task.userName && (
@@ -2491,6 +2495,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                       return (
                         <td 
                           key={column.id} 
+                          onClick={column.id === 'title' ? () => setSelectedTaskId(task.id) : undefined}
                           className="p-2 group relative overflow-hidden text-sm"
                           style={{ width: colPercent(column.width) }}
                         >
@@ -2614,6 +2619,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               <DraggableTaskCard 
                 key={task.id} 
                 task={task} 
+                onOpen={() => setSelectedTaskId(task.id)}
                 onToggle={() => handleToggleTaskStatus(task.id)}
                 onEdit={() => handleEditTask(task)}
                 onDelete={() => handleDeleteTask(task.id)}
@@ -2636,6 +2642,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               <DraggableTaskCard 
                 key={task.id} 
                 task={task} 
+                onOpen={() => setSelectedTaskId(task.id)}
                 onToggle={() => handleToggleTaskStatus(task.id)}
                 onEdit={() => handleEditTask(task)}
                 onDelete={() => handleDeleteTask(task.id)}
@@ -2658,6 +2665,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               <DraggableTaskCard 
                 key={task.id} 
                 task={task} 
+                onOpen={() => setSelectedTaskId(task.id)}
                 onToggle={() => handleToggleTaskStatus(task.id)}
                 onEdit={() => handleEditTask(task)}
                 onDelete={() => handleDeleteTask(task.id)}
@@ -2680,6 +2688,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               <DraggableTaskCard 
                 key={task.id} 
                 task={task} 
+                onOpen={() => setSelectedTaskId(task.id)}
                 onToggle={() => handleToggleTaskStatus(task.id)}
                 onEdit={() => handleEditTask(task)}
                 onDelete={() => handleDeleteTask(task.id)}
@@ -3256,7 +3265,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       })()}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-2 sm:px-3 py-3">
+      <div className="relative flex min-h-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-auto px-2 sm:px-3 py-3">
         {/* Navegação e filtros do calendário (dentro da área central) */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:mb-3">
           <div className="flex items-center gap-1">
@@ -3325,6 +3335,19 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         {viewMode === "day" && renderDayView()}
         {viewMode === "list" && renderListView()}
         {viewMode === "table" && renderTableView()}
+      </div>
+
+      {(() => {
+        const selectedTask = tasks.find(task => task.id === selectedTaskId);
+        if (!selectedTask) return null;
+        return <TaskDetailsSidebar key={selectedTask.id} task={selectedTask} origem={getOrigemLabel(selectedTask.origem, selectedTask.campaignName)} usuarios={usuarios}
+          onClose={() => setSelectedTaskId(null)} onEdit={() => handleEditTask(selectedTask)} onDelete={() => handleDeleteTask(selectedTask.id)}
+          onUpdate={async (updates) => {
+            const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
+            if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
+            return success;
+          }} />;
+      })()}
       </div>
 
       {/* Dialog para adicionar/editar tarefa */}
