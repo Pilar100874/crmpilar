@@ -265,9 +265,9 @@ function DraggableTask({
           <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 min-w-0">
+          <div className="flex items-start gap-1 min-w-0">
             {task.isAllDay && (
-              <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
+              <Calendar className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: "hsl(0, 85%, 60%)" }} />
             )}
             {getOrigemIconWithColor(task.origem, "sm")}
             {task.time && (
@@ -276,7 +276,7 @@ function DraggableTask({
               </span>
             )}
             <span
-              className={`truncate font-semibold cursor-pointer ${concluida ? "line-through text-muted-foreground" : ""}`}
+              className={`min-w-0 flex-1 font-semibold leading-tight line-clamp-2 break-words cursor-pointer ${concluida ? "line-through text-muted-foreground" : ""}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onClick?.(e);
@@ -285,14 +285,9 @@ function DraggableTask({
               {task.title}
             </span>
           </div>
-          {infoLinha && (
+          {(infoLinha || task.userName) && (
             <p className={`truncate text-[11px] leading-tight mt-0.5 ${concluida ? "text-muted-foreground/70" : "text-muted-foreground"}`}>
-              {infoLinha}
-            </p>
-          )}
-          {task.userName && (
-            <p className="text-[10px] text-muted-foreground/80 truncate mt-0.5">
-              {task.userName}
+              {[infoLinha, task.userName].filter(Boolean).join(" · ")}
             </p>
           )}
         </div>
