@@ -99,7 +99,7 @@ export function TaskDetailsSidebar({ task, origem, usuarios, onClose, onEdit, on
     { label: "E-mail", Icon: Mail, enabled: Boolean(contact?.email), tone: "bg-info text-info-foreground hover:bg-info/90", action: () => { if (contact?.email) { onClose(); novoEmailParaContato({ customerId: contact.id, nome: contact.nome, email: contact.email }); } } },
   ];
   return (
-    <aside aria-label={creating ? "Nova tarefa" : "Editar tarefa"} className="fixed bottom-0 right-0 top-[var(--calendario-barra,0px)] z-[610] flex w-full max-w-[400px] flex-col border-l border-border bg-background shadow-lg">
+    <aside aria-label={creating ? "Nova tarefa" : "Editar tarefa"} className="fixed bottom-0 right-0 top-[var(--calendario-barra,0px)] z-30 flex w-full max-w-[400px] flex-col border-l border-border bg-background shadow-lg">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-4">
         <h2 className="text-base font-bold">{creating ? "Nova tarefa" : "Editar tarefa"}</h2>
         <div className="flex items-center gap-1">
