@@ -108,6 +108,19 @@ function DroppableDay({
   );
 }
 
+// Faixa de horário (modo dia) que aceita tarefas soltas
+function DroppableSlot({ date, slotTime, children, className }: { date: Date; slotTime: string; children: React.ReactNode; className?: string }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `slot-${format(date, "yyyy-MM-dd")}-${slotTime || "semhora"}`,
+    data: { date, slotTime },
+  });
+  return (
+    <div ref={setNodeRef} className={`${className || ""} ${isOver ? "ring-2 ring-primary ring-inset bg-primary/10" : ""}`}>
+      {children}
+    </div>
+  );
+}
+
 // Componente de tarefa arrastável
 function DraggableTask({ 
   task, 
@@ -1756,7 +1769,11 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       }
       
       // Aplicar regra de realocação diária: ao mover para data diferente, remover horário (regra: realocacao_diaria)
-      if (calendarioRegras.realocacao_diaria && !isSameDay(task.date, newDate)) {
+      const slotTime = overData.slotTime as string | undefined;
+      if (slotTime !== undefined) {
+        adjustedTime = slotTime;
+        if (isSameDay(task.date, newDate) && ((task.time || "") === slotTime || (slotTime && task.time?.slice(0, 2) === slotTime.slice(0, 2)))) return;
+      } else if (calendarioRegras.realocacao_diaria && !isSameDay(task.date, newDate)) {
         adjustedTime = "";
         toast.info("Horário removido - tarefa definida como 'sem horário definido'");
       }
@@ -2171,6 +2188,16 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
     const timedTasks = dayTasks.filter(task => !task.isAllDay && task.time);
 
     const renderTaskCard = (task: Task) => (
+      <DraggableTask
+        key={task.id}
+        task={task}
+        onClick={() => handleToggleTaskStatus(task.id)}
+        onEdit={() => handleEditTask(task)}
+        onDelete={() => handleDeleteTask(task.id)}
+        userColor={task.userId ? userColors[task.userId] : undefined}
+      />
+    );
+    const _renderTaskCardLegado = (task: Task) => (
       <div
         key={task.id}
         className={`group p-2 rounded border ${
@@ -2242,8 +2269,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
           )}
 
           {/* Seção: Tarefas Sem Horário */}
-          {noTimeTasks.length > 0 && (
-            <div className="border-b-2 border-border bg-muted/10">
+          {(
+            <DroppableSlot date={currentDate} slotTime="" className="border-b-2 border-border bg-muted/10">
               <div className="flex">
                 <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm font-semibold text-foreground border-r border-border flex-shrink-0">
                   Sem Hora
@@ -2252,21 +2279,21 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                   {noTimeTasks.map(renderTaskCard)}
                 </div>
               </div>
-            </div>
+            </DroppableSlot>
           )}
 
           {/* Seção: Tarefas com Horário */}
           {hours.map(hour => {
             const hourTasks = timedTasks.filter(task => task.time?.startsWith(String(hour).padStart(2, '0')));
             return (
-              <div key={hour} className="flex border-b border-border hover:bg-muted/30">
+              <DroppableSlot key={hour} date={currentDate} slotTime={`${String(hour).padStart(2, '0')}:00`} className="flex border-b border-border hover:bg-muted/30">
                 <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm text-muted-foreground border-r border-border flex-shrink-0">
                   {String(hour).padStart(2, '0')}:00
                 </div>
                 <div className="flex-1 p-2 space-y-1 min-w-0">
                   {hourTasks.map(renderTaskCard)}
                 </div>
-              </div>
+              </DroppableSlot>
             );
           })}
         </div>
