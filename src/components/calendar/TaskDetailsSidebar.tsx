@@ -91,8 +91,8 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
   const name = contact?.nome || task.contactName || "Sem contato vinculado";
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
-  return createPortal(
-    <aside className="fixed bottom-0 right-0 z-[700] flex w-full flex-col overflow-hidden border-l border-border bg-card shadow-xl sm:w-80 md:w-64 lg:w-[400px]" style={{ top: topOffset }}>
+  return (
+    <aside className="flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-border bg-card sm:w-80 md:w-64 lg:w-[400px]">
       <div className="flex items-center gap-3 border-b border-border/60 bg-gradient-to-r from-orange-50 to-transparent px-4 py-3 dark:from-orange-950/20">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
           <CalendarDays className="h-4.5 w-4.5 text-orange-600 dark:text-orange-400" />
