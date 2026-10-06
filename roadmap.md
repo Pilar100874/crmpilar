@@ -5,6 +5,8 @@
 - [x] Renomear Agendar para Tarefa e sugerir o contato selecionado.
 - [x] Criar e editar no painel lateral único, sem popup de formulário.
 - [x] Conferir abertura de criação e edição, sugestão de contato e expansão na tela, sem alterar dados salvos.
+- [x] Abrir a tarefa como folha lateral igual ao cadastro de contato, sem WhatsApp/Ligar/E-mail nem Histórico.
+- [x] Campo Origem em seletor compacto (uma linha) no lugar da grade de opções.
 
 ## Cartões e barra de datas
 - [x] Deixar Próxima ação expansível e inicialmente fechada.
