@@ -42,6 +42,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getEstabelecimentoId, isAnyAdmin } from "@/lib/estabelecimentoUtils";
 import { notificarTarefasAlteradas } from "@/lib/calendario/eventos";
+import { montarPassos, TITULO_ACAO, type AcaoAgenda, type PassoPrevia, type AutomacaoAgenda } from "@/lib/calendario/previaRegras";
+import { PreviaRegrasDialog } from "@/components/calendar/PreviaRegrasDialog";
 
 // Utilitário para aplicar alpha em cores HSL, gerando hsla()
 const toAlpha = (hslColor: string, alpha: number) => {
@@ -429,6 +431,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [modoValidacao, setModoValidacao] = useState(() => localStorage.getItem("agenda_modo_validacao") === "1");
+  const [previa, setPrevia] = useState<{ titulo: string; passos: PassoPrevia[]; executar: () => void } | null>(null);
+  const [automacoesAgenda, setAutomacoesAgenda] = useState<AutomacaoAgenda[]>([]);
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string; auth_user_id: string | null }>>([]);
@@ -932,6 +937,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     };
 
     loadRegras();
+    (async () => {
+      const est = await getEstabelecimentoId();
+      if (!est) return;
+      const { data } = await (supabase as any).from('calendario_regras_automacao').select('nome, gatilho, acao, ativa').eq('estabelecimento_id', est);
+      if (Array.isArray(data)) setAutomacoesAgenda(data);
+    })();
   }, []);
 
   const saveTaskToDatabase = async (task: Task): Promise<boolean> => {
@@ -1258,6 +1269,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   };
 
   // Adicionar tarefa
+  const validacaoAtiva = isAdmin && modoValidacao;
+  const abrirPrevia = (acao: AcaoAgenda, ctx: Partial<Parameters<typeof montarPassos>[0]>, executar: () => void) => {
+    setPrevia({ titulo: TITULO_ACAO[acao], passos: montarPassos({ acao, regras: calendarioRegras, automacoes: automacoesAgenda, ...ctx }), executar });
+  };
+  const contarConflitos = (userId: string | undefined, data: Date, hora: string | undefined, ignorarId?: string) =>
+    hora ? tasks.filter((t) => t.id !== ignorarId && (!userId || t.userId === userId) && isSameDay(t.date, data) && t.time === hora).length : 0;
+
   const handleSaveTask = async (taskData: {
     id?: string;
     contactId: string;
@@ -1270,7 +1288,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     isAllDay?: boolean;
     userId?: string;
     isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
-  }) => {
+  }, semPrevia = false) => {
+    if (validacaoAtiva && !semPrevia) {
+      const dados = { ...taskData };
+      abrirPrevia(taskData.id ? "editar" : "criar", { data: taskData.date, horario: taskData.isAllDay ? undefined : taskData.time, diaTodo: taskData.isAllDay, automatica: taskData.isAutomatic, conflitos: contarConflitos(taskData.userId, taskData.date, taskData.time, taskData.id) }, () => handleSaveTask(dados, true));
+      return;
+    }
     // Verificar regra "dia todo" - SOMENTE se a data for FUTURA e for inserção automática
     if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo && taskData.isAutomatic) {
       // Só verificar se a data for diferente da data atual
@@ -1705,9 +1728,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setShowTaskDialog(true);
   };
 
-  const handleToggleTaskStatus = async (taskId: string) => {
+  const handleToggleTaskStatus = async (taskId: string, semPrevia = false) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
+    if (validacaoAtiva && !semPrevia) {
+      abrirPrevia(task.status === "pending" ? "concluir" : "reabrir", {}, () => handleToggleTaskStatus(taskId, true));
+      return;
+    }
     
     const newStatus = task.status === "pending" ? "completed" : "pending";
     const success = await updateTaskInDatabase(taskId, { status: newStatus }, 'toggle-status');
@@ -1724,7 +1751,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent, semPrevia = false) => {
     const { active, over } = event;
     setActiveId(null);
 
@@ -1733,6 +1760,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const taskId = active.id as string;
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
+    if (validacaoAtiva && !semPrevia && over.data.current?.date) {
+      const novaData = over.data.current.date as Date;
+      abrirPrevia("mover", { data: novaData, dataOriginal: task.date, horario: task.time || undefined, conflitos: contarConflitos(task.userId, novaData, task.time, task.id) }, () => handleDragEnd(event, true));
+      return;
+    }
 
     // Se o over.id é uma data (formato ISO), atualiza a data da tarefa
     const overData = over.data.current;
@@ -2292,7 +2324,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDeleteTask = async () => {
+  const confirmDeleteTask = async (semPrevia = false) => {
+    if (taskToDelete && validacaoAtiva && semPrevia !== true) {
+      setDeleteConfirmOpen(false);
+      abrirPrevia("excluir", {}, () => confirmDeleteTask(true));
+      return;
+    }
     if (taskToDelete) {
       const success = await deleteTaskFromDatabase(taskToDelete);
       if (success) {
@@ -2912,6 +2949,17 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               </div>
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  variant={modoValidacao ? "default" : "outline"}
+                  className="h-9 shrink-0 text-xs"
+                  title="Mostra todas as regras que serão executadas antes de cada ação na agenda"
+                  onClick={() => { const v = !modoValidacao; setModoValidacao(v); localStorage.setItem("agenda_modo_validacao", v ? "1" : "0"); toast.info(v ? "Modo validação ligado: as regras aparecerão antes de cada ação" : "Modo validação desligado"); }}
+                >
+                  {modoValidacao ? "Validação: ligada" : "Validação"}
+                </Button>
+              )}
               {diasRecolhidos && (
                 <Button
                   size="sm"
@@ -3492,6 +3540,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         </DialogContent>
       </Dialog>
 
+      <PreviaRegrasDialog
+        aberto={!!previa}
+        titulo={previa?.titulo || ""}
+        passos={previa?.passos || []}
+        onCancelar={() => { setPrevia(null); setTaskToDelete(null); }}
+        onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
+      />
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
         <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
