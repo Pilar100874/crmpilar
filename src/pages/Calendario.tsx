@@ -2723,7 +2723,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         isSameDay(task.date, date) &&
         !(index === 0 && !!task.time && task.time < horaAgora)
       ).length,
-      label: index === 0 ? "Hoje" : format(date, "EEE", { locale: ptBR }).replace(".", ""),
+      label: index === 0 ? "Hoje" : format(date, "EEEE", { locale: ptBR }).split("-")[0],
     };
   });
 
@@ -2849,86 +2849,75 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         </div>
 
         {!diasRecolhidos && (
-        <div className="sticky top-0 z-10 flex border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
-          <div role="group" aria-label="Visualização da agenda" className="grid shrink-0 grid-cols-2 content-center gap-1 border-r border-border/60 px-2">
-            {([
-              { modo: "list", Icone: ListIcon, rotulo: "Ver em lista" },
-              { modo: "month", Icone: Calendar, rotulo: "Ver em mês" },
-              { modo: "day", Icone: CalendarDays, rotulo: "Ver dia" },
-              { modo: "week", Icone: CalendarRange, rotulo: "Ver em semana" },
-            ] as const).map(({ modo, Icone, rotulo }) => (
-              <Button
-                key={modo}
-                variant={viewMode === modo ? "default" : "ghost"}
-                size="icon"
-                title={rotulo}
-                aria-label={rotulo}
-                aria-pressed={viewMode === modo}
-                onClick={() => {
-                  setViewMode(modo);
-                  window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: currentDate.toISOString(), modo } }));
-                }}
-                className="h-7 w-7 rounded border border-border/60"
-              >
-                <Icone className="h-3.5 w-3.5" />
-              </Button>
-            ))}
-          </div>
-          <div className="min-w-0 flex-1 overflow-x-auto">
-          <div className="grid min-w-[680px] grid-cols-[130px_repeat(5,minmax(110px,1fr))]">
+        <div className="px-2 pb-2 sm:px-3" style={{ paddingLeft: menuLargura ? menuLargura + 12 : undefined }}>
+          <div className="flex min-w-0 overflow-hidden rounded-lg border border-border/60 bg-card">
             <Button
               variant="ghost"
-              onClick={() => setViewMode("list")}
-              className="group flex h-auto min-h-[68px] items-center justify-start rounded-none border-r border-border/60 px-4 text-left transition-colors hover:bg-muted/50 sm:px-6"
+              size="icon"
+              aria-label="Abrir agenda de hoje"
+              title="Abrir agenda de hoje"
+              onClick={() => {
+                setCurrentDate(hoje);
+                setViewMode("day");
+                window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: hoje.toISOString(), modo: "day" } }));
+              }}
+              className="h-auto w-14 shrink-0 rounded-none border-r border-border/60 text-muted-foreground sm:w-16"
             >
-              <span>
-                <span className="block text-xs font-medium text-foreground">Atrasados</span>
-                <span className="mt-1 block font-cardTitle text-xl font-bold text-destructive">{tarefasAtrasadas}</span>
-              </span>
+              <Calendar className="h-6 w-6" />
             </Button>
-            {resumoDias.map((resumo, index) => {
-              const selecionado = isSameDay(currentDate, resumo.date);
-              const ultimo = index === resumoDias.length - 1;
-              return (
-                <button
-                  type="button"
-                  key={resumo.date.toISOString()}
-                  onClick={() => {
-                    setCurrentDate(resumo.date);
-                    setViewMode("day");
-                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
-                  }}
-                  className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:px-6 ${selecionado ? "bg-primary/10" : ""}`}
+            <div className="min-w-0 flex-1 overflow-x-auto">
+              <div className="grid min-w-[660px] grid-cols-[120px_repeat(5,minmax(108px,1fr))]">
+                <Button
+                  variant="ghost"
+                  onClick={() => setViewMode("list")}
+                  className="flex h-auto min-h-[82px] items-center justify-start rounded-none border-r border-border/60 px-4 text-left hover:bg-muted/50"
                 >
                   <span>
-                    <span className={`block text-xs font-semibold capitalize ${index === 0 ? "text-primary" : "text-foreground"}`}>
-                      {resumo.label} · {format(resumo.date, "d")}
-                    </span>
-                    <span className="mt-1 block font-cardTitle text-xl font-bold text-foreground">{resumo.count}</span>
+                    <span className="block text-xs font-medium text-foreground">Atrasados</span>
+                    <span className="mt-1 block font-cardTitle text-2xl font-bold text-destructive">{tarefasAtrasadas}</span>
                   </span>
-                  {!ultimo && <Calendar className={`h-5 w-5 ${index === 0 ? "text-primary" : "text-muted-foreground/60"}`} />}
-                  {ultimo && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelectedDate(null);
-                          setShowTaskDialog(true);
-                        }}
-                        title="Agendar"
-                        aria-label="Agendar"
-                        className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Agendar</span>
-                      </button>
-                    </>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                </Button>
+                {resumoDias.map((resumo, index) => {
+                  const selecionado = isSameDay(currentDate, resumo.date);
+                  const ultimo = index === resumoDias.length - 1;
+                  return (
+                    <Button
+                      variant="ghost"
+                      key={resumo.date.toISOString()}
+                      aria-pressed={selecionado}
+                      onClick={() => {
+                        setCurrentDate(resumo.date);
+                        setViewMode("day");
+                        window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
+                      }}
+                      className={cn(
+                        "flex h-auto min-h-[82px] items-center justify-between gap-2 rounded-none border-r border-border/60 px-4 text-left last:border-r-0 hover:bg-muted/50",
+                        index === 0 && "bg-primary/5 hover:bg-primary/10",
+                        selecionado && index !== 0 && "bg-accent"
+                      )}
+                    >
+                      <span>
+                        <span className={cn("block text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
+                          {resumo.label} · {format(resumo.date, "d")}
+                        </span>
+                        <span className="mt-1 block font-cardTitle text-2xl font-bold text-foreground">{resumo.count}</span>
+                      </span>
+                      {!ultimo && <Calendar className={cn("h-5 w-5 shrink-0", index === 0 ? "text-primary" : "text-muted-foreground")} />}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center px-3">
+              <Button
+                onClick={() => { setSelectedDate(null); setShowTaskDialog(true); }}
+                className="h-11 gap-2 rounded-lg px-4 font-semibold"
+                aria-label="Agendar"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Agendar</span>
+              </Button>
+            </div>
           </div>
         </div>
         )}

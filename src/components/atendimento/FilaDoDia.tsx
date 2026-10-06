@@ -127,6 +127,7 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
 
 export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
+  const [acoesExpandidas, setAcoesExpandidas] = useState<Set<string>>(new Set());
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
   const [orcLista, setOrcLista] = useState<any[]>([]);
   const [orcCarregando, setOrcCarregando] = useState(false);
@@ -512,14 +513,34 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         Atrasado{item.data ? ` · ${item.data}` : ""} · {item.horario || "--:--"}
                       </p>
                     )}
-                    <div className="mt-3 border-t border-border/40 pt-2">
-                      <p className="mb-1 text-[11px] font-medium text-muted-foreground">Próxima ação</p>
-                      <div className="flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
+                    <div className="mt-2 border-t border-border/40 pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-expanded={acoesExpandidas.has(item.id)}
+                        aria-controls={`proxima-acao-${item.id}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setAcoesExpandidas((anterior) => {
+                            const proximo = new Set(anterior);
+                            if (proximo.has(item.id)) proximo.delete(item.id);
+                            else proximo.add(item.id);
+                            return proximo;
+                          });
+                        }}
+                        className="h-6 w-full justify-between px-0 text-[11px] font-medium text-muted-foreground hover:bg-transparent"
+                      >
+                        Próxima ação
+                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
+                      </Button>
+                      <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id)}>
+                      <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
                         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                         <div className="min-w-0">
                           <p className="break-words text-xs font-semibold text-foreground">{item.motivo || "Atendimento"}</p>
                           <p className={cn("mt-0.5 text-[11px]", item.atrasado ? "text-destructive" : "text-info")}>{item.data || "Hoje"}{item.horario ? `, ${item.horario}` : " · Sem horário"}</p>
                         </div>
+                      </div>
                       </div>
                     </div>
                     {(item.mensagensNovas || 0) > 0 && (
