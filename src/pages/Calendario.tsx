@@ -3343,7 +3343,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
       {/* Content */}
       <div className="relative flex min-h-0 flex-1">
-      <div ref={agendaAreaRef} className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-3 py-3">
+      <div ref={agendaAreaRef} className={`min-w-0 flex-1 overflow-y-auto ${(selectedTaskId || showTaskDialog) ? "hidden" : ""}`} data-area="agenda" style={{}}>
         {/* Navegação e filtros do calendário (dentro da área central) */}
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
