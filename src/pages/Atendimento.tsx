@@ -5608,68 +5608,6 @@ ${recentMessages}
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
       {isMobile ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
-          {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
-          {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
-            <div className="flex-shrink-0 px-3 py-2.5 bg-card border-b border-border/50 flex items-center justify-between safe-area-top">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    if (mobileView === "details") {
-                      setMobileView("main");
-                    } else {
-                      setMobileView("list");
-                      if (activeTab === "chat") setSelectedConversation(null);
-                      if (activeTab === "agenda") { setSelectedTaskId(null); setSelectedTaskData(null); }
-                      if (activeTab === "email") { setSelectedEmailId(null); setSelectedEmailData(null); }
-                      if (activeTab === "orcamento") { setOrcamentoSheetOpen(false); setSelectedOrcamentoId(null); }
-                    }
-                  }}
-                  className="h-8 w-8 p-0 rounded-full"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                {activeTab === "chat" && selectedConv && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="font-medium text-sm truncate max-w-[150px]">
-                      {selectedConv.customer?.nome || "Cliente"}
-                    </span>
-                  </div>
-                )}
-                {activeTab === "agenda" && selectedTaskData && (
-                  <span className="font-medium text-sm truncate max-w-[180px]">
-                    {selectedTaskData.contact_name}
-                  </span>
-                )}
-                {activeTab === "email" && selectedEmailData && (
-                  <span className="font-medium text-sm truncate max-w-[180px]">
-                    {selectedEmailData.subject}
-                  </span>
-                )}
-                {activeTab === "orcamento" && selectedOrcamentoData && (
-                  <span className="font-medium text-sm truncate max-w-[180px]">
-                    {selectedOrcamentoData.customers?.nome || "Orçamento"}
-                  </span>
-                )}
-              </div>
-              {mobileView === "main" && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setMobileView("details")}
-                  className="h-8 w-8 rounded-full"
-                  title="Detalhes do cliente"
-                  aria-label="Detalhes do cliente"
-                >
-                  <UserRound className="h-5 w-5 text-orange-600" />
-                </Button>
-              )}
-            </div>
-          )}
 
           {mobileView === "main" && clienteCabecalho && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <div className="shrink-0 border-b border-border bg-card px-2 py-1">
@@ -5922,36 +5860,6 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex flex-shrink-0 items-center gap-1 border-b border-border/50 bg-card px-2 py-1.5">
-                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Dia anterior" onClick={handlePreviousDay}>
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium text-foreground"
-                  aria-label="Abrir agenda"
-                  onClick={() => window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }))}
-                >
-                  <CalendarIcon className="h-4 w-4 text-primary" />
-                  <span className="truncate">{isSameDay(agendaDate, new Date()) ? "Hoje" : agendaDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}</span>
-                </button>
-                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Próximo dia" onClick={handleNextDay}>
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-9 gap-1"
-                  aria-label="Nova tarefa"
-                  onClick={() => {
-                    const iso = agendaDate.toISOString();
-                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: iso, modo: "day" } }));
-                    window.setTimeout(() => window.dispatchEvent(new CustomEvent("calendario:nova-tarefa", { detail: { data: iso } })), 350);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Tarefa
-                </Button>
-              </div>
               <div className="flex-1 min-h-0 flex flex-col">
                 <FilaDoDia
                   items={filaItemsMobile}
@@ -5965,6 +5873,23 @@ ${recentMessages}
                   assumirContatos={assumirContatosConfig}
                   totais={totaisFila}
                 />
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-1 border-t border-border/50 bg-card px-2 py-1">
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Dia anterior" onClick={handlePreviousDay}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary/10 py-2 text-sm font-semibold text-primary"
+                  aria-label="Abrir agenda"
+                  onClick={() => window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }))}
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  <span className="truncate capitalize">{isSameDay(agendaDate, new Date()) ? "Hoje" : agendaDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}</span>
+                </button>
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Próximo dia" onClick={handleNextDay}>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
               </div>
             </div>
 
