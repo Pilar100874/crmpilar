@@ -274,7 +274,9 @@ export default function Atendimento() {
       setSelectedTaskData(null);
       setSelectedAgendaContato(null);
       setMobileView("main");
-      setDataAgendaCentral(new Date(detail.data));
+      const novaData = new Date(detail.data);
+      setAgendaDate(novaData);
+      setDataAgendaCentral(novaData);
       setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : "day");
       setAgendaCentralKey((k) => k + 1);
     };
