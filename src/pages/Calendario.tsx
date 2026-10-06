@@ -289,27 +289,13 @@ function DraggableTaskCard({
         />
       )}
 
-      {/* Alça de arrastar (aparece ao passar o mouse) */}
+      {/* Avatar com iniciais (também serve de alça para arrastar) */}
       <div
         {...attributes}
         {...listeners}
-        className="hidden shrink-0 cursor-grab text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 sm:block"
-        onClick={(e) => e.stopPropagation()}
+        title="Arraste para reordenar"
+        className="shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[13px] text-foreground/70 cursor-grab active:cursor-grabbing"
       >
-        <GripVertical className="h-4 w-4" />
-      </div>
-
-      {/* Concluir tarefa */}
-      <input
-        type="checkbox"
-        checked={concluida}
-        onChange={onToggle}
-        aria-label={concluida ? "Reabrir tarefa" : "Concluir tarefa"}
-        className="h-4 w-4 shrink-0 cursor-pointer accent-orange-500"
-      />
-
-      {/* Avatar com iniciais */}
-      <div className="shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[13px] text-foreground/70">
         {iniciais}
       </div>
 
