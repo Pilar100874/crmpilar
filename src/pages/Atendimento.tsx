@@ -241,6 +241,7 @@ export default function Atendimento() {
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
     if (isMobile) {
       setVisible(true);
+      setContatoMobileSelecionado(true);
       setMobileView("details");
       if (isTablet && showConversationsList) {
         setShowConversationsList(false);
@@ -4449,6 +4450,7 @@ ${recentMessages}
       ...item,
       onClick: () => {
         item.onClick();
+        setContatoMobileSelecionado(true);
         setMobileView("main");
       },
     })),
