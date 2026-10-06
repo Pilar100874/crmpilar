@@ -1897,7 +1897,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         <div className="min-w-0 space-y-4" data-agenda-mes-compacto>
           <div className="overflow-hidden rounded-md border border-border">
             <div className="grid grid-cols-7 border-b border-border bg-muted/30">
-              {Array.from({ length: 7 }, (_, i) => <span key={i} className="py-2 text-center text-xs font-medium text-muted-foreground">{format(addDays(inicio, i), "EEE", { locale: ptBR })}</span>)}
+              {Array.from({ length: 7 }, (_, i) => <span key={i} className="min-w-0 py-2 text-center text-xs font-medium text-muted-foreground">{format(addDays(inicio, i), "EEE", { locale: ptBR }).slice(0, 3)}</span>)}
             </div>
             <div className="grid grid-cols-7">
               {Array.from({ length: totalDias }, (_, i) => {
@@ -2938,7 +2938,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
         {!diasRecolhidos && (
         <div className="px-2 pb-2 sm:px-3" style={{ paddingLeft: menuLargura ? menuLargura + 12 : undefined }}>
-          <div className="flex min-w-0 overflow-hidden rounded-lg border border-border/60 bg-card">
+          <div className="flex min-w-0 flex-wrap overflow-hidden rounded-lg border border-border/60 bg-card sm:flex-nowrap">
             <Button
               variant="ghost"
               size="icon"
@@ -2949,16 +2949,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 setViewMode("day");
                 window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: hoje.toISOString(), modo: "day" } }));
               }}
-              className="h-auto w-14 shrink-0 rounded-none border-r border-border/60 text-muted-foreground sm:w-16"
+              className="h-auto w-10 shrink-0 rounded-none border-r border-border/60 text-muted-foreground sm:w-16"
             >
               <Calendar className="h-6 w-6" />
             </Button>
-            <div className="min-w-0 flex-1 overflow-x-hidden">
-              <div className="grid min-w-0 grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
+            <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] overflow-x-hidden sm:basis-auto">
+              <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
                   onClick={() => setViewMode("list")}
-                  className="flex h-auto min-h-[82px] items-center justify-start rounded-none border-r border-border/60 px-4 text-left hover:bg-muted/50"
+                  className="flex h-auto min-w-0 min-h-[58px] items-center justify-start rounded-none border-r border-border/60 px-2 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
                     <span className="block text-xs font-medium text-foreground">Atrasados</span>
@@ -2979,27 +2979,27 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                         window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
                       }}
                       className={cn(
-                        "flex h-auto min-h-[82px] items-center justify-between gap-2 rounded-none border-r border-border/60 px-4 text-left last:border-r-0 hover:bg-muted/50",
+                        "flex h-auto min-w-0 min-h-[58px] items-center justify-between gap-1 rounded-none border-r border-border/60 px-2 text-left last:border-r-0 hover:bg-muted/50 sm:min-h-[82px] sm:gap-2 sm:px-4",
                         index === 0 && "bg-primary/5 hover:bg-primary/10",
                         selecionado && index !== 0 && "bg-accent"
                       )}
                     >
-                      <span>
-                        <span className={cn("block text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
-                          {resumo.label} · {format(resumo.date, "d")}
+                      <span className="min-w-0">
+                        <span className={cn("block truncate text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
+                          <span className="sm:hidden">{index === 0 ? "Hoje" : format(resumo.date, "EEE", { locale: ptBR }).slice(0, 3)}</span><span className="hidden sm:inline">{resumo.label}</span> · {format(resumo.date, "d")}
                         </span>
                         <span className="mt-1 block font-cardTitle text-2xl font-bold text-foreground">{resumo.count}</span>
                       </span>
-                      {!ultimo && <Calendar className={cn("h-5 w-5 shrink-0", index === 0 ? "text-primary" : "text-muted-foreground")} />}
+                      {!ultimo && <Calendar className={cn("hidden h-5 w-5 shrink-0 sm:block", index === 0 ? "text-primary" : "text-muted-foreground")} />}
                     </Button>
                   );
                 })}
               </div>
             </div>
-            <div className="flex shrink-0 items-center px-3">
+            <div className="flex w-full shrink-0 items-center justify-end border-t border-border/60 px-2 py-1 sm:w-auto sm:border-t-0 sm:px-3 sm:py-0">
               <Button
                 onClick={() => handleOpenNewTask()}
-                className="h-11 gap-2 rounded-lg px-4 font-semibold"
+                className="h-8 gap-2 rounded-md px-3 font-semibold sm:h-11 sm:px-4"
                 aria-label="Nova tarefa"
               >
                 <Plus className="h-4 w-4" />
