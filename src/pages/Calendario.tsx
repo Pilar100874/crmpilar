@@ -2986,8 +2986,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                       )}
                     >
                       <span className="min-w-0">
-                        <span className={cn("block truncate text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
-                          <span className="sm:hidden">{index === 0 ? "Hoje" : format(resumo.date, "EEE", { locale: ptBR }).slice(0, 3)}</span><span className="hidden sm:inline">{resumo.label}</span> · {format(resumo.date, "d")}
+                        <span className={cn("flex min-w-0 items-baseline gap-1 text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
+                          <span className="min-w-0 truncate">
+                            <span className="lg:hidden">{index === 0 ? "Hoje" : format(resumo.date, "EEE", { locale: ptBR }).slice(0, 3)}</span>
+                            <span className="hidden lg:inline">{index === 0 ? "Hoje" : resumo.label}</span>
+                          </span>
+                          <span className="shrink-0 text-muted-foreground">· {format(resumo.date, "d")}</span>
                         </span>
                         <span className="mt-1 block font-cardTitle text-2xl font-bold text-foreground">{resumo.count}</span>
                       </span>
