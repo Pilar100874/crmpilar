@@ -284,6 +284,18 @@ export default function Atendimento() {
     return () => window.removeEventListener("calendario:abrir-data", abrirData);
   }, []);
 
+  // Navegação de datas dentro do calendário central atualiza a aba Agendados
+  useEffect(() => {
+    const dataMudou = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.data) return;
+      const nova = new Date(detail.data);
+      setAgendaDate((prev) => (isSameDay(prev, nova) ? prev : nova));
+    };
+    window.addEventListener("calendario:data-mudou", dataMudou);
+    return () => window.removeEventListener("calendario:data-mudou", dataMudou);
+  }, []);
+
 
   
   // AI Chat states
