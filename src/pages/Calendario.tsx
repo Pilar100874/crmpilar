@@ -177,7 +177,7 @@ function DraggableTask({
         concluida ? "border-border bg-muted text-muted-foreground" : atrasada ? "border-destructive/20 border-l-destructive bg-destructive/5" : retorno ? "border-info/20 border-l-info bg-info/5" : "border-primary/20 border-l-primary bg-primary/5",
       )}
     >
-      <div className="mb-1 flex min-w-0 items-center justify-between gap-1">
+      <div className={cn("mb-1 min-w-0 items-center justify-between gap-1", compacto ? "hidden lg:flex" : "flex")}>
         <div {...attributes} {...listeners} className="flex min-w-0 cursor-grab items-center gap-1 touch-none active:cursor-grabbing" title="Mover tarefa">
           {getOrigemIconWithColor(task.origem, "sm") || <CalendarDays className="h-3 w-3 text-primary" />}
           {atrasada && !compacto && <span className="rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-semibold text-destructive-foreground">Atrasado</span>}
@@ -198,7 +198,7 @@ function DraggableTask({
         )}
       </div>
       <div role="button" tabIndex={0} aria-label={`Abrir tarefa: ${task.title}`} className="cursor-pointer" onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onClick?.(e); } }} onClick={(e) => { e.stopPropagation(); onClick?.(e); }}>
-        <p className={cn("break-words text-xs font-semibold leading-snug", concluida && "line-through", compacto && "line-clamp-2")}>{task.title}</p>
+        <p className={cn("text-xs font-semibold leading-snug", concluida && "line-through", compacto ? "truncate text-[11px]" : "break-words")}>{task.title}</p>
         {!compacto && task.contactName && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.contactName}</p>}
         {!compacto && task.description && <p className="mt-0.5 break-words text-[11px] leading-snug text-muted-foreground">{task.description}</p>}
         {!compacto && task.userName && <p className="mt-1 truncate text-[10px] text-muted-foreground/80" title={`Responsável: ${task.userName}`}>{task.userName}</p>}
@@ -2804,7 +2804,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         className="fixed top-0 left-0 right-0 z-[600] border-b border-border/60 bg-background/95 backdrop-blur-sm"
       >
         <div
-          className="border-b border-border/50 py-3 pr-3 sm:pr-5 lg:pr-6"
+          className="border-b border-border/50 py-3 pl-3 pr-3 sm:pl-5 sm:pr-5 lg:pr-6"
           style={{ paddingLeft: menuLargura ? menuLargura + 20 : undefined }}
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
