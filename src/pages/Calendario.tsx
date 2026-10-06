@@ -2148,10 +2148,15 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                 </div>
                 <div className="flex-1 flex flex-wrap gap-1">
                   {dayTasks.slice(0, 3).map(task => (
-                    <Badge 
+                    <Badge
                       key={task.id}
                       variant={task.status === "completed" ? "secondary" : "default"}
-                      className="text-[10px] px-1.5 py-0.5 cursor-pointer truncate max-w-[120px]"
+                      className="text-[10px] px-1.5 py-0.5 cursor-pointer truncate max-w-[150px]"
+                      title={[
+                        task.time ? `${task.time} — ${task.title}` : task.title,
+                        task.description?.trim() || undefined,
+                        task.contactName?.trim() || undefined,
+                      ].filter(Boolean).join("\n")}
                       style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
                         backgroundColor: userColors[task.userId],
                         color: 'hsl(var(--primary-foreground))'
