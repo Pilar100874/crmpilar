@@ -4265,6 +4265,8 @@ ${recentMessages}
             setActiveTab("orcamento");
             setSelectedOrcamentoId(orcId);
             if (orc) { setSelectedOrcamentoData(orc); setContatoOrcamentoDetalhe(orc); }
+            setOrcamentoSheetOpen(true);
+            if (isMobile) setMobileView("main");
           },
           onClick: () => {
             if (bloquearTrocaClientePendente(contato.id)) return;
@@ -4353,6 +4355,8 @@ ${recentMessages}
           setActiveTab("orcamento");
           setSelectedOrcamentoId(orcId);
           if (orc) { setSelectedOrcamentoData(orc); setContatoOrcamentoDetalhe(orc); }
+          setOrcamentoSheetOpen(true);
+          if (isMobile) setMobileView("main");
         },
         onClick: () => {
           if (bloquearTrocaClientePendente(task.contact_id)) return;
@@ -8618,9 +8622,7 @@ function MobileListContent({
             selectedOrcamentoId={selectedOrcamentoId}
             onSelectOrcamento={(orcamento) => {
               setSelectedOrcamentoId(orcamento.id);
-              setSelectedOrcamentoData(orcamento);
               setOrcamentoSheetOpen(true);
-              setMobileView("main");
             }}
           />
         )}
