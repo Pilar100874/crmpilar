@@ -6320,7 +6320,7 @@ ${recentMessages}
           )}
 
           {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
-          {mobileView === "list" && !(((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
+          {false && mobileView === "list" && !(((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
