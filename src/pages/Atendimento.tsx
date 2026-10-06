@@ -1890,15 +1890,25 @@ export default function Atendimento() {
   };
 
   const handlePreviousDay = () => {
-    setAgendaDate(prev => subDays(prev, 1));
+    setAgendaDate(prev => {
+      const nova = subDays(prev, 1);
+      if (dataAgendaCentral) { setDataAgendaCentral(nova); setAgendaCentralKey((k) => k + 1); }
+      return nova;
+    });
   };
 
   const handleNextDay = () => {
-    setAgendaDate(prev => addDays(prev, 1));
+    setAgendaDate(prev => {
+      const nova = addDays(prev, 1);
+      if (dataAgendaCentral) { setDataAgendaCentral(nova); setAgendaCentralKey((k) => k + 1); }
+      return nova;
+    });
   };
 
   const handleToday = () => {
-    setAgendaDate(new Date());
+    const hoje = new Date();
+    setAgendaDate(hoje);
+    if (dataAgendaCentral) { setDataAgendaCentral(hoje); setAgendaCentralKey((k) => k + 1); }
   };
 
   const moveSortCriterion = (index: number, direction: 'up' | 'down') => {
