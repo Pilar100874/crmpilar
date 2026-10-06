@@ -2118,7 +2118,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         <DroppableDay 
           key={i} 
           date={day}
-          className="md:flex-1 md:min-w-0 border-b md:border-r border-border"
+          className="md:flex-1 md:min-w-[160px] border-b md:border-r border-border"
         >
           {/* Mobile/Tablet: Layout horizontal compacto */}
           <div className="md:hidden">
@@ -2241,8 +2241,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
       <div className="border-l border-t border-border">
         {/* Mobile/Tablet: dias empilhados verticalmente */}
         <div className="md:hidden flex flex-col">{days}</div>
-        {/* Desktop: dias lado a lado */}
-        <div className="hidden md:flex">{days}</div>
+        {/* Desktop: dias lado a lado (rolagem horizontal quando a tela é estreita) */}
+        <div className="hidden md:flex overflow-x-auto">{days}</div>
       </div>
     );
   };
