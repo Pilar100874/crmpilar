@@ -3423,24 +3423,33 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
           origem: "manual" as Task["origem"], createdAt: new Date(),
         };
-        return <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
-          onClose={() => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); }}
-          onEdit={() => { if (selectedTask) handleEditTask(selectedTask); }}
-          onDelete={() => { if (selectedTask) handleDeleteTask(selectedTask.id); }}
-          editor={<NewTaskDialog
-            open={true}
-            onOpenChange={(open) => { if (!open) { setShowTaskDialog(false); setSelectedTaskId(null); setEditingTask(null); } }}
-            onSave={handleSaveTask}
-            initialDate={creating ? selectedDate || undefined : undefined}
-            suggestedContact={creating ? contatoSugerido : undefined}
-            editingTask={selectedTask || undefined}
-          />}
-          onUpdate={async (updates) => {
-            if (!selectedTask) return false;
-            const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
-            if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
-            return success;
-          }} />;
+        return (
+          <div
+            className="fixed inset-0 z-[650] flex flex-col bg-card"
+            style={{ left: menuLargura || 0 }}
+            role="dialog"
+            aria-label={creating ? "Nova tarefa" : "Detalhes da tarefa"}
+          >
+            <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
+              onClose={() => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); }}
+              onEdit={() => { if (selectedTask) handleEditTask(selectedTask); }}
+              onDelete={() => { if (selectedTask) handleDeleteTask(selectedTask.id); }}
+              editor={<NewTaskDialog
+                open={true}
+                onOpenChange={(open) => { if (!open) { setShowTaskDialog(false); setSelectedTaskId(null); setEditingTask(null); } }}
+                onSave={handleSaveTask}
+                initialDate={creating ? selectedDate || undefined : undefined}
+                suggestedContact={creating ? contatoSugerido : undefined}
+                editingTask={selectedTask || undefined}
+              />}
+              onUpdate={async (updates) => {
+                if (!selectedTask) return false;
+                const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
+                if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
+                return success;
+              }} />
+          </div>
+        );
       })()}
       </div>
 
