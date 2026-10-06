@@ -6342,7 +6342,7 @@ ${recentMessages}
                 { id: "nova-tarefa", label: "Nova tarefa", icon: Plus, kind: "nova-tarefa" as const },
               ] as const).map((t) => {
                 const Icon = t.icon;
-                const ativo = t.kind === "view" ? mobileView === t.id : false;
+                const ativo = t.kind === "view" ? mobileView === t.id : t.kind === "agenda" ? activeTab === "agenda" : false;
                 const desabilitado = t.kind === "view" && t.id !== "list" && !contatoMobileSelecionado;
                 const onClick = () => {
                   if (t.kind === "agenda") {
