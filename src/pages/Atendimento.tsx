@@ -5917,6 +5917,36 @@ ${recentMessages}
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
+              <div className="flex flex-shrink-0 items-center gap-1 border-b border-border/50 bg-card px-2 py-1.5">
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Dia anterior" onClick={handlePreviousDay}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium text-foreground"
+                  aria-label="Abrir agenda"
+                  onClick={() => window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }))}
+                >
+                  <CalendarIcon className="h-4 w-4 text-primary" />
+                  <span className="truncate">{isSameDay(agendaDate, new Date()) ? "Hoje" : agendaDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}</span>
+                </button>
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Próximo dia" onClick={handleNextDay}>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-9 gap-1"
+                  aria-label="Nova tarefa"
+                  onClick={() => {
+                    const iso = agendaDate.toISOString();
+                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: iso, modo: "day" } }));
+                    window.setTimeout(() => window.dispatchEvent(new CustomEvent("calendario:nova-tarefa", { detail: { data: iso } })), 350);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Tarefa
+                </Button>
+              </div>
               <div className="flex-1 min-h-0 flex flex-col">
                 <FilaDoDia
                   items={filaItemsMobile}
@@ -6007,6 +6037,10 @@ ${recentMessages}
                   onToggleDetails={() => setShowClientDetailsEmail((v) => !v)}
                   detailsOpen={showClientDetailsEmail}
                 />
+              ) : activeTab === "agenda" && !selectedTaskId && !selectedAgendaContato && agendaViewMode !== "massa" ? (
+                <div className="h-full min-h-0 overflow-y-auto bg-card">
+                  <ModuloCalendario key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} />
+                </div>
               ) : <MobileMainContent
                 activeTab={activeTab}
                 selectedConversation={selectedConversation}

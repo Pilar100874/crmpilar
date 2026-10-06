@@ -1732,6 +1732,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setShowTaskDialog(true);
   };
 
+  useEffect(() => {
+    const nova = (e: Event) => {
+      const d = (e as CustomEvent).detail?.data;
+      handleOpenNewTask(d ? new Date(d) : undefined);
+    };
+    window.addEventListener("calendario:nova-tarefa", nova);
+    return () => window.removeEventListener("calendario:nova-tarefa", nova);
+  });
+
+
   const handleToggleTaskStatus = async (taskId: string, semPrevia = false) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
