@@ -420,6 +420,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   }, []);
   const agendaCompacta = agendaWidth > 0 && agendaWidth < 900;
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
+  // Avisa o Atendimento quando a data muda, para a aba Agendados acompanhar
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
+  }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);

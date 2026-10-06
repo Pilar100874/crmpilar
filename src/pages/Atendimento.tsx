@@ -25,7 +25,7 @@ import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
+import { format, startOfDay, endOfDay, addDays, subDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "@/lib/toast-config";
@@ -274,12 +274,26 @@ export default function Atendimento() {
       setSelectedTaskData(null);
       setSelectedAgendaContato(null);
       setMobileView("main");
-      setDataAgendaCentral(new Date(detail.data));
+      const novaData = new Date(detail.data);
+      setAgendaDate(novaData);
+      setDataAgendaCentral(novaData);
       setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : "day");
       setAgendaCentralKey((k) => k + 1);
     };
     window.addEventListener("calendario:abrir-data", abrirData);
     return () => window.removeEventListener("calendario:abrir-data", abrirData);
+  }, []);
+
+  // Navegação de datas dentro do calendário central atualiza a aba Agendados
+  useEffect(() => {
+    const dataMudou = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.data) return;
+      const nova = new Date(detail.data);
+      setAgendaDate((prev) => (isSameDay(prev, nova) ? prev : nova));
+    };
+    window.addEventListener("calendario:data-mudou", dataMudou);
+    return () => window.removeEventListener("calendario:data-mudou", dataMudou);
   }, []);
 
 
@@ -1888,15 +1902,25 @@ export default function Atendimento() {
   };
 
   const handlePreviousDay = () => {
-    setAgendaDate(prev => subDays(prev, 1));
+    setAgendaDate(prev => {
+      const nova = subDays(prev, 1);
+      if (dataAgendaCentral) { setDataAgendaCentral(nova); setAgendaCentralKey((k) => k + 1); }
+      return nova;
+    });
   };
 
   const handleNextDay = () => {
-    setAgendaDate(prev => addDays(prev, 1));
+    setAgendaDate(prev => {
+      const nova = addDays(prev, 1);
+      if (dataAgendaCentral) { setDataAgendaCentral(nova); setAgendaCentralKey((k) => k + 1); }
+      return nova;
+    });
   };
 
   const handleToday = () => {
-    setAgendaDate(new Date());
+    const hoje = new Date();
+    setAgendaDate(hoje);
+    if (dataAgendaCentral) { setDataAgendaCentral(hoje); setAgendaCentralKey((k) => k + 1); }
   };
 
   const moveSortCriterion = (index: number, direction: 'up' | 'down') => {
