@@ -2452,7 +2452,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             <div data-agenda-tabela-compacta>
               <div className="flex items-center gap-2 border-b border-border py-2">
                 <span className="text-xs text-muted-foreground">Ordenar por</span>
-                <Select value={sortColumn} onValueChange={handleSort}>
+                <Select value={sortConfig?.key || "title"} onValueChange={handleSort}>
                   <SelectTrigger className="h-9 min-w-0 flex-1"><SelectValue /></SelectTrigger>
                   <SelectContent>{visibleColumns.filter(col => col.id !== "actions" && col.id !== "status").map(col => <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>)}</SelectContent>
                 </Select>
