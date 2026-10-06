@@ -406,6 +406,16 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
 };
 
 export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string } }) {
+  const agendaAreaRef = useRef<HTMLDivElement>(null);
+  const [agendaWidth, setAgendaWidth] = useState(0);
+  useEffect(() => {
+    const area = agendaAreaRef.current;
+    if (!area) return;
+    const observer = new ResizeObserver(([entry]) => setAgendaWidth(entry.contentRect.width));
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, []);
+  const agendaCompacta = agendaWidth > 0 && agendaWidth < 900;
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -1879,6 +1889,41 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
+    if (agendaCompacta) {
+      const inicio = startOfWeek(monthStart, { weekStartsOn: 1 });
+      const totalDias = differenceInDays(endOfWeek(monthEnd, { weekStartsOn: 1 }), inicio) + 1;
+      const tarefasDoDia = getTasksForDay(currentDate);
+      return (
+        <div className="min-w-0 space-y-4" data-agenda-mes-compacto>
+          <div className="overflow-hidden rounded-md border border-border">
+            <div className="grid grid-cols-7 border-b border-border bg-muted/30">
+              {Array.from({ length: 7 }, (_, i) => <span key={i} className="py-2 text-center text-xs font-medium text-muted-foreground">{format(addDays(inicio, i), "EEE", { locale: ptBR })}</span>)}
+            </div>
+            <div className="grid grid-cols-7">
+              {Array.from({ length: totalDias }, (_, i) => {
+                const dia = addDays(inicio, i);
+                const quantidade = getTasksForDay(dia).length;
+                return <DroppableDay key={dia.toISOString()} date={dia} className="min-w-0 border-b border-r border-border/60">
+                  <Button variant="ghost" onClick={() => setCurrentDate(dia)} aria-label={`Selecionar ${format(dia, 'dd/MM/yyyy')}`} aria-pressed={isSameDay(dia, currentDate)} className={cn("h-16 w-full flex-col gap-1 rounded-none px-0", !isSameMonth(dia, monthStart) && "text-muted-foreground/60", isToday(dia) && "text-primary", isSameDay(dia, currentDate) && "bg-primary/10 ring-1 ring-inset ring-primary")}>
+                    <span className="text-sm font-semibold">{format(dia, "d")}</span>
+                    <span className={cn("h-4 text-[10px] tabular-nums", quantidade ? "text-primary" : "text-muted-foreground")}>{quantidade ? `${quantidade} ·` : ""}</span>
+                  </Button>
+                </DroppableDay>;
+              })}
+            </div>
+          </div>
+          <section className="space-y-2">
+            <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
+              <h3 className="text-sm font-semibold capitalize">{format(currentDate, "EEEE, dd/MM", { locale: ptBR })}</h3>
+              <span className="shrink-0 text-xs text-muted-foreground">{tarefasDoDia.length} tarefas</span>
+            </div>
+            {tarefasDoDia.map(task => <DraggableTask key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />)}
+            {!tarefasDoDia.length && <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma tarefa neste dia</p>}
+          </section>
+        </div>
+      );
+    }
+
     const dateFormat = "EEE";
     const days = [];
     let day = startDate;
@@ -2028,6 +2073,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const renderTarefa = (task: Task) => (
       <DraggableTask key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
     );
+    if (agendaCompacta) {
+      return <div className="min-w-0 space-y-3" data-agenda-semana-compacta>
+        {dias.map((dia, i) => <section key={dia.toISOString()} className="min-w-0 border-b border-border pb-3">
+          <div className={cn("mb-2 flex items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2", isToday(dia) && "bg-primary/10")}>
+            <Button variant="ghost" onClick={() => { setCurrentDate(dia); setViewMode("day"); }} className="h-8 min-w-0 justify-start px-0 text-sm font-semibold capitalize">{format(dia, "EEE, dd/MM", { locale: ptBR })}{isToday(dia) && <span className="ml-2 text-xs text-primary">Hoje</span>}</Button>
+            <span className="shrink-0 text-xs text-muted-foreground">{tarefasPorDia[i].length} tarefas</span>
+          </div>
+          <DroppableSlot date={dia} slotTime="" className="min-h-10 space-y-2">
+            {tarefasPorDia[i].filter(t => !t.time || t.isAllDay).map(renderTarefa)}
+          </DroppableSlot>
+          {Array.from({ length: 24 }, (_, hora) => {
+            const horario = `${String(hora).padStart(2, "0")}:00`;
+            const lista = tarefasPorDia[i].filter(t => !t.isAllDay && t.time?.startsWith(horario.slice(0, 2)));
+            if (!lista.length) return null;
+            return <DroppableSlot key={hora} date={dia} slotTime={horario} className="mb-2 space-y-2">{lista.map(renderTarefa)}</DroppableSlot>;
+          })}
+          {!tarefasPorDia[i].length && <p className="px-3 text-xs text-muted-foreground">Nenhuma tarefa</p>}
+        </section>)}
+      </div>;
+    }
     return (
       <div className="overflow-y-auto overflow-x-hidden rounded-md border border-border/70 bg-background" data-agenda-semana>
         <div className="min-w-0 w-full">
@@ -2137,18 +2202,18 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     );
 
     return (
-      <div className="border border-border rounded">
+      <div className="min-w-0 overflow-hidden border border-border rounded">
         <div className="p-3 sm:p-4 border-b border-border bg-muted/30">
           <h3 className="font-semibold text-sm sm:text-base">
             {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
           </h3>
         </div>
-        <div className="max-h-[calc(100vh-280px)] md:max-h-[600px] overflow-y-auto">
+        <div className="max-h-[600px] overflow-y-auto overflow-x-hidden">
           {/* Seção: Tarefas Dia Todo */}
           {allDayTasks.length > 0 && (
             <div className="border-b-2 border-border bg-accent/5">
               <div className="flex">
-                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm font-semibold text-foreground border-r border-border flex-shrink-0">
+                <div className="w-12 sm:w-16 p-1.5 text-xs font-semibold text-foreground border-r border-border flex-shrink-0">
                   Dia Todo
                 </div>
                 <div className="flex-1 p-2 space-y-1 min-w-0">
@@ -2162,7 +2227,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           {(
             <DroppableSlot date={currentDate} slotTime="" className="border-b-2 border-border bg-muted/10">
               <div className="flex">
-                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm font-semibold text-foreground border-r border-border flex-shrink-0">
+                <div className="w-12 sm:w-16 p-1.5 text-xs font-semibold text-foreground border-r border-border flex-shrink-0">
                   Sem Hora
                 </div>
                 <div className="flex-1 p-2 space-y-1 min-w-0">
@@ -2176,8 +2241,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           {hours.map(hour => {
             const hourTasks = timedTasks.filter(task => task.time?.startsWith(String(hour).padStart(2, '0')));
             return (
-              <DroppableSlot key={hour} date={currentDate} slotTime={`${String(hour).padStart(2, '0')}:00`} className="flex border-b border-border hover:bg-muted/30">
-                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm text-muted-foreground border-r border-border flex-shrink-0">
+              <DroppableSlot key={hour} date={currentDate} slotTime={`${String(hour).padStart(2, '0')}:00`} className="flex min-h-12 border-b border-border hover:bg-muted/30">
+                <div className="w-12 sm:w-16 p-1.5 text-xs text-muted-foreground border-r border-border flex-shrink-0">
                   {String(hour).padStart(2, '0')}:00
                 </div>
                 <div className="flex-1 p-2 space-y-1 min-w-0">
@@ -2358,9 +2423,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     return (
       <div className="flex flex-col h-full min-w-0 max-w-full">
 
-        <div className="border-b border-border bg-card px-6 py-4">
+        <div className="border-b border-border bg-card px-2 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex-1 max-w-md">
+            <div className="min-w-0 flex-1 max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -2372,7 +2437,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               </div>
             </div>
             
-            <div className="ml-auto text-sm text-muted-foreground">
+            <div className="ml-auto shrink-0 text-xs text-muted-foreground">
               {sortedTasks.length} tarefa{sortedTasks.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -2382,6 +2447,25 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           {sortedTasks.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
+            </div>
+          ) : agendaCompacta ? (
+            <div data-agenda-tabela-compacta>
+              <div className="flex items-center gap-2 border-b border-border py-2">
+                <span className="text-xs text-muted-foreground">Ordenar por</span>
+                <Select value={sortColumn} onValueChange={handleSort}>
+                  <SelectTrigger className="h-9 min-w-0 flex-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{visibleColumns.filter(col => col.id !== "actions" && col.id !== "status").map(col => <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {sortedTasks.map(task => <article key={task.id} className="space-y-2 border-b border-border py-3">
+                <DraggableTask task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-2 text-xs">
+                  <div><dt className="text-muted-foreground">Data</dt><dd className="font-medium">{format(task.date, "dd/MM/yyyy")}</dd></div>
+                  <div><dt className="text-muted-foreground">Status</dt><dd>{task.status === "completed" ? "Concluída" : "Pendente"}</dd></div>
+                  <div className="min-w-0"><dt className="text-muted-foreground">Origem</dt><dd className="break-words">{getOrigemLabel(task.origem, task.campaignName)}</dd></div>
+                  <div className="min-w-0"><dt className="text-muted-foreground">Atribuído a</dt><dd className="break-words">{task.assignedTo || task.userName || "—"}</dd></div>
+                </dl>
+              </article>)}
             </div>
           ) : (
             <table className="w-full table-fixed">
@@ -3259,9 +3343,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
       {/* Content */}
       <div className="relative flex min-h-0 flex-1">
-      <div className="min-w-0 flex-1 overflow-auto px-2 sm:px-3 py-3">
+      <div ref={agendaAreaRef} className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-3 py-3">
         {/* Navegação e filtros do calendário (dentro da área central) */}
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:mb-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Dia anterior" title="Dia anterior" className="h-8 w-8 rounded-md border border-border/60 bg-card">
               <ChevronLeft className="h-4 w-4" />
@@ -3270,12 +3354,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Próximo dia" title="Próximo dia" className="h-8 w-8 rounded-md border border-border/60 bg-card">
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <span className="ml-1 hidden text-xs font-semibold capitalize text-foreground sm:inline">
+            <span className="ml-1 min-w-0 text-xs font-semibold capitalize text-foreground">
               {format(currentDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
             {isAdmin && usuarios.length > 0 && (
               <Select
                 value={selectedUserIds.length === 1 ? selectedUserIds[0] : selectedUserIds.length > 1 ? "multiple" : "all"}
@@ -3313,12 +3397,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">{selectedOrigens.length + selectedUserIds.length}</Badge>
               )}
             </Button>
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-auto">
-              <TabsList className="h-8 bg-muted/60">
-                <TabsTrigger value="day" className="px-2 text-[11px]">Dia</TabsTrigger>
-                <TabsTrigger value="week" className="px-2 text-[11px]">Semana</TabsTrigger>
-                <TabsTrigger value="month" className="px-2 text-[11px]">Mês</TabsTrigger>
-                <TabsTrigger value="table" className="px-2 text-[11px]">Tabela</TabsTrigger>
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-full">
+              <TabsList className="grid h-10 w-full grid-cols-4 bg-muted/60">
+                <TabsTrigger value="day" className="h-8 px-1 text-xs">Dia</TabsTrigger>
+                <TabsTrigger value="week" className="h-8 px-1 text-xs">Semana</TabsTrigger>
+                <TabsTrigger value="month" className="h-8 px-1 text-xs">Mês</TabsTrigger>
+                <TabsTrigger value="table" className="h-8 px-1 text-xs">Tabela</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
