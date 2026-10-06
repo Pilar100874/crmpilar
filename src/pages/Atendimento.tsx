@@ -5659,8 +5659,10 @@ ${recentMessages}
                   variant="ghost"
                   onClick={() => setMobileView("details")}
                   className="h-8 w-8 rounded-full"
+                  title="Detalhes do cliente"
+                  aria-label="Detalhes do cliente"
                 >
-                  <ChevronRight className="h-5 w-5" />
+                  <UserRound className="h-5 w-5 text-orange-600" />
                 </Button>
               )}
             </div>
