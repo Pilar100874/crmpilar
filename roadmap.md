@@ -1,5 +1,10 @@
 # Roteiro
 
+## Cartões e barra de datas
+- [ ] Deixar Próxima ação expansível e inicialmente fechada.
+- [ ] Seguir a referência na barra de datas e remover botões de visualização.
+- [ ] Conferir os ajustes na tela e a compilação.
+
 ## Barra lateral da tarefa
 - [x] Abrir detalhes ao clicar nas tarefas, com dados reais e ações existentes de contato, edição e reagendamento.
 - [x] Conferir abertura, fechamento, histórico, reagendamento e preservação do status no navegador.
