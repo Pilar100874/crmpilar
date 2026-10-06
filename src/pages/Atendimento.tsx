@@ -6570,7 +6570,7 @@ ${recentMessages}
         )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
+          <div data-painel-centro style={{ top: 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>
