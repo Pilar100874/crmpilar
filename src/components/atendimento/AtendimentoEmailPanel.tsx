@@ -1,4 +1,4 @@
-import { Archive, ChevronLeft, ChevronRight, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
+import { Archive, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailPanel } from "@/components/email/EmailPanel";
@@ -60,7 +60,7 @@ export function AtendimentoEmailPanel({
   onReply,
   onForward,
   onToggleDetails,
-  detailsOpen,
+
   toolsSlot,
   onOpenConsultaEstoque,
   pendingAppendText,
