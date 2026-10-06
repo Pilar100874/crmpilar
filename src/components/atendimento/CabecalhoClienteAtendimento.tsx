@@ -1,4 +1,4 @@
-import { CalendarDays, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone } from "lucide-react";
+import { CalendarDays, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
