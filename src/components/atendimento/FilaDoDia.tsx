@@ -545,7 +545,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                       <button
                         type="button"
                         onClick={(event) => event.stopPropagation()}
-                        className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        className="h-8 w-8 md:h-6 md:w-6 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                         aria-label="Mais opções"
                       >
                         <MoreVertical className="h-4 w-4" />
@@ -578,9 +578,9 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         return proximo;
                       });
                     }}
-                    className="h-6 w-6 rounded-full text-muted-foreground"
+                    className="h-8 w-8 md:h-6 md:w-6 rounded-full text-muted-foreground"
                   >
-                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
+                    <ChevronDown className={cn("h-4 w-4 md:h-3.5 md:w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
                   </Button>
                 </div>
               </div>
