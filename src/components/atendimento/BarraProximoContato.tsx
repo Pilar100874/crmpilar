@@ -142,7 +142,7 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
       )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <CalendarCheck className="order-1 h-5 w-5 shrink-0 text-destructive" />
-        <div className="order-2 min-w-0 max-w-full flex-1 sm:max-w-[140px] sm:flex-none">
+        <div className="order-2 min-w-[96px] max-w-full flex-1 sm:min-w-0 sm:max-w-[140px] sm:flex-none">
           <p className="truncate text-xs font-semibold text-foreground">{modoInativar ? "Inativar cliente" : "Próximo contato"}</p>
           <p className="truncate text-[10px] text-muted-foreground">{contato.nome}</p>
         </div>
