@@ -1,8 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, Clock3, Edit, Loader2, MoreVertical, Trash2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CalendarDays, Clock3, Loader2, MoreVertical, Trash2, X, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,11 +38,13 @@ interface Props {
 
 interface Contact { id: string; nome: string; telefone: string | null; tel: string | null; email: string | null; empresa?: string }
 
+/** Painel lateral fixo da tarefa, ancorado à direita como a aba de detalhes do cliente. */
 export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     setContact(null);
@@ -71,6 +72,14 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
     return () => { cancelled = true; };
   }, [task.contactId, task.id]);
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   async function update(updates: Partial<SidebarTask>) {
     setSaving(true);
     try { await onUpdate(updates); } finally { setSaving(false); }
@@ -78,52 +87,52 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
   const late = task.status === "pending" && (isBefore(task.date, startOfDay(new Date())) || (format(task.date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd") && Boolean(task.time && task.time < format(new Date(), "HH:mm"))));
   const name = contact?.nome || task.contactName || "Sem contato vinculado";
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
-  return (
-    <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent side="right" className="z-[700] w-full overflow-hidden flex flex-col p-0 sm:max-w-2xl" overlayClassName="z-[700]">
-        <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
-          <div className="flex items-center gap-3 pr-12">
-            <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div className="min-w-0">
-              <SheetTitle className="text-lg">{creating ? "Nova Tarefa" : "Editar Tarefa"}</SheetTitle>
-              <p className="text-xs text-muted-foreground">
-                {format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}
-              </p>
-            </div>
-            {!creating && <div className="ml-auto flex items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-4 w-4" />Editar tarefa</DropdownMenuItem>
-                  <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir tarefa</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>}
-          </div>
-        </SheetHeader>
 
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
-          {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
-            <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" /><h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>{late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}</div>
-            <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
-          </div>}
-          {editor}
-          {!editor && <section>
-            <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Contato</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => { onClose(); abrirHistoricoDoContato({ customerId: task.contactId, nome: name }); }}>Ver no CRM</Button>}</div>
-            <div className="flex min-w-0 items-center gap-2 rounded-md border border-border p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">{initials}</div>
-              <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{name}</p>{contact?.empresa && <p className="break-words text-xs text-muted-foreground">{contact.empresa}</p>}{loading && <Loader2 className="mt-1 h-3 w-3 animate-spin text-muted-foreground" />}{error && <p className="text-xs text-destructive">Não foi possível carregar o contato.</p>}</div>
-            </div>
-          </section>}
-          {!creating && <section className="space-y-2">
-            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
-          </section>}
+  return (
+    <aside className="flex h-full w-full flex-shrink-0 flex-col overflow-hidden border-l border-border bg-card sm:w-80 md:w-64 lg:w-[400px]">
+      <div className="flex items-center gap-3 border-b border-border/60 bg-gradient-to-r from-orange-50 to-transparent px-4 py-3 dark:from-orange-950/20">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+          <CalendarDays className="h-4.5 w-4.5 text-orange-600 dark:text-orange-400" />
         </div>
-      </SheetContent>
-    </Sheet>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-foreground">{creating ? "Nova Tarefa" : "Editar Tarefa"}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-1">
+          {!creating && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-4 w-4" />Editar tarefa</DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir tarefa</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose} aria-label="Fechar painel da tarefa"><X className="h-4 w-4" /></Button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+        {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
+          <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" /><h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>{late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}</div>
+          <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
+        </div>}
+        {editor}
+        {!editor && <section>
+          <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Contato</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => { onClose(); abrirHistoricoDoContato({ customerId: task.contactId, nome: name }); }}>Ver no CRM</Button>}</div>
+          <div className="flex min-w-0 items-center gap-2 rounded-md border border-border p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">{initials}</div>
+            <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{name}</p>{contact?.empresa && <p className="break-words text-xs text-muted-foreground">{contact.empresa}</p>}{loading && <Loader2 className="mt-1 h-3 w-3 animate-spin text-muted-foreground" />}{error && <p className="text-xs text-destructive">Não foi possível carregar o contato.</p>}</div>
+          </div>
+        </section>}
+        {!creating && <section className="space-y-2">
+          <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
+        </section>}
+      </div>
+    </aside>
   );
 }
