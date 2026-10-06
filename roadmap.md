@@ -1,8 +1,8 @@
 # Roteiro
 
 ## Barra lateral da tarefa
-- [ ] Abrir detalhes ao clicar nas tarefas, com dados reais e ações existentes de contato, edição e reagendamento.
-- [ ] Conferir abertura, fechamento e preservação do status no navegador.
+- [x] Abrir detalhes ao clicar nas tarefas, com dados reais e ações existentes de contato, edição e reagendamento.
+- [x] Conferir abertura, fechamento, histórico, reagendamento e preservação do status no navegador.
 
 ## Visual da agenda — referência de outubro
 - [x] Aplicar grade semanal por horário e cartões coloridos legíveis conforme imagem enviada.
