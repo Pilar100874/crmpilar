@@ -251,86 +251,134 @@ function DraggableTaskCard({
 
   const getOrigemIcon = (origem: Task['origem']) => getOrigemIconWithColor(origem, "md");
 
+  const concluida = task.status === "completed";
+  const agora = new Date();
+  const atrasada =
+    !concluida &&
+    (isBefore(task.date, startOfDay(agora)) ||
+      (isSameDay(task.date, agora) && !!task.time && task.time < format(agora, "HH:mm")));
+  const corBarra = userColor || getOrigemColor(task.origem);
+  const nomeBase = task.contactName || task.title;
+  const iniciais = nomeBase
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte.charAt(0))
+    .join("")
+    .toUpperCase();
+
   return (
-    <Card 
-      ref={setNodeRef} 
-      style={{
-        ...style,
-        ...(userColor && task.status !== "completed" ? {
-          borderLeft: `4px solid ${userColor}`,
-          backgroundColor: toAlpha(userColor, 0.12)
-        } : {})
-      }} 
-      className="mb-2 sm:mb-3 hover:shadow-md transition-shadow"
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative flex items-center gap-3 border-b border-border/20 px-3 py-3 transition-colors hover:bg-muted/40",
+        concluida && "opacity-60"
+      )}
     >
-      <CardContent className="p-2 sm:p-3 md:p-4">
-        <div className="flex items-start gap-2 sm:gap-3">
-          <div {...attributes} {...listeners} className="mt-1 hidden sm:block">
-            <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-sm">
-              <span className="font-medium whitespace-nowrap">
-                {format(task.date, "dd/MM", { locale: ptBR })}
-              </span>
-              {task.time && (
-                <span className="text-muted-foreground whitespace-nowrap">{task.time}</span>
-              )}
-              {task.isAllDay && (
-                <Badge variant="secondary" className="text-[10px] sm:text-xs gap-0.5 sm:gap-1 px-1 sm:px-2">
-                  <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: "hsl(0, 85%, 60%)" }} />
-                  <span className="hidden sm:inline">Dia todo</span>
-                </Badge>
-              )}
-              {getOrigemIcon(task.origem) && (
-                <Badge variant="outline" className="text-[10px] sm:text-xs gap-0.5 sm:gap-1 px-1 sm:px-2">
-                  {getOrigemIcon(task.origem)}
-                  <span className="hidden md:inline">{task.origem}</span>
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                checked={task.status === "completed"}
-                onChange={onToggle}
-                className="cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <span className={`block break-words text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
-                  {task.title}
-                </span>
-                {task.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2">{task.description}</p>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex sm:flex-row flex-col items-center gap-0.5 sm:gap-1">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8"
-                onClick={onEdit}
-              >
-                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-destructive/20 hover:text-destructive"
-                onClick={onDelete}
-              >
-                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </Button>
-            )}
-          </div>
+      {/* Barra lateral de cor (usuário responsável ou origem) */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
+        style={{ backgroundColor: corBarra, opacity: concluida ? 0.4 : 1 }}
+        aria-hidden
+      />
+      {userColor && !concluida && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: toAlpha(userColor, 0.06) }}
+          aria-hidden
+        />
+      )}
+
+      {/* Alça de arrastar (aparece ao passar o mouse) */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="hidden shrink-0 cursor-grab text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 sm:block"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+
+      {/* Concluir tarefa */}
+      <input
+        type="checkbox"
+        checked={concluida}
+        onChange={onToggle}
+        aria-label={concluida ? "Reabrir tarefa" : "Concluir tarefa"}
+        className="h-4 w-4 shrink-0 cursor-pointer accent-orange-500"
+      />
+
+      {/* Avatar com iniciais */}
+      <div className="shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[13px] text-foreground/70">
+        {iniciais}
+      </div>
+
+      {/* Título, descrição e origem */}
+      <div className="min-w-0 flex-1">
+        <p className={cn("text-[14px] font-semibold leading-tight truncate", concluida ? "line-through text-muted-foreground" : "text-foreground")}>
+          {task.title}
+        </p>
+        {task.description && (
+          <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">{task.description}</p>
+        )}
+        <div className="mt-1 flex items-center gap-1.5">
+          {getOrigemIconWithColor(task.origem, "sm") && (
+            <span
+              title={`Origem: ${task.origem}`}
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted"
+            >
+              {getOrigemIconWithColor(task.origem, "sm")}
+            </span>
+          )}
+          {task.userName && (
+            <span className="text-[11px] text-muted-foreground truncate">{task.userName}</span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Horário e data */}
+      <div className="shrink-0 text-right">
+        {task.time ? (
+          <p className={cn("text-sm font-semibold tabular-nums leading-tight", atrasada ? "text-destructive" : "text-foreground")}>
+            {task.time}
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground leading-tight">Dia todo</p>
+        )}
+        {atrasada && (
+          <p className="text-[9px] font-semibold text-destructive leading-none">Atrasado</p>
+        )}
+        <p className="text-[10px] text-muted-foreground tabular-nums leading-tight">
+          {format(task.date, "dd/MM", { locale: ptBR })}
+        </p>
+      </div>
+
+      {/* Menu de opções */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Mais opções"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {onEdit && (
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit className="h-3.5 w-3.5 mr-1.5" /> Editar
+            </DropdownMenuItem>
+          )}
+          {onDelete && (
+            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Excluir
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
