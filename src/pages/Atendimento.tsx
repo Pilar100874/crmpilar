@@ -6331,15 +6331,14 @@ ${recentMessages}
             />
           )}
 
-          {/* Abas principais do celular: Fila / Atendimento / Cadastro / Agenda / Nova tarefa */}
+          {/* Abas principais do celular: Fila / Atendimento / Cadastro / Agenda */}
           {!(activeTab === "orcamento" && orcamentoSheetOpen) && (
-            <nav aria-label="Seções do atendimento" className="order-last flex-shrink-0 grid grid-cols-5 border-t border-border bg-card pb-safe">
+            <nav aria-label="Seções do atendimento" className="order-last flex-shrink-0 grid grid-cols-4 border-t border-border bg-card pb-safe">
               {([
                 { id: "list", label: "Contatos", icon: CalendarIcon, kind: "view" as const },
                 { id: "main", label: "Atendimento", icon: MessageSquare, kind: "view" as const },
                 { id: "details", label: "Cadastro", icon: User, kind: "view" as const },
                 { id: "agenda", label: "Agenda", icon: CalendarDays, kind: "agenda" as const },
-                { id: "nova-tarefa", label: "Nova tarefa", icon: Plus, kind: "nova-tarefa" as const },
               ] as const).map((t) => {
                 const Icon = t.icon;
                 const ativo = t.kind === "view" ? mobileView === t.id : t.kind === "agenda" ? activeTab === "agenda" : false;
@@ -6347,10 +6346,6 @@ ${recentMessages}
                 const onClick = () => {
                   if (t.kind === "agenda") {
                     window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }));
-                  } else if (t.kind === "nova-tarefa") {
-                    const iso = agendaDate.toISOString();
-                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: iso, modo: "day" } }));
-                    window.setTimeout(() => window.dispatchEvent(new CustomEvent("calendario:nova-tarefa", { detail: { data: iso } })), 350);
                   } else {
                     setMobileView(t.id);
                   }
@@ -6363,7 +6358,7 @@ ${recentMessages}
                     onClick={onClick}
                     aria-current={ativo ? "page" : undefined}
                     aria-disabled={desabilitado || undefined}
-                    title={desabilitado ? "Abra um contato na lista para liberar esta aba" : t.kind === "nova-tarefa" ? "Criar uma nova tarefa na agenda" : undefined}
+                    title={desabilitado ? "Abra um contato na lista para liberar esta aba" : undefined}
                     className={`flex min-w-0 flex-col items-center gap-0.5 py-2 px-0.5 text-[10px] font-medium leading-tight transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"} ${desabilitado ? "cursor-not-allowed opacity-40" : ""}`}
                   >
                     <Icon className="h-5 w-5" />
