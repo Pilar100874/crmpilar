@@ -235,6 +235,8 @@ export default function Atendimento() {
   }, [pendenciasAtendimento, setModoSimultaneo]);
   const [contatoFinalizarId, setContatoFinalizarId] = useState<string | null>(null);
   const [focoBarra, setFocoBarra] = useState(0);
+  // Celular: as abas "Atendimento" e "Cadastro" só ficam ativas depois de abrir um cartão de contato
+  const [contatoMobileSelecionado, setContatoMobileSelecionado] = useState(false);
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
     if (isMobile) {
@@ -4510,6 +4512,7 @@ ${recentMessages}
   // Abre o conteúdo do canal escolhido para o cliente (cabeçalho central ou botões do cartão).
   const abrirCanalDoContato = (clienteId: string, aba: string) => {
     fecharConteudoCentral();
+    setContatoMobileSelecionado(true);
     if (aba === activeTab) { aplicarClienteNaAba(clienteId, aba); return; }
     clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(aba);
