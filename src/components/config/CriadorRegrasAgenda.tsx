@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Lock, Network, Pencil, Plus, Trash2, Wand2, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, Network, Pencil, Plus, Search, Trash2, Wand2, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { AjustesAlertaAgenda } from "@/components/config/AjustesAlertaAgenda";
 import { FluxoVisualRegrasAgenda } from "@/components/config/FluxoVisualRegrasAgenda";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
@@ -40,11 +40,35 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
   const [aviso, setAviso] = useState<{ itens: Interferencia[]; escolhas: Record<string, string> } | null>(null);
   const [excluir, setExcluir] = useState<Regra | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [telaFiltro, setTelaFiltro] = useState("todas");
+  const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
+  const [ajusteAlerta, setAjusteAlerta] = useState<Regra | null>(null);
+  const [carregando, setCarregando] = useState(true);
   const db = supabase as any;
 
   const carregar = async () => {
-    const { data } = await db.from("calendario_regras_automacao").select("*").eq("estabelecimento_id", estabelecimentoId).order("prioridade").order("created_at");
-    setRegras(data || []);
+    const [automacoes, validacoes] = await Promise.all([
+      db.from("calendario_regras_automacao").select("*").eq("estabelecimento_id", estabelecimentoId).order("prioridade").order("created_at"),
+      db.from("calendario_regras").select("*").eq("estabelecimento_id", estabelecimentoId).order("ordem"),
+    ]);
+    setCarregando(false);
+    if (automacoes.error || validacoes.error) { toast.error("Não foi possível carregar todas as regras"); return; }
+    const catalogo: Regra[] = automacoes.data || [];
+    for (const validacao of validacoes.data || []) {
+      const chave = `cal_${validacao.tipo}`;
+      const existente = catalogo.find((r) => r.chave === chave);
+      if (existente) {
+        existente.acao_config = validacao.configuracao || {};
+        existente.ativa = validacao.ativa;
+      } else {
+        catalogo.push({ id: `validacao-${validacao.id}`, chave, nome: validacao.nome, descricao: validacao.descricao,
+          tela: "Calendário", gatilho: "tarefa_criada_manual", acao: `validar_${validacao.tipo}`, ativa: validacao.ativa,
+          condicoes: {}, acao_config: validacao.configuracao || {}, relacoes: {}, sistema: true, executor: "tela",
+          prioridade: 20 + (validacao.ordem || 0), execucoes: 0 });
+      }
+    }
+    setRegras(catalogo.sort((a, b) => a.prioridade - b.prioridade));
   };
   useEffect(() => {
     (async () => {
@@ -62,6 +86,8 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
   const nomeUsuario = (id: string) => usuarios.find((u) => u.id === id)?.nome || "usuário";
 
   const editar = (r: Regra) => {
+    if (["cal_alerta_urgente", "cal_alerta_tarefas_urgentes"].includes(r.chave || "")) { setAjusteAlerta(r); return; }
+    if (r.id.startsWith("validacao-")) { toast.info("Esta validação faz parte do funcionamento do calendário"); return; }
     const c = r.condicoes || {}, a = r.acao_config || {};
     setForm({
       ...vazio(), id: r.id, nome: r.nome, descricao: r.descricao || "", gatilho: r.gatilho, acao: r.acao, prioridade: r.prioridade,
@@ -113,8 +139,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
     if (!form) return;
     const { condicoes, acao_config } = montar(form);
     const relacoes: Record<string, string> = { ...form.relacoes };
-    const desativar: string[] = [];
-    Object.entries(escolhas).forEach(([id, m]) => { if (m === "desativar") { desativar.push(id); delete relacoes[id]; } else relacoes[id] = m; });
+    Object.entries(escolhas).forEach(([id, m]) => { if (m !== "desativar") relacoes[id] = m; });
     const linha: any = form.sistema
       ? { descricao: form.descricao || null, prioridade: form.prioridade, relacoes, ...(form.executor === "banco" ? { acao_config } : {}) }
       : { estabelecimento_id: estabelecimentoId, nome: form.nome.trim(), descricao: form.descricao || null, gatilho: form.gatilho, acao: form.acao,
@@ -123,18 +148,10 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
     const { error } = form.id
       ? await db.from("calendario_regras_automacao").update(linha).eq("id", form.id)
       : await db.from("calendario_regras_automacao").insert(linha);
-    if (!error && desativar.length) await db.from("calendario_regras_automacao").update({ ativa: false }).in("id", desativar);
     setSalvando(false);
     if (error) return toast.error("Não foi possível salvar a regra");
-    toast.success(desativar.length ? `Regra salva e ${desativar.length} regra(s) desativada(s)` : "Regra salva");
+    toast.success("Regra salva");
     setAviso(null); setForm(null); void carregar();
-  };
-
-  const podeAlternar = (r: Regra) => !r.sistema || r.executor === "banco" || !!r.chave?.startsWith("cal_");
-  const alternar = async (r: Regra, v: boolean) => {
-    setRegras((rs) => rs.map((x) => (x.id === r.id ? { ...x, ativa: v } : x)));
-    await db.from("calendario_regras_automacao").update({ ativa: v }).eq("id", r.id);
-    if (r.chave?.startsWith("cal_")) await db.from("calendario_regras").update({ ativa: v }).eq("estabelecimento_id", estabelecimentoId).eq("tipo", r.chave.slice(4));
   };
 
   const confirmarExclusao = async () => {
@@ -166,40 +183,68 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
 
   const interferenciasDe = (r: Regra) => analisarInterferencias(r, regras);
 
+  const alternarExpansao = (id: string) => setExpandidas((anteriores) => {
+    const proximas = new Set(anteriores);
+    if (proximas.has(id)) proximas.delete(id); else proximas.add(id);
+    return proximas;
+  });
   const cartaoRegra = (r: Regra) => {
-    const n = interferenciasDe(r).filter((i) => i.nivel !== "baixo").length;
+    const itens = interferenciasDe(r);
+    const aberta = expandidas.has(r.id);
     return (
-      <div key={r.id} className={cn("mb-2 flex items-start gap-3 rounded-md border bg-background p-3", !r.ativa && "opacity-60")}>
-        <Zap className={cn("mt-0.5 h-4 w-4 shrink-0", r.ativa ? "text-primary" : "text-muted-foreground")} />
-        <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium">
-            {r.nome}
-            {r.sistema && <Badge variant="secondary" className="text-[10px]">Sistema</Badge>}
-            {r.executor === "tela" && <Badge variant="outline" className="text-[10px]">Executada pela tela</Badge>}
-            <Badge variant="outline" className="text-[10px]">Prioridade {r.prioridade}</Badge>
-            {!r.sistema && <Badge variant="outline" className="text-[10px]">{r.execucoes} execuções</Badge>}
-            {n > 0 && <Badge variant="outline" className="border-warning/60 text-[10px]"><AlertTriangle className="mr-1 h-3 w-3" />{n} interferência(s)</Badge>}
-          </p>
-          <p className="text-xs text-muted-foreground">{resumo(r)}</p>
-          {r.descricao && <p className="text-xs text-muted-foreground/80">{r.descricao}</p>}
+      <article key={r.id} className="overflow-hidden rounded-md border bg-card">
+        <div className="flex items-start gap-1 p-2 sm:p-3">
+          <Button variant="ghost" className="h-auto min-w-0 flex-1 items-start justify-start gap-3 whitespace-normal p-2 text-left" aria-expanded={aberta} aria-controls={`detalhes-${r.id}`} onClick={() => alternarExpansao(r.id)}>
+            <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span className="min-w-0 flex-1 space-y-2">
+              <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                {r.nome}
+                <Badge variant="secondary" className="text-[10px]">{r.sistema ? "Sistema" : "Personalizada"}</Badge>
+                {!r.ativa && <Badge variant="outline" className="text-[10px]">Não está em execução</Badge>}
+              </span>
+              <span className="flex flex-wrap items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                <span>{rotuloGatilho(r.gatilho)}</span><ArrowRight className="h-3 w-3 shrink-0" /><span>{rotuloAcao(r.acao)}</span>
+              </span>
+              {itens.length > 0 && <span className="flex items-center gap-1 text-xs font-normal text-warning"><AlertTriangle className="h-3.5 w-3.5" />{itens.length} {itens.length === 1 ? "regra relacionada" : "regras relacionadas"}</span>}
+            </span>
+            <ChevronDown className={cn("mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform", aberta && "rotate-180")} />
+          </Button>
+          <div className="flex shrink-0 flex-col sm:flex-row">
+            {!r.id.startsWith("validacao-") && <Button size="icon" variant="ghost" className="h-8 w-8" title={`Editar ${r.nome}`} aria-label={`Editar ${r.nome}`} onClick={() => editar(r)}><Pencil className="h-4 w-4" /></Button>}
+            {!r.sistema && <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title={`Excluir ${r.nome}`} aria-label={`Excluir ${r.nome}`} onClick={() => setExcluir(r)}><Trash2 className="h-4 w-4" /></Button>}
+          </div>
         </div>
-        {podeAlternar(r) ? <Switch checked={r.ativa} onCheckedChange={(v) => alternar(r, v)} />
-          : <span title="Regra fixa da tela — ajuste prioridade e relações"><Lock className="mt-1 h-4 w-4 text-muted-foreground" /></span>}
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => editar(r)}><Pencil className="h-4 w-4" /></Button>
-        {!r.sistema && <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setExcluir(r)}><Trash2 className="h-4 w-4" /></Button>}
-      </div>
+        {aberta && <div id={`detalhes-${r.id}`} className="space-y-4 border-t bg-muted/20 p-4 sm:pl-12">
+          <div className="space-y-2"><p className="text-sm">{r.descricao || resumo(r)}</p><p className="text-xs text-muted-foreground">{resumo(r)}</p>
+            <div className="flex flex-wrap gap-2"><Badge variant="outline">Prioridade {r.prioridade}</Badge><Badge variant="outline">{r.executor === "tela" ? "Executada na tela" : "Automática"}</Badge>{!r.sistema && <Badge variant="outline">{r.execucoes} execuções</Badge>}</div>
+          </div>
+          {["cal_alerta_urgente", "cal_alerta_tarefas_urgentes"].includes(r.chave || "") && <Button variant="outline" size="sm" onClick={() => setAjusteAlerta(r)}><Pencil className="h-3.5 w-3.5" /> Ajustar níveis de alerta</Button>}
+          <div><h4 className="mb-2 flex items-center gap-2 text-sm font-semibold"><AlertTriangle className="h-4 w-4 text-warning" />Interferências e relações</h4>
+            {itens.length === 0 ? <p className="text-xs text-muted-foreground">Nenhuma interferência identificada nas regras configuradas.</p> : <ul className="divide-y">
+              {itens.map((i) => <li key={i.regra.id} className="space-y-1 py-3 text-xs">
+                <p className="flex flex-wrap items-center gap-2 font-medium">{i.regra.nome}<Badge variant="outline" className={cn("text-[10px]", corNivel[i.nivel])}>Risco {rotNivel[i.nivel]}</Badge><span className="font-normal text-muted-foreground">{telaDe(i.regra as Regra)}</span></p>
+                <p className="text-muted-foreground">{i.motivos.join(" · ")}</p>
+                <p>{relacaoEntre(r, i.regra) || "Sem relação definida — seguem a configuração e a prioridade de cada regra."}</p>
+              </li>)}
+            </ul>}
+            {itens.some((i) => i.regra.executor === "tela") && <p className="mt-2 text-xs text-muted-foreground">As relações com regras executadas pela tela são explicativas; não encadeiam nem alteram sua execução.</p>}
+          </div>
+        </div>}
+      </article>
     );
   };
+  const normalizar = (valor: string) => valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const visiveis = regras.filter((r) => (telaFiltro === "todas" || telaDe(r) === telaFiltro) && normalizar(`${r.nome} ${r.descricao || ""} ${telaDe(r)} ${resumo(r)}`).includes(normalizar(busca)));
 
   const travado = !!form?.sistema;
   const camposAcao = !form?.sistema || form.executor === "banco";
 
   return (
-    <section className="rounded-lg border bg-card p-4">
+    <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold"><Wand2 className="h-5 w-5 text-primary" /> Regras da agenda</h2>
-          <p className="text-xs text-muted-foreground">Todas as regras que criam ou mexem na agenda, do sistema e criadas por você, no formato "quando X → faça Y".</p>
+          <h2 className="flex items-center gap-2 text-base font-semibold"><Wand2 className="h-5 w-5 text-primary" /> Regras do calendário e da agenda</h2>
+          <p className="text-xs text-muted-foreground">{regras.length} regras · {telas.filter((t) => regras.some((r) => telaDe(r) === t)).length} telas e processos</p>
         </div>
         <Button size="sm" onClick={() => setForm(vazio())}><Plus className="h-4 w-4" /> Nova regra</Button>
       </div>
@@ -208,15 +253,18 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
         <TabsList>
           <TabsTrigger value="regras">Regras por tela</TabsTrigger>
           <TabsTrigger value="fluxo"><Network className="mr-1 h-4 w-4" /> Fluxo visual</TabsTrigger>
-          <TabsTrigger value="mapa"><Network className="mr-1 h-4 w-4" /> Interferências</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="regras">
-          {telas.filter((t) => regras.some((r) => telaDe(r) === t)).map((t) => (
-            <div key={t}>
-              <p className="mb-1 mt-3 text-xs font-semibold uppercase text-muted-foreground">{t}</p>
-              {regras.filter((r) => telaDe(r) === t).map(cartaoRegra)}
-            </div>
+        <TabsContent value="regras" className="space-y-6">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Buscar regras" placeholder="Buscar regra, acontecimento ou tela" value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-9" /></div>
+            <Select value={telaFiltro} onValueChange={setTelaFiltro}><SelectTrigger className="w-full sm:w-64" aria-label="Filtrar por tela"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as telas</SelectItem>{telas.filter((t) => regras.some((r) => telaDe(r) === t)).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+          </div>
+          {carregando ? <p className="py-6 text-sm text-muted-foreground">Carregando regras...</p> : visiveis.length === 0 ? <p className="py-6 text-sm text-muted-foreground">Nenhuma regra encontrada.</p> : telas.filter((t) => visiveis.some((r) => telaDe(r) === t)).map((t) => (
+            <section key={t} className="space-y-3">
+              <div className="flex items-center gap-2 border-b pb-2"><h3 className="text-base font-semibold">{t}</h3><Badge variant="secondary">{visiveis.filter((r) => telaDe(r) === t).length} regras</Badge></div>
+              <div className="space-y-2">{visiveis.filter((r) => telaDe(r) === t).map(cartaoRegra)}</div>
+            </section>
           ))}
         </TabsContent>
 
@@ -224,30 +272,6 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
           <FluxoVisualRegrasAgenda regras={regras} onEditar={editar} />
         </TabsContent>
 
-        <TabsContent value="mapa" className="space-y-3">
-          <p className="text-xs text-muted-foreground">Para cada regra ativa, as regras que podem interferir nela e a relação escolhida entre elas.</p>
-          {regras.filter((r) => r.ativa).map((r) => {
-            const itens = interferenciasDe(r);
-            if (!itens.length) return null;
-            return (
-              <div key={r.id} className="rounded-md border p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">{r.nome} <span className="text-xs font-normal text-muted-foreground">· {rotuloGatilho(r.gatilho)}</span></p>
-                  <Button size="sm" variant="ghost" onClick={() => editar(r)}><Pencil className="h-3.5 w-3.5" /> Ajustar</Button>
-                </div>
-                <ul className="mt-2 space-y-1.5">
-                  {itens.map((i) => (
-                    <li key={i.regra.id} className={cn("rounded border p-2 text-xs", corNivel[i.nivel])}>
-                      <span className="font-medium">{i.regra.nome}</span> <Badge variant="outline" className="ml-1 text-[10px]">{rotNivel[i.nivel]}</Badge>
-                      <span className="block text-muted-foreground">{i.motivos.join(" · ")}</span>
-                      <span className="block">{relacaoEntre(r, i.regra) || "Sem relação definida (executam as duas, na ordem de prioridade)"}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </TabsContent>
       </Tabs>
 
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
@@ -398,7 +422,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
                   </div>
                   <Select value={aviso.escolhas[i.regra.id]} onValueChange={(v) => setAviso((a) => a && { ...a, escolhas: { ...a.escolhas, [i.regra.id]: v } })}>
                     <SelectTrigger className="w-56 bg-background"><SelectValue /></SelectTrigger>
-                    <SelectContent>{MODOS_RELACAO.filter((m) => m.valor !== "desativar" || (!i.regra.sistema || i.regra.executor === "banco")).map((m) => <SelectItem key={m.valor} value={m.valor}>{m.rotulo}</SelectItem>)}</SelectContent>
+                    <SelectContent>{MODOS_RELACAO.filter((m) => m.valor !== "desativar").map((m) => <SelectItem key={m.valor} value={m.valor}>{m.rotulo}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -412,6 +436,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
         </DialogContent>
       </Dialog>
 
+      {ajusteAlerta && <AjustesAlertaAgenda estabelecimentoId={estabelecimentoId} tipo={(ajusteAlerta.chave || "").slice(4)} configuracao={ajusteAlerta.acao_config || {}} onClose={() => setAjusteAlerta(null)} onSaved={() => void carregar()} />}
       <DeleteConfirmDialog open={!!excluir} onOpenChange={(o) => !o && setExcluir(null)} onConfirm={confirmarExclusao} itemName={excluir?.nome} />
     </section>
   );
