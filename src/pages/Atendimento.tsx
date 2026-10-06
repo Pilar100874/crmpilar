@@ -6341,13 +6341,17 @@ ${recentMessages}
               ] as const).map((t) => {
                 const Icon = t.icon;
                 const ativo = mobileView === t.id;
+                const desabilitado = t.id !== "list" && !contatoMobileSelecionado;
                 return (
                   <button
                     key={t.id}
                     type="button"
+                    disabled={desabilitado}
                     onClick={() => setMobileView(t.id)}
                     aria-current={ativo ? "page" : undefined}
-                    className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"}`}
+                    aria-disabled={desabilitado || undefined}
+                    title={desabilitado ? "Abra um contato na lista para liberar esta aba" : undefined}
+                    className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${ativo ? "text-orange-600" : "text-muted-foreground"} ${desabilitado ? "cursor-not-allowed opacity-40" : ""}`}
                   >
                     <Icon className="h-5 w-5" />
                     {t.label}
