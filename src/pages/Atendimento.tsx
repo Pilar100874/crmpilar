@@ -261,7 +261,7 @@ export default function Atendimento() {
       setSelectedAgendaContato(null);
       setMobileView("main");
       setDataAgendaCentral(new Date(detail.data));
-      setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : null);
+      setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : "day");
       setAgendaCentralKey((k) => k + 1);
     };
     window.addEventListener("calendario:abrir-data", abrirData);

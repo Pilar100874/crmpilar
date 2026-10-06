@@ -45,3 +45,8 @@
 ## Disparo em massa
 - [x] Manter título e barra de datas do calendário ao abrir o disparo na área central e conferir na tela.
 - [x] Unificar a substituição de conteúdos centrais ao clicar em datas, disparo, canais e demais atalhos; validar as trocas.
+
+## Navegação por dias
+- [x] Separar os quatro modos antes de Atrasados e remover Lista/Semana à direita.
+- [x] Abrir datas sempre em Dia e corrigir as setas centrais para avançar um dia.
+- [x] Conferir os controles e a navegação na tela.

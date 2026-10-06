@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange } from "lucide-react";
-import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
@@ -1117,23 +1117,11 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
 
   // Navegação
   const handlePrevious = () => {
-    if (viewMode === "day") {
-      setCurrentDate(addDays(currentDate, -1));
-    } else if (viewMode === "week") {
-      setCurrentDate(addDays(currentDate, -7));
-    } else {
-      setCurrentDate(addMonths(currentDate, -1));
-    }
+    setCurrentDate(date => addDays(date, -1));
   };
 
   const handleNext = () => {
-    if (viewMode === "day") {
-      setCurrentDate(addDays(currentDate, 1));
-    } else if (viewMode === "week") {
-      setCurrentDate(addDays(currentDate, 7));
-    } else {
-      setCurrentDate(addMonths(currentDate, 1));
-    }
+    setCurrentDate(date => addDays(date, 1));
   };
 
   const handleToday = () => {
@@ -2894,42 +2882,43 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         </div>
 
         {!diasRecolhidos && (
-        <div className="sticky top-0 z-10 overflow-x-auto border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
-          <div className="grid min-w-[720px] grid-cols-[200px_repeat(5,minmax(110px,1fr))]">
-            <button
-              type="button"
+        <div className="sticky top-0 z-10 flex border-b border-border/60 bg-card" style={{ paddingLeft: menuLargura || undefined }}>
+          <div role="group" aria-label="Visualização da agenda" className="grid shrink-0 grid-cols-2 content-center gap-1 border-r border-border/60 px-2">
+            {([
+              { modo: "list", Icone: ListIcon, rotulo: "Ver em lista" },
+              { modo: "month", Icone: Calendar, rotulo: "Ver em mês" },
+              { modo: "day", Icone: CalendarDays, rotulo: "Ver dia" },
+              { modo: "week", Icone: CalendarRange, rotulo: "Ver em semana" },
+            ] as const).map(({ modo, Icone, rotulo }) => (
+              <Button
+                key={modo}
+                variant={viewMode === modo ? "default" : "ghost"}
+                size="icon"
+                title={rotulo}
+                aria-label={rotulo}
+                aria-pressed={viewMode === modo}
+                onClick={() => {
+                  setViewMode(modo);
+                  window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: currentDate.toISOString(), modo } }));
+                }}
+                className="h-7 w-7 rounded border border-border/60"
+              >
+                <Icone className="h-3.5 w-3.5" />
+              </Button>
+            ))}
+          </div>
+          <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="grid min-w-[680px] grid-cols-[130px_repeat(5,minmax(110px,1fr))]">
+            <Button
+              variant="ghost"
               onClick={() => setViewMode("list")}
-              className="group flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors hover:bg-muted/50 sm:px-6"
+              className="group flex h-auto min-h-[68px] items-center justify-start rounded-none border-r border-border/60 px-4 text-left transition-colors hover:bg-muted/50 sm:px-6"
             >
               <span>
                 <span className="block text-xs font-medium text-foreground">Atrasados</span>
                 <span className="mt-1 block font-cardTitle text-xl font-bold text-destructive">{tarefasAtrasadas}</span>
               </span>
-              <span className="grid grid-cols-2 gap-1">
-                {([
-                  { modo: "list", Icone: ListIcon, rotulo: "Lista" },
-                  { modo: "day", Icone: CalendarDays, rotulo: "Dia" },
-                  { modo: "week", Icone: CalendarRange, rotulo: "Semana" },
-                  { modo: "month", Icone: Calendar, rotulo: "Mês" },
-                ] as const).map(({ modo, Icone, rotulo }) => (
-                  <span
-                    key={modo}
-                    role="button"
-                    tabIndex={0}
-                    title={`Ver em ${rotulo}`}
-                    aria-label={`Ver em ${rotulo}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setViewMode(modo);
-                      window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: new Date().toISOString(), modo } }));
-                    }}
-                    className={`flex h-6 w-6 items-center justify-center rounded border border-border/60 transition-colors hover:bg-primary/10 hover:text-primary ${viewMode === modo ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
-                  >
-                    <Icone className="h-3.5 w-3.5" />
-                  </span>
-                ))}
-              </span>
-            </button>
+            </Button>
             {resumoDias.map((resumo, index) => {
               const selecionado = isSameDay(currentDate, resumo.date);
               const ultimo = index === resumoDias.length - 1;
@@ -2939,9 +2928,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                   key={resumo.date.toISOString()}
                   onClick={() => {
                     setCurrentDate(resumo.date);
-                    setViewMode("list");
-                    // Abre o calendário na área central (aba Agenda do Atendimento) em lista no dia clicado
-                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "list" } }));
+                    setViewMode("day");
+                    window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
                   }}
                   className={`relative flex min-h-[68px] items-center justify-between border-r border-border/60 px-4 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:px-6 ${selecionado ? "bg-primary/10" : ""}`}
                 >
@@ -2968,21 +2956,12 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                         <Plus className="h-3.5 w-3.5" />
                         <span>Agendar</span>
                       </button>
-                      <span className="absolute bottom-2 right-2 flex rounded-md bg-muted p-0.5 text-[10px] font-semibold shadow-inner">
-                      <span
-                        onClick={(event) => { event.stopPropagation(); setViewMode("list"); }}
-                        className={`rounded px-2 py-1 ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                      >Lista</span>
-                      <span
-                        onClick={(event) => { event.stopPropagation(); setViewMode("week"); }}
-                        className={`rounded px-2 py-1 ${viewMode === "week" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                      >Semana</span>
-                      </span>
                     </>
                   )}
                 </button>
               );
             })}
+          </div>
           </div>
         </div>
         )}
@@ -3323,15 +3302,15 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         {/* Navegação e filtros do calendário (dentro da área central) */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:mb-3">
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Dia anterior" title="Dia anterior" className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">Hoje</Button>
-            <Button variant="ghost" size="icon" onClick={handleNext} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Próximo dia" title="Próximo dia" className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
             </Button>
             <span className="ml-1 hidden text-xs font-semibold capitalize text-foreground sm:inline">
-              {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM", { locale: ptBR })}
+              {format(currentDate, "d 'de' MMMM", { locale: ptBR })}
             </span>
           </div>
 
