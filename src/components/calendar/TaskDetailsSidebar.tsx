@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarDays, Clock3, Loader2, MoreVertical, Trash2, X, Edit } from "lucide-react";
@@ -88,8 +89,8 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
   const name = contact?.nome || task.contactName || "Sem contato vinculado";
   const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
-  return (
-    <aside className="flex h-full w-full flex-shrink-0 flex-col overflow-hidden border-l border-border bg-card sm:w-80 md:w-64 lg:w-[400px]">
+  return createPortal(
+    <aside className="fixed inset-y-0 right-0 z-[700] flex w-full flex-col overflow-hidden border-l border-border bg-card shadow-xl sm:w-80 md:w-64 lg:w-[400px]">
       <div className="flex items-center gap-3 border-b border-border/60 bg-gradient-to-r from-orange-50 to-transparent px-4 py-3 dark:from-orange-950/20">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
           <CalendarDays className="h-4.5 w-4.5 text-orange-600 dark:text-orange-400" />
@@ -133,6 +134,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
           <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
         </section>}
       </div>
-    </aside>
+    </aside>,
+    document.body
   );
 }
