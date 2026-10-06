@@ -513,11 +513,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         </button>
                       </div>
                     )}
-                    {item.atrasado && (
-                      <p className="mt-0.5 text-[9px] font-semibold text-destructive leading-none whitespace-nowrap">
-                        Atrasado{item.data ? ` · ${item.data}` : ""} · {item.horario || "--:--"}
-                      </p>
-                    )}
                       <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id)}>
                       <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
                         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
