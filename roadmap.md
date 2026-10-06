@@ -1,8 +1,8 @@
 # Roteiro
 
 ## Visual da agenda — referência de outubro
-- [ ] Aplicar grade semanal por horário e cartões coloridos legíveis conforme imagem enviada.
-- [ ] Harmonizar cabeçalhos e contatos sem alterar regras e controles; conferir na tela.
+- [x] Aplicar grade semanal por horário e cartões coloridos legíveis conforme imagem enviada.
+- [x] Harmonizar cabeçalhos e contatos sem alterar regras e controles; conferir na tela.
 
 - [x] Telefone: somente Não atendeu, Ocupado e Atendeu, com ícones e relato condicionado.
 - [x] Visita: trocar resultado por formulário preenchível na tela central.

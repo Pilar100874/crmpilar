@@ -2037,13 +2037,13 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               </div>
             ))}
           </div>
-          <div className="max-h-[calc(100vh-285px)] min-h-[380px] overflow-y-auto" ref={(el) => { if (el && !el.dataset.iniciado) { el.scrollTop = 8 * 100; el.dataset.iniciado = "true"; } }}>
             {tarefasPorDia.some(lista => lista.some(t => !t.time || t.isAllDay)) && (
               <div className="grid grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/60">
                 <span className="border-r border-border/60 px-1 py-2 text-[9px] text-muted-foreground">Sem hora / Dia todo</span>
                 {dias.map((dia, i) => <DroppableSlot key={dia.toISOString()} date={dia} slotTime="" className="space-y-1 border-r border-border/60 p-1 last:border-r-0">{tarefasPorDia[i].filter(t => !t.time || t.isAllDay).map(renderTarefa)}</DroppableSlot>)}
               </div>
             )}
+          <div className="max-h-[calc(100vh-420px)] min-h-[380px] overflow-y-auto" ref={(el) => { if (el && !el.dataset.iniciado) { el.scrollTop = 8 * 100; el.dataset.iniciado = "true"; } }}>
             {Array.from({ length: 24 }, (_, hora) => (
               <div key={hora} className="grid min-h-[100px] grid-cols-[48px_repeat(7,minmax(0,1fr))] border-b border-border/60">
                 <span className="border-r border-border/60 px-1 py-2 text-center text-[11px] tabular-nums text-muted-foreground">{String(hora).padStart(2, "0")}:00</span>
