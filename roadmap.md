@@ -38,6 +38,6 @@
 - [x] Validar o mapa na tela de configurações.
 
 ## Configurações do Calendário unificadas
-- [ ] Unificar regras e validações por tela, sem controles de ativação.
-- [ ] Mostrar interferências ao expandir a regra, sem aba separada.
-- [ ] Preservar ajustes de alertas e conferir a tela.
+- [x] Unificar regras e validações por tela, sem controles de ativação.
+- [x] Mostrar interferências ao expandir a regra, sem aba separada.
+- [x] Preservar ajustes de alertas e conferir a tela.
