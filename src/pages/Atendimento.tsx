@@ -5675,7 +5675,17 @@ ${recentMessages}
                   cliente={clienteCabecalho}
                   abaAtiva={activeTab}
                   compacto
-                  onTrocarCanal={(aba) => { setHistoricoCliente(null); setAgendaContato(null); trocarAba(aba); }}
+                  onTrocarCanal={(aba) => {
+                    setHistoricoCliente(null);
+                    setAgendaContato(null);
+                    if (aba === "orcamento") {
+                      const id = clienteCabecalho.id;
+                      setOrcamentosCliente(id ? { id, nome: clienteCabecalho.nome } : null);
+                      return;
+                    }
+                    setOrcamentosCliente(null);
+                    trocarAba(aba);
+                  }}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
@@ -5687,6 +5697,89 @@ ${recentMessages}
 
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
+            {historicoCliente && estabelecimentoId && (
+              <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
+                <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">Histórico do cliente</p>
+                    <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setHistoricoCliente(null)} title="Fechar histórico">
+                    <X className="mr-1 h-4 w-4" /> Fechar
+                  </Button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+                  <CustomerHistoryTimeline
+                    contactId={historicoCliente.customerId}
+                    contactName={historicoCliente.nome}
+                    estabelecimentoId={estabelecimentoId}
+                    isFullView
+                    onEventClick={(event: any) => {
+                      const id = event.originalId;
+                      if (!id) return;
+                      setHistoricoCliente(null);
+                      if (event.type === "chat") {
+                        setActiveTab("chat");
+                        setSelectedConversation(id);
+                      } else if (event.type === "orcamento") {
+                        const orcamento = orcamentos.find((item: any) => item.id === id);
+                        setActiveTab("orcamento");
+                        setSelectedOrcamentoId(id);
+                        if (orcamento) setSelectedOrcamentoData(orcamento);
+                        setOrcamentoSheetOpen(true);
+                      } else if (event.type === "email") {
+                        setActiveTab("email");
+                        setSelectedEmailId(id);
+                      } else if (event.type === "tarefa") {
+                        setActiveTab("agenda");
+                        setSelectedTaskId(id);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {orcamentosCliente && (
+              <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
+                <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">Orçamentos do cliente</p>
+                    <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setOrcamentosCliente(null)} title="Fechar orçamentos">
+                    <X className="mr-1 h-4 w-4" /> Fechar
+                  </Button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  <OrcamentosEmpresaList
+                    orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
+                    tarefasAgenda={filteredTasks}
+                    emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
+                    chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+                    indicadoresPorContato={indicadoresPorContato}
+                    selectedOrcamentoId={selectedOrcamentoId}
+                    onSelectOrcamento={(orcamento) => {
+                      setOrcamentosCliente(null);
+                      setActiveTab("orcamento");
+                      setSelectedOrcamentoId(orcamento.id);
+                      setSelectedOrcamentoData(orcamento);
+                      setOrcamentoSheetOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {agendaContato && (
+              <AgendaContatoPanel
+                key={agendaContato.id}
+                contactId={agendaContato.id}
+                nome={agendaContato.nome}
+                onClose={() => setAgendaContato(null)}
+              />
+            )}
+
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen (fica montado ao navegar em outras abas) */}
             {(fluxoPersistente || ((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo')) && (
               <div className={`absolute inset-0 z-20 bg-background overflow-hidden ${(activeTab === "tel" || activeTab === "visita") && mobileView === "main" ? "" : "hidden"}`}>
@@ -8523,7 +8616,12 @@ function MobileListContent({
             chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
             indicadoresPorContato={indicadoresPorContato}
             selectedOrcamentoId={selectedOrcamentoId}
-            onSelectOrcamento={(orcamento) => setSelectedOrcamentoId(orcamento.id)}
+            onSelectOrcamento={(orcamento) => {
+              setSelectedOrcamentoId(orcamento.id);
+              setSelectedOrcamentoData(orcamento);
+              setOrcamentoSheetOpen(true);
+              setMobileView("main");
+            }}
           />
         )}
       </div>
