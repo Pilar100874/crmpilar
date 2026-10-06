@@ -20,6 +20,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
+const origemOptions: Array<{ value: "bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat" | "manual" | "novo_contato"; label: string; Icon: typeof Bot }> = [
+  { value: "bot", label: "BOT", Icon: Bot },
+  { value: "campanha", label: "Campanha", Icon: Megaphone },
+  { value: "ligacao", label: "Ligação", Icon: Phone },
+  { value: "visita", label: "Visita", Icon: MapPin },
+  { value: "email", label: "Email", Icon: Mail },
+  { value: "pedido", label: "Pedido", Icon: FileText },
+  { value: "chat", label: "Chat", Icon: MessageSquare },
+  { value: "manual", label: "Manual", Icon: FileText },
+  { value: "novo_contato", label: "Novo Contato", Icon: MessageSquare },
+];
+
 interface Contact {
   id: string;
   name: string;
