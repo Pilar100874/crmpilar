@@ -1988,7 +1988,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                     className="text-xs text-muted-foreground px-2 w-full text-left cursor-pointer hover:text-primary"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedTaskId(task.id);
+                      setCurrentDate(currentDay);
+                      setViewMode("day");
                     }}
                   >
                     +{dayTasks.length - 3} mais
@@ -2494,7 +2495,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
                       return (
                         <td 
                           key={column.id} 
-                          onDoubleClick={() => setSelectedTaskId(task.id)}
+                          onClick={column.id === 'title' ? () => setSelectedTaskId(task.id) : undefined}
                           className="p-2 group relative overflow-hidden text-sm"
                           style={{ width: colPercent(column.width) }}
                         >
