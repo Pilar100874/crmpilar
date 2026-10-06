@@ -405,7 +405,7 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial, viewModeInicial }: { dataInicial?: Date; viewModeInicial?: ViewMode }) {
+export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string } }) {
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -1462,6 +1462,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
         toast.success(taskData.id ? 'Tarefa atualizada para dia todo' : 'Tarefa de dia todo adicionada');
         await loadTasks();
         setShowTaskDialog(false);
+        setEditingTask(null);
         return;
       }
 
@@ -1687,6 +1688,8 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   };
 
   const handleOpenNewTask = (date?: Date) => {
+    setSelectedTaskId(null);
+    setEditingTask(null);
     setSelectedDate(date || null);
     setShowTaskDialog(true);
   };
@@ -2237,6 +2240,7 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
   };
 
   const handleEditTask = (task: Task) => {
+    setSelectedTaskId(task.id);
     setEditingTask(task);
     setShowTaskDialog(true);
   };
@@ -2826,12 +2830,12 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
               {diasRecolhidos && (
                 <Button
                   size="sm"
-                  onClick={() => { setSelectedDate(null); setShowTaskDialog(true); }}
+                  onClick={() => handleOpenNewTask()}
                   className="h-9 gap-1"
-                  aria-label="Agendar"
+                  aria-label="Nova tarefa"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Agendar</span>
+                  <span>Tarefa</span>
                 </Button>
               )}
               <Button
@@ -2910,12 +2914,12 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
             </div>
             <div className="flex shrink-0 items-center px-3">
               <Button
-                onClick={() => { setSelectedDate(null); setShowTaskDialog(true); }}
+                onClick={() => handleOpenNewTask()}
                 className="h-11 gap-2 rounded-lg px-4 font-semibold"
-                aria-label="Agendar"
+                aria-label="Nova tarefa"
               >
                 <Plus className="h-4 w-4" />
-                <span>Agendar</span>
+                <span>Tarefa</span>
               </Button>
             </div>
           </div>
@@ -3328,40 +3332,33 @@ export default function Calendario({ dataInicial, viewModeInicial }: { dataInici
 
       {(() => {
         const selectedTask = tasks.find(task => task.id === selectedTaskId);
-        if (!selectedTask) return null;
-        return <TaskDetailsSidebar key={selectedTask.id} task={selectedTask} origem={getOrigemLabel(selectedTask.origem, selectedTask.campaignName)} usuarios={usuarios}
-          onClose={() => setSelectedTaskId(null)} onEdit={() => handleEditTask(selectedTask)} onDelete={() => handleDeleteTask(selectedTask.id)}
+        const creating = showTaskDialog && !selectedTask && !editingTask;
+        if (!selectedTask && !creating) return null;
+        const task = selectedTask || {
+          id: "nova-tarefa", title: "Nova tarefa", date: selectedDate || new Date(),
+          status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
+          origem: "manual" as Task["origem"], createdAt: new Date(),
+        };
+        return <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
+          onClose={() => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); }}
+          onEdit={() => { if (selectedTask) handleEditTask(selectedTask); }}
+          onDelete={() => { if (selectedTask) handleDeleteTask(selectedTask.id); }}
+          editor={<NewTaskDialog
+            open={true}
+            onOpenChange={(open) => { if (!open) { setShowTaskDialog(false); setSelectedTaskId(null); setEditingTask(null); } }}
+            onSave={handleSaveTask}
+            initialDate={creating ? selectedDate || undefined : undefined}
+            suggestedContact={creating ? contatoSugerido : undefined}
+            editingTask={selectedTask || undefined}
+          />}
           onUpdate={async (updates) => {
+            if (!selectedTask) return false;
             const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
             if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
             return success;
           }} />;
       })()}
       </div>
-
-      {/* Dialog para adicionar/editar tarefa */}
-      <NewTaskDialog
-        open={showTaskDialog}
-        onOpenChange={(open) => {
-          setShowTaskDialog(open);
-          if (!open) setEditingTask(null);
-        }}
-        onSave={handleSaveTask}
-        initialDate={selectedDate || undefined}
-        editingTask={editingTask ? {
-          id: editingTask.id,
-          contactId: editingTask.contactId,
-          contactName: editingTask.contactName,
-          date: editingTask.date,
-          time: editingTask.time,
-          origem: editingTask.origem,
-          campaignId: editingTask.campaignId,
-          description: editingTask.description,
-          isAllDay: editingTask.isAllDay,
-          userId: editingTask.userId,
-          dataOriginal: editingTask.dataOriginal,
-        } : undefined}
-      />
 
       {/* Dialog de conflito */}
       <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>

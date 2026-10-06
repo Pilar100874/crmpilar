@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Contact {
   id: string;
@@ -46,6 +47,7 @@ interface NewTaskDialogProps {
     userId?: string;
   }) => void;
   initialDate?: Date;
+  suggestedContact?: { id: string; nome: string };
   editingTask?: {
     id: string;
     contactId?: string;
@@ -61,7 +63,7 @@ interface NewTaskDialogProps {
   };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact }: NewTaskDialogProps) {
   // Função centralizada para obter cor de origem
   const getOrigemColor = (origem: string) => {
     switch (origem) {
@@ -114,6 +116,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [pendingTaskData, setPendingTaskData] = useState<any>(null);
   const [contactExistingTasks, setContactExistingTasks] = useState<any[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [deleteExistingId, setDeleteExistingId] = useState<string | null>(null);
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
 
   // Preencher dados quando estiver editando
   useEffect(() => {
@@ -192,6 +196,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           });
           setSearchQuery(editingTask.contactName);
         }
+      } else if (open && suggestedContact) {
+        setSelectedContact({ id: suggestedContact.id, name: suggestedContact.nome, type: "contato", phone: "", email: "" });
+        setSearchQuery(suggestedContact.nome);
       } else if (!open) {
         // Resetar ao fechar
         setEditingTaskId(null);
@@ -217,7 +224,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     };
     
     checkUserAndFillForm();
-  }, [editingTask, open, initialDate]);
+  }, [editingTask, open, initialDate, suggestedContact?.id, suggestedContact?.nome]);
 
   // Carregar contatos e empresas do Supabase
   useEffect(() => {
@@ -574,7 +581,6 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
     if (editingTaskId) {
       onSave(payload);
-      onOpenChange(false);
       return;
     }
 
@@ -593,7 +599,6 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         return;
       }
       onSave(payload);
-      onOpenChange(false);
     })();
   };
 
@@ -726,14 +731,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="text-xl font-bold">
-            {editingTaskId ? 'Editar Tarefa' : 'Nova Tarefa'}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5 mt-6">
+    <div className="space-y-4">
           {/* Campo de busca de contato */}
           <div className="relative">
             <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
@@ -839,7 +837,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                         variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteExistingTask(task.id)}
+                        onClick={() => setDeleteExistingId(task.id)}
                         title="Excluir tarefa"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -852,7 +850,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           )}
 
           {/* Grid de data e hora */}
-          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
+          <div className={cn("space-y-3 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Data e Horário</Label>
               {editingTask?.dataOriginal && (
@@ -1021,7 +1019,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             </div>
 
             {/* Checkboxes para opções especiais */}
-            <div className="flex gap-6 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               <div className="flex items-center gap-2">
                 <Checkbox 
                   id="allday" 
@@ -1061,7 +1059,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Origem da tarefa */}
-          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
+          <div className={cn("space-y-3 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Origem da Tarefa</Label>
             <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
@@ -1220,7 +1218,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Atribuição */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <div className="space-y-3">
             <Label className="text-sm font-semibold">Atribuir Tarefa Para</Label>
             <RadioGroup value={assignedTo} onValueChange={(value) => {
               setAssignedTo(value);
@@ -1259,7 +1257,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Observação */}
-          <div className={cn("space-y-2 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
+          <div className={cn("space-y-2 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Observação (opcional)</Label>
             <Textarea
               placeholder="Adicione detalhes ou observações sobre a tarefa..."
@@ -1280,9 +1278,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               {editingTaskId ? 'Atualizar' : 'Salvar Tarefa'}
             </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </div>
 
     {/* Diálogo de conflito */}
     <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
@@ -1343,13 +1339,15 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button size="sm" className="w-full" onClick={() => void resolverDuplicada(true)}>Trocar pela nova tarefa</Button>
+          <Button size="sm" className="w-full" onClick={() => setReplaceConfirmOpen(true)}>Trocar pela nova tarefa</Button>
           <Button size="sm" variant="secondary" className="w-full" onClick={() => void resolverDuplicada(false)}>Manter as duas</Button>
           <AlertDialogCancel asChild><Button size="sm" variant="outline" className="w-full mt-0">Cancelar</Button></AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
 
+    <DeleteConfirmDialog open={!!deleteExistingId} onOpenChange={(open) => { if (!open) setDeleteExistingId(null); }} onConfirm={() => { if (deleteExistingId) handleDeleteExistingTask(deleteExistingId); setDeleteExistingId(null); }} />
+    <DeleteConfirmDialog open={replaceConfirmOpen} onOpenChange={setReplaceConfirmOpen} onConfirm={() => { setReplaceConfirmOpen(false); void resolverDuplicada(true); }} />
     </>
   );
 }

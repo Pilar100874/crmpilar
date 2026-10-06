@@ -506,6 +506,26 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                           className={cn("h-6 w-6 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
                           <FileText className="h-3 w-3" />
                         </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                          aria-label={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                          aria-expanded={acoesExpandidas.has(item.id)}
+                          aria-controls={`proxima-acao-${item.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setAcoesExpandidas((anterior) => {
+                              const proximo = new Set(anterior);
+                              if (proximo.has(item.id)) proximo.delete(item.id);
+                              else proximo.add(item.id);
+                              return proximo;
+                            });
+                          }}
+                          className="h-6 w-6 rounded-full text-muted-foreground"
+                        >
+                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
+                        </Button>
                       </div>
                     )}
                     {item.atrasado && (
@@ -513,26 +533,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         Atrasado{item.data ? ` · ${item.data}` : ""} · {item.horario || "--:--"}
                       </p>
                     )}
-                    <div className="mt-2 border-t border-border/40 pt-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-expanded={acoesExpandidas.has(item.id)}
-                        aria-controls={`proxima-acao-${item.id}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setAcoesExpandidas((anterior) => {
-                            const proximo = new Set(anterior);
-                            if (proximo.has(item.id)) proximo.delete(item.id);
-                            else proximo.add(item.id);
-                            return proximo;
-                          });
-                        }}
-                        className="h-6 w-full justify-between px-0 text-[11px] font-medium text-muted-foreground hover:bg-transparent"
-                      >
-                        Próxima ação
-                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
-                      </Button>
                       <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id)}>
                       <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
                         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -542,7 +542,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         </div>
                       </div>
                       </div>
-                    </div>
                     {(item.mensagensNovas || 0) > 0 && (
                       <span className="ml-1.5 inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
                         {item.mensagensNovas === 1
