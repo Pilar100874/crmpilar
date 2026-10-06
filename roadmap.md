@@ -1,5 +1,11 @@
 # Roteiro
 
+## Editor único de tarefas
+- [ ] Mover a expansão para um ícone após Últimos orçamentos, sem texto nem faixa extra.
+- [ ] Renomear Agendar para Tarefa e sugerir o contato selecionado.
+- [ ] Criar e editar no painel lateral único, sem popup de formulário.
+- [ ] Conferir criação, edição e expansão na tela.
+
 ## Cartões e barra de datas
 - [x] Deixar Próxima ação expansível e inicialmente fechada.
 - [x] Seguir a referência na barra de datas e remover botões de visualização da faixa.
