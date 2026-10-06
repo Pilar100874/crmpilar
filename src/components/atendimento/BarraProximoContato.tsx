@@ -124,8 +124,8 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
     <div
       style={{ minHeight: ALTURA_BARRA_PROXIMO }}
       className={cn(
-        "flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 pr-16 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]",
-        emFluxo ? "relative w-full flex-shrink-0" : "absolute inset-x-0 bottom-0 z-[130]"
+"flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]",
+        emFluxo ? "relative w-full flex-shrink-0 pr-3" : "absolute inset-x-0 bottom-0 z-[130] pr-16"
       )}
     >
       {pendentes.length > 1 && (
@@ -140,34 +140,34 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2">
-        <CalendarCheck className="h-5 w-5 shrink-0 text-destructive" />
-        <div className="min-w-0 max-w-[140px] shrink">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <CalendarCheck className="order-1 h-5 w-5 shrink-0 text-destructive" />
+        <div className="order-2 min-w-[96px] max-w-full flex-1 sm:min-w-0 sm:max-w-[140px] sm:flex-none">
           <p className="truncate text-xs font-semibold text-foreground">{modoInativar ? "Inativar cliente" : "Próximo contato"}</p>
           <p className="truncate text-[10px] text-muted-foreground">{contato.nome}</p>
         </div>
         {modoInativar ? (
-          <Input autoFocus value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Motivo da inativação (obrigatório)" className="h-8 min-w-0 flex-1 text-xs" />
+          <Input autoFocus value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Motivo da inativação (obrigatório)" className="order-4 h-8 min-w-0 flex-1 text-xs max-sm:w-full" />
         ) : (
           <>
-            <Input ref={dataRef} type="date" value={data} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setData(e.target.value)} className="h-8 w-[140px] shrink-0 text-xs transition-shadow" />
-            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="hidden h-8 min-w-0 flex-1 text-xs sm:block" />
+            <Input ref={dataRef} type="date" value={data} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setData(e.target.value)} className="order-4 h-8 w-[140px] shrink-0 text-xs transition-shadow max-sm:w-[120px]" />
+            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="order-5 hidden h-8 min-w-0 flex-1 text-xs sm:block" />
           </>
         )}
-        <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[10px] text-muted-foreground" title="Permite abrir outro cliente sem finalizar este. Todos continuam obrigatórios.">
+        <label className="order-6 flex shrink-0 cursor-pointer items-center gap-1 text-[10px] text-muted-foreground sm:order-5" title="Permite abrir outro cliente sem finalizar este. Todos continuam obrigatórios.">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden xl:inline">Atender simultâneo</span>
           <Switch checked={!!simultaneo} onCheckedChange={(v) => onSimultaneo?.(v)} className="scale-75" />
         </label>
         {!modoInativar && (
-          <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" title="Ignorar movimentação (ação feita por engano)" onClick={ignorar}>
+          <Button size="icon" variant="ghost" className="order-7 h-8 w-8 shrink-0 sm:order-6" title="Ignorar movimentação (ação feita por engano)" onClick={ignorar}>
             <Undo2 className="h-4 w-4" />
           </Button>
         )}
-        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" title={modoInativar ? "Voltar" : "Inativar cliente"} onClick={() => setModoInativar((v) => !v)}>
+        <Button size="icon" variant="ghost" className="order-8 h-8 w-8 shrink-0 text-destructive sm:order-7" title={modoInativar ? "Voltar" : "Inativar cliente"} onClick={() => setModoInativar((v) => !v)}>
           {modoInativar ? <CalendarCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
         </Button>
-        <Button size="sm" onClick={finalizar} disabled={salvando} variant={modoInativar ? "destructive" : "default"} className="h-8 shrink-0 gap-1.5">
+        <Button size="sm" onClick={finalizar} disabled={salvando} variant={modoInativar ? "destructive" : "default"} className="order-3 ml-auto h-8 shrink-0 gap-1.5 sm:order-8 sm:ml-0">
           {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />}
           {modoInativar ? "Inativar" : "Finalizar"}
         </Button>
