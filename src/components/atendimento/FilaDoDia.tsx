@@ -467,9 +467,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                      <p className={cn("text-[14px] font-semibold text-foreground leading-tight", tablet ? "break-words" : "truncate")}>
                       {item.nome}
                     </p>
-                    {item.empresa && (
-                       <p className={cn("text-[11px] text-muted-foreground leading-tight", tablet ? "break-words" : "truncate")}>{item.empresa}</p>
-                    )}
+                     {(item.empresa || item.atrasado) && (
+                        <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[11px] leading-tight">
+                          {item.empresa && (
+                            <span className={cn("min-w-0 text-muted-foreground", tablet ? "break-words" : "truncate")}>{item.empresa}</span>
+                          )}
+                          {item.atrasado && (
+                            <span className="shrink-0 font-semibold text-destructive">
+                              Atrasado{item.data ? ` ${item.data}` : ""}{item.horario ? ` ${item.horario}` : ""}
+                            </span>
+                          )}
+                        </p>
+                     )}
                     {item.contactId && pendencias.includes(item.contactId) && (
                       <button type="button" title="Finalizar atendimento (próximo contato)"
                         onClick={(e) => { e.stopPropagation(); pedirFinalizacao({ customerId: item.contactId!, nome: item.nome }); }}
@@ -477,61 +486,36 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         <CalendarCheck className="h-3 w-3" /> Finalizar atendimento
                       </button>
                     )}
-                    {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                        {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
+                     {((item.contactId && (item.canais?.length || 0) > 0) || item.tipo === "recebido") && (
+                       <div className="mt-1 flex flex-wrap items-center gap-1">
+                         {(item.canais?.length ? item.canais! : [item.canal]).map((c) => {
                           const cfg = CANAL_CONFIG[c];
                           const Ic = cfg.icon;
                           const destaque = filtro !== "tudo" && c === item.canal;
                           return (
                             <button key={c} type="button" title={cfg.label} onClick={(e) => { e.stopPropagation(); if (item.tipo === "recebido" && c === item.canal) { item.onClick(); } else { item.onCanal?.(c); } }}
-                              className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
-                              <Ic className="h-3 w-3" />
+                              className={cn("h-5 w-5 rounded-full border-2 flex items-center justify-center", destaque ? cfg.borda : "border-transparent", cfg.fundo, cfg.cor, "hover:ring-1 hover:ring-current")}>
+                              <Ic className="h-2.5 w-2.5" />
                             </button>
                           );
                         })}
                         {item.onHistorico && (
                           <button type="button" title="Histórico" onClick={(e) => { e.stopPropagation(); item.onHistorico?.(); }}
-                            className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
-                            <History className="h-3 w-3" />
+                            className="h-5 w-5 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
+                            <History className="h-2.5 w-2.5" />
                           </button>
                         )}
                         {item.onAgendaCentro && (
                           <button type="button" title="Agenda" onClick={(e) => { e.stopPropagation(); item.onAgendaCentro?.(item.contactId!, item.nome); }}
-                            className="h-6 w-6 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
-                            <CalendarDays className="h-3 w-3" />
+                            className="h-5 w-5 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
+                            <CalendarDays className="h-2.5 w-2.5" />
                           </button>
                         )}
                         <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); item.onOrcamentosCentro?.(item.contactId, item.nome); }}
-                          className={cn("h-6 w-6 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
-                          <FileText className="h-3 w-3" />
+                          className={cn("h-5 w-5 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
+                          <FileText className="h-2.5 w-2.5" />
                         </button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
-                          aria-label={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
-                          aria-expanded={acoesExpandidas.has(item.id)}
-                          aria-controls={`proxima-acao-${item.id}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setAcoesExpandidas((anterior) => {
-                              const proximo = new Set(anterior);
-                              if (proximo.has(item.id)) proximo.delete(item.id);
-                              else proximo.add(item.id);
-                              return proximo;
-                            });
-                          }}
-                          className="h-6 w-6 rounded-full text-muted-foreground"
-                        >
-                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
-                        </Button>
                       </div>
-                    )}
-                    {item.atrasado && (
-                      <p className="mt-0.5 text-[9px] font-semibold text-destructive leading-none whitespace-nowrap">
-                        Atrasado{item.data ? ` · ${item.data}` : ""} · {item.horario || "--:--"}
-                      </p>
                     )}
                       <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id)}>
                       <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
@@ -552,29 +536,51 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   </div>
                 </div>
 
-                {/* Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={(event) => event.stopPropagation()}
-                       className={cn("h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors", tablet && "col-start-3 row-start-1")}
-                      aria-label="Mais opções"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(item.menuItems && item.menuItems.length > 0
-                      ? item.menuItems
-                      : [{ label: "Abrir atendimento", onClick: item.onClick }]
-                    ).map((menuItem) => (
-                      <DropdownMenuItem key={menuItem.label} onClick={menuItem.onClick}>
-                        {menuItem.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Coluna direita: menu e ampliar */}
+                <div className={cn("flex shrink-0 flex-col items-center gap-0.5 self-start", tablet && "col-start-2 row-start-1")}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(event) => event.stopPropagation()}
+                        className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        aria-label="Mais opções"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(item.menuItems && item.menuItems.length > 0
+                        ? item.menuItems
+                        : [{ label: "Abrir atendimento", onClick: item.onClick }]
+                      ).map((menuItem) => (
+                        <DropdownMenuItem key={menuItem.label} onClick={menuItem.onClick}>
+                          {menuItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                    aria-label={acoesExpandidas.has(item.id) ? "Recolher tarefa" : "Ampliar tarefa"}
+                    aria-expanded={acoesExpandidas.has(item.id)}
+                    aria-controls={`proxima-acao-${item.id}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setAcoesExpandidas((anterior) => {
+                        const proximo = new Set(anterior);
+                        if (proximo.has(item.id)) proximo.delete(item.id);
+                        else proximo.add(item.id);
+                        return proximo;
+                      });
+                    }}
+                    className="h-6 w-6 rounded-full text-muted-foreground"
+                  >
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", acoesExpandidas.has(item.id) && "rotate-180")} />
+                  </Button>
+                </div>
               </div>
               {item.contactId && orcAberto === item.contactId && (
                 <div className="border-b border-border/20 bg-muted/30 px-4 py-2 space-y-1">

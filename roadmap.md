@@ -71,3 +71,8 @@
 - [x] Separar os quatro modos antes de Atrasados e remover Lista/Semana à direita.
 - [x] Abrir datas sempre em Dia e corrigir as setas centrais para avançar um dia.
 - [x] Conferir os controles e a navegação na tela.
+
+## Cartão compacto da fila
+- [x] Mover o ícone de ampliar para a coluna direita, abaixo dos três pontinhos.
+- [x] Apresentar "Atrasado dd/mm hh:mm" na linha da empresa, sem linha própria.
+- [x] Conferir altura do cartão, quebra dos ícones e expansão na tela.
