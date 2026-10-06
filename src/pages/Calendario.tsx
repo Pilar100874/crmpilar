@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -3451,7 +3452,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         );
         // Instância oculta (outras abas): leva o painel para o espaço central do atendimento.
         const quadro = typeof document !== "undefined" ? document.querySelector<HTMLElement>("[data-quadro-central]") : null;
-        const hospedeOculto = !!quadro && !!calendarioRaizRef.current && calendarioRaizRef.current.getBoundingClientRect().width < 50;
+        const hospedeOculto = !!quadro && !!agendaAreaRef.current && agendaAreaRef.current.getBoundingClientRect().width < 50;
         return hospedeOculto && quadro ? createPortal(painelTarefa, quadro) : painelTarefa;
       })()}
       </div>
