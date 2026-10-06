@@ -124,50 +124,57 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
     <div
       style={{ minHeight: ALTURA_BARRA_PROXIMO }}
       className={cn(
-"flex flex-col justify-center gap-1 border-t border-destructive/30 bg-card py-1.5 pl-3 shadow-[0_-4px_12px_hsl(var(--foreground)/0.06)]",
+        "flex flex-col justify-center gap-1.5 border-t border-border bg-card py-2 pl-3 shadow-[0_-6px_16px_hsl(var(--foreground)/0.08)]",
+        modoInativar ? "border-t-2 border-t-destructive" : "border-t-2 border-t-primary",
         emFluxo ? "relative w-full flex-shrink-0 pr-3" : "absolute inset-x-0 bottom-0 z-[130] pr-16"
       )}
     >
       {pendentes.length > 1 && (
         <div className="flex items-center gap-1 overflow-x-auto">
-          <span className="shrink-0 text-[10px] font-semibold text-destructive">{pendentes.length} atendimentos a finalizar:</span>
+          <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">{pendentes.length} a finalizar:</span>
           {pendentes.map((p) => (
             <button key={p.id} type="button" onClick={() => onTrocarContato?.(p.id)}
-              className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                p.id === contato.id ? "border-destructive bg-destructive/10 text-destructive" : "border-border text-muted-foreground hover:bg-muted")}>
+              className={cn("shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                p.id === contato.id ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}>
               {p.nome}
             </button>
           ))}
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <CalendarCheck className="order-1 h-5 w-5 shrink-0 text-destructive" />
-        <div className="order-2 min-w-[96px] max-w-full flex-1 sm:min-w-0 sm:max-w-[140px] sm:flex-none">
-          <p className="truncate text-xs font-semibold text-foreground">{modoInativar ? "Inativar cliente" : "Próximo contato"}</p>
-          <p className="truncate text-[10px] text-muted-foreground">{contato.nome}</p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <span className={cn("order-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+          modoInativar ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+          {modoInativar ? <UserX className="h-4 w-4" /> : <CalendarCheck className="h-4 w-4" />}
+        </span>
+        <div className="order-2 min-w-[96px] max-w-full flex-1 sm:min-w-0 sm:max-w-[160px] sm:flex-none">
+          <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{modoInativar ? "Inativar cliente" : "Finalizar atendimento"}</p>
+          <p className="truncate text-sm font-semibold text-foreground">{contato.nome}</p>
         </div>
         {modoInativar ? (
-          <Input autoFocus value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Motivo da inativação (obrigatório)" className="order-4 h-8 min-w-0 flex-1 text-xs max-sm:w-full" />
+          <Input autoFocus value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Motivo da inativação (obrigatório)" className="order-4 h-9 min-w-0 flex-1 rounded-full text-xs max-sm:w-full" />
         ) : (
           <>
-            <Input ref={dataRef} type="date" value={data} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setData(e.target.value)} className="order-4 h-8 w-[140px] shrink-0 text-xs transition-shadow max-sm:w-[120px]" />
-            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="order-5 hidden h-8 min-w-0 flex-1 text-xs sm:block" />
+            <label className="order-4 flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/40 pl-3 pr-1 max-sm:flex-1">
+              <span className="text-[10px] font-medium text-muted-foreground">Próximo</span>
+              <Input ref={dataRef} type="date" value={data} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setData(e.target.value)} className="h-8 w-[130px] border-0 bg-transparent px-1 text-xs shadow-none transition-shadow focus-visible:ring-0 max-sm:w-full" />
+            </label>
+            <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observação (opcional)" className="order-5 hidden h-9 min-w-0 flex-1 rounded-full text-xs sm:block" />
           </>
         )}
-        <label className="order-6 flex shrink-0 cursor-pointer items-center gap-1 text-[10px] text-muted-foreground sm:order-5" title="Permite abrir outro cliente sem finalizar este. Todos continuam obrigatórios.">
+        <label className="order-6 flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-full border border-border px-2 text-[10px] text-muted-foreground sm:order-5" title="Permite abrir outro cliente sem finalizar este. Todos continuam obrigatórios.">
           <Users className="h-3.5 w-3.5" />
-          <span className="hidden xl:inline">Atender simultâneo</span>
+          <span className="hidden xl:inline">Simultâneo</span>
           <Switch checked={!!simultaneo} onCheckedChange={(v) => onSimultaneo?.(v)} className="scale-75" />
         </label>
         {!modoInativar && (
-          <Button size="icon" variant="ghost" className="order-7 h-8 w-8 shrink-0 sm:order-6" title="Ignorar movimentação (ação feita por engano)" onClick={ignorar}>
+          <Button size="icon" variant="outline" className="order-7 h-9 w-9 shrink-0 rounded-full sm:order-6" title="Ignorar movimentação (ação feita por engano)" aria-label="Ignorar movimentação" onClick={ignorar}>
             <Undo2 className="h-4 w-4" />
           </Button>
         )}
-        <Button size="icon" variant="ghost" className="order-8 h-8 w-8 shrink-0 text-destructive sm:order-7" title={modoInativar ? "Voltar" : "Inativar cliente"} onClick={() => setModoInativar((v) => !v)}>
+        <Button size="icon" variant="outline" className="order-8 h-9 w-9 shrink-0 rounded-full text-destructive hover:text-destructive sm:order-7" title={modoInativar ? "Voltar" : "Inativar cliente"} aria-label={modoInativar ? "Voltar" : "Inativar cliente"} onClick={() => setModoInativar((v) => !v)}>
           {modoInativar ? <CalendarCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
         </Button>
-        <Button size="sm" onClick={finalizar} disabled={salvando} variant={modoInativar ? "destructive" : "default"} className="order-3 ml-auto h-8 shrink-0 gap-1.5 sm:order-8 sm:ml-0">
+        <Button size="sm" onClick={finalizar} disabled={salvando} variant={modoInativar ? "destructive" : "default"} className="order-3 ml-auto h-9 shrink-0 gap-1.5 rounded-full px-4 font-semibold shadow-sm sm:order-8 sm:ml-0">
           {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />}
           {modoInativar ? "Inativar" : "Finalizar"}
         </Button>
