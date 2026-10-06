@@ -1,4 +1,4 @@
-import { Archive, ChevronLeft, ChevronRight, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
+import { Archive, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailPanel } from "@/components/email/EmailPanel";
@@ -60,7 +60,7 @@ export function AtendimentoEmailPanel({
   onReply,
   onForward,
   onToggleDetails,
-  detailsOpen,
+
   toolsSlot,
   onOpenConsultaEstoque,
   pendingAppendText,
@@ -93,17 +93,6 @@ export function AtendimentoEmailPanel({
           <Button variant="ghost" size="icon" onClick={onRefresh} className="h-9 w-9" title="Atualizar e-mails">
             <RefreshCw className="h-4 w-4" />
           </Button>
-          {onToggleDetails && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleDetails}
-              className="h-9 w-9"
-              title={detailsOpen ? "Ocultar detalhes" : "Mostrar detalhes"}
-            >
-              {detailsOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          )}
         </div>
         <div className="mt-3 grid grid-cols-3 gap-1">
           {pastas.map((pasta) => {

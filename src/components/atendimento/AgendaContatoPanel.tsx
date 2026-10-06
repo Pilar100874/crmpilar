@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, Check, Clock, X } from "lucide-react";
+import { CalendarDays, Check, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -27,7 +27,7 @@ interface Props {
 const concluida = (s: string) => ["completed", "concluida", "concluído", "concluida", "done"].includes((s || "").toLowerCase());
 
 /** Agenda do contato: próximos agendamentos e, opcionalmente, a sequência completa de tarefas. */
-export function AgendaContatoPanel({ contactId, nome, onClose, top = 0 }: Props) {
+export function AgendaContatoPanel({ contactId, nome, top = 0 }: Props) {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [mostrarSequencia, setMostrarSequencia] = useState(() => localStorage.getItem("agendaContato.sequencia") !== "0");
@@ -76,7 +76,6 @@ export function AgendaContatoPanel({ contactId, nome, onClose, top = 0 }: Props)
             Mostrar sequência de tarefas
             <Switch checked={mostrarSequencia} onCheckedChange={alternarSequencia} />
           </label>
-          <Button size="sm" variant="ghost" onClick={onClose}><X className="h-4 w-4" /> Fechar</Button>
         </div>
       </div>
 
