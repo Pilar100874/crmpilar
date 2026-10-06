@@ -6037,6 +6037,10 @@ ${recentMessages}
                   onToggleDetails={() => setShowClientDetailsEmail((v) => !v)}
                   detailsOpen={showClientDetailsEmail}
                 />
+              ) : activeTab === "agenda" && !selectedTaskId && !selectedAgendaContato && agendaViewMode !== "massa" ? (
+                <div className="h-full min-h-0 overflow-y-auto bg-card">
+                  <ModuloCalendario key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} />
+                </div>
               ) : <MobileMainContent
                 activeTab={activeTab}
                 selectedConversation={selectedConversation}
