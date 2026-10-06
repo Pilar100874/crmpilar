@@ -3425,8 +3425,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         };
         return (
           <div
-            className="fixed inset-0 z-[650] flex flex-col bg-card"
-            style={{ left: menuLargura || 0 }}
+            className="absolute inset-0 z-[650] flex flex-col bg-card"
             role="dialog"
             aria-label={creating ? "Nova tarefa" : "Detalhes da tarefa"}
           >
