@@ -3423,9 +3423,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
           origem: "manual" as Task["origem"], createdAt: new Date(),
         };
-        return (
+        const painelTarefa = (
           <div
-            className="absolute inset-0 z-[650] flex flex-col bg-card"
+            className="absolute inset-x-0 top-0 bottom-[var(--barra-proximo,0px)] z-[650] flex flex-col bg-card"
             role="dialog"
             aria-label={creating ? "Nova tarefa" : "Detalhes da tarefa"}
           >
@@ -3449,6 +3449,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               }} />
           </div>
         );
+        // Instância oculta (outras abas): leva o painel para o espaço central do atendimento.
+        const quadro = typeof document !== "undefined" ? document.querySelector<HTMLElement>("[data-quadro-central]") : null;
+        const hospedeOculto = !!quadro && !!calendarioRaizRef.current && calendarioRaizRef.current.getBoundingClientRect().width < 50;
+        return hospedeOculto && quadro ? createPortal(painelTarefa, quadro) : painelTarefa;
       })()}
       </div>
 

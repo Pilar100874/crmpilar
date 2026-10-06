@@ -6386,7 +6386,7 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div ref={quadroCentralRef} style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} data-quadro-central style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile ? "cabecalho-cliente-ativo" : ""}`}>
         {contatoPendenteBarra && usuarioId && estabelecimentoId && (
           <BarraProximoContato
             contato={contatoPendenteBarra}
