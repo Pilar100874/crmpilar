@@ -51,7 +51,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
     setLoading(Boolean(task.contactId));
     async function load() {
       try {
-        const id = await getEstabelecimentoIdSafe();
+        const id = await getEstabelecimentoId();
         if (cancelled) return;
         if (!task.contactId || !id) return;
         const { data, error: queryError } = await supabase.from("customers")
@@ -126,11 +126,4 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
       </SheetContent>
     </Sheet>
   );
-}
-
-async function getEstabelecimentoIdSafe(): Promise<string | null> {
-  try {
-    const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
-    return await getEstabelecimentoId();
-  } catch { return null; }
 }
