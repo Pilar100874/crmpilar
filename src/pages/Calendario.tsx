@@ -2013,7 +2013,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
 
     return (
-      <div className="border-l border-t border-border overflow-x-auto">
+      <div className="border-l border-t border-border overflow-hidden">
         <div className="grid grid-cols-7 min-w-0">{weekDays}</div>
         {rows}
       </div>
