@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Contact {
   id: string;
@@ -115,6 +116,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [pendingTaskData, setPendingTaskData] = useState<any>(null);
   const [contactExistingTasks, setContactExistingTasks] = useState<any[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [deleteExistingId, setDeleteExistingId] = useState<string | null>(null);
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
 
   // Preencher dados quando estiver editando
   useEffect(() => {
@@ -834,7 +837,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                         variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteExistingTask(task.id)}
+                        onClick={() => setDeleteExistingId(task.id)}
                         title="Excluir tarefa"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -1336,13 +1339,15 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button size="sm" className="w-full" onClick={() => void resolverDuplicada(true)}>Trocar pela nova tarefa</Button>
+          <Button size="sm" className="w-full" onClick={() => setReplaceConfirmOpen(true)}>Trocar pela nova tarefa</Button>
           <Button size="sm" variant="secondary" className="w-full" onClick={() => void resolverDuplicada(false)}>Manter as duas</Button>
           <AlertDialogCancel asChild><Button size="sm" variant="outline" className="w-full mt-0">Cancelar</Button></AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
 
+    <DeleteConfirmDialog open={!!deleteExistingId} onOpenChange={(open) => { if (!open) setDeleteExistingId(null); }} onConfirm={() => { if (deleteExistingId) handleDeleteExistingTask(deleteExistingId); setDeleteExistingId(null); }} />
+    <DeleteConfirmDialog open={replaceConfirmOpen} onOpenChange={setReplaceConfirmOpen} onConfirm={() => { setReplaceConfirmOpen(false); void resolverDuplicada(true); }} />
     </>
   );
 }
