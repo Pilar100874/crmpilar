@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, Clock3, Edit, Loader2, MoreVertical, Trash2, User } from "lucide-react";
+import { CalendarDays, Clock3, Edit, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface SidebarTask {
   id: string;
