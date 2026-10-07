@@ -214,6 +214,8 @@ export default function Atendimento() {
   });
   const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
+  // Guarda o cliente dono da lista de orçamentos aberta, para voltar nela ao sair do editor.
+  const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
@@ -514,6 +516,7 @@ export default function Atendimento() {
   type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
     if (destino !== 'historico') setHistoricoClienteState(null);
+    if (destino !== 'orcamentos' && destino !== 'orcamento') listaOrcamentosRef.current = null;
     if (destino !== 'orcamentos') setOrcamentosClienteState(null);
     if (destino !== 'agendaContato') setAgendaContatoState(null);
     if (destino !== 'extras') setExtrasEmpresaState(null);
@@ -539,6 +542,14 @@ export default function Atendimento() {
   function setOrcamentosCliente(valor: typeof orcamentosCliente) {
     if (valor) fecharConteudoCentral('orcamentos');
     setOrcamentosClienteState(valor);
+  }
+  // Ao sair do editor, reabre a lista de orçamentos do cliente de onde ela foi aberta.
+  function voltarParaListaOrcamentos() {
+    const cliente = listaOrcamentosRef.current;
+    if (!cliente) return false;
+    listaOrcamentosRef.current = null;
+    setOrcamentosClienteState(cliente);
+    return true;
   }
   function setAgendaContato(valor: typeof agendaContato) {
     if (valor) fecharConteudoCentral('agendaContato');
@@ -2511,7 +2522,7 @@ export default function Atendimento() {
       setInitialEmpresaForOrcamento(data.empresa_id || null);
     }
     setTimeout(() => {
-      setActiveTab('orcamento');
+      setActiveTabState('orcamento');
       setOrcamentoSheetOpen(true);
     }, 100);
     toast.success(`Orçamento iniciado para ${data.nome || data.nome_fantasia || 'contato'}`);
@@ -5697,11 +5708,14 @@ ${recentMessages}
                     indicadoresPorContato={indicadoresPorContato}
                     selectedOrcamentoId={selectedOrcamentoId}
                     onSelectOrcamento={(orcamento) => {
+                      const cliente = orcamentosCliente;
                       setOrcamentosCliente(null);
                       setActiveTab("orcamento");
                       setSelectedOrcamentoId(orcamento.id);
                       setSelectedOrcamentoData(orcamento);
                       setOrcamentoSheetOpen(true);
+                      listaOrcamentosRef.current = cliente;
+                      setMobileView("main");
                     }}
                   />
                 </div>
@@ -6019,13 +6033,13 @@ ${recentMessages}
                 onOrcamentoClose={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
-                  setMobileView("list");
+                  setMobileView(voltarParaListaOrcamentos() ? "main" : "list");
                 }}
                 onOrcamentoDelete={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
                   setSelectedOrcamentoData(null);
-                  setMobileView("list");
+                  setMobileView(voltarParaListaOrcamentos() ? "main" : "list");
                   loadOrcamentos();
                 }}
                 onOrcamentoSave={() => {
@@ -6569,7 +6583,7 @@ ${recentMessages}
                   <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); }}>
+                  <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); listaOrcamentosRef.current = c; }}>
                     <Plus className="h-4 w-4 mr-1" /> Novo orçamento
                   </Button>
 
@@ -6584,12 +6598,14 @@ ${recentMessages}
                   indicadoresPorContato={indicadoresPorContato}
                   selectedOrcamentoId={selectedOrcamentoId}
                   onSelectOrcamento={(orcamento) => {
+                    const cliente = orcamentosCliente;
                     setOrcamentosCliente(null);
                     setActiveTab("orcamento");
                     setSelectedOrcamentoId(orcamento.id);
                     setSelectedOrcamentoData(orcamento);
                     setContatoOrcamentoDetalhe(orcamento);
                     setOrcamentoSheetOpen(true);
+                    listaOrcamentosRef.current = cliente;
                   }}
                 />
               </div>
@@ -7635,12 +7651,14 @@ ${recentMessages}
               setOrcamentoSheetOpen(false);
               setSelectedOrcamentoId(null);
               setInitialEmpresaForOrcamento(null);
+              voltarParaListaOrcamentos();
             }}
             onDelete={() => {
               setOrcamentoSheetOpen(false);
               setSelectedOrcamentoId(null);
               setSelectedOrcamentoData(null);
               loadOrcamentos();
+              voltarParaListaOrcamentos();
             }}
             onSave={() => {
               marcarPendencia(selectedOrcamentoData?.cliente_id);
