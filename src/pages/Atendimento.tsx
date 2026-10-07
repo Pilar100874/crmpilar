@@ -214,6 +214,8 @@ export default function Atendimento() {
   });
   const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
+  // Guarda o cliente dono da lista de orçamentos aberta, para voltar nela ao sair do editor.
+  const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
@@ -514,6 +516,7 @@ export default function Atendimento() {
   type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
     if (destino !== 'historico') setHistoricoClienteState(null);
+    if (destino !== 'orcamentos' && destino !== 'orcamento') listaOrcamentosRef.current = null;
     if (destino !== 'orcamentos') setOrcamentosClienteState(null);
     if (destino !== 'agendaContato') setAgendaContatoState(null);
     if (destino !== 'extras') setExtrasEmpresaState(null);
@@ -539,6 +542,14 @@ export default function Atendimento() {
   function setOrcamentosCliente(valor: typeof orcamentosCliente) {
     if (valor) fecharConteudoCentral('orcamentos');
     setOrcamentosClienteState(valor);
+  }
+  // Ao sair do editor, reabre a lista de orçamentos do cliente de onde ela foi aberta.
+  function voltarParaListaOrcamentos() {
+    const cliente = listaOrcamentosRef.current;
+    if (!cliente) return false;
+    listaOrcamentosRef.current = null;
+    setOrcamentosClienteState(cliente);
+    return true;
   }
   function setAgendaContato(valor: typeof agendaContato) {
     if (valor) fecharConteudoCentral('agendaContato');
