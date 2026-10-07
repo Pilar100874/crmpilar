@@ -6760,6 +6760,7 @@ ${recentMessages}
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card animate-wipe-in">
             <DisparoMassaPanel
               fontes={fontesDisparo}
+              abaInicial={filtroFila}
               onClose={() => setShowDisparoMassa(false)}
               onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
               onIniciarEnvio={iniciarEnvioDoDisparo}
@@ -7903,6 +7904,7 @@ ${recentMessages}
       <div className="fixed inset-0 z-[700] bg-background">
         <DisparoMassaPanel
           fontes={fontesDisparo}
+              abaInicial={filtroFila}
           onClose={() => setShowDisparoMassa(false)}
           onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
           onIniciarEnvio={iniciarEnvioDoDisparo}
