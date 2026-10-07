@@ -81,3 +81,7 @@
 - [x] Mover o ícone de ampliar para a coluna direita, abaixo dos três pontinhos.
 - [x] Apresentar "Atrasado dd/mm hh:mm" na linha da empresa, sem linha própria.
 - [x] Conferir altura do cartão, quebra dos ícones e expansão na tela.
+
+## Fechar o disparo em massa
+- [x] Ao fechar o disparo em massa, voltar para a lista de Contatos de onde foi aberto.
+- [x] Conferir no celular e no computador a volta à lista após fechar.
