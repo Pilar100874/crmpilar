@@ -6421,7 +6421,7 @@ ${recentMessages}
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
         {(activeTab !== "agenda" || showDisparoMassa || showEnvioMassaWizard || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
-            <Suspense fallback={null}><ModuloCalendario contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
+            <Suspense fallback={null}><ModuloCalendario dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
           </div>
         )}
         {/* Abinha para reabrir a Fila do dia quando encolhida (igual ao painel de detalhes) */}
@@ -7315,7 +7315,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? undefined} viewModeInicial={modoAgendaCentral as any} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
+                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
                   </Suspense>
                 </div>
               )}
