@@ -2974,17 +2974,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                   {modoValidacao ? "Validação: ligada" : "Validação"}
                 </Button>
               )}
-              {diasRecolhidos && (
-                <Button
-                  size="sm"
-                  onClick={() => handleOpenNewTask()}
-                  className="h-9 gap-1"
-                  aria-label="Nova tarefa"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Tarefa</span>
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -3012,20 +3001,20 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 setViewMode("day");
                 window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: hoje.toISOString(), modo: "day" } }));
               }}
-              className="h-auto w-10 shrink-0 rounded-none border-r border-border/60 text-muted-foreground sm:w-16"
+              className="h-auto w-9 shrink-0 rounded-none border-r border-border/60 text-muted-foreground sm:w-16"
             >
-              <Calendar className="h-6 w-6" />
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
             <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] overflow-x-hidden sm:basis-auto">
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
                   onClick={() => setViewMode("list")}
-                  className="flex h-auto min-w-0 min-h-[58px] items-center justify-start rounded-none border-r border-border/60 px-2 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
+                  className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
-                    <span className="block text-xs font-medium text-foreground">Atrasados</span>
-                    <span className="mt-1 block font-cardTitle text-2xl font-bold text-destructive">{tarefasAtrasadas}</span>
+                    <span className="block text-[10px] font-medium text-foreground sm:text-xs">Atrasados</span>
+                    <span className="mt-0.5 block font-cardTitle text-base font-bold text-destructive sm:mt-1 sm:text-2xl">{tarefasAtrasadas}</span>
                   </span>
                 </Button>
                 {resumoDias.map((resumo, index) => {
@@ -3042,36 +3031,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                         window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
                       }}
                       className={cn(
-                        "flex h-auto min-w-0 min-h-[58px] items-center justify-between gap-1 rounded-none border-r border-border/60 px-2 text-left last:border-r-0 hover:bg-muted/50 sm:min-h-[82px] sm:gap-2 sm:px-4",
+                        "flex h-auto min-w-0 min-h-[42px] items-center justify-between gap-1 rounded-none border-r border-border/60 px-1.5 text-left last:border-r-0 hover:bg-muted/50 sm:min-h-[82px] sm:gap-2 sm:px-4",
                         index === 0 && "bg-primary/5 hover:bg-primary/10",
                         selecionado && index !== 0 && "bg-accent"
                       )}
                     >
                       <span className="min-w-0">
-                        <span className={cn("flex min-w-0 items-baseline gap-1 text-xs font-semibold capitalize", index === 0 ? "text-primary" : "text-foreground")}>
+                        <span className={cn("flex min-w-0 items-baseline gap-1 text-[10px] font-semibold capitalize sm:text-xs", index === 0 ? "text-primary" : "text-foreground")}>
                           <span className="min-w-0 truncate">
                             <span className="lg:hidden">{index === 0 ? "Hoje" : format(resumo.date, "EEE", { locale: ptBR }).slice(0, 3)}</span>
                             <span className="hidden lg:inline">{index === 0 ? "Hoje" : resumo.label}</span>
                           </span>
                           <span className="shrink-0 text-muted-foreground">· {format(resumo.date, "d")}</span>
                         </span>
-                        <span className="mt-1 block font-cardTitle text-2xl font-bold text-foreground">{resumo.count}</span>
+                        <span className="mt-0.5 block font-cardTitle text-base font-bold text-foreground sm:mt-1 sm:text-2xl">{resumo.count}</span>
                       </span>
                       {!ultimo && <Calendar className={cn("hidden h-5 w-5 shrink-0 lg:block", index === 0 ? "text-primary" : "text-muted-foreground")} />}
                     </Button>
                   );
                 })}
               </div>
-            </div>
-            <div className="flex w-full shrink-0 items-center justify-end border-t border-border/60 px-2 py-1 sm:w-auto sm:border-t-0 sm:px-3 sm:py-0">
-              <Button
-                onClick={() => handleOpenNewTask()}
-                className="h-8 gap-2 rounded-md px-3 font-semibold sm:h-11 sm:px-4"
-                aria-label="Nova tarefa"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Tarefa</span>
-              </Button>
             </div>
           </div>
         </div>
@@ -3412,7 +3391,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       <div className="relative flex min-h-0 flex-1">
       <div ref={agendaAreaRef} className={`min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-3 py-3 ${(selectedTaskId || showTaskDialog) ? "hidden" : ""}`}>
         {/* Navegação e filtros do calendário (dentro da área central) */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Dia anterior" title="Dia anterior" className="h-8 w-8 rounded-md border border-border/60 bg-card">
               <ChevronLeft className="h-4 w-4" />
@@ -3463,6 +3442,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && (
                 <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">{selectedOrigens.length + selectedUserIds.length}</Badge>
               )}
+            </Button>
+            <Button
+              onClick={() => handleOpenNewTask()}
+              size="sm"
+              className="h-8 gap-1.5 rounded-md px-3 text-xs font-semibold"
+              aria-label="Nova tarefa"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Tarefa
             </Button>
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-full">
               <TabsList className="grid h-10 w-full grid-cols-4 bg-muted/60">
