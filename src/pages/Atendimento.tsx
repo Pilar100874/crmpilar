@@ -4051,8 +4051,13 @@ ${recentMessages}
       const c: any = contatoEmailSelecionado;
       return { id: c.id, nome: c.nome, email: c.email, telefone: c.telefone, tel: c.tel };
     }
+    // Lista de orçamentos do cliente aberta (ex.: ao voltar do editor): mantém a barra de abas do contato.
+    if (orcamentosCliente?.id) {
+      const c: any = contatosBase.find((contato: any) => contato.id === orcamentosCliente.id) || {};
+      return { id: orcamentosCliente.id, nome: c.nome || orcamentosCliente.nome || "Cliente", empresa: empresaDe(c.companies), telefone: c.telefone || c.whatsapp, tel: c.tel, email: c.email };
+    }
     return null;
-  }, [activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado, agendaViewMode, discadorModo, fluxoCurrentTask, contatosBase]);
+  }, [orcamentosCliente, activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado, agendaViewMode, discadorModo, fluxoCurrentTask, contatosBase]);
 
   const clienteCabecalho = useMemo(() => {
     const base: any = clienteCabecalhoBase;
