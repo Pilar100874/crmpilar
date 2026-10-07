@@ -85,3 +85,8 @@
 ## Fechar o disparo em massa
 - [x] Ao fechar o disparo em massa, voltar para a lista de Contatos de onde foi aberto.
 - [x] Conferir no celular e no computador a volta à lista após fechar.
+
+## Orçamentos do cliente
+- [x] Listar somente os orçamentos, com filtro por etapa, sem o cartão de contato.
+- [x] Conferir a lista e o filtro no celular e no computador.
+
