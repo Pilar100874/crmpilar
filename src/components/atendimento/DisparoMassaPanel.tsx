@@ -32,6 +32,7 @@ interface Props {
   onClose: () => void;
   onIniciarLigacao: (ids: string[], modo: "sequencial" | "previa") => void;
   onIniciarEnvio: (ids: string[], canal: "whatsapp" | "email") => void;
+  abaInicial?: Aba;
 }
 
 interface Contato {
@@ -112,12 +113,12 @@ function FiltroMulti({ rotulo, opcoes, valor, onChange }: {
   );
 }
 
-export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciarEnvio }: Props) {
+export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciarEnvio, abaInicial = "tudo" }: Props) {
   const [canal, setCanal] = useState<CanalDisparo | null>(null);
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [nomesUsuarios, setNomesUsuarios] = useState<Record<string, string>>({});
-  const [aba, setAba] = useState<Aba>("tudo");
+  const [aba, setAba] = useState<Aba>(abaInicial);
   const [busca, setBusca] = useState("");
   const [fData, setFData] = useState<FiltroData[]>([]);
   const [fTipo, setFTipo] = useState<string[]>([]);
