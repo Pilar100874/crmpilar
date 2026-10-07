@@ -5725,6 +5725,7 @@ ${recentMessages}
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   <OrcamentosEmpresaList
+                    modo="direto"
                     orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
                     tarefasAgenda={filteredTasks}
                     emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
@@ -6615,6 +6616,7 @@ ${recentMessages}
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto p-2">
                 <OrcamentosEmpresaList
+                  modo="direto"
                   orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
                   tarefasAgenda={filteredTasks}
                   emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
