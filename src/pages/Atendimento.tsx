@@ -216,6 +216,8 @@ export default function Atendimento() {
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
   // Guarda o cliente dono da lista de orçamentos aberta, para voltar nela ao sair do editor.
   const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
+  // Guarda de onde o disparo em massa foi aberto, para voltar lá ao fechar.
+  const disparoOrigemRef = useRef<{ mobileView: "list" | "main" | "details"; activeTab: string; showConversationsList: boolean } | null>(null);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
@@ -4797,6 +4799,8 @@ ${recentMessages}
   };
 
   const abrirDisparoMassa = () => {
+    // Anota a tela de contatos de onde o disparo foi aberto.
+    disparoOrigemRef.current = { mobileView, activeTab, showConversationsList };
     setHistoricoCliente(null);
     setAgendaContato(null);
     setShowEnvioMassaWizard(false);
@@ -4804,6 +4808,17 @@ ${recentMessages}
     if (!discadorModo) setAgendaViewMode("default");
     setMobileView("main");
     setShowDisparoMassa(true);
+  };
+
+  // Fechar o disparo em massa devolve o usuário à lista de contatos de onde veio.
+  const fecharDisparoMassa = () => {
+    setShowDisparoMassa(false);
+    const origem = disparoOrigemRef.current;
+    disparoOrigemRef.current = null;
+    if (!origem) return;
+    setActiveTabState(origem.activeTab);
+    setShowConversationsList(origem.showConversationsList);
+    setMobileView(origem.mobileView);
   };
 
   const iniciarEnvioDoDisparo = (ids: string[], canal: "whatsapp" | "email") => {
@@ -6766,7 +6781,7 @@ ${recentMessages}
             <DisparoMassaPanel
               fontes={fontesDisparo}
               abaInicial={filtroFila}
-              onClose={() => setShowDisparoMassa(false)}
+              onClose={fecharDisparoMassa}
               onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
               onIniciarEnvio={iniciarEnvioDoDisparo}
             />
@@ -7910,7 +7925,7 @@ ${recentMessages}
         <DisparoMassaPanel
           fontes={fontesDisparo}
               abaInicial={filtroFila}
-          onClose={() => setShowDisparoMassa(false)}
+          onClose={fecharDisparoMassa}
           onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
           onIniciarEnvio={iniciarEnvioDoDisparo}
         />
