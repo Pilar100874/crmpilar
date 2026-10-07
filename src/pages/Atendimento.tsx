@@ -4557,7 +4557,11 @@ ${recentMessages}
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
       if (contato) {
         setSelectedTelContato(contato);
-        if (!(novaAba === 'tel' && discadorModo && agendaViewMode === 'fluxo')) abrirFluxoComContato(contato);
+        // Fluxo só existe quando iniciado pelo disparo em massa (discador); Visita nunca tem fluxo.
+        if (!(novaAba === 'tel' && fluxoPersistente)) {
+          if (agendaViewMode === 'fluxo') setAgendaViewMode('default');
+          if (isMobile) setMobileView('main');
+        }
       }
     } else if (novaAba === 'email') {
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
@@ -5732,7 +5736,7 @@ ${recentMessages}
             )}
 
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen (fica montado ao navegar em outras abas) */}
-            {(fluxoPersistente || ((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo')) && (
+            {fluxoPersistente && (
               <div className={`absolute inset-0 z-20 bg-background overflow-hidden ${(activeTab === "tel" || activeTab === "visita") && mobileView === "main" ? "" : "hidden"}`}>
                 {/* Fluxo Panel */}
                 <div 
@@ -6223,7 +6227,7 @@ ${recentMessages}
             onOcultar={() => setShowClientDetailsOrcamento(false)}
                 />
               )}
-              {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === "default" && selectedTelContato && (
+              {(activeTab === "tel" || activeTab === "visita") && !fluxoPersistente && selectedTelContato && (
                 <UnifiedDetailsPanel
                   type="agenda"
                   nome={selectedTelContato.nome}
@@ -7137,7 +7141,7 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : activeTab === "visita" && agendaViewMode === 'fluxo' ? (
+        ) : false && activeTab === "visita" && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <div className="flex flex-1 min-h-0 flex-col">
           <div className="flex min-h-0 flex-[3] flex-col overflow-hidden">
@@ -7434,7 +7438,7 @@ ${recentMessages}
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
-      {!orcamentoSheetOpen && ((activeTab === "tel" && !!discadorModo) || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
+      {!orcamentoSheetOpen && fluxoPersistente && activeTab === "tel" && fluxoCurrentTask && showClientDetailsFluxo && (
       <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
@@ -7465,7 +7469,7 @@ ${recentMessages}
       </PainelCentralDetalhes>
       )}
 
-      {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
+      {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && !fluxoPersistente && selectedTelContato && showClientDetailsFluxo && (
       <PainelCentralDetalhes>
           <UnifiedDetailsPanel
             type="agenda"
