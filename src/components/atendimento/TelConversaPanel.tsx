@@ -140,14 +140,14 @@ export default function TelConversaPanel({ customerId, telefones, estabeleciment
           <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
           {!resultadoNome && <span className="flex items-center gap-1 text-[10px] text-destructive"><AlertCircle className="h-3 w-3" /> Obrigatório</span>}
         </div>
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+        <div className="flex items-center gap-1.5">
           {RESULTADOS.map(({ nome, Icone }) => {
             const selecionado = resultadoNome === nome;
             return (
               <Button key={nome} type="button" variant={selecionado ? "default" : "outline"} size="sm"
-                onClick={() => selecionarResultado(nome)} className="h-8 min-w-0 gap-1.5 px-2 text-xs">
-                <Icone className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{nome}</span>
+                title={nome} aria-label={nome} aria-pressed={selecionado}
+                onClick={() => selecionarResultado(nome)} className="h-8 flex-1 min-w-0 p-0">
+                <Icone className="h-4 w-4 shrink-0" />
               </Button>
             );
           })}
