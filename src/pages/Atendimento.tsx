@@ -2522,7 +2522,7 @@ export default function Atendimento() {
       setInitialEmpresaForOrcamento(data.empresa_id || null);
     }
     setTimeout(() => {
-      setActiveTab('orcamento');
+      setActiveTabState('orcamento');
       setOrcamentoSheetOpen(true);
     }, 100);
     toast.success(`Orçamento iniciado para ${data.nome || data.nome_fantasia || 'contato'}`);
@@ -5708,11 +5708,13 @@ ${recentMessages}
                     indicadoresPorContato={indicadoresPorContato}
                     selectedOrcamentoId={selectedOrcamentoId}
                     onSelectOrcamento={(orcamento) => {
+                      const cliente = orcamentosCliente;
                       setOrcamentosCliente(null);
                       setActiveTab("orcamento");
                       setSelectedOrcamentoId(orcamento.id);
                       setSelectedOrcamentoData(orcamento);
                       setOrcamentoSheetOpen(true);
+                      listaOrcamentosRef.current = cliente;
                     }}
                   />
                 </div>
@@ -6030,13 +6032,13 @@ ${recentMessages}
                 onOrcamentoClose={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
-                  setMobileView("list");
+                  setMobileView(voltarParaListaOrcamentos() ? "main" : "list");
                 }}
                 onOrcamentoDelete={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
                   setSelectedOrcamentoData(null);
-                  setMobileView("list");
+                  setMobileView(voltarParaListaOrcamentos() ? "main" : "list");
                   loadOrcamentos();
                 }}
                 onOrcamentoSave={() => {
@@ -6580,7 +6582,7 @@ ${recentMessages}
                   <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); }}>
+                  <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); listaOrcamentosRef.current = c; }}>
                     <Plus className="h-4 w-4 mr-1" /> Novo orçamento
                   </Button>
 
@@ -6595,12 +6597,14 @@ ${recentMessages}
                   indicadoresPorContato={indicadoresPorContato}
                   selectedOrcamentoId={selectedOrcamentoId}
                   onSelectOrcamento={(orcamento) => {
+                    const cliente = orcamentosCliente;
                     setOrcamentosCliente(null);
                     setActiveTab("orcamento");
                     setSelectedOrcamentoId(orcamento.id);
                     setSelectedOrcamentoData(orcamento);
                     setContatoOrcamentoDetalhe(orcamento);
                     setOrcamentoSheetOpen(true);
+                    listaOrcamentosRef.current = cliente;
                   }}
                 />
               </div>
@@ -7646,12 +7650,14 @@ ${recentMessages}
               setOrcamentoSheetOpen(false);
               setSelectedOrcamentoId(null);
               setInitialEmpresaForOrcamento(null);
+              voltarParaListaOrcamentos();
             }}
             onDelete={() => {
               setOrcamentoSheetOpen(false);
               setSelectedOrcamentoId(null);
               setSelectedOrcamentoData(null);
               loadOrcamentos();
+              voltarParaListaOrcamentos();
             }}
             onSave={() => {
               marcarPendencia(selectedOrcamentoData?.cliente_id);
