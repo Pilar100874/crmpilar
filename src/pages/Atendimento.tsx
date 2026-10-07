@@ -5715,6 +5715,7 @@ ${recentMessages}
                       setSelectedOrcamentoData(orcamento);
                       setOrcamentoSheetOpen(true);
                       listaOrcamentosRef.current = cliente;
+                      setMobileView("main");
                     }}
                   />
                 </div>
