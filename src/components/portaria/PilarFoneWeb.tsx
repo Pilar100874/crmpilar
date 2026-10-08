@@ -1,3 +1,4 @@
+import IaAjudaAtendente from "@/components/telefonia/IaAjudaAtendente";
 import { useEffect, useRef, useState } from "react";
 import { Download, ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -287,6 +288,8 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   };
 
   const controlesTelefone = (
+    <>
+    <div className="absolute inset-x-2 bottom-2 z-30 bg-card rounded-lg"><IaAjudaAtendente local="fone" /></div>
     <PilarFone
       embedded
       initialNumber={numeroInicial}

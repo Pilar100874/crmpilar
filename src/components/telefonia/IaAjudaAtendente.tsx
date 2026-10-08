@@ -47,6 +47,7 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   const [sugestoes, setSugestoes] = useState<{ texto: string; em: string }[]>([]);
   const [ramal, setRamal] = useState<string | null>(null);
   const visivel = local === "atendimento" || prefs.local === "fone";
+  const exibindo = local === prefs.local;
 
   useEffect(() => { void meuRamal().then(setRamal); }, []);
 
@@ -65,7 +66,7 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   };
 
   useEffect(() => {
-    if (!prefs.ativa || !ramal || !visivel) return;
+    if (!prefs.ativa || !ramal || !exibindo) return;
     let vivo = true;
     const buscar = async () => {
       const { data } = await db.from("voz_chamadas").select("sugestoes").eq("modo", "assistir")
@@ -75,9 +76,17 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
     void buscar();
     const t = setInterval(buscar, 3000);
     return () => { vivo = false; clearInterval(t); };
-  }, [prefs.ativa, ramal, visivel]);
+  }, [prefs.ativa, ramal, exibindo]);
 
   if (!visivel) return null;
+  if (local === "atendimento" && prefs.local !== "atendimento") {
+    return (
+      <label className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${className}`}>
+        <Switch checked={false} onCheckedChange={() => atualizar({ local: "atendimento" })} aria-label="Usar IA ajuda aqui" />
+        <Bot className="h-3.5 w-3.5 text-primary" /> Usar IA ajuda nesta tela (sai do Pilar Fone)
+      </label>
+    );
+  }
   const ultimas = sugestoes.slice(-3).reverse();
 
   return (
