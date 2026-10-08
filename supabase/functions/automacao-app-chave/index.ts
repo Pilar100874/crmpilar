@@ -14,7 +14,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** Aplicativos que usam chave de empresa. */
-const APPS_VALIDOS = ["pilar-fone", "fone", "automacao", "controle", "sms", "remotas", "coletor", "coletor-tv"];
+const APPS_VALIDOS = ["pilar-fone", "fone", "automacao", "controle", "sms", "voz", "remotas", "coletor", "coletor-tv"];
 const CORTE_ATIVACAO_COLETOR = "2026-09-14T14:13:57.000Z";
 
 const MigracaoLegadaSchema = z.object({
