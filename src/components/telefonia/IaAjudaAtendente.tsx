@@ -135,12 +135,6 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
         <Bot className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold">IA ajuda</span>
         <Switch checked={prefs.ativa} onCheckedChange={(v) => void ativar(v)} aria-label="Ativar IA ajuda" />
-        {local === "atendimento" && (
-          <label className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Switch checked={prefs.local === "atendimento"} onCheckedChange={(v) => atualizar({ local: v ? "atendimento" : "fone" })} aria-label="Mostrar aqui" />
-            Mostrar aqui (sai do Pilar Fone)
-          </label>
-        )}
       </div>
       {prefs.ativa && (
         <div className="mt-2 max-h-28 space-y-1 overflow-y-auto">
