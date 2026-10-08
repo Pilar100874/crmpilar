@@ -94,3 +94,8 @@
 ## Agentes de Voz
 - [x] Tela, tabelas, chaves, servidor de voz
 - [ ] Testar na central real (depende de rodar o servidor na rede da UCM)
+
+## IA ajuda no Pilar Fone
+- [x] Sugestões dentro de um campo abaixo dos telefones, em formato de conversa.
+- [x] Manter o campo visível durante a ligação.
+- [x] Conferir no computador o campo vazio e com sugestões.

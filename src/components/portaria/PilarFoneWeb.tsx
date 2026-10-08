@@ -289,9 +289,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   const controlesTelefone = (
     <>
-    <div className="absolute inset-x-2 bottom-2 z-30 bg-card rounded-lg"><IaAjudaAtendente local="fone" /></div>
     <PilarFone
       embedded
+      painelIa={<IaAjudaAtendente local="fone" />}
       initialNumber={numeroInicial}
       onChamadaRecebida={() => {
         // Chamada tocando: pisca a aba e abre o telefone para o botão Atender ficar à vista.
