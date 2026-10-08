@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId } from "@/lib/aip/db";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { Switch } from "@/components/ui/switch";
 
 const db = supabase as any;
