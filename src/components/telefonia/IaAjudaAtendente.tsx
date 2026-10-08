@@ -53,8 +53,8 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   const [sugestoes, setSugestoes] = useState<{ texto: string; em: string }[]>([]);
   const [ramal, setRamal] = useState<string | null>(null);
   const rolagem = useRef<HTMLDivElement>(null);
-  const visivel = local === "atendimento" || prefs.local === "fone";
-  const exibindo = local === prefs.local;
+  const visivel = local === prefs.local;
+  const exibindo = visivel;
 
   useEffect(() => { void meuRamal().then(setRamal); }, []);
 
@@ -68,7 +68,8 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
     const { data: u } = await supabase.auth.getUser();
     const r = await db.from("voz_comandos").insert({ estabelecimento_id: est, agente_id: ag.id, tipo: "assistir", ramal, criado_por: u.user?.id ?? null });
     if (r.error) return toast.error(r.error.message);
-    atualizar({ ativa: true });
+    // Ao ligar a partir desta tela, as sugestões passam a aparecer nela (saem do outro local).
+    atualizar({ ativa: true, local });
     toast.success("A IA vai escutar seu ramal e sugerir respostas");
   };
 
