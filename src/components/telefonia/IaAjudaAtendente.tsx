@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,12 @@ async function meuRamal(): Promise<string | null> {
   return (r as any)?.ramal ? String((r as any).ramal) : null;
 }
 
+function hora(iso: string) {
+  try {
+    return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch { return ""; }
+}
+
 interface Props { local: LocalIaAjuda; className?: string }
 
 /** Painel de sugestões da IA ao atendente; só aparece no local escolhido. */
@@ -46,6 +52,7 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   const { prefs, atualizar } = useIaAjudaPrefs();
   const [sugestoes, setSugestoes] = useState<{ texto: string; em: string }[]>([]);
   const [ramal, setRamal] = useState<string | null>(null);
+  const rolagem = useRef<HTMLDivElement>(null);
   const visivel = local === "atendimento" || prefs.local === "fone";
   const exibindo = local === prefs.local;
 
@@ -78,6 +85,12 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
     return () => { vivo = false; clearInterval(t); };
   }, [prefs.ativa, ramal, exibindo]);
 
+  // No telefone o campo acompanha a conversa: a sugestão mais nova fica à vista.
+  useEffect(() => {
+    const el = rolagem.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [sugestoes, prefs.ativa, prefs.local]);
+
   if (!visivel) return null;
   if (local === "atendimento" && prefs.local !== "atendimento") {
     return (
@@ -87,6 +100,40 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
       </label>
     );
   }
+
+  if (local === "fone") {
+    const conversas = sugestoes.slice(-20);
+    return (
+      <div className={`overflow-hidden rounded-2xl border border-white/10 bg-[#111B21] ${className}`}>
+        <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#00A884]/15">
+            <Bot className="h-3.5 w-3.5 text-[#00A884]" />
+          </span>
+          <span className="text-[13px] font-semibold text-[#E9EDEF]">IA ajuda</span>
+          <span className="ml-auto text-[11px] text-[#8696A0]">{prefs.ativa ? "escutando seu ramal" : "desligada"}</span>
+          <Switch checked={prefs.ativa} onCheckedChange={(v) => void ativar(v)} aria-label="Ativar IA ajuda" />
+        </div>
+        <div ref={rolagem} className="max-h-44 min-h-[76px] space-y-2 overflow-y-auto px-3 py-3">
+          {!prefs.ativa ? (
+            <p className="text-[12px] text-[#8696A0]">Ligue a IA para receber sugestões de resposta durante a ligação.</p>
+          ) : conversas.length === 0 ? (
+            <p className="text-[12px] text-[#8696A0]">Aguardando a conversa para sugerir…</p>
+          ) : (
+            conversas.map((s, i) => (
+              <div key={s.em + i} className="flex gap-2">
+                <Sparkles className="mt-1.5 h-3.5 w-3.5 shrink-0 text-[#00A884]" />
+                <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#18252D] px-3 py-2">
+                  <p className="text-[13px] leading-snug text-[#E9EDEF]">{s.texto}</p>
+                  <p className="mt-1 text-[10px] text-[#8696A0]">{hora(s.em)}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const ultimas = sugestoes.slice(-3).reverse();
 
   return (

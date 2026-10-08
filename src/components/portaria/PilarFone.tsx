@@ -120,6 +120,8 @@ interface Props {
   onChamadaRecebida?: () => void;
   /** Informa o estado do ramal à aba externa do Pilar Fone. */
   onStatusRamalChange?: (status: { registrado: boolean; conectando: boolean }) => void;
+  /** Campo exibido abaixo da lista de telefones (ex.: sugestões da IA). */
+  painelIa?: React.ReactNode;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -141,6 +143,7 @@ export default function PilarFone({
   abasPermitidas,
   onChamadaRecebida,
   onStatusRamalChange,
+  painelIa,
 }: Props) {
 
   const { toast } = useToast();
@@ -686,6 +689,7 @@ export default function PilarFone({
                 </div>
               );
             })}
+            {painelIa && <div className="px-4 pb-3">{painelIa}</div>}
             <PilarFoneHistorico grupo="ramais" titulo="Chamadas recentes" onLigar={isRegistered ? (n) => ligar(n) : undefined} />
           </div>
         )}
