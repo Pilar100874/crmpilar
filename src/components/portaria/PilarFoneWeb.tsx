@@ -372,6 +372,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
       onFechar={() => (janela ? window.close() : setAberto(false))}
     />
+    </>
   );
 
   // Sem abas liberadas: telefone indisponível (nada é renderizado, inclusive a aba lateral)
