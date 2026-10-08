@@ -31,7 +31,7 @@ class VozService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACAO_PARAR) { pararTudo(); stopSelf(); return START_NOT_STICKY }
         iniciarPrimeiroPlano("Conectando à central…")
-        if (!rodando) { rodando = true; Thread(::principal, "pilar-voz").start() }
+        if (!rodando) { rodando = true; Monitor.servico = "Conectando"; Monitor.avisar(this); Thread(::principal, "pilar-voz").start() }
         return START_STICKY
     }
 
@@ -49,19 +49,20 @@ class VozService : Service() {
                 if (host.isBlank() || ramal.isBlank()) { log("Preencha o endereço da central e o ramal"); return }
                 val sip = SipAgente(host, porta, ramal, pref.getString("senha", "")!!, ::log) { c -> aoReceber(c) }
                 agente = sip
-                if (!sip.registrar()) { sip.parar(); Thread.sleep(15_000); continue }
+                if (!sip.registrar()) { Monitor.central = "Falha no registro"; Monitor.avisar(this); sip.parar(); Thread.sleep(15_000); continue }
+                Monitor.servico = "Ativo"; Monitor.central = "Ramal $ramal registrado em $host"; Monitor.avisar(this)
                 log("Ramal $ramal registrado em $host"); atualizarNotificacao("Ramal $ramal pronto para atender")
                 var ultimoRegistro = System.currentTimeMillis()
                 while (rodando) {
                     if (System.currentTimeMillis() - ultimoRegistro > 240_000) {
-                        if (!sip.registrar()) break; ultimoRegistro = System.currentTimeMillis()
+                        if (!sip.registrar()) { Monitor.central = "Registro perdido"; Monitor.avisar(this); break }; ultimoRegistro = System.currentTimeMillis()
                     }
                     runCatching { Api.proximoComando() }.getOrNull()?.let { executarComando(sip, it) }
                     Thread.sleep(3000)
                 }
                 sip.parar()
             } catch (e: Exception) {
-                log("Erro: ${e.message}"); Thread.sleep(15_000)
+                Monitor.central = "Erro: ${e.message}"; Monitor.avisar(this); log("Erro: ${e.message}"); Thread.sleep(15_000)
             }
         }
     }
@@ -94,8 +95,11 @@ class VozService : Service() {
     private fun conduzir(c: Chamada, cfg: JSONObject, modo: String, objetivo: String?, numero: String? = c.numero, ramal: String? = null) {
         val chamadaId = runCatching { Api.iniciar(modo, numero, ramal) }.getOrNull()
         val hist = JSONArray()
+        Monitor.inicioLigacao(modo, numero ?: ramal ?: "?"); Monitor.avisar(this)
         fun registrar(papel: String, texto: String) {
             if (texto.isBlank()) return
+            if (papel == "cliente") Monitor.falaCliente = texto else Monitor.falaIa = texto
+            Monitor.avisar(this)
             hist.put(JSONObject().put("papel", papel).put("texto", texto))
             chamadaId?.let { Api.fala(it, papel, texto) }
         }
@@ -125,13 +129,13 @@ class VozService : Service() {
                             if (r != null) {
                                 registrar("cliente", r.optString("fala"))
                                 val resp = r.optString("resposta").trim()
-                                if (modo == "assistir") { if (resp.isNotBlank()) chamadaId?.let { Api.sugestao(it, resp) } }
+                                if (modo == "assistir") { if (resp.isNotBlank()) { Monitor.falaIa = "Sugestão: $resp"; Monitor.avisar(this) }; if (resp.isNotBlank()) chamadaId?.let { Api.sugestao(it, resp) } }
                                 else if (resp.isNotBlank()) {
                                     registrar("agente", resp.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").trim())
                                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
                                     while (c.ativa && c.rtp.tocando()) Thread.sleep(100)
                                     val transf = if (modo == "ligar" && !ramal.isNullOrBlank()) ramal else cfg.optString("ramal_transferencia")
-                                    if (resp.contains("[TRANSFERIR]") && transf.isNotBlank()) { c.transferir(transf); Thread.sleep(4000); break }
+                                    if (resp.contains("[TRANSFERIR]") && transf.isNotBlank()) { Monitor.transferidas++; log("Transferindo para o ramal $transf"); c.transferir(transf); Thread.sleep(4000); break }
                                     if (resp.contains("[DESLIGAR]")) break
                                 }
                             }
@@ -144,11 +148,12 @@ class VozService : Service() {
         finally {
             c.desligar()
             chamadaId?.let { Api.finalizar(it, erro) }
+            Monitor.fimLigacao(); Monitor.avisar(this)
             log("Ligação encerrada")
         }
     }
 
-    private fun pararTudo() { rodando = false; Thread { agente?.parar() }.start(); runCatching { trava?.release() } }
+    private fun pararTudo() { rodando = false; Monitor.servico = "Parado"; Monitor.central = "Desconectado"; Monitor.fimLigacao(); Monitor.avisar(this); Thread { agente?.parar() }.start(); runCatching { trava?.release() } }
     override fun onDestroy() { pararTudo(); super.onDestroy() }
 
     private fun iniciarPrimeiroPlano(texto: String) {
@@ -183,4 +188,25 @@ class VozService : Service() {
         }
         fun parar(ctx: Context) = ctx.startService(Intent(ctx, VozService::class.java).setAction(ACAO_PARAR))
     }
+}
+
+/** Estado ao vivo do serviço, mostrado na tela de monitoramento. */
+object Monitor {
+    @Volatile var servico = "Parado"
+    @Volatile var central = "Desconectado"
+    @Volatile var modo: String? = null
+    @Volatile var destino: String? = null
+    @Volatile var inicio = 0L
+    @Volatile var falaCliente = ""
+    @Volatile var falaIa = ""
+    @Volatile var atendidas = 0
+    @Volatile var feitas = 0
+    @Volatile var assistidas = 0
+    @Volatile var transferidas = 0
+    fun inicioLigacao(m: String, d: String) {
+        modo = m; destino = d; inicio = System.currentTimeMillis(); falaCliente = ""; falaIa = ""
+        when (m) { "receber" -> atendidas++; "ligar" -> feitas++; else -> assistidas++ }
+    }
+    fun fimLigacao() { modo = null; destino = null; inicio = 0L }
+    fun avisar(ctx: Context) = ctx.sendBroadcast(Intent(VozService.EVENTO).setPackage(ctx.packageName))
 }

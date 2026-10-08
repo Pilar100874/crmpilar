@@ -19,9 +19,11 @@ import androidx.core.content.ContextCompat
 class MainActivity : AppCompatActivity() {
     private val pref by lazy { getSharedPreferences(VozService.PREF, MODE_PRIVATE) }
     private lateinit var eventos: TextView
+    private val relogio = android.os.Handler(android.os.Looper.getMainLooper())
+    private val tique = object : Runnable { override fun run() { mostrarMonitor(); relogio.postDelayed(this, 1000) } }
 
     private val receptor = object : BroadcastReceiver() {
-        override fun onReceive(c: Context?, i: Intent?) = mostrarEventos()
+        override fun onReceive(c: Context?, i: Intent?) { mostrarEventos(); mostrarMonitor() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +41,7 @@ class MainActivity : AppCompatActivity() {
             val ativo = !pref.getString("chave", "").isNullOrBlank()
             ativacao.visibility = if (ativo) View.GONE else View.VISIBLE
             config.visibility = if (ativo) View.VISIBLE else View.GONE
+            findViewById<View>(R.id.bloco_monitor).visibility = if (ativo) View.VISIBLE else View.GONE
             findViewById<TextView>(R.id.txt_empresa).text = pref.getString("empresa", "")
         }
 
@@ -74,11 +77,29 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         ContextCompat.registerReceiver(this, receptor, IntentFilter(VozService.EVENTO), ContextCompat.RECEIVER_NOT_EXPORTED)
+        relogio.post(tique)
     }
 
-    override fun onStop() { unregisterReceiver(receptor); super.onStop() }
+    override fun onStop() { relogio.removeCallbacks(tique); unregisterReceiver(receptor); super.onStop() }
 
     private fun mostrarEventos() = runOnUiThread {
         eventos.text = synchronized(VozService.EVENTOS) { VozService.EVENTOS.joinToString("\n") }.ifBlank { "Nenhum evento ainda." }
+    }
+
+    private fun mostrarMonitor() {
+        val m = Monitor
+        val cor = when (m.servico) { "Ativo" -> "🟢"; "Conectando" -> "🟡"; else -> "⚪" }
+        findViewById<TextView>(R.id.mon_servico).text = "$cor Serviço: ${m.servico}"
+        findViewById<TextView>(R.id.mon_central).text = "Central: ${m.central}"
+        val modo = m.modo
+        findViewById<TextView>(R.id.mon_ligacao).text = if (modo == null) "Nenhuma ligação no momento" else {
+            val seg = (System.currentTimeMillis() - m.inicio) / 1000
+            val nome = when (modo) { "receber" -> "Atendendo"; "ligar" -> "Ligando para"; else -> "Ajudando o ramal" }
+            "📞 $nome ${m.destino} — %02d:%02d".format(seg / 60, seg % 60)
+        }
+        findViewById<TextView>(R.id.mon_cliente).text = if (m.falaCliente.isBlank()) "" else "Cliente: ${m.falaCliente}"
+        findViewById<TextView>(R.id.mon_ia).text = if (m.falaIa.isBlank()) "" else "IA: ${m.falaIa}"
+        findViewById<TextView>(R.id.mon_contadores).text =
+            "Desde que abriu: ${m.atendidas} atendidas · ${m.feitas} feitas · ${m.assistidas} ajudas · ${m.transferidas} transferidas"
     }
 }

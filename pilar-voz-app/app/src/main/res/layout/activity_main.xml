@@ -27,6 +27,25 @@
                 android:layout_marginTop="10dp" android:gravity="center" android:textColor="@color/activation_muted" />
         </LinearLayout>
 
+
+        <LinearLayout android:id="@+id/bloco_monitor" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:background="@drawable/activation_card" android:orientation="vertical"
+            android:padding="16dp" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Monitoramento"
+                android:textColor="@color/activation_text" android:textStyle="bold" android:textSize="16sp" />
+            <TextView android:id="@+id/mon_servico" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:textColor="@color/activation_text" android:textSize="14sp" />
+            <TextView android:id="@+id/mon_central" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:textColor="@color/activation_muted" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_ligacao" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:textColor="@color/brand_accent" android:textStyle="bold" android:textSize="14sp" />
+            <TextView android:id="@+id/mon_cliente" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:textColor="@color/activation_text" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_ia" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:textColor="@color/activation_text" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_contadores" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:textColor="@color/activation_muted" android:textSize="12sp" />
+        </LinearLayout>
         <LinearLayout android:id="@+id/bloco_config" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="16dp" android:background="@drawable/activation_card" android:orientation="vertical"
             android:padding="20dp" android:visibility="gone">
