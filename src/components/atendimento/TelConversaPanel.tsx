@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import IaAjudaAtendente from "@/components/telefonia/IaAjudaAtendente";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { lerResultadoPendente, salvarResultadoPendente } from "@/lib/atendimento/finalizarAtendimento";
 
@@ -135,6 +136,7 @@ export default function TelConversaPanel({ customerId, telefones, estabeleciment
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-2 p-3 overflow-hidden">
+      <IaAjudaAtendente local="atendimento" className="shrink-0" />
       <div className="shrink-0 space-y-2 rounded-lg border border-border bg-card p-2.5">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-foreground">Resultado do contato</label>
