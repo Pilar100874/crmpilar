@@ -994,6 +994,10 @@ export default function PilarFone({
             )}
           </div>
 
+          {/* Campo de conversa da IA durante a ligação */}
+          {painelIa && <div className="relative z-10 mt-3 w-full max-w-sm self-center">{painelIa}</div>}
+
+
           {/* Controles da chamada */}
           <div className="relative z-10 flex w-full max-w-sm items-center justify-around self-center">
             {chamadaAtual.state === SessionState.Established ? (
