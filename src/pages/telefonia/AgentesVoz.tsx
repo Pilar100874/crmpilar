@@ -147,7 +147,11 @@ export default function AgentesVoz() {
               <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => setAtual({ ...atual, nome: e.target.value })} /></div>
               <div className="flex items-end gap-2"><Switch checked={atual.ativo} onCheckedChange={(v) => setAtual({ ...atual, ativo: v })} /><Label>Ativo</Label></div>
               <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Transferir para o ramal</Label><Input placeholder="ex.: 2001" value={atual.ramal_transferencia} onChange={(e) => setAtual({ ...atual, ramal_transferencia: e.target.value })} /></div>
+              <div className="space-y-1">
+                <Label>Transferir para o ramal</Label>
+                <Input placeholder="ex.: 2001" value={atual.ramal_transferencia} onChange={(e) => setAtual({ ...atual, ramal_transferencia: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Usado quando a IA atende sozinha (ramal na fila ou URA). Nas ligações do Disparo em massa, a chamada vai para o ramal de quem iniciou.</p>
+              </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>O que este agente faz</Label>
                 <div className="flex flex-wrap gap-2">

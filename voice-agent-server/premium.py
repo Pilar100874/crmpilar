@@ -1,5 +1,6 @@
 """Pipeline Pipecat (voz → texto → IA → voz) ligado ao áudio da central."""
 import asyncio
+import time
 
 import numpy as np
 from pipecat.frames.frames import (
@@ -19,9 +20,23 @@ DIRETIVA = ("Improve collaboration between squads and ensure all agents read the
 class SaidaCentral(FrameProcessor):
     """Envia o áudio gerado para a ligação e registra o texto da IA."""
 
-    def __init__(self, call, reg, modo):
+    def __init__(self, call, reg, modo, destino=""):
         super().__init__()
         self.call, self.reg, self.modo, self.texto = call, reg, modo, ""
+        self.destino, self.acao, self.acao_em = destino, "", 0.0
+
+    def verificar(self):
+        """Aplica a ordem da IA (transferir ou desligar) depois que a fala terminar."""
+        if not self.acao or time.time() - self.acao_em < 2.0 or self.call.state != CallState.ANSWERED:
+            return
+        acao, self.acao = self.acao, ""
+        try:
+            if acao == "transferir" and self.destino and hasattr(self.call, "transfer"):
+                self.call.transfer(self.destino)
+            elif acao == "desligar":
+                self.call.hangup()
+        except Exception:
+            pass
 
     async def process_frame(self, frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -30,7 +45,15 @@ class SaidaCentral(FrameProcessor):
         elif isinstance(frame, LLMTextFrame):
             self.texto += frame.text
             if self.texto.rstrip().endswith((".", "?", "!")):
-                (self.reg.sugestao if self.modo == "assistir" else lambda t: self.reg.fala("agente", t))(self.texto.strip())
+                texto = self.texto.strip()
+                if self.modo == "assistir":
+                    self.reg.sugestao(texto)
+                else:
+                    if "[TRANSFERIR]" in texto:
+                        self.acao, self.acao_em = "transferir", time.time()
+                    elif "[DESLIGAR]" in texto:
+                        self.acao, self.acao_em = "desligar", time.time()
+                    self.reg.fala("agente", texto.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").strip())
                 self.texto = ""
         elif isinstance(frame, (TTSAudioRawFrame, OutputAudioRawFrame)) and self.modo != "assistir":
             a = np.frombuffer(frame.audio, dtype=np.int16)
@@ -47,7 +70,7 @@ class SaidaCentral(FrameProcessor):
         await self.push_frame(frame, direction)
 
 
-async def rodar_pipecat(call, agente, reg, modo, objetivo, chaves):
+async def rodar_pipecat(call, agente, reg, modo, objetivo, chaves, ramal=None):
     from pipecat.services.deepgram.stt import DeepgramSTTService
     from deepgram import LiveOptions
 
@@ -77,7 +100,7 @@ async def rodar_pipecat(call, agente, reg, modo, objetivo, chaves):
         sistema += f"\nObjetivo desta ligação: {objetivo}"
     contexto = OpenAILLMContext([{"role": "system", "content": sistema}])
     agg = llm.create_context_aggregator(contexto)
-    saida = SaidaCentral(call, reg, modo)
+    saida = SaidaCentral(call, reg, modo, ramal or agente.get("ramal_transferencia") or "")
 
     etapas = [stt, agg.user(), llm] + ([] if modo == "assistir" else [tts]) + [saida, agg.assistant()]
     task = PipelineTask(Pipeline(etapas), params=PipelineParams(audio_in_sample_rate=8000, audio_out_sample_rate=8000))
@@ -93,4 +116,9 @@ async def rodar_pipecat(call, agente, reg, modo, objetivo, chaves):
             await task.queue_frame(InputAudioRawFrame(audio=a, sample_rate=8000, num_channels=1))
         await task.queue_frame(EndFrame())
 
-    await asyncio.gather(PipelineRunner(handle_sigint=False).run(task), entrada())
+    async def vigiar():
+        while call.state == CallState.ANSWERED:
+            await asyncio.sleep(0.5)
+            saida.verificar()
+
+    await asyncio.gather(PipelineRunner(handle_sigint=False).run(task), entrada(), vigiar())
