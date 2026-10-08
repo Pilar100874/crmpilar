@@ -130,7 +130,7 @@ class VozService : Service() {
                                     registrar("agente", resp.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").trim())
                                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
                                     while (c.ativa && c.rtp.tocando()) Thread.sleep(100)
-                                    val transf = cfg.optString("ramal_transferencia")
+                                    val transf = if (modo == "ligar" && !ramal.isNullOrBlank()) ramal else cfg.optString("ramal_transferencia")
                                     if (resp.contains("[TRANSFERIR]") && transf.isNotBlank()) { c.transferir(transf); Thread.sleep(4000); break }
                                     if (resp.contains("[DESLIGAR]")) break
                                 }

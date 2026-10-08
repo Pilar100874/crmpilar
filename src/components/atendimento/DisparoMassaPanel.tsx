@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Check, ChevronDown, ListOrdered, Loader2, Mail, MessageCircle, Phone,
-  PhoneForwarded, Rocket, Search, X,
+  PhoneForwarded, Rocket, Search, X, Bot,
 } from "lucide-react";
+import { toast } from "sonner";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
+import { iniciarCampanhaIa } from "@/lib/voz/campanhaIa";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CHAVE_PARAR_AO_RECEBER, lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { cn } from "@/lib/utils";
 
-export type CanalDisparo = "whatsapp" | "email" | "telefone";
+export type CanalDisparo = "whatsapp" | "email" | "telefone" | "ia";
 type Aba = "tudo" | "agendados" | "recebidos";
 type FiltroData = "hoje" | "atrasados" | "futuros";
 
@@ -42,6 +47,7 @@ interface Contato {
   temWhats: boolean;
   temTel: boolean;
   temEmail: boolean;
+  numero: string;
   cidade: string;
   estado: string;
   tipo: string;
@@ -57,6 +63,7 @@ const CANAIS: { id: CanalDisparo; label: string; desc: string; icon: typeof Phon
   { id: "whatsapp", label: "WhatsApp", desc: "Mensagens em massa com sequência de conteúdos", icon: MessageCircle, cor: "text-success", fundo: "bg-success/10" },
   { id: "email", label: "E-mail", desc: "Campanha de e-mail para os contatos escolhidos", icon: Mail, cor: "text-info", fundo: "bg-info/10" },
   { id: "telefone", label: "Telefone", desc: "Discador sequencial ou com aprovação uma a uma", icon: Phone, cor: "text-primary", fundo: "bg-primary/10" },
+  { id: "ia", label: "Ligação com IA", desc: "A IA liga em sequência e passa para o seu ramal quando o contato responder", icon: Bot, cor: "text-primary", fundo: "bg-primary/10" },
 ];
 
 const ROTULO_TIPO: Record<string, string> = { B2B: "B2B", vendedor: "Vendedor", transportadora: "Transportadora" };
@@ -201,6 +208,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
           temWhats: tel.length >= 10,
           temTel: tel.length >= 8 || fixo.length >= 8,
           temEmail: !!c.email && String(c.email).includes("@"),
+          numero: tel.length >= 8 ? tel : fixo,
           cidade: c.cidade || e?.cidade || "",
           estado: c.estado || e?.estado || "",
           tipo: e?.tipo_cliente || "",
@@ -298,9 +306,38 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
 
   const escolherCanal = (k: CanalDisparo) => { setCanal(k); setSelecionados(new Set()); };
 
+  const [agentesIa, setAgentesIa] = useState<{ id: string; nome: string }[]>([]);
+  const [agenteIa, setAgenteIa] = useState("");
+  const [objetivoIa, setObjetivoIa] = useState("");
+  const [ramalIa, setRamalIa] = useState("");
+  useEffect(() => {
+    if (canal !== "ia") return;
+    void (async () => {
+      const est = await getEstabelecimentoId();
+      const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos").eq("estabelecimento_id", est).eq("ativo", true);
+      const l = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));
+      setAgentesIa(l); setAgenteIa((v) => v || l[0]?.id || "");
+      const r = await meuRamal(); if (r) setRamalIa((v) => v || r);
+    })();
+  }, [canal]);
+
+  const iniciarIa = async () => {
+    const est = await getEstabelecimentoId();
+    if (!est) return;
+    if (!agenteIa) return toast.error('Nenhum agente de voz com "Fazer ligações" ativo');
+    if (!ramalIa.trim()) return toast.error("Seu usuário não tem ramal configurado");
+    const itens = contatos.filter((c) => selecionados.has(c.id) && c.numero)
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa, numero: c.numero }));
+    const ok = iniciarCampanhaIa({ estabelecimentoId: est, agenteId: agenteIa, objetivo: objetivoIa.trim(), ramalAtendente: ramalIa.trim(), itens });
+    if (!ok) return toast.error("Já existe uma sequência de ligações com IA em andamento");
+    toast.success(`A IA começou a ligar para ${itens.length} contato(s)`);
+    onClose();
+  };
+
   const iniciar = () => {
     const ids = [...selecionados];
     if (!canal || ids.length === 0) return;
+    if (canal === "ia") return void iniciarIa();
     if (canal === "telefone") onIniciarLigacao(ids, modo);
     else onIniciarEnvio(ids, canal);
   };
@@ -341,7 +378,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
 
       {!canal ? (
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-3">
+          <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {CANAIS.map((k) => {
               const Icone = k.icon;
               return (
@@ -503,12 +540,23 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
                 </label>
               </div>
             )}
+            {canal === "ia" && (
+              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_8rem]">
+                <select value={agenteIa} onChange={(e) => setAgenteIa(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-xs text-foreground">
+                  {agentesIa.length === 0 && <option value="">Nenhum agente com "Fazer ligações"</option>}
+                  {agentesIa.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                </select>
+                <Input value={ramalIa} onChange={(e) => setRamalIa(e.target.value)} placeholder="Seu ramal" className="h-9 text-xs" aria-label="Ramal do atendente" />
+                <Textarea rows={2} value={objetivoIa} onChange={(e) => setObjetivoIa(e.target.value)} className="text-xs sm:col-span-2"
+                  placeholder="Objetivo da ligação (ex.: oferecer a promoção da semana). Quando o contato responder, a IA transfere para o seu ramal." />
+              </div>
+            )}
             <Button className="h-11 w-full gap-2 text-sm font-semibold" disabled={selecionados.size === 0} onClick={iniciar}>
               <Rocket className="h-4 w-4" />
               {selecionados.size === 0
                 ? "Selecione os contatos"
-                : canal === "telefone"
-                  ? `Iniciar ligações (${selecionados.size})`
+                : canal === "telefone" || canal === "ia"
+                  ? `${canal === "ia" ? "Iniciar ligações com IA" : "Iniciar ligações"} (${selecionados.size})`
                   : `Continuar para a mensagem (${selecionados.size})`}
             </Button>
           </div>
