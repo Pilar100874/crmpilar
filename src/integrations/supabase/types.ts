@@ -30651,6 +30651,178 @@ export type Database = {
           },
         ]
       }
+      voz_agentes: {
+        Row: {
+          ativo: boolean
+          config: Json
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          llm_modelo: string | null
+          llm_provedor: string | null
+          modos: string[]
+          nome: string
+          prompt: string
+          qualidade: string
+          ramal_ia: string | null
+          ramal_transferencia: string | null
+          saudacao: string | null
+          stt_provedor: string | null
+          tts_provedor: string | null
+          updated_at: string
+          voz: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          llm_modelo?: string | null
+          llm_provedor?: string | null
+          modos?: string[]
+          nome: string
+          prompt?: string
+          qualidade?: string
+          ramal_ia?: string | null
+          ramal_transferencia?: string | null
+          saudacao?: string | null
+          stt_provedor?: string | null
+          tts_provedor?: string | null
+          updated_at?: string
+          voz?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          llm_modelo?: string | null
+          llm_provedor?: string | null
+          modos?: string[]
+          nome?: string
+          prompt?: string
+          qualidade?: string
+          ramal_ia?: string | null
+          ramal_transferencia?: string | null
+          saudacao?: string | null
+          stt_provedor?: string | null
+          tts_provedor?: string | null
+          updated_at?: string
+          voz?: string | null
+        }
+        Relationships: []
+      }
+      voz_chamadas: {
+        Row: {
+          agente_id: string | null
+          duracao_seg: number | null
+          estabelecimento_id: string
+          finalizada_em: string | null
+          id: string
+          iniciada_em: string
+          modo: string
+          numero: string | null
+          ramal_monitorado: string | null
+          resumo: string | null
+          status: string
+          sugestoes: Json
+          transcricao: Json
+        }
+        Insert: {
+          agente_id?: string | null
+          duracao_seg?: number | null
+          estabelecimento_id: string
+          finalizada_em?: string | null
+          id?: string
+          iniciada_em?: string
+          modo?: string
+          numero?: string | null
+          ramal_monitorado?: string | null
+          resumo?: string | null
+          status?: string
+          sugestoes?: Json
+          transcricao?: Json
+        }
+        Update: {
+          agente_id?: string | null
+          duracao_seg?: number | null
+          estabelecimento_id?: string
+          finalizada_em?: string | null
+          id?: string
+          iniciada_em?: string
+          modo?: string
+          numero?: string | null
+          ramal_monitorado?: string | null
+          resumo?: string | null
+          status?: string
+          sugestoes?: Json
+          transcricao?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voz_chamadas_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "voz_agentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voz_comandos: {
+        Row: {
+          agente_id: string
+          created_at: string
+          criado_por: string | null
+          erro: string | null
+          estabelecimento_id: string
+          id: string
+          numero: string | null
+          objetivo: string | null
+          processado_em: string | null
+          ramal: string | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          agente_id: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          estabelecimento_id: string
+          id?: string
+          numero?: string | null
+          objetivo?: string | null
+          processado_em?: string | null
+          ramal?: string | null
+          status?: string
+          tipo: string
+        }
+        Update: {
+          agente_id?: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          estabelecimento_id?: string
+          id?: string
+          numero?: string | null
+          objetivo?: string | null
+          processado_em?: string | null
+          ramal?: string | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voz_comandos_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "voz_agentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_chat_messages: {
         Row: {
           content: string
