@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 
 const db = supabase as any;
 
@@ -84,8 +85,10 @@ export default function AgentesVoz() {
   const salvar = async () => {
     if (!empresa) return;
     if (!atual.nome.trim() || !atual.ramal_ia.trim()) return toast.error("Informe o nome e o ramal da IA");
+    const ramalUsuario = await meuRamal();
+    if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
-    const corpo = { ...dados, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
+    const corpo = { ...dados, ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
     const r = id ? await db.from("voz_agentes").update(corpo).eq("id", id).select().single()
       : await db.from("voz_agentes").insert(corpo).select().single();
     if (r.error) return toast.error(r.error.message);
@@ -149,8 +152,7 @@ export default function AgentesVoz() {
               <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
               <div className="space-y-1">
                 <Label>Transferir para o ramal</Label>
-                <Input placeholder="ex.: 2001" value={atual.ramal_transferencia} onChange={(e) => setAtual({ ...atual, ramal_transferencia: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Usado quando a IA atende sozinha (ramal na fila ou URA). Nas ligações do Disparo em massa, a chamada vai para o ramal de quem iniciou.</p>
+                <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>O que este agente faz</Label>
