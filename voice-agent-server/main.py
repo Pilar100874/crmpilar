@@ -139,7 +139,9 @@ def falar_gratuito(call, agente, reg, texto):
         print("Falha na saudação:", e)
 
 
-def sessao_gratuita(call, agente, reg, modo, objetivo=None):
+def sessao_gratuita(call, agente, reg, modo, objetivo=None, ramal=None):
+    # ramal = quem iniciou a ligação (atendente). Sem ele, vale o ramal do agente.
+    destino = ramal or agente.get("ramal_transferencia")
     prompt_extra = f"\nObjetivo desta ligação: {objetivo}" if objetivo else ""
     agente = {**agente, "prompt": (agente.get("prompt") or "") + prompt_extra}
     if modo != "assistir" and agente.get("saudacao"):
@@ -166,8 +168,8 @@ def sessao_gratuita(call, agente, reg, modo, objetivo=None):
                             reg.fala("agente", resp.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").strip())
                             if r.get("audio_b64"):
                                 tocar(call, wav_para_pcm8u(base64.b64decode(r["audio_b64"])))
-                            if "[TRANSFERIR]" in resp and agente.get("ramal_transferencia"):
-                                call.transfer(agente["ramal_transferencia"]) if hasattr(call, "transfer") else None
+                            if "[TRANSFERIR]" in resp and destino:
+                                call.transfer(destino) if hasattr(call, "transfer") else None
                                 return
                             if "[DESLIGAR]" in resp:
                                 call.hangup(); return
@@ -177,10 +179,10 @@ def sessao_gratuita(call, agente, reg, modo, objetivo=None):
 
 
 # ---------------- modo premium (Pipecat) ----------------
-def sessao_premium(call, agente, reg, modo, objetivo=None):
+def sessao_premium(call, agente, reg, modo, objetivo=None, ramal=None):
     from premium import rodar_pipecat
     chaves = {p: chave(p) for p in ("deepgram", "openai", "anthropic", "elevenlabs", "cartesia")}
-    asyncio.run(rodar_pipecat(call, agente, reg, modo, objetivo, chaves))
+    asyncio.run(rodar_pipecat(call, agente, reg, modo, objetivo, chaves, ramal))
 
 
 def conduzir(call, modo, numero=None, ramal=None, objetivo=None):
@@ -190,9 +192,9 @@ def conduzir(call, modo, numero=None, ramal=None, objetivo=None):
     reg = Registro(agente, modo, numero, ramal)
     try:
         if agente.get("qualidade") == "premium":
-            sessao_premium(call, agente, reg, modo, objetivo)
+            sessao_premium(call, agente, reg, modo, objetivo, ramal)
         else:
-            sessao_gratuita(call, agente, reg, modo, objetivo)
+            sessao_gratuita(call, agente, reg, modo, objetivo, ramal)
         reg.fim()
     except Exception as e:
         print("Erro na chamada:", e); reg.fim("erro")
