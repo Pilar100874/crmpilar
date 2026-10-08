@@ -53,8 +53,8 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   const [sugestoes, setSugestoes] = useState<{ texto: string; em: string }[]>([]);
   const [ramal, setRamal] = useState<string | null>(null);
   const rolagem = useRef<HTMLDivElement>(null);
-  const visivel = local === "atendimento" || prefs.local === "fone";
-  const exibindo = local === prefs.local;
+  const visivel = local === prefs.local;
+  const exibindo = visivel;
 
   useEffect(() => { void meuRamal().then(setRamal); }, []);
 
@@ -68,7 +68,8 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
     const { data: u } = await supabase.auth.getUser();
     const r = await db.from("voz_comandos").insert({ estabelecimento_id: est, agente_id: ag.id, tipo: "assistir", ramal, criado_por: u.user?.id ?? null });
     if (r.error) return toast.error(r.error.message);
-    atualizar({ ativa: true });
+    // Ao ligar a partir desta tela, as sugestões passam a aparecer nela (saem do outro local).
+    atualizar({ ativa: true, local });
     toast.success("A IA vai escutar seu ramal e sugerir respostas");
   };
 
@@ -92,14 +93,6 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   }, [sugestoes, prefs.ativa, prefs.local]);
 
   if (!visivel) return null;
-  if (local === "atendimento" && prefs.local !== "atendimento") {
-    return (
-      <label className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${className}`}>
-        <Switch checked={false} onCheckedChange={() => atualizar({ local: "atendimento" })} aria-label="Usar IA ajuda aqui" />
-        <Bot className="h-3.5 w-3.5 text-primary" /> Usar IA ajuda nesta tela (sai do Pilar Fone)
-      </label>
-    );
-  }
 
   if (local === "fone") {
     const conversas = sugestoes.slice(-20);
@@ -142,12 +135,6 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
         <Bot className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold">IA ajuda</span>
         <Switch checked={prefs.ativa} onCheckedChange={(v) => void ativar(v)} aria-label="Ativar IA ajuda" />
-        {local === "atendimento" && (
-          <label className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Switch checked={prefs.local === "atendimento"} onCheckedChange={(v) => atualizar({ local: v ? "atendimento" : "fone" })} aria-label="Mostrar aqui" />
-            Mostrar aqui (sai do Pilar Fone)
-          </label>
-        )}
       </div>
       {prefs.ativa && (
         <div className="mt-2 max-h-28 space-y-1 overflow-y-auto">
