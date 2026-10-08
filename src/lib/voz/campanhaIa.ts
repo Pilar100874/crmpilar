@@ -57,7 +57,7 @@ async function executar() {
       let fim: StatusItem | null = null;
       while (!fim && Date.now() - inicio < 10 * 60_000) {
         await espera(3000);
-        if (!campanha || campanha.estado === "cancelada") { fim = "cancelado"; break; }
+        if (!campanha || (campanha.estado as string) === "cancelada") { fim = "cancelado"; break; }
         const s = (await db.from("voz_comandos").select("status").eq("id", r.data.id).maybeSingle()).data?.status;
         if (s === "sem_resposta" || s === "erro" || s === "cancelado") fim = s;
         else if (s === "concluido") {
