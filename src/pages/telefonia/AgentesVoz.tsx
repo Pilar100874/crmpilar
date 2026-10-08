@@ -232,27 +232,6 @@ export default function AgentesVoz() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="acoes" className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><PhoneCall className="h-5 w-5" /> IA liga para um contato</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1"><Label>Número</Label><Input value={ligar.numero} onChange={(e) => setLigar({ ...ligar, numero: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Objetivo da ligação</Label><Textarea rows={3} placeholder="Ex.: confirmar a visita de amanhã às 10h" value={ligar.objetivo} onChange={(e) => setLigar({ ...ligar, objetivo: e.target.value })} /></div>
-              <Button disabled={!atual.modos.includes("ligar")} onClick={() => void comando("ligar")}>Ligar agora</Button>
-              {!atual.modos.includes("ligar") && <p className="text-xs text-muted-foreground">Ative "Fazer ligações" no agente.</p>}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Headset className="h-5 w-5" /> IA ajuda um atendente</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">A IA escuta a ligação em silêncio e mostra sugestões ao vivo na aba Chamadas.</p>
-              <div className="space-y-1"><Label>Ramal do atendente <span className="text-xs font-normal text-muted-foreground">(já vem com o seu; troque só para ajudar outra pessoa)</span></Label><Input value={ramalAssistir} onChange={(e) => setRamalAssistir(e.target.value)} /></div>
-              <Button disabled={!atual.modos.includes("assistir")} onClick={() => void comando("assistir")}>Começar a ajudar</Button>
-              {!atual.modos.includes("assistir") && <p className="text-xs text-muted-foreground">Ative "Ajudar o atendente" no agente.</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="chamadas" className="space-y-3">
           {chamadas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma chamada da IA ainda.</p>}
           {chamadas.map((c) => (
