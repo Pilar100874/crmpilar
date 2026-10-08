@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - 'pilar-voz-app/**'
-      - '.github/workflows/build-pilar-sms.yml'
+      - '.github/workflows/build-pilar-voz.yml'
 
 permissions:
   contents: write
@@ -120,21 +120,21 @@ jobs:
             j.version = '${VERSION}';
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = 'v${VERSION}: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android.';
+            j.notas = 'v${VERSION}: Agente de voz com IA para a central telefônica.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/voz-version.json
 
-      - name: Commit sms-version.json bump
+      - name: Commit voz-version.json bump
         working-directory: ${{ github.workspace }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if git diff --quiet public/coletor/voz-version.json; then
-            echo "sms-version.json unchanged"
+            echo "voz-version.json unchanged"
           else
             git add public/coletor/voz-version.json
-            git commit -m "chore(sms): publish apk v${{ steps.version.outputs.version }} [skip ci]"
+            git commit -m "chore(voz): publish apk v${{ steps.version.outputs.version }} [skip ci]"
             for i in 1 2 3 4 5; do
               git pull --rebase --autostash origin main && git push origin HEAD:main && break
               echo "push retry $i..."
