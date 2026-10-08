@@ -120,6 +120,28 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Teste de Webhooks"
     }
   ],
+  "AgentesVoz": [
+    {
+      "id": "agente",
+      "label": "Agente"
+    },
+    {
+      "id": "chaves",
+      "label": "Chaves"
+    },
+    {
+      "id": "acoes",
+      "label": "Ligar / Ajudar"
+    },
+    {
+      "id": "chamadas",
+      "label": "Chamadas"
+    },
+    {
+      "id": "servidor",
+      "label": "Servidor"
+    }
+  ],
   "Calendario Painel": [
     {
       "id": "day",
