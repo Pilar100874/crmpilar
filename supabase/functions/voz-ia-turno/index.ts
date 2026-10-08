@@ -3,7 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 /**
  * Modo "gratuito" dos Agentes de Voz: o servidor de voz envia o trecho de fala
  * do cliente (WAV) e recebe texto transcrito, resposta da IA e áudio da resposta.
- * Usa a IA inclusa no sistema. Protegido pela chave compartilhada VOZ_RUNNER_KEY.
+ * Usa a IA inclusa no sistema. Protegido pela chave compartilhada AIP_RUNNER_KEY.
  */
 const GW = "https://ai.gateway.lovable.dev/v1";
 const json = (b: unknown, s = 200) =>
@@ -54,7 +54,7 @@ async function responder(key: string, sistema: string, historico: { papel: strin
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const esperado = Deno.env.get("VOZ_RUNNER_KEY");
+  const esperado = Deno.env.get("AIP_RUNNER_KEY");
   if (!esperado || req.headers.get("x-runner-key") !== esperado) return json({ error: "Não autorizado" }, 401);
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
