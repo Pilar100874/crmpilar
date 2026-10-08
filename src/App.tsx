@@ -1,3 +1,4 @@
+import CampanhaIaPopup from "@/components/telefonia/CampanhaIaPopup";
 import { Toaster } from "@/components/ui/toaster";
 import * as React from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -491,6 +492,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <EditorPopupProvider />
+        <CampanhaIaPopup />
         
         
         <BrowserRouter>

@@ -1,3 +1,4 @@
+import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { useCallback, useEffect, useState } from "react";
 import { Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +58,7 @@ export default function AgentesVoz() {
   const [valoresChave, setValoresChave] = useState<Record<string, string>>({});
   const [ligar, setLigar] = useState({ numero: "", objetivo: "" });
   const [ramalAssistir, setRamalAssistir] = useState("");
+  useEffect(() => { void meuRamal().then((r) => r && setRamalAssistir((v) => v || r)); }, []);
   const [excluir, setExcluir] = useState(false);
 
   const carregar = useCallback(async () => {
@@ -265,7 +267,7 @@ export default function AgentesVoz() {
             <CardHeader><CardTitle className="flex items-center gap-2"><Headset className="h-5 w-5" /> IA ajuda um atendente</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">A IA escuta a ligação em silêncio e mostra sugestões ao vivo na aba Chamadas.</p>
-              <div className="space-y-1"><Label>Ramal do atendente</Label><Input value={ramalAssistir} onChange={(e) => setRamalAssistir(e.target.value)} /></div>
+              <div className="space-y-1"><Label>Ramal do atendente <span className="text-xs font-normal text-muted-foreground">(já vem com o seu; troque só para ajudar outra pessoa)</span></Label><Input value={ramalAssistir} onChange={(e) => setRamalAssistir(e.target.value)} /></div>
               <Button disabled={!atual.modos.includes("assistir")} onClick={() => void comando("assistir")}>Começar a ajudar</Button>
               {!atual.modos.includes("assistir") && <p className="text-xs text-muted-foreground">Ative "Ajudar o atendente" no agente.</p>}
             </CardContent>

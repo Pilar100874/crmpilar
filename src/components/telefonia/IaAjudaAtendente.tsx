@@ -33,7 +33,7 @@ export function useIaAjudaPrefs() {
   return { prefs, atualizar };
 }
 
-async function meuRamal(): Promise<string | null> {
+export async function meuRamal(): Promise<string | null> {
   const { data } = await supabase.rpc("get_minhas_credenciais" as any);
   const r = Array.isArray(data) ? data[0] : data;
   return (r as any)?.ramal ? String((r as any).ramal) : null;
