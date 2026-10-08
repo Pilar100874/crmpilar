@@ -1,4 +1,3 @@
-import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { useCallback, useEffect, useState } from "react";
 import { Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -56,9 +55,6 @@ export default function AgentesVoz() {
   const [chamadas, setChamadas] = useState<Chamada[]>([]);
   const [chavesSalvas, setChavesSalvas] = useState<Record<string, string>>({});
   const [valoresChave, setValoresChave] = useState<Record<string, string>>({});
-  const [ligar, setLigar] = useState({ numero: "", objetivo: "" });
-  const [ramalAssistir, setRamalAssistir] = useState("");
-  useEffect(() => { void meuRamal().then((r) => r && setRamalAssistir((v) => v || r)); }, []);
   const [excluir, setExcluir] = useState(false);
 
   const carregar = useCallback(async () => {
@@ -118,22 +114,6 @@ export default function AgentesVoz() {
     void carregar();
   };
 
-  const comando = async (tipo: "ligar" | "assistir") => {
-    if (!empresa || !atual.id) return toast.error("Salve um agente primeiro");
-    if (tipo === "ligar" && !ligar.numero.trim()) return toast.error("Informe o número");
-    if (tipo === "assistir" && !ramalAssistir.trim()) return toast.error("Informe o ramal do atendente");
-    const { data: u } = await supabase.auth.getUser();
-    const r = await db.from("voz_comandos").insert({
-      estabelecimento_id: empresa, agente_id: atual.id, tipo,
-      numero: tipo === "ligar" ? ligar.numero.trim() : null,
-      ramal: tipo === "assistir" ? ramalAssistir.trim() : null,
-      objetivo: tipo === "ligar" ? ligar.objetivo.trim() || null : null,
-      criado_por: u.user?.id ?? null,
-    });
-    if (r.error) return toast.error(r.error.message);
-    toast.success(tipo === "ligar" ? "Ligação enviada para a IA" : "A IA vai escutar o ramal e sugerir respostas");
-  };
-
   const alternarModo = (m: string) =>
     setAtual((a) => ({ ...a, modos: a.modos.includes(m) ? a.modos.filter((x) => x !== m) : [...a.modos, m] }));
 
@@ -151,7 +131,6 @@ export default function AgentesVoz() {
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="agente">Agente</TabsTrigger>
           <TabsTrigger value="chaves">Chaves</TabsTrigger>
-          <TabsTrigger value="acoes">Ligar / Ajudar</TabsTrigger>
           <TabsTrigger value="chamadas">Chamadas</TabsTrigger>
           <TabsTrigger value="servidor">Servidor</TabsTrigger>
         </TabsList>
@@ -249,27 +228,6 @@ export default function AgentesVoz() {
                   <Button size="sm" onClick={() => void salvarChave(c.id, c.nome)}>Salvar</Button>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="acoes" className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><PhoneCall className="h-5 w-5" /> IA liga para um contato</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1"><Label>Número</Label><Input value={ligar.numero} onChange={(e) => setLigar({ ...ligar, numero: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Objetivo da ligação</Label><Textarea rows={3} placeholder="Ex.: confirmar a visita de amanhã às 10h" value={ligar.objetivo} onChange={(e) => setLigar({ ...ligar, objetivo: e.target.value })} /></div>
-              <Button disabled={!atual.modos.includes("ligar")} onClick={() => void comando("ligar")}>Ligar agora</Button>
-              {!atual.modos.includes("ligar") && <p className="text-xs text-muted-foreground">Ative "Fazer ligações" no agente.</p>}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Headset className="h-5 w-5" /> IA ajuda um atendente</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">A IA escuta a ligação em silêncio e mostra sugestões ao vivo na aba Chamadas.</p>
-              <div className="space-y-1"><Label>Ramal do atendente <span className="text-xs font-normal text-muted-foreground">(já vem com o seu; troque só para ajudar outra pessoa)</span></Label><Input value={ramalAssistir} onChange={(e) => setRamalAssistir(e.target.value)} /></div>
-              <Button disabled={!atual.modos.includes("assistir")} onClick={() => void comando("assistir")}>Começar a ajudar</Button>
-              {!atual.modos.includes("assistir") && <p className="text-xs text-muted-foreground">Ative "Ajudar o atendente" no agente.</p>}
             </CardContent>
           </Card>
         </TabsContent>
