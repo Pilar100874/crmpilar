@@ -6,3 +6,5 @@
 - Render the weekly schedule with shared draggable task cards and hourly drop targets, keeping untimed tasks outside hourly scrolling so no tasks disappear from the initial view.
 - Adapt calendar views to their measured content width with ResizeObserver, not only viewport width, so adjacent panels cannot compress task information into unreadable columns.
 - Use the shared calendar task sidebar as the single create/edit surface, embedding the existing validated task form instead of a modal; preserve persistence, contact navigation and history, and never toggle completion on card clicks.
+- Agentes de voz with the PBX run in voice-agent-server/ (Python, Pipecat + pyVoIP) on a host inside the PBX network, because RTP/UDP cannot reach Railway; the CRM only stores agents, calls and dial commands (voz_* tables) and the server polls voz_comandos.
+- Free-quality voice turns go through the voz-ia-turno function guarded by AIP_RUNNER_KEY; premium keys live in the existing aip-credenciais vault, so no provider keys are stored elsewhere.

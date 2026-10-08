@@ -90,3 +90,7 @@
 - [x] Listar somente os orçamentos, com filtro por etapa, sem o cartão de contato.
 - [x] Conferir a lista e o filtro no celular e no computador.
 
+
+## Agentes de Voz
+- [x] Tela, tabelas, chaves, servidor de voz
+- [ ] Testar na central real (depende de rodar o servidor na rede da UCM)
