@@ -93,14 +93,6 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
   }, [sugestoes, prefs.ativa, prefs.local]);
 
   if (!visivel) return null;
-  if (local === "atendimento" && prefs.local !== "atendimento") {
-    return (
-      <label className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${className}`}>
-        <Switch checked={false} onCheckedChange={() => atualizar({ local: "atendimento" })} aria-label="Usar IA ajuda aqui" />
-        <Bot className="h-3.5 w-3.5 text-primary" /> Usar IA ajuda nesta tela (sai do Pilar Fone)
-      </label>
-    );
-  }
 
   if (local === "fone") {
     const conversas = sugestoes.slice(-20);
