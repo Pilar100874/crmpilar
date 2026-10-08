@@ -11,6 +11,70 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+// deno-lint-ignore no-explicit-any
+type SB = any;
+const dig = (s: unknown) => String(s ?? "").replace(/\D/g, "");
+const brl = (v: unknown) => `R$ ${Number(v ?? 0).toFixed(2).replace(".", ",")}`;
+const dt = (s: unknown) => (s ? String(s).slice(0, 10).split("-").reverse().join("/") : "");
+
+/** Reúne o máximo de informação do CRM sobre o número da ligação para o modo "ajudar o atendente". */
+async function contextoCrm(sb: SB, empresa: string, numero: string): Promise<string> {
+  const d = dig(numero);
+  if (d.length < 8) return "";
+  const fim = d.slice(-8);
+  const like = `%${fim.slice(0, 4)}%${fim.slice(4)}%`;
+  const [{ data: clis }, { data: emps }] = await Promise.all([
+    sb.from("customers").select("id,nome,email,telefone,tel,cidade,estado,tags,empresa_id")
+      .eq("estabelecimento_id", empresa).or(`telefone.ilike.${like},tel.ilike.${like}`).limit(3),
+    sb.from("empresas").select("id,nome_fantasia,nome,cnpj,cidade,estado,status_comercial,tipo_cliente,produtos_interesse,observacoes_internas,segmento_id,porte")
+      .eq("estabelecimento_id", empresa).or(`telefone.ilike.${like},whatsapp.ilike.${like},contato_telefone.ilike.${like}`).limit(2),
+  ]);
+  const cli = (clis ?? []).find((c: SB) => dig(c.telefone).endsWith(fim) || dig(c.tel).endsWith(fim)) ?? clis?.[0];
+  let emp = emps?.[0];
+  if (!emp && cli?.empresa_id) {
+    emp = (await sb.from("empresas").select("id,nome_fantasia,nome,cnpj,cidade,estado,status_comercial,tipo_cliente,produtos_interesse,observacoes_internas,porte").eq("id", cli.empresa_id).maybeSingle()).data;
+  }
+  const p: string[] = [];
+  if (cli) p.push(`Contato: ${cli.nome ?? ""}${cli.email ? `, ${cli.email}` : ""}${cli.cidade ? `, ${cli.cidade}/${cli.estado ?? ""}` : ""}${cli.tags?.length ? `, tags: ${cli.tags.join(", ")}` : ""}`);
+  if (emp) p.push(`Empresa: ${emp.nome_fantasia || emp.nome}${emp.cnpj ? ` (CNPJ ${emp.cnpj})` : ""}${emp.cidade ? `, ${emp.cidade}/${emp.estado ?? ""}` : ""}${emp.status_comercial ? `, situação: ${emp.status_comercial}` : ""}${emp.porte ? `, porte: ${emp.porte}` : ""}${emp.produtos_interesse ? `, interesse: ${JSON.stringify(emp.produtos_interesse)}` : ""}${emp.observacoes_internas ? `. Obs.: ${String(emp.observacoes_internas).slice(0, 300)}` : ""}`);
+
+  // Orçamentos (abertos, ganhos e perdidos) com itens
+  const filtros: string[] = [];
+  if (cli) filtros.push(`cliente_id.eq.${cli.id}`);
+  if (emp) filtros.push(`empresa_id.eq.${emp.id}`);
+  const tarefas = cli
+    ? sb.from("calendario_tarefas").select("title,description,date,status").eq("contact_id", cli.id).order("date", { ascending: false }).limit(6)
+    : Promise.resolve({ data: [] });
+  const notas = cli
+    ? sb.from("anotacoes_ligacao").select("texto,created_at").eq("customer_id", cli.id).order("created_at", { ascending: false }).limit(5)
+    : Promise.resolve({ data: [] });
+  const orcs = filtros.length
+    ? sb.from("orcamentos").select("id,etapa,status,valor_total,motivo_perda,observacoes,created_at, orcamento_itens(quantidade,preco_unitario,produtos(nome,codigo))")
+      .eq("estabelecimento_id", empresa).or(filtros.join(",")).order("created_at", { ascending: false }).limit(8)
+    : Promise.resolve({ data: [] });
+  const pedRec = sb.from("pedidos_recebidos").select("numero_pedido,valor_total,status,data_pedido,created_at,itens_json")
+    .eq("estabelecimento_id", empresa).ilike("telefone_cliente", like).order("created_at", { ascending: false }).limit(6);
+  const pedEc = sb.from("pedidos_ecommerce").select("numero_pedido,valor_total,status,created_at, pedidos_ecommerce_itens(nome_produto,quantidade)")
+    .eq("estabelecimento_id", empresa).ilike("telefone_cliente", like).order("created_at", { ascending: false }).limit(6);
+  const [t, n, o, pr, pe] = await Promise.all([tarefas, notas, orcs, pedRec, pedEc]);
+
+  const itens = (arr: SB[] | undefined, f: (i: SB) => string) => (arr ?? []).slice(0, 8).map(f).join("; ");
+  for (const x of o.data ?? []) {
+    p.push(`Orçamento ${dt(x.created_at)} — ${x.etapa}/${x.status}, ${brl(x.valor_total)}${x.motivo_perda ? `, perdido por: ${x.motivo_perda}` : ""}. Itens: ${itens(x.orcamento_itens, (i) => `${i.quantidade}x ${i.produtos?.nome ?? "produto"} a ${brl(i.preco_unitario)}`)}`);
+  }
+  for (const x of pr.data ?? []) {
+    const its = Array.isArray(x.itens_json) ? itens(x.itens_json, (i) => `${i.quantidade ?? ""}x ${i.nome ?? i.titulo ?? i.descricao ?? "item"}`) : "";
+    p.push(`Compra ${dt(x.data_pedido ?? x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}${its ? `. Itens: ${its}` : ""}`);
+  }
+  for (const x of pe.data ?? []) {
+    p.push(`Compra loja virtual ${dt(x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}. Itens: ${itens(x.pedidos_ecommerce_itens, (i) => `${i.quantidade}x ${i.nome_produto}`)}`);
+  }
+  for (const x of n.data ?? []) p.push(`Anotação ${dt(x.created_at)}: ${String(x.texto).slice(0, 200)}`);
+  for (const x of t.data ?? []) p.push(`Tarefa ${dt(x.date)} (${x.status}): ${x.title}${x.description ? ` — ${String(x.description).slice(0, 150)}` : ""}`);
+  if (!p.length) return "\n\nDados do CRM: número não encontrado no cadastro (cliente novo ou não identificado).";
+  return `\n\nDados do CRM sobre quem está na ligação (use para sugerir: relembre compras, retome orçamentos em aberto, contorne motivos de perda, ofereça reposição e produtos relacionados; nunca invente dados):\n- ${p.join("\n- ").slice(0, 6000)}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -47,12 +111,20 @@ Deno.serve(async (req) => {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
         const objetivo = corpo.objetivo ? `\nObjetivo desta ligação: ${corpo.objetivo}` : "";
+        let crm = "";
+        if ((corpo.modo ?? "receber") === "assistir" || corpo.contexto_crm) {
+          let numero = String(corpo.numero ?? "");
+          if (!numero && corpo.chamada_id) {
+            numero = (await sb.from("voz_chamadas").select("numero").eq("id", String(corpo.chamada_id)).eq("estabelecimento_id", empresa).maybeSingle()).data?.numero ?? "";
+          }
+          try { crm = await contextoCrm(sb, empresa, numero); } catch (e) { console.error("contexto CRM", e); }
+        }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-runner-key": Deno.env.get("AIP_RUNNER_KEY") ?? "" },
           body: JSON.stringify({
             audio_wav_b64: corpo.audio_wav_b64 ?? null,
-            prompt: (corpo.prompt_extra ? `${corpo.prompt_extra}\n` : "") + (a.prompt ?? "") + objetivo,
+            prompt: (corpo.prompt_extra ? `${corpo.prompt_extra}\n` : "") + (a.prompt ?? "") + objetivo + crm,
             historico: Array.isArray(corpo.historico) ? corpo.historico.slice(-20) : [],
             modo: corpo.modo ?? "receber",
             voz: a.voz || "alloy",

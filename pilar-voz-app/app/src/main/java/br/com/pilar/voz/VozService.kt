@@ -120,7 +120,7 @@ class VozService : Service() {
                     q.forEach { trecho.add(it) }
                     if (++silencio > 35) {
                         if (trecho.size > 4000) {
-                            val r = runCatching { Api.turno(Audio.paraBase64(Audio.wav8k(trecho.toShortArray())), hist, modo, objetivo) }
+                            val r = runCatching { Api.turno(Audio.paraBase64(Audio.wav8k(trecho.toShortArray())), hist, modo, objetivo, null, chamadaId, numero) }
                                 .onFailure { log("IA: ${it.message}") }.getOrNull()
                             if (r != null) {
                                 registrar("cliente", r.optString("fala"))

@@ -36,9 +36,10 @@ object Api {
 
     fun config(): JSONObject = voz("config").getJSONObject("agente")
 
-    fun turno(wavB64: String?, historico: JSONArray, modo: String, objetivo: String?, promptExtra: String? = null): JSONObject =
+    fun turno(wavB64: String?, historico: JSONArray, modo: String, objetivo: String?, promptExtra: String? = null, chamadaId: String? = null, numero: String? = null): JSONObject =
         voz("turno", JSONObject().put("audio_wav_b64", wavB64 ?: JSONObject.NULL).put("historico", historico)
-            .put("modo", modo).put("objetivo", objetivo ?: JSONObject.NULL).put("prompt_extra", promptExtra ?: JSONObject.NULL))
+            .put("modo", modo).put("objetivo", objetivo ?: JSONObject.NULL).put("prompt_extra", promptExtra ?: JSONObject.NULL)
+            .put("chamada_id", chamadaId ?: JSONObject.NULL).put("numero", numero ?: JSONObject.NULL))
 
     fun iniciar(modo: String, numero: String?, ramal: String?): String =
         voz("iniciar", JSONObject().put("modo", modo).put("numero", numero ?: JSONObject.NULL).put("ramal", ramal ?: JSONObject.NULL)).getString("id")
