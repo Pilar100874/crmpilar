@@ -260,7 +260,7 @@
         </div>
       </div>
 
-      <div class="hdr-subtitle">Coletor Desktop · Ponto & Câmeras</div>
+      <div class="hdr-subtitle">Coletor Desktop · Ponto, Câmeras, Automação & Voz</div>
 
       <div id="globalStatusPill" class="status-pill">
         <span class="dot"></span>
@@ -405,6 +405,32 @@
           <div style="margin-top:10px; font-size:12px; font-weight:600; color:var(--text-2);">Dispositivos do interfone</div>
           <div id="portariaDispositivos" style="margin-top:6px; display:flex; flex-direction:column; gap:6px;"></div>
 
+        </div>
+        <div class="module">
+          <div class="module-head">
+            <div class="t"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;display:inline-flex;align-items:center;justify-content:center;">🎧</span> Pilar Voz</div>
+            <label class="switch"><input type="checkbox" id="toggleVoz" onchange="toggleVoz(this.checked)"><span class="track"></span></label>
+          </div>
+          <div class="status-line" id="vozStatus">—</div>
+          <div class="meta">Ramal da IA na central: atende, faz as ligações do Disparo em massa e ajuda o atendente. O computador precisa estar na mesma rede da central.</div>
+          <div id="vozMonitor" class="meta" style="margin-top:8px; line-height:1.6;"></div>
+          <details style="margin-top:10px; border-top:1px solid var(--stroke); padding-top:10px;">
+            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Configurar central e chave</summary>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+              <div style="grid-column:1/3"><label style="font-size:11px; color:var(--text-2);">Chave do Pilar Voz (CRM → Telefonia → Agentes de Voz → Chaves)</label><input id="vozChave" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Endereço da central</label><input id="vozHost" placeholder="192.168.0.10" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Porta</label><input id="vozPorta" placeholder="5060" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Ramal da IA (vazio = o do agente)</label><input id="vozRamal" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Senha do ramal</label><input id="vozSenha" type="password" placeholder="(mantida se vazio)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Código de escuta</label><input id="vozEscuta" placeholder="*45" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+              <button class="btn" style="background:var(--brand); color:#fff; padding:6px 12px; font-size:13px;" onclick="salvarVoz()">Salvar</button>
+              <span id="vozMsg" style="font-size:11px; color:var(--text-2);"></span>
+            </div>
+          </details>
+          <div style="margin-top:10px; font-size:12px; font-weight:600; color:var(--text-2);">Eventos</div>
+          <div id="vozEventos" class="meta" style="margin-top:4px; max-height:140px; overflow:auto;"></div>
         </div>
       </div>
 
@@ -576,6 +602,29 @@
   <script>
     async function togglePonto(v){ if(v) await window.coletor.startPonto(); else await window.coletor.stopPonto(); refresh(); }
     async function toggleCameras(v){ if(v) await window.coletor.startCameras(); else await window.coletor.stopCameras(); refresh(); }
+    async function toggleVoz(v){ if(v) await window.coletor.vozStart(); else await window.coletor.vozStop(); refreshVoz(); }
+    let vozFormCarregado=false;
+    async function refreshVoz(){
+      try{
+        const s=await window.coletor.vozStatus(); if(!s) return;
+        document.getElementById('toggleVoz').checked=!!s.rodando;
+        const ic={Ativo:'🟢',Conectando:'🟡',Parado:'⚪'}[s.servico]||'⚪';
+        document.getElementById('vozStatus').textContent=`${ic} ${s.servico} · ${s.central}`;
+        const esc=t=>String(t||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+        let lig='Nenhuma ligação agora';
+        if(s.modo){const seg=Math.floor((Date.now()-s.inicio)/1000);const t=String(Math.floor(seg/60)).padStart(2,'0')+':'+String(seg%60).padStart(2,'0');
+          lig=({receber:'Atendendo',ligar:'Ligando para',assistir:'Ajudando o ramal'}[s.modo]||s.modo)+' '+esc(s.destino)+' · '+t;}
+        document.getElementById('vozMonitor').innerHTML=`<b>Ligação:</b> ${lig}<br><b>Cliente:</b> ${esc(s.falaCliente)||'—'}<br><b>IA:</b> ${esc(s.falaIa)||'—'}<br>Atendidas ${s.atendidas} · Feitas ${s.feitas} · Ajudadas ${s.assistidas} · Transferidas ${s.transferidas}`;
+        document.getElementById('vozEventos').innerHTML=(s.eventos||[]).map(e=>`${new Date(e.em).toLocaleTimeString('pt-BR')} — ${esc(e.texto)}`).join('<br>')||'—';
+        if(!vozFormCarregado){vozFormCarregado=true;const c=s.config||{};
+          vozChave.value=c.chave||'';vozHost.value=c.host||'';vozPorta.value=c.porta||'';vozRamal.value=c.ramal||'';vozEscuta.value=c.codigoEscuta||'';}
+      }catch(e){}
+    }
+    async function salvarVoz(){
+      await window.coletor.vozSalvar({chave:vozChave.value.trim(),host:vozHost.value.trim(),porta:vozPorta.value.trim()||'5060',ramal:vozRamal.value.trim(),senha:vozSenha.value,codigoEscuta:vozEscuta.value.trim()||'*45'});
+      vozSenha.value='';document.getElementById('vozMsg').textContent='Salvo.';refreshVoz();
+    }
+    setInterval(refreshVoz,1000); setTimeout(refreshVoz,300);
     async function togglePortaria(v){ if(v) await window.coletor.startPortaria(); else await window.coletor.stopPortaria(); refresh(); }
     async function refreshNow(){ await window.coletor.pollNow(); refresh(); }
     async function limparColetor(){
