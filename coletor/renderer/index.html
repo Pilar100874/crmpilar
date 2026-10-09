@@ -747,6 +747,7 @@
     async function carregarFiliais(){
       const sel = document.getElementById('filialSelect');
       sel.innerHTML = '<option value="">— carregando —</option>';
+      sel.dataset.erro = '';
       try{
         const filiais = await window.coletor.listarFiliais();
         // Agrupa por estabelecimento para não misturar unidades de cadastros diferentes
@@ -761,7 +762,11 @@
           ? nomes.map(n => `<optgroup label="${escapeHtml(n)}">${grupos[n].map(opt).join('')}</optgroup>`).join('')
           : filiais.map(opt).join('');
         sel.innerHTML = '<option value="">— selecione —</option>' + corpo;
-      } catch(e){ sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>'; }
+      } catch(e){
+        sel.dataset.erro = '1';
+        const m = String(e.message || e).replace(/^Error invoking remote method '[^']+':\s*(Error:\s*)?/, '');
+        sel.innerHTML = '<option value="">' + escapeHtml(m) + '</option>';
+      }
     }
     async function salvarFilial(){
       const sel = document.getElementById('filialSelect');
@@ -876,6 +881,8 @@
       try{
         const a = await window.coletor.ativacao();
         const ov = document.getElementById('ativacaoOverlay');
+        const sel = document.getElementById('filialSelect');
+        if (a && a.ativado && sel && sel.dataset.erro === '1') carregarFiliais();
         ov.style.display = a && a.ativado ? 'none' : 'flex';
         const el = document.getElementById('empresaAtivaNome');
         if (el) el.textContent = (a && a.empresaNome) || '—';
@@ -889,7 +896,7 @@
       btn.disabled = true; msg.textContent = 'Validando chave…';
       try{
         const r = await window.coletor.ativarChave(chave);
-        if (r && r.ok){ msg.textContent = ''; await verificarAtivacao(); refresh(); }
+        if (r && r.ok){ msg.textContent = ''; await verificarAtivacao(); await carregarFiliais(); refresh(); }
         else { msg.textContent = (r && r.error) || 'Não foi possível validar a chave.'; }
       }catch(e){ msg.textContent = String(e.message || e); }
       btn.disabled = false;
