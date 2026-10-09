@@ -123,6 +123,22 @@ export default function AgentesVoz() {
     const t = MODOS.find((x) => x.id === m);
     setAtual({ ...NOVO, modos: [m], nome: t?.rotulo ?? NOVO.nome });
     setEscolherTipo(false);
+    setEditando(true);
+  };
+  const abrir = (a: Agente) => { setAtual(a); setEditando(true); };
+  const alternarAtivo = async (a: Agente) => {
+    const r = await db.from("voz_agentes").update({ ativo: !a.ativo }).eq("id", a.id);
+    if (r.error) return toast.error(r.error.message);
+    toast.success(a.ativo ? "Agente desativado" : "Agente ativado");
+    void carregar();
+  };
+  const duplicar = async (a: Agente) => {
+    const { id, ...dados } = a as any;
+    delete dados.created_at; delete dados.updated_at;
+    const r = await db.from("voz_agentes").insert({ ...dados, nome: `${a.nome} (cópia)`, ativo: false, estabelecimento_id: empresa }).select().single();
+    if (r.error) return toast.error(r.error.message);
+    toast.success("Agente duplicado (inativo)");
+    void carregar();
   };
 
   return (
@@ -268,6 +284,7 @@ export default function AgentesVoz() {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="chaves">
