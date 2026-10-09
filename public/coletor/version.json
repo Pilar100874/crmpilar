@@ -4,5 +4,5 @@
   "notas": "2.1.0: um único aplicativo com liga/desliga para Ponto, Câmeras, Automação e Pilar Voz, para Windows, Mac (Intel e Apple Silicon) e Linux.",
   "downloadUrlMacAppleSilicon": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-AppleSilicon.zip",
   "downloadUrlMacIntel": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-Intel.zip",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Linux.AppImage"
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.1/ColetorPilar-Linux.AppImage"
 }
