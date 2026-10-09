@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import AtualizacaoChave from "@/components/admin/AtualizacaoChave";
 
 type Chave = {
   id: string;
@@ -40,8 +41,8 @@ function gerarChave() {
   return `${saida.slice(0, 4)}-${saida.slice(4)}`;
 }
 
-/** Painel de chaves. Com `apps`, mostra e cria só chaves desses programas (uso embutido na tela de Apps). */
-export default function AutomacaoChavesApp({ apps }: { apps?: string[] } = {}) {
+/** Painel de chaves. Com `apps`, mostra e cria só chaves desses programas (uso embutido na tela de Apps). Com `appSlug`, cada cartão de chave mostra a atualização remota do aparelho que a usa. */
+export default function AutomacaoChavesApp({ apps, appSlug }: { apps?: string[]; appSlug?: string } = {}) {
   const opcoes = apps?.length ? APPS.filter((a) => apps.includes(a.valor)) : APPS;
   const embutido = !!apps?.length;
   const [chaves, setChaves] = useState<Chave[]>([]);
@@ -181,6 +182,7 @@ export default function AutomacaoChavesApp({ apps }: { apps?: string[] } = {}) {
                     ? `Último uso: ${new Date(c.ultima_comunicacao).toLocaleString("pt-BR")}`
                     : "Ainda não usada"}
                 </p>
+                {appSlug && <AtualizacaoChave appSlug={appSlug} chave={c.chave} dispositivoId={c.dispositivo_id} />}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"

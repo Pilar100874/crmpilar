@@ -21,7 +21,6 @@ import { Check, ChevronDown, KeyRound, Download, Smartphone, Apple, HelpCircle, 
 import { baixarArquivo } from "@/lib/baixarArquivo";
 import { Fragment } from "react";
 import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
-import GestaoVersoesApps from "@/pages/admin/GestaoVersoesApps";
 
 /** Tipos de chave que cada aplicativo aceita, na ordem de preferência. */
 const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
@@ -95,20 +94,16 @@ const corIcone: Record<AppRow["icone"], string> = {
   tv: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
 };
 
-/** Conteúdo do painel expandido de um aplicativo: chaves + atualização remota. */
+/** Conteúdo do painel expandido de um aplicativo: chaves, cada uma com a atualização remota do aparelho que a usa. */
 function PainelExpandido({ app }: { app: AppRow }) {
   return (
     <div className="space-y-3">
-      <ChavesPainel apps={chavesDoApp(app)} />
-      <div className="border-t pt-3">
-        {app.appSlug ? (
-          <GestaoVersoesApps app={app.appSlug} />
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            <b className="text-foreground">Atualização:</b> este aplicativo se atualiza manualmente — baixe a versão nova acima e instale no aparelho.
-          </p>
-        )}
-      </div>
+      <ChavesPainel apps={chavesDoApp(app)} appSlug={app.appSlug} />
+      {!app.appSlug && (
+        <p className="text-xs text-muted-foreground">
+          <b className="text-foreground">Atualização:</b> este aplicativo se atualiza manualmente — baixe a versão nova acima e instale no aparelho.
+        </p>
+      )}
     </div>
   );
 }
