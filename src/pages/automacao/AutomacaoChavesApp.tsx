@@ -22,7 +22,7 @@ type Chave = {
 const APPS = [
   { valor: "pilar-fone", rotulo: "Pilar Fone (Android)" },
   { valor: "sms", rotulo: "Pilar SMS (Android)" },
-  { valor: "voz", rotulo: "Pilar Voz – Agente de IA (Android)" },
+  { valor: "voz", rotulo: "Pilar Voz – Agente de IA (Android / Computador)" },
   { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
   { valor: "controle", rotulo: "Pilar Coletor (Ponto e Automação na rede local)" },
   { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
