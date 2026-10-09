@@ -182,6 +182,7 @@ export default function AutomacaoChavesApp({ apps, appSlug }: { apps?: string[];
                     ? `Último uso: ${new Date(c.ultima_comunicacao).toLocaleString("pt-BR")}`
                     : "Ainda não usada"}
                 </p>
+                {appSlug && <AtualizacaoChave appSlug={appSlug} chave={c.chave} dispositivoId={c.dispositivo_id} />}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
