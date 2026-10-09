@@ -14,7 +14,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { enviarComando, getEstabelecimentoId, getUsuarioId } from "@/services/tvSignage/tvSignageService";
 import { toast } from "sonner";
-import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, Laptop } from "lucide-react";
+import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, Laptop, KeyRound, ChevronDown } from "lucide-react";
+import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
+
+/** Tipos de chave que cada aplicativo aceita, na ordem de preferência (mesmo mapa da tela de Apps). */
+const chavesDoApp = (app: string): string[] => {
+  if (app === "automacao") return ["automacao"];
+  if (app === "sms") return ["sms"];
+  if (app === "remotas") return ["coletor-tv"];
+  if (app === "hub") return ["controle", "voz"];
+  return ["coletor", "controle"];
+};
 
 const APPS = [
   { valor: "sms", nome: "Pilar SMS" },
@@ -88,6 +98,7 @@ export default function GestaoVersoesApps() {
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [comandos, setComandos] = useState<ComandoAtualizacao[]>([]);
   const [disparando, setDisparando] = useState(false);
+  const [chavesAberta, setChavesAberta] = useState<string | null>(null);
 
   const carregarVersoes = useCallback(async () => {
     const entradas = await Promise.all(
@@ -332,6 +343,7 @@ export default function GestaoVersoesApps() {
                const comando = ultimoComando(e.id);
                const statusComando = comando?.status || e.statusAtualizacao;
                const mensagemComando = comando?.mensagem || e.resultadoAtualizacao;
+               const chavesAbertasNeste = chavesAberta === e.id;
               return (
                 <article key={e.id} className="grid gap-3 rounded-lg border bg-background p-3 shadow-sm xl:grid-cols-[auto_minmax(170px,1fr)_100px_100px_minmax(150px,1fr)_auto_auto] xl:items-center xl:gap-4">
                   <div className="flex min-w-0 items-center gap-3 xl:contents">
@@ -351,9 +363,26 @@ export default function GestaoVersoesApps() {
                       {statusComando && <Badge variant="outline" className="xl:mt-1">{statusComando}</Badge>}
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" className="w-full xl:w-auto" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
-                    <Send className="mr-2 h-4 w-4" /> Enviar
-                  </Button>
+                  <div className="flex flex-wrap gap-2 xl:justify-end">
+                    <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
+                      <Send className="mr-2 h-4 w-4" /> Enviar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={chavesAbertasNeste ? "secondary" : "outline"}
+                      className="w-full sm:w-auto"
+                      aria-expanded={chavesAbertasNeste}
+                      onClick={() => setChavesAberta(chavesAbertasNeste ? null : e.id)}
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" /> Chaves
+                      <ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${chavesAbertasNeste ? "rotate-180" : ""}`} />
+                    </Button>
+                  </div>
+                  {chavesAbertasNeste && (
+                    <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 md:col-span-2 xl:col-span-full">
+                      <ChavesPainel apps={chavesDoApp(e.app)} />
+                    </div>
+                  )}
                   {mensagemComando && <p className="text-xs text-muted-foreground md:col-span-2 xl:col-span-full xl:ml-10">{mensagemComando}</p>}
                 </article>
               );
