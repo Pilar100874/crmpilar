@@ -291,8 +291,12 @@ export default function GestaoVersoesApps({ app }: { app?: string }) {
         <Button
           size="sm"
           variant="outline"
-          onClick={() => enviarAtualizacoes(atualizaveis.map((e) => e.id))}
-          disabled={disparando || !disponivel || atualizaveis.length === 0}
+          onClick={() => {
+            if (!atualizaveis.length) return toast.error("Nenhum aparelho deste aplicativo instalado até agora");
+            if (!disponivel) return toast.error("Nenhuma versão publicada para este aplicativo");
+            enviarAtualizacoes(atualizaveis.map((e) => e.id));
+          }}
+          disabled={disparando}
         >
           <Send className="mr-1.5 h-3.5 w-3.5" /> Atualizar aparelhos
         </Button>
