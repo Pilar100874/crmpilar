@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
+import { Check, Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
 import { baixarArquivo } from "@/lib/baixarArquivo";
 
 // Fallbacks fixos caso os manifestos estejam indisponíveis.
@@ -46,6 +46,7 @@ type AppRow = {
   descricao: string;
   icone: "android" | "windows" | "mac" | "linux" | "tv";
   sistemas: string[];
+  recursos: string[];
   arquivo: string;
   url: string;
   versao?: string;
@@ -117,6 +118,7 @@ export default function AdminApps() {
       descricao: "Abre os painéis de automação em tela cheia, por ambiente.",
       icone: "android",
       sistemas: ["Android"],
+      recursos: ["Automação"],
       arquivo: "pilar-automacao.apk",
       url: automacaoInfo?.url || AUTOMACAO_URL,
       versao: automacaoInfo?.versionName ? `v${automacaoInfo.versionName}` : undefined,
@@ -134,6 +136,7 @@ export default function AdminApps() {
       descricao: "Celular Android vira modem de SMS para os disparos do CRM.",
       icone: "android",
       sistemas: ["Android"],
+      recursos: ["SMS"],
       arquivo: "pilar-sms-v1.11.0.apk",
       url: SMS_URL,
       versao: "v1.11.0",
@@ -151,6 +154,7 @@ export default function AdminApps() {
       descricao: "Coletor Android: ponto, câmeras e automação na rede local.",
       icone: "android",
       sistemas: ["Android"],
+      recursos: ["Ponto", "Câmeras", "Automação"],
       arquivo: "pilar-coletor-v3.2.2.apk",
       url: HUB_URL,
       versao: "v3.2.2",
@@ -168,6 +172,7 @@ export default function AdminApps() {
       descricao: "Interfone da portaria com abertura remota pelo CRM.",
       icone: "android",
       sistemas: ["Android"],
+      recursos: ["Interfone"],
       arquivo: "pilar-interfone-v1.7.6.apk",
       url: INTERFONE_URL,
       versao: "v1.7.6",
@@ -185,6 +190,7 @@ export default function AdminApps() {
       descricao: "Painel de TV: exibe mídias e avisos em TVs Android.",
       icone: "tv",
       sistemas: ["Android TV"],
+      recursos: ["TV / Mídia"],
       arquivo: "app-release.apk",
       url: tvInfo?.url || TV_URL,
       versao: tvInfo?.versionName ? `v${tvInfo.versionName}` : undefined,
@@ -202,6 +208,7 @@ export default function AdminApps() {
       descricao: "Ponto, câmeras, automação e Pilar Voz num PC Windows ligado 24/7.",
       icone: "windows",
       sistemas: ["Windows"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: coletorFileName,
       url: coletorUrl,
       versao: coletorVersao,
@@ -220,6 +227,7 @@ export default function AdminApps() {
       descricao: "Mesmo Coletor para Macs com chip M1, M2, M3 ou M4.",
       icone: "mac",
       sistemas: ["macOS"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Mac-AppleSilicon.zip",
       url: coletorMacAsUrl,
       versao: coletorVersao,
@@ -238,6 +246,7 @@ export default function AdminApps() {
       descricao: "Mesmo Coletor para Macs com processador Intel.",
       icone: "mac",
       sistemas: ["macOS"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Mac-Intel.zip",
       url: coletorMacIntelUrl,
       versao: coletorVersao,
@@ -256,6 +265,7 @@ export default function AdminApps() {
       descricao: "AppImage x64 para Debian, Ubuntu, Mint etc.",
       icone: "linux",
       sistemas: ["Linux"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Linux.AppImage",
       url: coletorLinuxUrl,
       versao: coletorVersao,
@@ -273,6 +283,7 @@ export default function AdminApps() {
       descricao: "Instala Linux + Coletor em modo kiosk num mini-PC, com SSH e Cockpit.",
       icone: "linux",
       sistemas: ["Linux"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
       ajuda: {
@@ -303,6 +314,7 @@ export default function AdminApps() {
                 <TableRow>
                   <TableHead className="min-w-[220px]">Aplicativo</TableHead>
                   <TableHead>Sistema</TableHead>
+                  <TableHead className="hidden sm:table-cell">Recursos</TableHead>
                   <TableHead className="hidden md:table-cell">Versão</TableHead>
                   <TableHead className="hidden lg:table-cell">Arquivo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -328,6 +340,19 @@ export default function AdminApps() {
                           <Badge key={s} variant="outline" className="text-[10px] uppercase tracking-wider">
                             {s}
                           </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="flex flex-wrap gap-1.5">
+                        {app.recursos.map((r) => (
+                          <span
+                            key={r}
+                            className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-foreground"
+                          >
+                            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                            {r}
+                          </span>
                         ))}
                       </div>
                     </TableCell>
