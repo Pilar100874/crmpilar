@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Paleta idêntica ao Coletor Desktop (renderer/index.html) -->
-    <color name="activation_top">#16253E</color>
-    <color name="activation_bottom">#0D1626</color>
-    <color name="bg_page">#0D1626</color>
-    <color name="bg_card">#182235</color>
-    <color name="bg_stat">#202B3D</color>
-    <color name="border_soft">#364052</color>
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_muted">#94A3B8</color>
+    <!-- Paleta única do Coletor (igual a Windows/Mac/Linux) (renderer/index.html) -->
+    <color name="activation_top">#F5F7FB</color>
+    <color name="activation_bottom">#F5F7FB</color>
+    <color name="bg_page">#F5F7FB</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_stat">#F1F5F9</color>
+    <color name="border_soft">#E2E8F0</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_muted">#64748B</color>
     <color name="accent_green">#22c55e</color>
     <color name="accent_green_dark">#16a34a</color>
-    <color name="accent_blue">#FF6B00</color>
-    <color name="accent_blue_dark">#D95B00</color>
+    <color name="accent_blue">#0B1E3F</color>
+    <color name="accent_blue_dark">#061128</color>
     <color name="danger_red">#ef4444</color>
     <color name="warn_amber">#f59e0b</color>
     <color name="iso_page">#F5F7FB</color>
@@ -30,12 +30,12 @@
     <color name="iso_warning_bg">#FEF3C7</color>
     <color name="iso_info">#2563EB</color>
     <color name="iso_info_bg">#DBEAFE</color>
-    <color name="activation_muted">#94A3B8</color>
-    <color name="activation_text">#FFFFFF</color>
-    <color name="activation_card">#182235</color>
-    <color name="activation_border">#364052</color>
-    <color name="brand_accent">#FF6B00</color>
-    <color name="brand_accent_dark">#D95B00</color>
-    <color name="activation_bg">#0D1626</color>
+    <color name="activation_muted">#64748B</color>
+    <color name="activation_text">#0F172A</color>
+    <color name="activation_card">#FFFFFF</color>
+    <color name="activation_border">#E2E8F0</color>
+    <color name="brand_accent">#0B1E3F</color>
+    <color name="brand_accent_dark">#061128</color>
+    <color name="activation_bg">#F5F7FB</color>
     <color name="white">#FFFFFF</color>
 </resources>
