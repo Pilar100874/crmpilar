@@ -275,7 +275,7 @@ export default function AgentesVoz() {
             <CardContent className="space-y-2 text-sm">
               <p>1. Na central UCM, crie um ramal para a IA (o mesmo informado no agente), com codec PCMU/PCMA.</p>
               <p>2. Instale o aplicativo <b>Pilar Voz</b> num Android ligado no Wi‑Fi da central (ou rode o servidor <b>voice-agent-server</b> num computador da mesma rede).</p>
-              <p className="pl-4 text-muted-foreground">No app, use uma chave do tipo "Pilar Voz" criada em Chaves dos aplicativos e informe o IP da central e a senha do ramal.</p>
+              <p className="pl-4 text-muted-foreground">No app, use uma chave do tipo "Pilar Voz" criada no botão Chaves da tela Aplicativos e downloads e informe o IP da central e a senha do ramal.</p>
               <Button size="sm" variant="outline" onClick={() => fetch("/coletor/voz-version.json", { cache: "no-store" }).then((r) => r.json()).then((j) => window.open(j.downloadUrl, "_blank", "noopener")).catch(() => toast.error("Aplicativo ainda não publicado"))}>Baixar app Pilar Voz (Android)</Button>
               <p>3. Preencha o endereço da central, a senha do ramal e a chave do servidor (a mesma do motor de agentes).</p>
               <p>4. Para atender recebidas, coloque o ramal da IA na fila ou URA desejada.</p>

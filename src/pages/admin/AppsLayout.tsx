@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 const itens = [
   { to: "/admin/apps", label: "Aplicativos e downloads", icon: Download, end: true },
   { to: "/admin/apps/atualizacoes", label: "Atualizações", icon: RefreshCw, end: false },
-  { to: "/admin/apps/chaves", label: "Chaves do Aplicativo", icon: KeyRound, end: false },
 ];
 
 export default function AppsLayout() {

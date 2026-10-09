@@ -40,20 +40,25 @@ function gerarChave() {
   return `${saida.slice(0, 4)}-${saida.slice(4)}`;
 }
 
-export default function AutomacaoChavesApp() {
+/** Painel de chaves. Com `apps`, mostra e cria só chaves desses programas (uso embutido na tela de Apps). */
+export default function AutomacaoChavesApp({ apps }: { apps?: string[] } = {}) {
+  const opcoes = apps?.length ? APPS.filter((a) => apps.includes(a.valor)) : APPS;
+  const embutido = !!apps?.length;
   const [chaves, setChaves] = useState<Chave[]>([]);
   const [nome, setNome] = useState("");
-  const [app, setApp] = useState<string>("automacao");
+  const [app, setApp] = useState<string>(opcoes[0]?.valor ?? "automacao");
   const [filtro, setFiltro] = useState<string>("todos");
   const [carregando, setCarregando] = useState(true);
   const [excluir, setExcluir] = useState<Chave | null>(null);
 
   const carregar = async () => {
     setCarregando(true);
-    const { data, error } = await supabase
+    let q = supabase
       .from("automacao_app_chaves")
       .select("id, nome, chave, app, bloqueado, ultima_comunicacao, dispositivo_id")
       .order("created_at", { ascending: false });
+    if (embutido) q = q.in("app", apps!);
+    const { data, error } = await q;
     if (error) toast.error("Não foi possível carregar as chaves");
     setChaves((data as Chave[]) ?? []);
     setCarregando(false);
@@ -102,7 +107,7 @@ export default function AutomacaoChavesApp() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 lg:p-6">
+    <div className={embutido ? "w-full space-y-3" : "mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 lg:p-6"}>
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -127,7 +132,7 @@ export default function AutomacaoChavesApp() {
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
             aria-label="Programa que vai usar a chave"
           >
-            {APPS.map((a) => (
+            {opcoes.map((a) => (
               <option key={a.valor} value={a.valor}>{a.rotulo}</option>
             ))}
           </select>
@@ -137,7 +142,7 @@ export default function AutomacaoChavesApp() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {!embutido && <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">Mostrar:</span>
         <select
           value={filtro}
@@ -150,7 +155,7 @@ export default function AutomacaoChavesApp() {
             <option key={a.valor} value={a.valor}>{a.rotulo}</option>
           ))}
         </select>
-      </div>
+      </div>}
 
       {carregando ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
