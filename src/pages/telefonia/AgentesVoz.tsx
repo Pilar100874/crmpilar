@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
+import { ArrowLeft, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 
 const db = supabase as any;
 
@@ -59,6 +60,8 @@ export default function AgentesVoz() {
   const [valoresChave, setValoresChave] = useState<Record<string, string>>({});
   const [excluir, setExcluir] = useState(false);
   const [escolherTipo, setEscolherTipo] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     if (!empresa) return;
@@ -104,7 +107,7 @@ export default function AgentesVoz() {
     const r = await db.from("voz_agentes").delete().eq("id", atual.id);
     if (r.error) return toast.error(r.error.message);
     toast.success("Agente excluído");
-    setAtual(NOVO); setExcluir(false); void carregar();
+    setAtual(NOVO); setExcluir(false); setEditando(false); void carregar();
   };
 
   const salvarChave = async (provedor: string, nome: string) => {
@@ -123,6 +126,22 @@ export default function AgentesVoz() {
     const t = MODOS.find((x) => x.id === m);
     setAtual({ ...NOVO, modos: [m], nome: t?.rotulo ?? NOVO.nome });
     setEscolherTipo(false);
+    setEditando(true);
+  };
+  const abrir = (a: Agente) => { setAtual(a); setEditando(true); };
+  const alternarAtivo = async (a: Agente) => {
+    const r = await db.from("voz_agentes").update({ ativo: !a.ativo }).eq("id", a.id);
+    if (r.error) return toast.error(r.error.message);
+    toast.success(a.ativo ? "Agente desativado" : "Agente ativado");
+    void carregar();
+  };
+  const duplicar = async (a: Agente) => {
+    const { id, ...dados } = a as any;
+    delete dados.created_at; delete dados.updated_at;
+    const r = await db.from("voz_agentes").insert({ ...dados, nome: `${a.nome} (cópia)`, ativo: false, estabelecimento_id: empresa }).select().single();
+    if (r.error) return toast.error(r.error.message);
+    toast.success("Agente duplicado (inativo)");
+    void carregar();
   };
 
   return (
@@ -143,34 +162,50 @@ export default function AgentesVoz() {
           <TabsTrigger value="servidor">Servidor</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="agente" className="space-y-4">
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => setEscolherTipo(true)}><Plus className="mr-1 h-4 w-4" /> Novo agente</Button>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {MODOS.map((m) => {
-              const doTipo = agentes.filter((a) => (a.modos[0] ?? "receber") === m.id);
-              return (
-                <Card key={m.id} className="flex flex-col">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base"><m.icone className="h-5 w-5 text-primary" /> {m.rotulo}</CardTitle>
-                    <CardDescription>{m.desc}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-1 flex-col gap-2">
-                    {doTipo.length === 0 && <p className="text-xs text-muted-foreground">Nenhum agente deste tipo.</p>}
-                    {doTipo.map((a) => (
-                      <button key={a.id} type="button" onClick={() => setAtual(a)}
-                        className={`flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${a.id === atual.id ? "border-primary bg-primary/5" : ""}`}>
-                        <span className="min-w-0 break-words font-medium">{a.nome}</span>
-                        <Badge variant={a.ativo ? "default" : "secondary"}>{a.ativo ? "Ativo" : "Inativo"}</Badge>
-                      </button>
-                    ))}
-                    <Button size="sm" variant="ghost" className="mt-auto" onClick={() => novoDoTipo(m.id)}><Plus className="mr-1 h-4 w-4" /> Criar</Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        <TabsContent value="agente" className="space-y-6">
+          {!editando && (
+            <>
+              <Card className="cursor-pointer border-2 border-dashed border-primary/30 transition-all hover:shadow-lg sm:max-w-sm" onClick={() => setEscolherTipo(true)}>
+                <CardHeader className="p-4">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10"><Bot className="h-6 w-6 text-primary" /></div>
+                  <CardTitle className="text-lg">Novo agente de voz</CardTitle>
+                  <CardDescription>Escolha o que o agente faz: atender, ligar ou ajudar o atendente.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 pt-0"><Button className="w-full"><Plus className="mr-2 h-4 w-4" /> Criar novo agente</Button></CardContent>
+              </Card>
+              {MODOS.map((m) => {
+                const doTipo = agentes.filter((a) => (a.modos[0] ?? "receber") === m.id);
+                return (
+                  <div key={m.id} className="space-y-3">
+                    <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+                      <m.icone className="h-5 w-5 text-primary" /> {m.rotulo}
+                      <Badge variant="outline" className="text-xs">{doTipo.length}</Badge>
+                      <Button size="sm" variant="ghost" onClick={() => novoDoTipo(m.id)}><Plus className="mr-1 h-4 w-4" /> Criar</Button>
+                    </h2>
+                    {doTipo.length === 0 ? <p className="text-sm text-muted-foreground">{m.desc} Nenhum agente deste tipo ainda.</p> : (
+                      <WorkflowCardGrid>
+                        {doTipo.map((a) => (
+                          <WorkflowCard key={a.id} id={a.id!} title={a.nome} description={a.prompt ? a.prompt.slice(0, 120) : m.desc}
+                            isActive={a.ativo}
+                            menuOpen={menuAberto === a.id} onMenuOpenChange={(o) => setMenuAberto(o ? a.id! : null)}
+                            onEdit={() => abrir(a)} onOpenEditor={() => abrir(a)}
+                            onDuplicate={() => void duplicar(a)}
+                            onToggleActive={() => void alternarAtivo(a)}
+                            onDelete={() => { setAtual(a); setExcluir(true); }}
+                            customContent={
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <Badge variant="secondary">Ramal IA {a.ramal_ia || "—"}</Badge>
+                                <Badge variant="outline">{a.qualidade === "premium" ? "Premium" : "Gratuita"}</Badge>
+                              </div>
+                            } />
+                        ))}
+                      </WorkflowCardGrid>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
           <Dialog open={escolherTipo} onOpenChange={setEscolherTipo}>
             <DialogContent className="max-w-2xl">
               <DialogHeader><DialogTitle>O que este agente vai fazer?</DialogTitle></DialogHeader>
@@ -186,9 +221,11 @@ export default function AgentesVoz() {
               </div>
             </DialogContent>
           </Dialog>
+          {editando && (
           <Card>
             <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
-              <div className="flex items-center gap-2 md:col-span-2">
+              <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+                <Button variant="outline" size="sm" onClick={() => setEditando(false)}><ArrowLeft className="mr-1 h-4 w-4" /> Voltar</Button>
                 {(() => { const m = MODOS.find((x) => x.id === (atual.modos[0] ?? "receber")) ?? MODOS[0]; return (
                   <Badge variant="outline" className="gap-1"><m.icone className="h-3 w-3" /> {m.rotulo}</Badge>); })()}
                 <span className="text-sm text-muted-foreground">{atual.id ? "Editando agente" : "Novo agente"}</span>
@@ -250,6 +287,7 @@ export default function AgentesVoz() {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="chaves">
