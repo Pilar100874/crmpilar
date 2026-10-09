@@ -39,6 +39,9 @@ const TV_URL = "https://github.com/Pilar100874/crmpilar/releases/download/androi
 
 const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
+// Colunas de recurso da tabela, na ordem em que aparecem. Os nomes são escritos na vertical no cabeçalho.
+const RECURSOS = ["Ponto", "Câmeras", "Automação", "Voz", "SMS", "Interfone", "TV / Mídia"];
+
 type Ajuda = { titulo: string; passos: string[]; observacao?: string };
 
 type AppRow = {
@@ -314,7 +317,15 @@ export default function AdminApps() {
                 <TableRow>
                   <TableHead className="min-w-[220px]">Aplicativo</TableHead>
                   <TableHead>Sistema</TableHead>
-                  <TableHead className="hidden sm:table-cell">Recursos</TableHead>
+                  {RECURSOS.map((r) => (
+                    <TableHead key={r} className="hidden w-9 p-0 align-bottom text-center sm:table-cell">
+                      <span className="mx-auto flex h-20 items-end justify-center">
+                        <span className="inline-block whitespace-nowrap text-[11px] font-medium tracking-wide text-muted-foreground [writing-mode:vertical-rl] rotate-180">
+                          {r}
+                        </span>
+                      </span>
+                    </TableHead>
+                  ))}
                   <TableHead className="hidden md:table-cell">Versão</TableHead>
                   <TableHead className="hidden lg:table-cell">Arquivo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -331,6 +342,17 @@ export default function AdminApps() {
                         <div className="min-w-0">
                           <p className="font-semibold leading-tight">{app.nome}</p>
                           <p className="text-xs text-muted-foreground line-clamp-2">{app.descricao}</p>
+                          <div className="mt-1 flex flex-wrap gap-1 sm:hidden">
+                            {app.recursos.map((r) => (
+                              <span
+                                key={r}
+                                className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-foreground"
+                              >
+                                <Check className="h-2.5 w-2.5 text-primary" />
+                                {r}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
@@ -343,19 +365,21 @@ export default function AdminApps() {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="flex flex-wrap gap-1.5">
-                        {app.recursos.map((r) => (
-                          <span
-                            key={r}
-                            className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-foreground"
-                          >
-                            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                            {r}
+                    {RECURSOS.map((r) => (
+                      <TableCell
+                        key={r}
+                        title={`${app.nome} · ${r}`}
+                        className="hidden w-9 p-1 text-center align-middle sm:table-cell"
+                      >
+                        {app.recursos.includes(r) ? (
+                          <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-md border border-primary/25 bg-primary/10">
+                            <Check className="h-3.5 w-3.5 text-primary" />
                           </span>
-                        ))}
-                      </div>
-                    </TableCell>
+                        ) : (
+                          <span className="mx-auto block h-6 w-6 rounded-md bg-muted/40" aria-hidden="true" />
+                        )}
+                      </TableCell>
+                    ))}
                     <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                       {app.versao || "—"}
                     </TableCell>
