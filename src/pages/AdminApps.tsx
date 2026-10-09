@@ -189,7 +189,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "TV Signage",
+      nome: "TV Remotas",
       descricao: "Painel de TV: exibe mídias e avisos em TVs Android.",
       icone: "tv",
       sistemas: ["Android TV"],
@@ -198,7 +198,7 @@ export default function AdminApps() {
       url: tvInfo?.url || TV_URL,
       versao: tvInfo?.versionName ? `v${tvInfo.versionName}` : undefined,
       ajuda: {
-        titulo: "TV Signage — como instalar",
+        titulo: "TV Remotas — como instalar",
         passos: [
           "Baixe o APK e instale na TV ou TV Box Android (por USB ou app de transferência).",
           "Abra o app e anote o código de pareamento exibido na tela.",
@@ -282,7 +282,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Appliance (ISO)",
+      nome: "Coletor Desktop (Appliance ISO)",
       descricao: "Instala Linux + Coletor em modo kiosk num mini-PC, com SSH e Cockpit.",
       icone: "linux",
       sistemas: ["Linux"],
@@ -290,7 +290,7 @@ export default function AdminApps() {
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
       ajuda: {
-        titulo: "Appliance (ISO) — como instalar",
+        titulo: "Coletor Desktop (Appliance ISO) — como instalar",
         passos: [
           "Grave a ISO num pendrive (Rufus, Balena Etcher) e dê boot pelo mini-PC.",
           "A instalação é automática: Linux + Coletor em modo kiosk.",
