@@ -257,6 +257,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Mac-AppleSilicon.zip",
       url: coletorMacAsUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
         passos: [
@@ -276,6 +277,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Mac-Intel.zip",
       url: coletorMacIntelUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
         passos: [
@@ -295,6 +297,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Linux.AppImage",
       url: coletorLinuxUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Linux — como instalar",
         passos: [
@@ -312,6 +315,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Appliance ISO) — como instalar",
         passos: [
