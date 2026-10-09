@@ -343,6 +343,19 @@ export default function AdminApps() {
                         ))}
                       </div>
                     </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="flex flex-wrap gap-1.5">
+                        {app.recursos.map((r) => (
+                          <span
+                            key={r}
+                            className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-foreground"
+                          >
+                            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                       {app.versao || "—"}
                     </TableCell>
