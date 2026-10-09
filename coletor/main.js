@@ -113,6 +113,7 @@ app.on('second-instance', () => {
 
 function createWindow() {
   win = new BrowserWindow({
+    icon: path.join(__dirname, 'build', 'icon.png'),
     width: 980,
     height: 720,
     minWidth: 760,
@@ -145,9 +146,10 @@ function createWindow() {
 }
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
+  let icon = nativeImage.createFromPath(path.join(__dirname, 'build', 'icon.png'));
+  if (icon.isEmpty()) icon = nativeImage.createEmpty(); else icon = icon.resize({ width: 16, height: 16 });
   tray = new Tray(icon);
-  tray.setToolTip('Ponto Coletor');
+  tray.setToolTip('Pilar Coletor');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Abrir', click: () => win.show() },
     { type: 'separator' },
