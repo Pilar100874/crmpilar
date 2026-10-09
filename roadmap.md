@@ -99,3 +99,8 @@
 - [x] Sugestões dentro de um campo abaixo dos telefones, em formato de conversa.
 - [x] Manter o campo visível durante a ligação.
 - [x] Conferir no computador o campo vazio e com sugestões.
+
+## Agentes de Voz dentro de Configurações de Atendimento
+- [x] Adicionar "Agentes de Voz" como item novo da tela de Configurações de Atendimento.
+- [x] Remover o item do menu principal e manter o endereço antigo abrindo a nova aba.
+- [x] Conferir no navegador a nova aba, o redirecionamento, o menu sem o item e a permissão por grupo.
