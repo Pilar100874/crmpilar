@@ -28,6 +28,10 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Agentes de Chat"
     },
     {
+      "id": "agentes-voz",
+      "label": "Agentes de Voz"
+    },
+    {
       "id": "textos-prontos",
       "label": "Textos Prontos"
     },
@@ -118,24 +122,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "teste-webhooks",
       "label": "Teste de Webhooks"
-    }
-  ],
-  "AgentesVoz": [
-    {
-      "id": "agente",
-      "label": "Agente"
-    },
-    {
-      "id": "chaves",
-      "label": "Chaves"
-    },
-    {
-      "id": "chamadas",
-      "label": "Chamadas"
-    },
-    {
-      "id": "servidor",
-      "label": "Servidor"
     }
   ],
   "Calendario Painel": [
