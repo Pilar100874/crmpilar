@@ -2,19 +2,27 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock, Tablet } from "lucide-react";
-import { toast } from "sonner";
-import { Link } from "react-router-dom";
-import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
-import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
-import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
-import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
-import PilarHubDownloadCard from "@/components/hub/PilarHubDownloadCard";
-import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
 import { baixarArquivo } from "@/lib/baixarArquivo";
 
-
-// Alternativas da mesma versão publicada no manifesto do Coletor.
+// Fallbacks fixos caso os manifestos estejam indisponíveis.
+const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
+const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
 const COLETOR_LINUX_FALLBACK_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Linux.AppImage";
 const COLETOR_MAC_APPLE_SILICON_FALLBACK_URL =
@@ -23,138 +31,50 @@ const COLETOR_MAC_INTEL_FALLBACK_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-Intel.zip";
 const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
-
-// Fallback fixo caso version.json esteja indisponível.
-const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
-const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
-
-
-interface BIPEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function MobileAppCard() {
-  const [installEvt, setInstallEvt] = useState<BIPEvent | null>(null);
-  const [installed, setInstalled] = useState<boolean>(false);
-
-  useEffect(() => {
-    const standalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      // @ts-ignore
-      window.navigator.standalone === true;
-    setInstalled(!!standalone);
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallEvt(e as BIPEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installEvt) {
-      toast.info("Use o menu do navegador: 'Instalar aplicativo' ou 'Adicionar à tela inicial'");
-      return;
-    }
-    await installEvt.prompt();
-    const res = await installEvt.userChoice;
-    if (res.outcome === "accepted") toast.success("App instalado! Abra pelo ícone na tela inicial.");
-    setInstallEvt(null);
-  };
-
-  return (
-    <Card className="rounded-3xl border-orange-500/30 bg-gradient-to-br from-orange-500/5 via-background to-primary/5 shadow-md">
-      <CardContent className="p-5 sm:p-7">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-500">
-              <Smartphone className="h-7 w-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold sm:text-2xl">App Mobile Pilar</h2>
-                {installed && <Badge className="bg-green-500/15 text-green-600 border-green-500/40">Instalado</Badge>}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Instale no iPhone e Android. Atualiza sozinho, sem reinstalar. Com push notifications.
-              </p>
-            </div>
-          </div>
-          <Badge variant="outline" className="hidden sm:inline-flex gap-1">
-            <BellRing className="h-3.5 w-3.5" /> Push habilitado
-          </Badge>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border bg-card p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/15 text-green-600">
-                <Smartphone className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Android</h3>
-                <p className="text-xs text-muted-foreground">Chrome, Edge ou Samsung Internet</p>
-              </div>
-            </div>
-            <Button onClick={handleInstall} className="w-full gap-2 bg-green-600 hover:bg-green-500">
-              <Download className="h-4 w-4" />
-              {installEvt ? "Instalar app agora" : (installed ? "Já instalado" : "Adicionar à tela inicial")}
-            </Button>
-            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Abra este site pelo Chrome no celular</li>
-              <li>Toque em "Instalar app agora" acima</li>
-              <li>Confirme "Instalar"</li>
-              <li>Abra pelo ícone na tela inicial</li>
-            </ol>
-          </div>
-
-          <div className="rounded-2xl border bg-card p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-500/15 text-slate-600 dark:text-slate-300">
-                <Apple className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold">iPhone / iPad (iOS 16.4+)</h3>
-                <p className="text-xs text-muted-foreground">Requer Safari</p>
-              </div>
-            </div>
-            <div className="rounded-lg border border-dashed p-3 text-xs space-y-1.5">
-              <p className="flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5" /> 1. Toque em <b>Compartilhar</b> na barra do Safari</p>
-              <p className="flex items-center gap-1.5"><Plus className="h-3.5 w-3.5" /> 2. Escolha <b>Adicionar à Tela de Início</b></p>
-              <p className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> 3. Abra pelo ícone e ative notificações em Configurações</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link to="/config/push">
-            <Button variant="outline" size="sm" className="gap-2">
-              <BellRing className="h-4 w-4" /> Ativar notificações neste dispositivo
-            </Button>
-          </Link>
-          <a href="https://crmpilar.lovable.app" target="_blank" rel="noreferrer">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ExternalLink className="h-4 w-4" /> Abrir URL pública para instalar
-            </Button>
-          </a>
-        </div>
-
-        <div className="mt-4 flex gap-2 rounded-lg bg-muted/40 p-3 text-xs">
-          <Info className="h-4 w-4 shrink-0 text-primary" />
-          <div className="space-y-1">
-            <p><b>Atualização automática:</b> toda vez que abrir o app, ele carrega a versão mais nova. Nunca precisa reinstalar.</p>
-            <p><b>Push notifications:</b> após instalar, ative as notificações em <Link to="/config/push" className="text-primary underline">Configurações → Push</Link>.</p>
-            <p><b>Só funciona em produção:</b> instale a partir de <code>crmpilar.lovable.app</code> ou do seu domínio publicado — não pelo editor Lovable.</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+const SMS_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.11.0/pilar-sms-v1.11.0.apk";
+const HUB_URL = "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.2.2/pilar-coletor-v3.2.2.apk";
+const INTERFONE_URL = "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.6/pilar-interfone-v1.7.6.apk";
+const AUTOMACAO_URL = "https://github.com/Pilar100874/crmpilar/releases/download/pilar-automacao-latest/pilar-automacao.apk";
+const TV_URL = "https://github.com/Pilar100874/crmpilar/releases/download/android-tv-signage-latest/app-release.apk";
 
 const baixar = (file: string, url: string) => baixarArquivo(file, url);
+
+type Ajuda = { titulo: string; passos: string[]; observacao?: string };
+
+type AppRow = {
+  nome: string;
+  descricao: string;
+  icone: "android" | "windows" | "mac" | "linux" | "tv";
+  sistemas: string[];
+  arquivo: string;
+  url: string;
+  versao?: string;
+  ajuda: Ajuda;
+};
+
+const IconeSistema = ({ tipo }: { tipo: AppRow["icone"] }) => {
+  const cls = "h-5 w-5";
+  switch (tipo) {
+    case "android":
+      return <Smartphone className={cls} />;
+    case "windows":
+      return <Monitor className={cls} />;
+    case "mac":
+      return <Apple className={cls} />;
+    case "linux":
+      return <Monitor className={cls} />;
+    case "tv":
+      return <Tv className={cls} />;
+  }
+};
+
+const corIcone: Record<AppRow["icone"], string> = {
+  android: "bg-green-500/15 text-green-600",
+  windows: "bg-purple-500/15 text-purple-600 dark:text-purple-300",
+  mac: "bg-secondary text-foreground",
+  linux: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+  tv: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
+};
 
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{
@@ -165,11 +85,22 @@ export default function AdminApps() {
     downloadUrlMacIntel?: string;
     notas?: string;
   } | null>(null);
+  const [automacaoInfo, setAutomacaoInfo] = useState<{ url?: string; versionName?: string } | null>(null);
+  const [tvInfo, setTvInfo] = useState<{ url?: string; versionName?: string } | null>(null);
+  const [ajudaAberta, setAjudaAberta] = useState<Ajuda | null>(null);
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setColetorInfo(data))
+      .catch(() => {});
+    fetch("/apps/pilar-automacao-latest.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setAutomacaoInfo(data))
+      .catch(() => {});
+    fetch("/apps/android-tv-signage-latest.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setTvInfo(data))
       .catch(() => {});
   }, []);
 
@@ -178,337 +109,293 @@ export default function AdminApps() {
   const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
   const coletorMacAsUrl = coletorInfo?.downloadUrlMacAppleSilicon || COLETOR_MAC_APPLE_SILICON_FALLBACK_URL;
   const coletorMacIntelUrl = coletorInfo?.downloadUrlMacIntel || COLETOR_MAC_INTEL_FALLBACK_URL;
+  const coletorVersao = coletorInfo?.version ? `v${coletorInfo.version}` : undefined;
+
+  const apps: AppRow[] = [
+    {
+      nome: "Pilar Automação",
+      descricao: "Abre os painéis de automação em tela cheia, por ambiente.",
+      icone: "android",
+      sistemas: ["Android"],
+      arquivo: "pilar-automacao.apk",
+      url: automacaoInfo?.url || AUTOMACAO_URL,
+      versao: automacaoInfo?.versionName ? `v${automacaoInfo.versionName}` : undefined,
+      ajuda: {
+        titulo: "Pilar Automação — como instalar",
+        passos: [
+          "Baixe e instale o APK no celular ou tablet Android (permita fontes desconhecidas).",
+          "Ao abrir, informe o endereço do sistema e, se quiser, cole o código do painel desejado.",
+          "O app abre o painel em tela cheia. Você define qual ambiente cada usuário vê em Configurações → Usuários.",
+        ],
+      },
+    },
+    {
+      nome: "Pilar SMS",
+      descricao: "Celular Android vira modem de SMS para os disparos do CRM.",
+      icone: "android",
+      sistemas: ["Android"],
+      arquivo: "pilar-sms-v1.11.0.apk",
+      url: SMS_URL,
+      versao: "v1.11.0",
+      ajuda: {
+        titulo: "Pilar SMS — como instalar",
+        passos: [
+          "Instale o APK em um celular Android com chip (SIM) ativo e saldo para SMS.",
+          "Abra o app, faça login com sua conta do CRM e autorize as permissões de SMS.",
+          "Deixe o celular ligado e conectado: os disparos de SMS do CRM saem por ele.",
+        ],
+      },
+    },
+    {
+      nome: "Pilar Hub",
+      descricao: "Coletor Android: ponto, câmeras e automação na rede local.",
+      icone: "android",
+      sistemas: ["Android"],
+      arquivo: "pilar-coletor-v3.2.2.apk",
+      url: HUB_URL,
+      versao: "v3.2.2",
+      ajuda: {
+        titulo: "Pilar Hub — como instalar",
+        passos: [
+          "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
+          "Faça login com sua conta do CRM Pilar.",
+          "Ative os módulos desejados na tela do app.",
+        ],
+      },
+    },
+    {
+      nome: "Pilar Interfone",
+      descricao: "Interfone da portaria com abertura remota pelo CRM.",
+      icone: "android",
+      sistemas: ["Android"],
+      arquivo: "pilar-interfone-v1.7.6.apk",
+      url: INTERFONE_URL,
+      versao: "v1.7.6",
+      ajuda: {
+        titulo: "Pilar Interfone — como instalar",
+        passos: [
+          "Instale o APK no tablet ou celular Android da portaria.",
+          "Faça login com a conta da portaria no CRM.",
+          "As chamadas de interfone passam a chegar neste aparelho.",
+        ],
+      },
+    },
+    {
+      nome: "TV Signage",
+      descricao: "Painel de TV: exibe mídias e avisos em TVs Android.",
+      icone: "tv",
+      sistemas: ["Android TV"],
+      arquivo: "app-release.apk",
+      url: tvInfo?.url || TV_URL,
+      versao: tvInfo?.versionName ? `v${tvInfo.versionName}` : undefined,
+      ajuda: {
+        titulo: "TV Signage — como instalar",
+        passos: [
+          "Baixe o APK e instale na TV ou TV Box Android (por USB ou app de transferência).",
+          "Abra o app e anote o código de pareamento exibido na tela.",
+          "No CRM, em Marketing → TV, vincule a TV pelo código e escolha o conteúdo.",
+        ],
+      },
+    },
+    {
+      nome: "Coletor Desktop",
+      descricao: "Ponto, câmeras, automação e Pilar Voz num PC Windows ligado 24/7.",
+      icone: "windows",
+      sistemas: ["Windows"],
+      arquivo: coletorFileName,
+      url: coletorUrl,
+      versao: coletorVersao,
+      ajuda: {
+        titulo: "Coletor Desktop (Windows) — como instalar",
+        passos: [
+          `Baixe e execute o ${coletorFileName} em um PC Windows que fique ligado 24/7 na mesma rede das câmeras e relógios de ponto.`,
+          "Faça login com sua conta do CRM Pilar. O Coletor vincula ao seu tenant automaticamente.",
+          "Ative os módulos Câmeras, Ponto, Automação e/ou Pilar Voz na tela principal. O ícone deve ficar verde (online).",
+        ],
+        observacao: coletorInfo?.notas ? `Novidades: ${coletorInfo.notas}` : undefined,
+      },
+    },
+    {
+      nome: "Coletor Desktop (Apple Silicon)",
+      descricao: "Mesmo Coletor para Macs com chip M1, M2, M3 ou M4.",
+      icone: "mac",
+      sistemas: ["macOS"],
+      arquivo: "ColetorPilar-Mac-AppleSilicon.zip",
+      url: coletorMacAsUrl,
+      versao: coletorVersao,
+      ajuda: {
+        titulo: "Coletor no Mac — como instalar",
+        passos: [
+          "Dê dois cliques no .zip baixado e arraste o Coletor Pilar para a pasta Aplicativos.",
+          "Na primeira vez, abra com clique direito → Abrir e confirme em Abrir. Depois abre normal.",
+          "Entre com sua conta do CRM e ligue só os módulos que este computador deve rodar.",
+        ],
+        observacao: "Não sabe o processador? Menu da maçã → Sobre Este Mac: Chip Apple M… = Apple Silicon; Processador Intel = versão Intel.",
+      },
+    },
+    {
+      nome: "Coletor Desktop (Mac Intel)",
+      descricao: "Mesmo Coletor para Macs com processador Intel.",
+      icone: "mac",
+      sistemas: ["macOS"],
+      arquivo: "ColetorPilar-Mac-Intel.zip",
+      url: coletorMacIntelUrl,
+      versao: coletorVersao,
+      ajuda: {
+        titulo: "Coletor no Mac — como instalar",
+        passos: [
+          "Dê dois cliques no .zip baixado e arraste o Coletor Pilar para a pasta Aplicativos.",
+          "Na primeira vez, abra com clique direito → Abrir e confirme em Abrir. Depois abre normal.",
+          "Entre com sua conta do CRM e ligue só os módulos que este computador deve rodar.",
+        ],
+        observacao: "Não sabe o processador? Menu da maçã → Sobre Este Mac: Chip Apple M… = Apple Silicon; Processador Intel = versão Intel.",
+      },
+    },
+    {
+      nome: "Coletor Desktop (Linux)",
+      descricao: "AppImage x64 para Debian, Ubuntu, Mint etc.",
+      icone: "linux",
+      sistemas: ["Linux"],
+      arquivo: "ColetorPilar-Linux.AppImage",
+      url: coletorLinuxUrl,
+      versao: coletorVersao,
+      ajuda: {
+        titulo: "Coletor no Linux — como instalar",
+        passos: [
+          "Baixe o AppImage e dê permissão: chmod +x ColetorPilar-Linux.AppImage",
+          "Execute ./ColetorPilar-Linux.AppImage e faça login com sua conta do CRM.",
+          "Ative os módulos desejados na tela principal.",
+        ],
+      },
+    },
+    {
+      nome: "Appliance (ISO)",
+      descricao: "Instala Linux + Coletor em modo kiosk num mini-PC, com SSH e Cockpit.",
+      icone: "linux",
+      sistemas: ["Linux"],
+      arquivo: "coletor-pilar-appliance-amd64.iso",
+      url: APPLIANCE_ISO_URL,
+      ajuda: {
+        titulo: "Appliance (ISO) — como instalar",
+        passos: [
+          "Grave a ISO num pendrive (Rufus, Balena Etcher) e dê boot pelo mini-PC.",
+          "A instalação é automática: Linux + Coletor em modo kiosk.",
+          "Para atualizar depois: sudo /opt/coletor/update.sh.",
+        ],
+      },
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-6">
       <div>
         <h1 className="text-xl font-semibold sm:text-3xl">Aplicativos e downloads</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          Instale o CRM Pilar no celular ou tablet para acessar de qualquer lugar.
+          Todos os aplicativos do CRM Pilar, por sistema operacional. Clique em <b>Ajuda</b> para ver o passo a passo de instalação.
         </p>
       </div>
 
-      <div className="flex items-center gap-3 pt-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-500/15 text-green-600">
-          <Smartphone className="h-5 w-5" />
-        </div>
-        <h2 className="text-lg font-bold sm:text-xl">Android</h2>
-      </div>
-
-      <MobileAppCard />
-
-      <InterfoneAppDownloadCard />
-
-      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 sm:h-14 sm:w-14 sm:rounded-2xl">
-              <Tablet className="h-8 w-8" />
-            </div>
-            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              Android · Tablet / Celular
-            </span>
-          </div>
-
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-bold text-foreground sm:text-2xl">Pilar Automação</h2>
-            <VersaoAppBadge manifesto="/apps/pilar-automacao-latest.json" />
-          </div>
-          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Aplicativo dedicado para abrir os painéis de automação em celular ou tablet.
-            Instale o APK no Android e escolha qual ambiente deve abrir em cada aparelho.
-          </div>
-
-          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
-                APK Android
-              </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">pilar-automacao.apk</span>
-            </div>
-            <BaixarAppAutomacao />
+      <Card className="overflow-hidden rounded-xl border shadow-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[220px]">Aplicativo</TableHead>
+                  <TableHead>Sistema</TableHead>
+                  <TableHead className="hidden md:table-cell">Versão</TableHead>
+                  <TableHead className="hidden lg:table-cell">Arquivo</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {apps.map((app) => (
+                  <TableRow key={app.nome}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${corIcone[app.icone]}`}>
+                          <IconeSistema tipo={app.icone} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold leading-tight">{app.nome}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{app.descricao}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {app.sistemas.map((s) => (
+                          <Badge key={s} variant="outline" className="text-[10px] uppercase tracking-wider">
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {app.versao || "—"}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <code className="text-xs text-muted-foreground">{app.arquivo}</code>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => baixar(app.arquivo, app.url)}
+                        >
+                          <Download className="h-4 w-4" />
+                          <span className="hidden sm:inline">Baixar</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={() => setAjudaAberta(app.ajuda)}
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                          <span className="hidden sm:inline">Ajuda</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
-
-        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
-          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Como usar
-          </h3>
-          <ol className="grid gap-4 md:grid-cols-3">
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e instale o APK no celular ou tablet Android (permita fontes desconhecidas).</p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Ao abrir, informe o endereço do sistema e, se quiser, cole o código do painel desejado.</p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">O app abre o painel em tela cheia. Você pode definir qual ambiente cada usuário vê em <Link to="/config/usuarios" className="text-primary underline">Configurações → Usuários</Link>.</p>
-            </li>
-          </ol>
-        </div>
       </Card>
 
-      <div className="grid items-start gap-5 md:grid-cols-2">
-        <PilarSmsDownloadCard />
-        <PilarHubDownloadCard />
-        <div className="md:col-span-2">
-          <TvSignageDownloadCard />
-        </div>
+      <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+        <Phone className="h-4 w-4 shrink-0 text-primary" />
+        <p>
+          <b className="text-foreground">App mobile do CRM (celular):</b> não precisa de APK — abra{" "}
+          <code>crmpilar.lovable.app</code> no navegador do celular e use "Instalar aplicativo" (Android) ou
+          "Adicionar à Tela de Início" (iPhone). Ele atualiza sozinho a cada abertura.
+        </p>
       </div>
 
-      <div className="flex items-center gap-3 pt-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-300">
-          <Monitor className="h-5 w-5" />
-        </div>
-        <h2 className="text-lg font-bold sm:text-xl">Windows</h2>
-      </div>
-
-      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 sm:h-14 sm:w-14 sm:rounded-2xl">
-              <Monitor className="h-8 w-8" />
-            </div>
-            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              Windows · Instalador
-            </span>
-          </div>
-
-          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Windows)</h2>
-          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Instale em <b>um PC da mesma rede local</b> para habilitar duas funções:
-            <b> câmeras IP</b> (snapshot e ao vivo de Hikvision, Intelbras, Tapo etc. que não estão na internet) e
-            <b> relógios de ponto</b> (coleta automática de batidas de Control iD, Henry, ZKTeco, Topdata e Madis na LAN).
-            Sem o Coletor rodando, a nuvem não consegue acessar equipamentos com IP privado.
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
-            <Camera className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            <span>
-              <b className="text-foreground">Necessário para</b> câmeras internas (LAN) e relógios de ponto na rede local.
-              Câmeras públicas (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
-                Instalador Windows {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
-              </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">{coletorFileName}</span>
-            </div>
-            <Button
-              onClick={() => baixar(coletorFileName, coletorUrl)}
-              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-purple-500 hover:bg-purple-400 text-white"
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar Coletor
-            </Button>
-          </div>
-          {coletorInfo?.notas && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              <b>Novidades:</b> {coletorInfo.notas}
-            </p>
+      <Dialog open={!!ajudaAberta} onOpenChange={(aberto) => !aberto && setAjudaAberta(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{ajudaAberta?.titulo}</DialogTitle>
+            <DialogDescription>Siga os passos abaixo para instalar e usar.</DialogDescription>
+          </DialogHeader>
+          <ol className="space-y-3 pt-2">
+            {ajudaAberta?.passos.map((passo, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold">
+                  {i + 1}
+                </span>
+                <p className="text-sm leading-relaxed text-muted-foreground">{passo}</p>
+              </li>
+            ))}
+          </ol>
+          {ajudaAberta?.observacao && (
+            <p className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">{ajudaAberta.observacao}</p>
           )}
-        </CardContent>
-
-        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
-          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Como instalar e usar
-          </h3>
-          <ol className="grid gap-4 md:grid-cols-3">
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>{coletorFileName}</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Faça login com sua conta do CRM Pilar. O Coletor vincula ao seu tenant automaticamente.</p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Ative os módulos <b>Câmeras</b> e/ou <b>Ponto</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot, streaming e coleta de batidas.</p>
-            </li>
-          </ol>
-        </div>
-      </Card>
-
-      <div className="flex items-center gap-3 pt-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-300">
-          <Monitor className="h-5 w-5" />
-        </div>
-        <h2 className="text-lg font-bold sm:text-xl">Linux</h2>
-      </div>
-
-      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 sm:h-14 sm:w-14 sm:rounded-2xl">
-              <Monitor className="h-8 w-8" />
-            </div>
-            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              Linux · AppImage / ISO
-            </span>
-          </div>
-
-          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Linux) & Appliance</h2>
-          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Mesma função do Coletor Windows, em <b>AppImage x64</b> (Debian, Ubuntu, Mint etc.).
-            Também disponível a <b>ISO do Appliance</b>: instala o Linux + Coletor em modo kiosk automaticamente
-            num mini-PC, com SSH e Cockpit para acesso remoto.
-          </div>
-
-          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
-                AppImage Linux x64
-              </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Linux.AppImage</span>
-            </div>
-            <Button
-              onClick={() => baixar("ColetorPilar-Linux.AppImage", coletorLinuxUrl)}
-              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-amber-500 hover:bg-amber-400 text-white"
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar AppImage
-            </Button>
-          </div>
-
-          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-dashed p-3 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                ISO do Appliance (instala o sistema todo)
-              </span>
-              <span className="truncate font-mono text-xs text-foreground sm:text-sm">coletor-pilar-appliance-amd64.iso</span>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", APPLIANCE_ISO_URL)}
-              className="w-full flex-shrink-0 rounded-xl sm:w-auto"
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar ISO
-            </Button>
-          </div>
-        </CardContent>
-
-        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
-          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Como usar no Linux
-          </h3>
-          <ol className="grid gap-4 md:grid-cols-3">
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Baixe o AppImage e dê permissão: <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">chmod +x ColetorPilar-Linux.AppImage</code>
-              </p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Execute <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">./ColetorPilar-Linux.AppImage</code> e faça login com sua conta do CRM.
-              </p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                No appliance (ISO), atualize a qualquer momento com <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">sudo /opt/coletor/update.sh</code>.
-              </p>
-            </li>
-          </ol>
-        </div>
-      </Card>
-
-      <div className="flex items-center gap-3 pt-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-foreground">
-          <Apple className="h-5 w-5" />
-        </div>
-        <h2 className="text-lg font-bold sm:text-xl">Mac</h2>
-      </div>
-
-      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-foreground sm:h-14 sm:w-14 sm:rounded-2xl">
-              <Apple className="h-8 w-8" />
-            </div>
-            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              macOS · Apple Silicon e Intel
-            </span>
-          </div>
-
-          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Mac)</h2>
-          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            O mesmo aplicativo do Coletor para macOS, com as chaves <b>Ponto</b>, <b>Câmeras</b>,
-            <b> Automação</b> e <b>Pilar Voz</b>. Baixe o arquivo do processador do seu Mac:
-            <b> Apple Silicon</b> (M1, M2, M3, M4) ou <b>Intel</b>.
-          </div>
-
-          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
-                Apple Silicon · M1, M2, M3, M4 {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
-              </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Mac-AppleSilicon.zip</span>
-            </div>
-            <Button
-              onClick={() => baixar("ColetorPilar-Mac-AppleSilicon.zip", coletorMacAsUrl)}
-              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar para Mac
-            </Button>
-          </div>
-
-          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-dashed p-3 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Mac com processador Intel {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
-              </span>
-              <span className="truncate font-mono text-xs text-foreground sm:text-sm">ColetorPilar-Mac-Intel.zip</span>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => baixar("ColetorPilar-Mac-Intel.zip", coletorMacIntelUrl)}
-              className="w-full flex-shrink-0 rounded-xl sm:w-auto"
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar para Mac Intel
-            </Button>
-          </div>
-        </CardContent>
-
-        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
-          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Como instalar e abrir no Mac
-          </h3>
-          <ol className="grid gap-4 md:grid-cols-3">
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Dê dois cliques no <b>.zip</b> baixado para descompactar e arraste o <b>Coletor Pilar</b> para a pasta <b>Aplicativos</b>.
-              </p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Na primeira vez, abra com <b>clique direito → Abrir</b> e confirme em <b>Abrir</b>. Depois disso, abre normal com dois cliques.
-              </p>
-            </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Entre com sua conta do CRM Pilar e ligue só os módulos que este computador deve rodar: <b>Ponto</b>, <b>Câmeras</b>, <b>Automação</b> ou <b>Pilar Voz</b>.
-              </p>
-            </li>
-          </ol>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Não sabe o processador? Abra o <b>menu da maçã</b> (canto superior esquerdo) → <b>Sobre Este Mac</b>: se aparecer <b>Chip: Apple M…</b>,
-            baixe o Apple Silicon; se aparecer <b>Processador: Intel</b>, baixe o Intel.
-          </p>
-        </div>
-      </Card>
-
+        </DialogContent>
+      </Dialog>
     </div>
-
   );
 }
