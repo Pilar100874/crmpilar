@@ -521,6 +521,65 @@ export default function AdminApps() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Celular e tablet: cartões em vez da tabela, para nada ficar espremido. */}
+          <div className="space-y-3 p-3 lg:hidden">
+            {apps.map((app) => {
+              const id = `${app.nome}-${app.sistemas.join("-")}`;
+              const aberta = chavesAberta === id;
+              return (
+                <div key={id} className="rounded-xl border bg-card p-3 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${corIcone[app.icone]}`}>
+                      <IconeSistema tipo={app.icone} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold leading-tight break-words">{app.nome}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground break-words">{app.descricao}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    {app.sistemas.map((s) => (
+                      <Badge key={s} variant="outline" className="text-[10px] uppercase tracking-wider">{s}</Badge>
+                    ))}
+                    <Badge variant="secondary" className="text-[10px]">{app.versao || "versão não informada"}</Badge>
+                    <span className="text-[10px] text-muted-foreground">{datasDownloads[app.url] || ""}</span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {app.recursos.map((r) => (
+                      <span key={r} className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                        <Check className="h-2.5 w-2.5 text-primary" />
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <Button size="sm" className="gap-1.5 px-2" onClick={() => baixar(app.arquivo, app.url)}>
+                      <Download className="h-4 w-4 shrink-0" /> Baixar
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5 px-2" onClick={() => setAjudaAberta(app.ajuda)}>
+                      <HelpCircle className="h-4 w-4 shrink-0" /> Ajuda
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={aberta ? "secondary" : "outline"}
+                      className="gap-1.5 px-2"
+                      aria-expanded={aberta}
+                      onClick={() => setChavesAberta(aberta ? null : id)}
+                    >
+                      <KeyRound className="h-4 w-4 shrink-0" /> Chaves
+                      <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${aberta ? "rotate-180" : ""}`} />
+                    </Button>
+                  </div>
+                  {aberta && (
+                    <div className="mt-3 rounded-lg border bg-muted/30 p-3">
+                      <PainelExpandido app={app} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 
