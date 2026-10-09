@@ -46,6 +46,7 @@ type AppRow = {
   descricao: string;
   icone: "android" | "windows" | "mac" | "linux" | "tv";
   sistemas: string[];
+  recursos: string[];
   arquivo: string;
   url: string;
   versao?: string;
