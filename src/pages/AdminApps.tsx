@@ -311,14 +311,14 @@ export default function AdminApps() {
 
       <Card className="overflow-hidden rounded-xl border shadow-sm">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="w-full max-w-full overflow-x-hidden">
+            <Table className="table-fixed lg:table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[220px]">Aplicativo</TableHead>
-                  <TableHead>Sistema</TableHead>
+                  <TableHead>Aplicativo</TableHead>
+                  <TableHead className="hidden sm:table-cell w-28">Sistema</TableHead>
                   {RECURSOS.map((r) => (
-                    <TableHead key={r} className="hidden w-9 p-0 align-bottom text-center sm:table-cell">
+                    <TableHead key={r} className="hidden w-9 p-0 align-bottom text-center lg:table-cell">
                       <span className="mx-auto flex h-20 items-end justify-center">
                         <span className="inline-block whitespace-nowrap text-[11px] font-medium tracking-wide text-muted-foreground [writing-mode:vertical-rl] rotate-180">
                           {r}
@@ -326,9 +326,9 @@ export default function AdminApps() {
                       </span>
                     </TableHead>
                   ))}
-                  <TableHead className="hidden md:table-cell">Versão</TableHead>
-                  <TableHead className="hidden lg:table-cell">Arquivo</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="hidden xl:table-cell">Versão</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">Arquivo</TableHead>
+                  <TableHead className="text-right w-24 sm:w-48">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -340,9 +340,10 @@ export default function AdminApps() {
                           <IconeSistema tipo={app.icone} />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold leading-tight">{app.nome}</p>
+                          <p className="font-semibold leading-tight break-words">{app.nome}</p>
                           <p className="text-xs text-muted-foreground line-clamp-2">{app.descricao}</p>
-                          <div className="mt-1 flex flex-wrap gap-1 sm:hidden">
+                          <div className="mt-1 flex flex-wrap gap-1 lg:hidden">
+                            {app.sistemas.map((s) => (<Badge key={s} variant="outline" className="text-[10px] uppercase sm:hidden">{s}</Badge>))}
                             {app.recursos.map((r) => (
                               <span
                                 key={r}
@@ -356,7 +357,7 @@ export default function AdminApps() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {app.sistemas.map((s) => (
                           <Badge key={s} variant="outline" className="text-[10px] uppercase tracking-wider">
@@ -369,7 +370,7 @@ export default function AdminApps() {
                       <TableCell
                         key={r}
                         title={`${app.nome} · ${r}`}
-                        className="hidden w-9 p-1 text-center align-middle sm:table-cell"
+                        className="hidden w-9 p-1 text-center align-middle lg:table-cell"
                       >
                         {app.recursos.includes(r) ? (
                           <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-md border border-primary/25 bg-primary/10">
@@ -380,14 +381,14 @@ export default function AdminApps() {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                       {app.versao || "—"}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
+                    <TableCell className="hidden 2xl:table-cell">
                       <code className="text-xs text-muted-foreground">{app.arquivo}</code>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-wrap justify-end gap-2">
                         <Button
                           size="sm"
                           className="gap-1.5"
