@@ -343,6 +343,7 @@ export default function GestaoVersoesApps() {
                const comando = ultimoComando(e.id);
                const statusComando = comando?.status || e.statusAtualizacao;
                const mensagemComando = comando?.mensagem || e.resultadoAtualizacao;
+               const chavesAbertasNeste = chavesAberta === e.id;
               return (
                 <article key={e.id} className="grid gap-3 rounded-lg border bg-background p-3 shadow-sm xl:grid-cols-[auto_minmax(170px,1fr)_100px_100px_minmax(150px,1fr)_auto_auto] xl:items-center xl:gap-4">
                   <div className="flex min-w-0 items-center gap-3 xl:contents">
