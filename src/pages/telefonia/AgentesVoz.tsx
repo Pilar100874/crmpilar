@@ -180,7 +180,6 @@ export default function AgentesVoz() {
                     <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
                       <m.icone className="h-5 w-5 text-primary" /> {m.rotulo}
                       <Badge variant="outline" className="text-xs">{doTipo.length}</Badge>
-                      <Button size="sm" variant="ghost" onClick={() => novoDoTipo(m.id)}><Plus className="mr-1 h-4 w-4" /> Criar</Button>
                     </h2>
                     {doTipo.length === 0 ? <p className="text-sm text-muted-foreground">{m.desc} Nenhum agente deste tipo ainda.</p> : (
                       <WorkflowCardGrid>
