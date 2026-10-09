@@ -16,7 +16,11 @@ import { baixarArquivo } from "@/lib/baixarArquivo";
 
 // Alternativas da mesma versão publicada no manifesto do Coletor.
 const COLETOR_LINUX_FALLBACK_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Linux.AppImage";
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Linux.AppImage";
+const COLETOR_MAC_APPLE_SILICON_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-AppleSilicon.zip";
+const COLETOR_MAC_INTEL_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-Intel.zip";
 const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 
@@ -157,6 +161,8 @@ export default function AdminApps() {
     version: string;
     downloadUrl: string;
     downloadUrlLinux?: string;
+    downloadUrlMacAppleSilicon?: string;
+    downloadUrlMacIntel?: string;
     notas?: string;
   } | null>(null);
 
@@ -170,6 +176,8 @@ export default function AdminApps() {
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
   const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
+  const coletorMacAsUrl = coletorInfo?.downloadUrlMacAppleSilicon || COLETOR_MAC_APPLE_SILICON_FALLBACK_URL;
+  const coletorMacIntelUrl = coletorInfo?.downloadUrlMacIntel || COLETOR_MAC_INTEL_FALLBACK_URL;
 
   return (
     <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-6">
@@ -380,6 +388,87 @@ export default function AdminApps() {
               </p>
             </li>
           </ol>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-foreground sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Apple className="h-8 w-8" />
+            </div>
+            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
+              macOS · Apple Silicon e Intel
+            </span>
+          </div>
+
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Mac)</h2>
+          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
+            O mesmo aplicativo do Coletor para macOS, com as chaves <b>Ponto</b>, <b>Câmeras</b>,
+            <b> Automação</b> e <b>Pilar Voz</b>. Baixe o arquivo do processador do seu Mac:
+            <b> Apple Silicon</b> (M1, M2, M3, M4) ou <b>Intel</b>.
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+                Apple Silicon · M1, M2, M3, M4 {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
+              </span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Mac-AppleSilicon.zip</span>
+            </div>
+            <Button
+              onClick={() => baixar("ColetorPilar-Mac-AppleSilicon.zip", coletorMacAsUrl)}
+              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar para Mac
+            </Button>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-dashed p-3 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Mac com processador Intel {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
+              </span>
+              <span className="truncate font-mono text-xs text-foreground sm:text-sm">ColetorPilar-Mac-Intel.zip</span>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => baixar("ColetorPilar-Mac-Intel.zip", coletorMacIntelUrl)}
+              className="w-full flex-shrink-0 rounded-xl sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar para Mac Intel
+            </Button>
+          </div>
+        </CardContent>
+
+        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Como instalar e abrir no Mac
+          </h3>
+          <ol className="grid gap-4 md:grid-cols-3">
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Dê dois cliques no <b>.zip</b> baixado para descompactar e arraste o <b>Coletor Pilar</b> para a pasta <b>Aplicativos</b>.
+              </p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Na primeira vez, abra com <b>clique direito → Abrir</b> e confirme em <b>Abrir</b>. Depois disso, abre normal com dois cliques.
+              </p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Entre com sua conta do CRM Pilar e ligue só os módulos que este computador deve rodar: <b>Ponto</b>, <b>Câmeras</b>, <b>Automação</b> ou <b>Pilar Voz</b>.
+              </p>
+            </li>
+          </ol>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Não sabe o processador? Abra o <b>menu da maçã</b> (canto superior esquerdo) → <b>Sobre Este Mac</b>: se aparecer <b>Chip: Apple M…</b>,
+            baixe o Apple Silicon; se aparecer <b>Processador: Intel</b>, baixe o Intel.
+          </p>
         </div>
       </Card>
 
