@@ -21,7 +21,6 @@ import { Check, ChevronDown, KeyRound, Download, Smartphone, Apple, HelpCircle, 
 import { baixarArquivo } from "@/lib/baixarArquivo";
 import { Fragment } from "react";
 import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
-import GestaoVersoesApps from "@/pages/admin/GestaoVersoesApps";
 
 /** Tipos de chave que cada aplicativo aceita, na ordem de preferência. */
 const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
