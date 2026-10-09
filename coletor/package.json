@@ -1,6 +1,6 @@
 {
   "name": "ponto-coletor",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
@@ -90,6 +90,11 @@
       "deleteAppDataOnUninstall": false,
       "displayLanguageSelector": false,
       "menuCategory": false
+    },
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "build/icon.png",
+      "identity": null
     }
   }
 }

@@ -138,3 +138,48 @@ jobs:
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-mac:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: coletor
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Read version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Mac (Intel e Apple Silicon)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npx electron-builder --mac zip --x64 --publish never -c.mac.artifactName='ColetorPilar-Mac-Intel.${ext}'
+          npx electron-builder --mac zip --arm64 --publish never -c.mac.artifactName='ColetorPilar-Mac-AppleSilicon.${ext}'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColetorPilar-Mac
+          path: coletor/dist-installer/ColetorPilar-Mac-*.zip
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: coletor-v${{ steps.pkg.outputs.version }}
+          name: Coletor Pilar v${{ steps.pkg.outputs.version }}
+          files: coletor/dist-installer/ColetorPilar-Mac-*.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
