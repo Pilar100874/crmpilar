@@ -98,6 +98,7 @@ export default function GestaoVersoesApps() {
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [comandos, setComandos] = useState<ComandoAtualizacao[]>([]);
   const [disparando, setDisparando] = useState(false);
+  const [chavesAberta, setChavesAberta] = useState<string | null>(null);
 
   const carregarVersoes = useCallback(async () => {
     const entradas = await Promise.all(
