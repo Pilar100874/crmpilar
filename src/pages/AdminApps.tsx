@@ -314,6 +314,7 @@ export default function AdminApps() {
                 <TableRow>
                   <TableHead className="min-w-[220px]">Aplicativo</TableHead>
                   <TableHead>Sistema</TableHead>
+                  <TableHead className="hidden sm:table-cell">Recursos</TableHead>
                   <TableHead className="hidden md:table-cell">Versão</TableHead>
                   <TableHead className="hidden lg:table-cell">Arquivo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
