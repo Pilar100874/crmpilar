@@ -90,11 +90,11 @@ const menorQue = (a?: string | null, b?: string | null) => {
   return false;
 };
 
-export default function GestaoVersoesApps() {
+export default function GestaoVersoesApps({ app }: { app?: string }) {
   const [versoes, setVersoes] = useState<Record<string, VersaoPublicada>>({});
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [filtroApp, setFiltroApp] = useState<string>("todos");
+  const [filtroApp, setFiltroApp] = useState<string>(app || "todos");
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [comandos, setComandos] = useState<ComandoAtualizacao[]>([]);
   const [disparando, setDisparando] = useState(false);
