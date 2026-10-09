@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
+import { ArrowLeft, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 
 const db = supabase as any;
 
@@ -59,6 +60,8 @@ export default function AgentesVoz() {
   const [valoresChave, setValoresChave] = useState<Record<string, string>>({});
   const [excluir, setExcluir] = useState(false);
   const [escolherTipo, setEscolherTipo] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     if (!empresa) return;
@@ -104,7 +107,7 @@ export default function AgentesVoz() {
     const r = await db.from("voz_agentes").delete().eq("id", atual.id);
     if (r.error) return toast.error(r.error.message);
     toast.success("Agente excluído");
-    setAtual(NOVO); setExcluir(false); void carregar();
+    setAtual(NOVO); setExcluir(false); setEditando(false); void carregar();
   };
 
   const salvarChave = async (provedor: string, nome: string) => {
