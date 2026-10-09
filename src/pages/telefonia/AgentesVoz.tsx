@@ -217,7 +217,7 @@ export default function AgentesVoz() {
                 return (
                   <div key={m.id} className="space-y-3 sm:space-y-4">
                     <h2 className="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg">
-                      <m.icone className="h-4 w-4 text-primary sm:h-5 sm:w-5" /> {m.rotulo}
+                      {m.rotulo}
                       <Badge variant="outline" className="text-xs">{doTipo.length}</Badge>
                     </h2>
                     <WorkflowCardGrid>
