@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Send } from "lucide-react";
+import { MonitorSmartphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { enviarComando, getEstabelecimentoId, getUsuarioId } from "@/services/tvSignage/tvSignageService";
 
@@ -161,31 +161,49 @@ export default function AtualizacaoChave({
 
   if (!aparelho) {
     return (
-      <p className="text-xs text-muted-foreground">
-        Nenhum aparelho usando esta chave até agora — a atualização aparece aqui depois da primeira ativação.
-      </p>
+      <div className="flex items-start gap-2 rounded-lg border border-dashed bg-muted/30 px-3 py-2">
+        <MonitorSmartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
+          Nenhum aparelho usando esta chave até agora — a atualização aparece aqui depois da primeira ativação.
+        </p>
+      </div>
     );
   }
 
   const atrasado = menorQue(aparelho.versao, disponivel);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2.5 py-2">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-medium">{aparelho.nome}</p>
-        <p className="text-xs text-muted-foreground">
-          Instalada: {aparelho.versao || "desconhecida"} · Disponível: {disponivel || "—"}
-        </p>
+    <div className="rounded-lg border bg-background p-3">
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <MonitorSmartphone className="h-3.5 w-3.5" /> Aparelho desta chave
       </div>
-      <Badge variant={atrasado ? "destructive" : "secondary"}>
-        {atrasado ? "Desatualizado" : "Atualizado"}
-      </Badge>
-      {aparelho.statusComando && aparelho.statusComando !== "concluido" && (
-        <Badge variant="outline">{aparelho.statusComando}</Badge>
-      )}
-      <Button size="sm" variant="outline" onClick={atualizar} disabled={enviando || !atrasado}>
-        <Send className="mr-1.5 h-3.5 w-3.5" /> {enviando ? "Enviando…" : "Atualizar"}
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{aparelho.nome}</p>
+          <p className="text-xs text-muted-foreground">
+            Instalada <span className="font-mono">{aparelho.versao || "desconhecida"}</span> · Disponível{" "}
+            <span className="font-mono">{disponivel || "—"}</span>
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge
+            variant="outline"
+            className={
+              atrasado
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            }
+          >
+            {atrasado ? "Desatualizado" : "Atualizado"}
+          </Badge>
+          {aparelho.statusComando && aparelho.statusComando !== "concluido" && (
+            <Badge variant="outline">{aparelho.statusComando}</Badge>
+          )}
+          <Button size="sm" variant={atrasado ? "default" : "outline"} onClick={atualizar} disabled={enviando || !atrasado}>
+            <Send className="mr-1.5 h-3.5 w-3.5" /> {enviando ? "Enviando…" : "Atualizar"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

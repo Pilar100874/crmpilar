@@ -165,41 +165,69 @@ export default function AutomacaoChavesApp({ apps, appSlug }: { apps?: string[];
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {chaves.filter((c) => filtro === "todos" || (c.app ?? "automacao") === filtro).map((c) => (
-            <Card key={c.id} className="transition-shadow hover:shadow-md">
+            <Card
+              key={c.id}
+              className="relative overflow-hidden border-border/80 transition-all duration-200 hover:border-primary/40 hover:shadow-md"
+            >
+              <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-primary/25 to-transparent" />
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{c.nome}</p>
-                    <p className="font-mono text-lg tracking-widest">{c.chave}</p>
+                  <div className="flex min-w-0 items-start gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <KeyRound className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium leading-tight">{c.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.ultima_comunicacao
+                          ? `Último uso: ${new Date(c.ultima_comunicacao).toLocaleString("pt-BR")}`
+                          : "Ainda não usada"}
+                      </p>
+                    </div>
                   </div>
-                  <Badge variant={c.bloqueado ? "destructive" : "secondary"}>
+                  <Badge variant={c.bloqueado ? "destructive" : "secondary"} className="shrink-0 gap-1">
+                    {c.bloqueado && <Lock className="h-3 w-3" />}
                     {c.bloqueado ? "Bloqueada" : "Ativa"}
                   </Badge>
                 </div>
-                <Badge variant="outline" className="text-[11px]">{rotuloApp(c.app ?? "automacao")}</Badge>
-                <p className="text-xs text-muted-foreground">
-                  {c.ultima_comunicacao
-                    ? `Último uso: ${new Date(c.ultima_comunicacao).toLocaleString("pt-BR")}`
-                    : "Ainda não usada"}
-                </p>
-                {appSlug && <AtualizacaoChave appSlug={appSlug} chave={c.chave} dispositivoId={c.dispositivo_id} />}
-                <div className="flex flex-wrap gap-2">
+
+                <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2">
+                  <p className="select-all font-mono text-base font-semibold tracking-[0.18em] text-foreground">
+                    {c.chave}
+                  </p>
                   <Button
-                    size="sm"
-                    variant="outline"
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 shrink-0"
+                    aria-label="Copiar chave"
                     onClick={() => {
                       navigator.clipboard.writeText(c.chave);
                       toast.success("Chave copiada");
                     }}
                   >
-                    <Copy className="mr-1 h-4 w-4" /> Copiar
+                    <Copy className="h-3.5 w-3.5" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => alternarBloqueio(c)}>
+                </div>
+
+                <Badge variant="outline" className="text-[11px] font-normal text-muted-foreground">
+                  {rotuloApp(c.app ?? "automacao")}
+                </Badge>
+
+                {appSlug && <AtualizacaoChave appSlug={appSlug} chave={c.chave} dispositivoId={c.dispositivo_id} />}
+
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => alternarBloqueio(c)}>
                     {c.bloqueado ? <Unlock className="mr-1 h-4 w-4" /> : <Lock className="mr-1 h-4 w-4" />}
                     {c.bloqueado ? "Liberar" : "Bloquear"}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setExcluir(c)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Excluir chave"
+                    onClick={() => setExcluir(c)}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
