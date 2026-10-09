@@ -77,6 +77,7 @@ import ChatWebhook from './ChatWebhook';
 // Import Bot components
 import BotCreate from './BotCreate';
 import BotTest from './BotTest';
+import AgentesVoz from './telefonia/AgentesVoz';
 
 // Import Telefonia components
 import BotResponseMonitor from './BotResponseMonitor';
@@ -93,6 +94,7 @@ interface TabItem {
 const todosTabItems: TabItem[] = [
   { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
   { id: 'agentes-chat', label: 'Agentes de Chat', icon: Bot },
+  { id: 'agentes-voz', label: 'Agentes de Voz', icon: Bot },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
   { id: 'anexos-rapidos', label: 'Anexos Rápidos', icon: Paperclip },
   { id: 'skills', label: 'Skills de Atendimento', icon: Award },
@@ -746,6 +748,16 @@ export default function AtendimentoConfig() {
 
             <TabsContent value="teste-webhooks" className="mt-0 h-full overflow-hidden flex flex-col">
               <ChatWebhook embedded />
+            </TabsContent>
+
+            <TabsContent value="agentes-voz" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Bot className="h-4 w-4 sm:h-5 sm:w-5" />Agentes de Voz</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">IA que atende, liga e ajuda nas ligações da central telefônica</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6"><AgentesVoz embedded /></CardContent>
+              </Card>
             </TabsContent>
           </div>
         </Tabs>
