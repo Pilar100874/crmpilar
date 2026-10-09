@@ -90,7 +90,7 @@ export default function AgentesVoz() {
     const ramalUsuario = await meuRamal();
     if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
-    const corpo = { ...dados, ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
+    const corpo = { ...dados, modos: [dados.modos[0] ?? "receber"], ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
     const r = id ? await db.from("voz_agentes").update(corpo).eq("id", id).select().single()
       : await db.from("voz_agentes").insert(corpo).select().single();
     if (r.error) return toast.error(r.error.message);
