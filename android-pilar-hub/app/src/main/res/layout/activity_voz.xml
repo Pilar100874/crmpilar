@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_activation_page" android:fillViewport="true" android:fitsSystemWindows="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+
+        <ImageView android:layout_width="132dp" android:layout_height="48dp" android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp" android:contentDescription="Pilar" android:scaleType="centerInside" android:src="@drawable/logo_pilar" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+            android:gravity="center" android:text="Pilar Voz – Agente de IA" android:textColor="@color/activation_text"
+            android:textSize="18sp" android:textStyle="bold" />
+
+        <LinearLayout android:id="@+id/bloco_ativacao" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:background="@drawable/activation_card" android:orientation="vertical" android:padding="24dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+                android:text="Informe a chave da empresa criada em Chaves dos aplicativos (tipo Pilar Voz)."
+                android:textColor="@color/activation_muted" android:textSize="13sp" />
+            <EditText android:id="@+id/campo_chave" android:layout_width="match_parent" android:layout_height="52dp"
+                android:layout_marginTop="16dp" android:background="@drawable/activation_input" android:gravity="center"
+                android:hint="XXXX-XXXX" android:inputType="textCapCharacters" android:maxLines="1" android:padding="14dp"
+                android:textColor="@color/activation_text" android:textColorHint="@color/activation_muted" android:textSize="19sp" />
+            <Button android:id="@+id/btn_ativar" android:layout_width="match_parent" android:layout_height="52dp"
+                android:layout_marginTop="16dp" android:background="@drawable/activation_button" android:text="Ativar aparelho"
+                android:textAllCaps="false" android:textColor="@color/white" android:textStyle="bold" />
+            <TextView android:id="@+id/txt_status" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:gravity="center" android:textColor="@color/activation_muted" />
+        </LinearLayout>
+
+
+        <LinearLayout android:id="@+id/bloco_monitor" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:background="@drawable/activation_card" android:orientation="vertical"
+            android:padding="16dp" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Monitoramento"
+                android:textColor="@color/activation_text" android:textStyle="bold" android:textSize="16sp" />
+            <TextView android:id="@+id/mon_servico" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:textColor="@color/activation_text" android:textSize="14sp" />
+            <TextView android:id="@+id/mon_central" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:textColor="@color/activation_muted" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_ligacao" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:textColor="@color/brand_accent" android:textStyle="bold" android:textSize="14sp" />
+            <TextView android:id="@+id/mon_cliente" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:textColor="@color/activation_text" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_ia" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:textColor="@color/activation_text" android:textSize="13sp" />
+            <TextView android:id="@+id/mon_contadores" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:textColor="@color/activation_muted" android:textSize="12sp" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/bloco_config" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:background="@drawable/activation_card" android:orientation="vertical"
+            android:padding="20dp" android:visibility="gone">
+            <TextView android:id="@+id/txt_empresa" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center" android:textColor="@color/brand_accent" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+                android:text="Endereço da central (IP)" android:textColor="@color/activation_text" />
+            <EditText android:id="@+id/campo_host" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/activation_input" android:hint="192.168.0.10" android:inputType="text"
+                android:padding="12dp" android:textColor="@color/activation_text" android:textColorHint="@color/activation_muted" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                android:text="Porta SIP" android:textColor="@color/activation_text" />
+            <EditText android:id="@+id/campo_porta" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/activation_input" android:inputType="number" android:padding="12dp"
+                android:textColor="@color/activation_text" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                android:text="Ramal da IA (vazio = o do agente no CRM)" android:textColor="@color/activation_text" />
+            <EditText android:id="@+id/campo_ramal" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/activation_input" android:inputType="number" android:padding="12dp"
+                android:textColor="@color/activation_text" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                android:text="Senha do ramal" android:textColor="@color/activation_text" />
+            <EditText android:id="@+id/campo_senha" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/activation_input" android:inputType="textPassword" android:padding="12dp"
+                android:textColor="@color/activation_text" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                android:text="Código de escuta da central" android:textColor="@color/activation_text" />
+            <EditText android:id="@+id/campo_escuta" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/activation_input" android:inputType="text" android:padding="12dp"
+                android:textColor="@color/activation_text" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp">
+                <Button android:id="@+id/btn_iniciar" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                    android:background="@drawable/activation_button" android:text="Iniciar" android:textAllCaps="false" android:textColor="@color/white" />
+                <Button android:id="@+id/btn_parar" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                    android:layout_marginStart="8dp" android:text="Parar" android:textAllCaps="false" />
+            </LinearLayout>
+            <Button android:id="@+id/btn_sair" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp"
+                android:background="@android:color/transparent" android:text="Trocar chave" android:textAllCaps="false"
+                android:textColor="@color/activation_muted" />
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            android:text="Eventos" android:textColor="@color/activation_text" android:textStyle="bold" />
+        <TextView android:id="@+id/txt_eventos" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:background="@drawable/activation_card" android:fontFamily="monospace"
+            android:padding="12dp" android:textColor="@color/activation_muted" android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>
