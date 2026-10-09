@@ -66,6 +66,8 @@ type AppRow = {
   arquivo: string;
   url: string;
   versao?: string;
+  /** Identificador usado na central de atualizações (equipamentos instalados). */
+  appSlug?: string;
   ajuda: Ajuda;
 };
 
@@ -140,6 +142,7 @@ export default function AdminApps() {
       arquivo: "pilar-automacao.apk",
       url: automacaoInfo?.url || AUTOMACAO_URL,
       versao: automacaoInfo?.versionName ? `v${automacaoInfo.versionName}` : undefined,
+      appSlug: "automacao",
       ajuda: {
         titulo: "Pilar Automação — como instalar",
         passos: [
@@ -158,6 +161,7 @@ export default function AdminApps() {
       arquivo: "pilar-sms-v1.11.0.apk",
       url: SMS_URL,
       versao: "v1.11.0",
+      appSlug: "sms",
       ajuda: {
         titulo: "Pilar SMS — como instalar",
         passos: [
@@ -176,6 +180,7 @@ export default function AdminApps() {
       arquivo: "pilar-coletor-v3.3.0.apk",
       url: HUB_URL,
       versao: "v3.3.0",
+      appSlug: "hub",
       ajuda: {
         titulo: "Coletor — como instalar",
         passos: [
@@ -213,6 +218,7 @@ export default function AdminApps() {
       arquivo: "app-release.apk",
       url: tvInfo?.url || TV_URL,
       versao: tvInfo?.versionName ? `v${tvInfo.versionName}` : undefined,
+      appSlug: "remotas",
       ajuda: {
         titulo: "TV Remotas — como instalar",
         passos: [
@@ -231,6 +237,7 @@ export default function AdminApps() {
       arquivo: coletorFileName,
       url: coletorUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Windows) — como instalar",
         passos: [
