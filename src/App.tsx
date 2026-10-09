@@ -122,7 +122,6 @@ const PontoAlertas = React.lazy(() => import("./pages/ponto/PontoAlertas"));
 const PontoAuditoria = React.lazy(() => import("./pages/ponto/PontoAuditoria"));
 const PontoColetorDownload = React.lazy(() => import("./pages/ponto/PontoColetorDownload"));
 const AdminApps = React.lazy(() => import("./pages/AdminApps"));
-const CentralAtualizacoesApps = React.lazy(() => import("./pages/admin/GestaoVersoesApps"));
 const AppsLayout = React.lazy(() => import("./pages/admin/AppsLayout"));
 const PoliticasInternas = React.lazy(() => import("./pages/PoliticasInternas"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
