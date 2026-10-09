@@ -363,9 +363,26 @@ export default function GestaoVersoesApps() {
                       {statusComando && <Badge variant="outline" className="xl:mt-1">{statusComando}</Badge>}
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" className="w-full xl:w-auto" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
-                    <Send className="mr-2 h-4 w-4" /> Enviar
-                  </Button>
+                  <div className="flex flex-wrap gap-2 xl:justify-end">
+                    <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
+                      <Send className="mr-2 h-4 w-4" /> Enviar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={chavesAbertasNeste ? "secondary" : "outline"}
+                      className="w-full sm:w-auto"
+                      aria-expanded={chavesAbertasNeste}
+                      onClick={() => setChavesAberta(chavesAbertasNeste ? null : e.id)}
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" /> Chaves
+                      <ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${chavesAbertasNeste ? "rotate-180" : ""}`} />
+                    </Button>
+                  </div>
+                  {chavesAbertasNeste && (
+                    <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 md:col-span-2 xl:col-span-full">
+                      <ChavesPainel apps={chavesDoApp(e.app)} />
+                    </div>
+                  )}
                   {mensagemComando && <p className="text-xs text-muted-foreground md:col-span-2 xl:col-span-full xl:ml-10">{mensagemComando}</p>}
                 </article>
               );
