@@ -274,7 +274,6 @@ const AutomacaoEstado = React.lazy(() => import("./pages/automacao/AutomacaoEsta
 const AutomacaoRegras = React.lazy(() => import("./pages/automacao/AutomacaoRegras"));
 const AutomacaoTela = React.lazy(() => import("./pages/automacao/AutomacaoTela"));
 const AutomacaoMeuPainel = React.lazy(() => import("./pages/automacao/AutomacaoMeuPainel"));
-const AutomacaoChavesApp = React.lazy(() => import("./pages/automacao/AutomacaoChavesApp"));
 
 const PortariaDashboard = React.lazy(() => import("./pages/portaria/PortariaDashboard"));
 const PortariaAcessos = React.lazy(() => import("./pages/portaria/PortariaAcessos"));
@@ -710,7 +709,7 @@ const App = () => (
               <Route path="/admin/apps" element={<AppsLayout />}>
                 <Route index element={<AdminApps />} />
                 <Route path="atualizacoes" element={<CentralAtualizacoesApps />} />
-                <Route path="chaves" element={<AutomacaoChavesApp />} />
+                <Route path="chaves" element={<Navigate to="/admin/apps" replace />} />
                 <Route path="versoes" element={<Navigate to="/admin/apps/atualizacoes" replace />} />
               </Route>
               <Route path="/admin/versoes-apps" element={<Navigate to="/admin/apps/atualizacoes" replace />} />
@@ -900,7 +899,7 @@ const App = () => (
                 <Route path="painel/:id" element={<AutomacaoPainel />} />
                 <Route path="regras" element={<AutomacaoRegras />} />
                 <Route path="estado" element={<AutomacaoEstado />} />
-                <Route path="chaves-app" element={<Navigate to="/admin/apps/chaves" replace />} />
+                <Route path="chaves-app" element={<Navigate to="/admin/apps" replace />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />
               </Route>
 

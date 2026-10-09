@@ -17,8 +17,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
+import { Check, ChevronDown, KeyRound, Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
 import { baixarArquivo } from "@/lib/baixarArquivo";
+import { Fragment } from "react";
+import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
+
+/** Tipos de chave que cada aplicativo aceita, na ordem de preferência. */
+const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
+  if (app.nome === "Pilar Automação") return ["automacao"];
+  if (app.nome === "Pilar SMS") return ["sms"];
+  if (app.nome === "Pilar Fone") return ["pilar-fone"];
+  if (app.nome === "TV Remotas") return ["coletor-tv"];
+  if (app.nome === "Coletor" && app.icone === "android") return ["controle", "voz"];
+  return ["coletor", "controle"];
+};
 
 // Fallbacks fixos caso os manifestos estejam indisponíveis.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
@@ -92,6 +104,7 @@ export default function AdminApps() {
   const [automacaoInfo, setAutomacaoInfo] = useState<{ url?: string; versionName?: string } | null>(null);
   const [tvInfo, setTvInfo] = useState<{ url?: string; versionName?: string } | null>(null);
   const [ajudaAberta, setAjudaAberta] = useState<Ajuda | null>(null);
+  const [chavesAberta, setChavesAberta] = useState<string | null>(null);
   const [datasDownloads, setDatasDownloads] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -370,8 +383,12 @@ export default function AdminApps() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apps.map((app) => (
-                  <TableRow key={`${app.nome}-${app.sistemas.join("-")}`}>
+                {apps.map((app) => {
+                  const id = `${app.nome}-${app.sistemas.join("-")}`;
+                  const aberta = chavesAberta === id;
+                  return (
+                  <Fragment key={id}>
+                  <TableRow>
                     <TableCell>
                       <div className="flex items-center gap-2 sm:gap-3">
                         <div className={`hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl sm:flex ${corIcone[app.icone]}`}>
@@ -447,10 +464,30 @@ export default function AdminApps() {
                           <HelpCircle className="h-4 w-4" />
                           <span className="hidden sm:inline">Ajuda</span>
                         </Button>
+                        <Button
+                          size="sm"
+                          variant={aberta ? "secondary" : "outline"}
+                          className="gap-1.5"
+                          aria-expanded={aberta}
+                          onClick={() => setChavesAberta(aberta ? null : id)}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          <span className="hidden sm:inline">Chaves</span>
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${aberta ? "rotate-180" : ""}`} />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  {aberta && (
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={RECURSOS.length + 5} className="p-3 sm:p-4">
+                        <ChavesPainel apps={chavesDoApp(app)} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
