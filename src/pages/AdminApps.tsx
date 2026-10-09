@@ -153,7 +153,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Android (Pilar Hub)",
+      nome: "Coletor",
       descricao: "Coletor Android: ponto, câmeras, automação e Pilar Voz na rede local.",
       icone: "android",
       sistemas: ["Android"],
@@ -162,7 +162,7 @@ export default function AdminApps() {
       url: HUB_URL,
       versao: "v3.2.2",
       ajuda: {
-        titulo: "Coletor Android (Pilar Hub) — como instalar",
+        titulo: "Coletor — como instalar",
         passos: [
           "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
           "Faça login com sua conta do CRM Pilar.",
@@ -208,7 +208,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Desktop",
+      nome: "Coletor",
       descricao: "Ponto, câmeras, automação e Pilar Voz num PC Windows ligado 24/7.",
       icone: "windows",
       sistemas: ["Windows"],
@@ -217,7 +217,7 @@ export default function AdminApps() {
       url: coletorUrl,
       versao: coletorVersao,
       ajuda: {
-        titulo: "Coletor Desktop (Windows) — como instalar",
+        titulo: "Coletor (Windows) — como instalar",
         passos: [
           `Baixe e execute o ${coletorFileName} em um PC Windows que fique ligado 24/7 na mesma rede das câmeras e relógios de ponto.`,
           "Faça login com sua conta do CRM Pilar. O Coletor vincula ao seu tenant automaticamente.",
@@ -227,7 +227,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Desktop (Apple Silicon)",
+      nome: "Coletor (Apple Silicon)",
       descricao: "Mesmo Coletor para Macs com chip M1, M2, M3 ou M4.",
       icone: "mac",
       sistemas: ["macOS"],
@@ -246,7 +246,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Desktop (Mac Intel)",
+      nome: "Coletor (Mac Intel)",
       descricao: "Mesmo Coletor para Macs com processador Intel.",
       icone: "mac",
       sistemas: ["macOS"],
@@ -265,7 +265,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Desktop (Linux)",
+      nome: "Coletor (Linux)",
       descricao: "AppImage x64 para Debian, Ubuntu, Mint etc.",
       icone: "linux",
       sistemas: ["Linux"],
@@ -283,7 +283,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Coletor Desktop (Appliance ISO)",
+      nome: "Coletor (Appliance ISO)",
       descricao: "Instala Linux + Coletor em modo kiosk num mini-PC, com SSH e Cockpit.",
       icone: "linux",
       sistemas: ["Linux"],
@@ -291,7 +291,7 @@ export default function AdminApps() {
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
       ajuda: {
-        titulo: "Coletor Desktop (Appliance ISO) — como instalar",
+        titulo: "Coletor (Appliance ISO) — como instalar",
         passos: [
           "Grave a ISO num pendrive (Rufus, Balena Etcher) e dê boot pelo mini-PC.",
           "A instalação é automática: Linux + Coletor em modo kiosk.",
