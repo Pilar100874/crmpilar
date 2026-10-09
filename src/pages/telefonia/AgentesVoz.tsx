@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const db = supabase as any;
 
@@ -34,9 +35,9 @@ const NOVO: Agente = {
 };
 
 const MODOS = [
-  { id: "receber", rotulo: "Atender recebidas", icone: PhoneIncoming },
-  { id: "ligar", rotulo: "Fazer ligações", icone: PhoneCall },
-  { id: "assistir", rotulo: "Ajudar o atendente", icone: Headset },
+  { id: "receber", rotulo: "Atender recebidas", icone: PhoneIncoming, desc: "Atende quem liga para a empresa e transfere quando preciso." },
+  { id: "ligar", rotulo: "Fazer ligações", icone: PhoneCall, desc: "Liga para contatos (Disparo em massa) e transfere ao atendente." },
+  { id: "assistir", rotulo: "Ajudar o atendente", icone: Headset, desc: "Escuta a ligação e sugere respostas ao atendente." },
 ];
 
 const CHAVES = [
@@ -57,6 +58,7 @@ export default function AgentesVoz() {
   const [chavesSalvas, setChavesSalvas] = useState<Record<string, string>>({});
   const [valoresChave, setValoresChave] = useState<Record<string, string>>({});
   const [excluir, setExcluir] = useState(false);
+  const [escolherTipo, setEscolherTipo] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!empresa) return;
@@ -88,7 +90,7 @@ export default function AgentesVoz() {
     const ramalUsuario = await meuRamal();
     if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
-    const corpo = { ...dados, ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
+    const corpo = { ...dados, modos: [dados.modos[0] ?? "receber"], ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
     const r = id ? await db.from("voz_agentes").update(corpo).eq("id", id).select().single()
       : await db.from("voz_agentes").insert(corpo).select().single();
     if (r.error) return toast.error(r.error.message);
@@ -117,8 +119,11 @@ export default function AgentesVoz() {
     void carregar();
   };
 
-  const alternarModo = (m: string) =>
-    setAtual((a) => ({ ...a, modos: a.modos.includes(m) ? a.modos.filter((x) => x !== m) : [...a.modos, m] }));
+  const novoDoTipo = (m: string) => {
+    const t = MODOS.find((x) => x.id === m);
+    setAtual({ ...NOVO, modos: [m], nome: t?.rotulo ?? NOVO.nome });
+    setEscolherTipo(false);
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4 p-4">
@@ -139,30 +144,61 @@ export default function AgentesVoz() {
         </TabsList>
 
         <TabsContent value="agente" className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {agentes.map((a) => (
-              <Button key={a.id} size="sm" variant={a.id === atual.id ? "default" : "outline"} onClick={() => setAtual(a)}>{a.nome}</Button>
-            ))}
-            <Button size="sm" variant="ghost" onClick={() => setAtual(NOVO)}><Plus className="mr-1 h-4 w-4" /> Novo agente</Button>
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setEscolherTipo(true)}><Plus className="mr-1 h-4 w-4" /> Novo agente</Button>
           </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {MODOS.map((m) => {
+              const doTipo = agentes.filter((a) => (a.modos[0] ?? "receber") === m.id);
+              return (
+                <Card key={m.id} className="flex flex-col">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base"><m.icone className="h-5 w-5 text-primary" /> {m.rotulo}</CardTitle>
+                    <CardDescription>{m.desc}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-2">
+                    {doTipo.length === 0 && <p className="text-xs text-muted-foreground">Nenhum agente deste tipo.</p>}
+                    {doTipo.map((a) => (
+                      <button key={a.id} type="button" onClick={() => setAtual(a)}
+                        className={`flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${a.id === atual.id ? "border-primary bg-primary/5" : ""}`}>
+                        <span className="min-w-0 break-words font-medium">{a.nome}</span>
+                        <Badge variant={a.ativo ? "default" : "secondary"}>{a.ativo ? "Ativo" : "Inativo"}</Badge>
+                      </button>
+                    ))}
+                    <Button size="sm" variant="ghost" className="mt-auto" onClick={() => novoDoTipo(m.id)}><Plus className="mr-1 h-4 w-4" /> Criar</Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <Dialog open={escolherTipo} onOpenChange={setEscolherTipo}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader><DialogTitle>O que este agente vai fazer?</DialogTitle></DialogHeader>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {MODOS.map((m) => (
+                  <button key={m.id} type="button" onClick={() => novoDoTipo(m.id)}
+                    className="flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-colors hover:border-primary hover:bg-accent">
+                    <m.icone className="h-6 w-6 text-primary" />
+                    <span className="font-semibold">{m.rotulo}</span>
+                    <span className="text-xs text-muted-foreground">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
           <Card>
             <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
+              <div className="flex items-center gap-2 md:col-span-2">
+                {(() => { const m = MODOS.find((x) => x.id === (atual.modos[0] ?? "receber")) ?? MODOS[0]; return (
+                  <Badge variant="outline" className="gap-1"><m.icone className="h-3 w-3" /> {m.rotulo}</Badge>); })()}
+                <span className="text-sm text-muted-foreground">{atual.id ? "Editando agente" : "Novo agente"}</span>
+              </div>
               <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => setAtual({ ...atual, nome: e.target.value })} /></div>
               <div className="flex items-end gap-2"><Switch checked={atual.ativo} onCheckedChange={(v) => setAtual({ ...atual, ativo: v })} /><Label>Ativo</Label></div>
               <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
               <div className="space-y-1">
                 <Label>Transferir para o ramal</Label>
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>O que este agente faz</Label>
-                <div className="flex flex-wrap gap-2">
-                  {MODOS.map((m) => (
-                    <Button key={m.id} type="button" size="sm" variant={atual.modos.includes(m.id) ? "default" : "outline"} onClick={() => alternarModo(m.id)}>
-                      <m.icone className="mr-1 h-4 w-4" /> {m.rotulo}
-                    </Button>
-                  ))}
-                </div>
               </div>
               <div className="space-y-1 md:col-span-2"><Label>Saudação</Label><Input value={atual.saudacao} onChange={(e) => setAtual({ ...atual, saudacao: e.target.value })} /></div>
               <div className="space-y-1 md:col-span-2">
