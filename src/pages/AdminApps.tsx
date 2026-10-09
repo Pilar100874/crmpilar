@@ -153,7 +153,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Pilar Hub",
+      nome: "Coletor Android (Pilar Hub)",
       descricao: "Coletor Android: ponto, câmeras e automação na rede local.",
       icone: "android",
       sistemas: ["Android"],
@@ -162,7 +162,7 @@ export default function AdminApps() {
       url: HUB_URL,
       versao: "v3.2.2",
       ajuda: {
-        titulo: "Pilar Hub — como instalar",
+        titulo: "Coletor Android (Pilar Hub) — como instalar",
         passos: [
           "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
           "Faça login com sua conta do CRM Pilar.",
