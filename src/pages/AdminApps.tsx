@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
+import { Check, Download, Smartphone, Apple, HelpCircle, Monitor, Tv, Phone } from "lucide-react";
 import { baixarArquivo } from "@/lib/baixarArquivo";
 
 // Fallbacks fixos caso os manifestos estejam indisponíveis.
