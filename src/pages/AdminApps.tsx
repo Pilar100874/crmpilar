@@ -92,6 +92,7 @@ export default function AdminApps() {
   const [automacaoInfo, setAutomacaoInfo] = useState<{ url?: string; versionName?: string } | null>(null);
   const [tvInfo, setTvInfo] = useState<{ url?: string; versionName?: string } | null>(null);
   const [ajudaAberta, setAjudaAberta] = useState<Ajuda | null>(null);
+  const [datasDownloads, setDatasDownloads] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
@@ -301,6 +302,42 @@ export default function AdminApps() {
     },
   ];
 
+  const urlsDownloads = apps.map((app) => app.url).join("\n");
+
+  useEffect(() => {
+    let cancelado = false;
+    const grupos = new Map<string, { url: string; arquivo: string }[]>();
+    for (const url of urlsDownloads.split("\n")) {
+      const partes = url.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/(?:download\/([^/]+)|latest\/download)\/(.+)$/);
+      if (!partes) continue;
+      const endpoint = `https://api.github.com/repos/${partes[1]}/releases/${partes[2] ? `tags/${partes[2]}` : "latest"}`;
+      const itens = grupos.get(endpoint) || [];
+      itens.push({ url, arquivo: decodeURIComponent(partes[3]) });
+      grupos.set(endpoint, itens);
+    }
+    void Promise.all(Array.from(grupos, async ([endpoint, itens]) => {
+      try {
+        const resposta = await fetch(endpoint);
+        if (!resposta.ok) return;
+        const release = await resposta.json() as {
+          published_at?: string;
+          assets?: { name: string; updated_at?: string }[];
+        };
+        const datas: Record<string, string> = {};
+        for (const item of itens) {
+          const data = release.assets?.find((asset) => asset.name === item.arquivo)?.updated_at || release.published_at;
+          if (data && !Number.isNaN(Date.parse(data))) {
+            datas[item.url] = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(data));
+          }
+        }
+        if (!cancelado) setDatasDownloads((anteriores) => ({ ...anteriores, ...datas }));
+      } catch {
+        // Sem data confirmada, a tabela mantém "Não informada".
+      }
+    }));
+    return () => { cancelado = true; };
+  }, [urlsDownloads]);
+
   return (
     <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-6">
       <div>
@@ -327,17 +364,17 @@ export default function AdminApps() {
                       </span>
                     </TableHead>
                   ))}
-                  <TableHead className="hidden xl:table-cell">Versão</TableHead>
+                  <TableHead className="w-24 sm:w-28">Versão / Data</TableHead>
                   <TableHead className="hidden 2xl:table-cell">Arquivo</TableHead>
-                  <TableHead className="text-right w-24 sm:w-48">Ações</TableHead>
+                  <TableHead className="text-right w-16 sm:w-48">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {apps.map((app) => (
-                  <TableRow key={app.nome}>
+                  <TableRow key={`${app.nome}-${app.sistemas.join("-")}`}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${corIcone[app.icone]}`}>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl sm:flex ${corIcone[app.icone]}`}>
                           <IconeSistema tipo={app.icone} />
                         </div>
                         <div className="min-w-0">
@@ -382,8 +419,11 @@ export default function AdminApps() {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {app.versao || "—"}
+                    <TableCell className="text-xs sm:text-sm">
+                      <p className="font-medium break-words">{app.versao || "Não informada"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground" title="Data de atualização do arquivo de download">
+                        {datasDownloads[app.url] || "Não informada"}
+                      </p>
                     </TableCell>
                     <TableCell className="hidden 2xl:table-cell">
                       <code className="text-xs text-muted-foreground">{app.arquivo}</code>
