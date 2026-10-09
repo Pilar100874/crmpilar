@@ -420,6 +420,13 @@ export default function AdminApps() {
         </div>
       </Card>
 
+      <div className="flex items-center gap-3 pt-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-foreground">
+          <Apple className="h-5 w-5" />
+        </div>
+        <h2 className="text-lg font-bold sm:text-xl">Mac</h2>
+      </div>
+
       <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
         <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
           <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
