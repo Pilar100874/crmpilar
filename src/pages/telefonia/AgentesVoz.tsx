@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
@@ -16,13 +16,15 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const db = supabase as any;
 
 type Agente = {
   id?: string; nome: string; ativo: boolean; modos: string[]; ramal_ia: string; ramal_transferencia: string;
   saudacao: string; prompt: string; qualidade: "gratuita" | "premium"; stt_provedor: string;
-  llm_provedor: string; llm_modelo: string; tts_provedor: string; voz: string;
+  llm_provedor: string; llm_modelo: string; tts_provedor: string; voz: string; updated_at?: string;
 };
 type Chamada = {
   id: string; modo: string; numero: string | null; ramal_monitorado: string | null; status: string;
@@ -62,9 +64,10 @@ export default function AgentesVoz() {
   const [escolherTipo, setEscolherTipo] = useState(false);
   const [editando, setEditando] = useState(false);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
   const carregar = useCallback(async () => {
-    if (!empresa) return;
+    if (!empresa) { setCarregando(false); return; }
     const [a, c, k] = await Promise.all([
       db.from("voz_agentes").select("*").eq("estabelecimento_id", empresa).order("created_at"),
       db.from("voz_chamadas").select("*").eq("estabelecimento_id", empresa).order("iniciada_em", { ascending: false }).limit(30),
@@ -75,6 +78,7 @@ export default function AgentesVoz() {
     setAtual((ant) => (ant.id ? lista.find((l: Agente) => l.id === ant.id) ?? ant : lista[0] ?? NOVO));
     setChamadas(c.data ?? []);
     setChavesSalvas(Object.fromEntries((k.data ?? []).map((x: any) => [x.provedor, x.id])));
+    setCarregando(false);
   }, [empresa]);
 
   useEffect(() => { void carregar(); }, [carregar]);
