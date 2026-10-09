@@ -139,6 +139,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update public/coletor/version.json
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $version = "${{ steps.pkg.outputs.version }}"
+          $repo = "${{ github.repository }}"
+          $base = "https://github.com/$repo/releases/download/coletor-v$version"
+          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
+          $json | Add-Member -NotePropertyName downloadUrlLinux -NotePropertyValue "$base/ColetorPilar-Linux.AppImage" -Force
+          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
+
+      - name: Commit version.json bump
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/version.json; then
+            echo "version.json unchanged"
+          else
+            git add public/coletor/version.json
+            git commit -m "chore(coletor): publish linux installer v${{ steps.pkg.outputs.version }} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push origin HEAD:main && break
+              echo "push retry $i..."
+              sleep 3
+            done
+          fi
+
   build-mac:
     runs-on: macos-latest
     defaults:
@@ -183,3 +211,32 @@ jobs:
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update public/coletor/version.json
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $version = "${{ steps.pkg.outputs.version }}"
+          $repo = "${{ github.repository }}"
+          $base = "https://github.com/$repo/releases/download/coletor-v$version"
+          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
+          $json | Add-Member -NotePropertyName downloadUrlMacAppleSilicon -NotePropertyValue "$base/ColetorPilar-Mac-AppleSilicon.zip" -Force
+          $json | Add-Member -NotePropertyName downloadUrlMacIntel -NotePropertyValue "$base/ColetorPilar-Mac-Intel.zip" -Force
+          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
+
+      - name: Commit version.json bump
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/version.json; then
+            echo "version.json unchanged"
+          else
+            git add public/coletor/version.json
+            git commit -m "chore(coletor): publish mac installers v${{ steps.pkg.outputs.version }} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push origin HEAD:main && break
+              echo "push retry $i..."
+              sleep 3
+            done
+          fi

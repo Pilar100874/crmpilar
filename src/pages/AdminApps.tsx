@@ -16,7 +16,11 @@ import { baixarArquivo } from "@/lib/baixarArquivo";
 
 // Alternativas da mesma versão publicada no manifesto do Coletor.
 const COLETOR_LINUX_FALLBACK_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Linux.AppImage";
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Linux.AppImage";
+const COLETOR_MAC_APPLE_SILICON_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-AppleSilicon.zip";
+const COLETOR_MAC_INTEL_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.0/ColetorPilar-Mac-Intel.zip";
 const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 
@@ -157,6 +161,8 @@ export default function AdminApps() {
     version: string;
     downloadUrl: string;
     downloadUrlLinux?: string;
+    downloadUrlMacAppleSilicon?: string;
+    downloadUrlMacIntel?: string;
     notas?: string;
   } | null>(null);
 
@@ -170,6 +176,8 @@ export default function AdminApps() {
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
   const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
+  const coletorMacAsUrl = coletorInfo?.downloadUrlMacAppleSilicon || COLETOR_MAC_APPLE_SILICON_FALLBACK_URL;
+  const coletorMacIntelUrl = coletorInfo?.downloadUrlMacIntel || COLETOR_MAC_INTEL_FALLBACK_URL;
 
   return (
     <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-6">
