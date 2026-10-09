@@ -74,7 +74,8 @@ async function api(acao, extra = {}) {
     const resp = await fetch(`${cfg.url}/functions/v1/voz-dispositivo`, {
       method: 'POST', signal: ctl.signal,
       headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` },
-      body: JSON.stringify({ ...extra, chave: String(v.chave || '').trim().toUpperCase(), acao }),
+      // Sem chave específica da voz, usa a chave de instalação do Coletor.
+      body: JSON.stringify({ ...extra, chave: String(v.chave || cfg.chaveEmpresa || '').trim().toUpperCase(), acao }),
     });
     const json = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(json.error || `Erro ${resp.status}`);
