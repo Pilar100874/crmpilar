@@ -66,6 +66,8 @@ type AppRow = {
   arquivo: string;
   url: string;
   versao?: string;
+  /** Identificador usado na central de atualizações (equipamentos instalados). */
+  appSlug?: string;
   ajuda: Ajuda;
 };
 
@@ -140,6 +142,7 @@ export default function AdminApps() {
       arquivo: "pilar-automacao.apk",
       url: automacaoInfo?.url || AUTOMACAO_URL,
       versao: automacaoInfo?.versionName ? `v${automacaoInfo.versionName}` : undefined,
+      appSlug: "automacao",
       ajuda: {
         titulo: "Pilar Automação — como instalar",
         passos: [
@@ -158,6 +161,7 @@ export default function AdminApps() {
       arquivo: "pilar-sms-v1.11.0.apk",
       url: SMS_URL,
       versao: "v1.11.0",
+      appSlug: "sms",
       ajuda: {
         titulo: "Pilar SMS — como instalar",
         passos: [
@@ -176,6 +180,7 @@ export default function AdminApps() {
       arquivo: "pilar-coletor-v3.3.0.apk",
       url: HUB_URL,
       versao: "v3.3.0",
+      appSlug: "hub",
       ajuda: {
         titulo: "Coletor — como instalar",
         passos: [
@@ -213,6 +218,7 @@ export default function AdminApps() {
       arquivo: "app-release.apk",
       url: tvInfo?.url || TV_URL,
       versao: tvInfo?.versionName ? `v${tvInfo.versionName}` : undefined,
+      appSlug: "remotas",
       ajuda: {
         titulo: "TV Remotas — como instalar",
         passos: [
@@ -231,6 +237,7 @@ export default function AdminApps() {
       arquivo: coletorFileName,
       url: coletorUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Windows) — como instalar",
         passos: [
@@ -250,6 +257,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Mac-AppleSilicon.zip",
       url: coletorMacAsUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
         passos: [
@@ -269,6 +277,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Mac-Intel.zip",
       url: coletorMacIntelUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
         passos: [
@@ -288,6 +297,7 @@ export default function AdminApps() {
       arquivo: "ColetorPilar-Linux.AppImage",
       url: coletorLinuxUrl,
       versao: coletorVersao,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Linux — como instalar",
         passos: [
@@ -305,6 +315,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
+      appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Appliance ISO) — como instalar",
         passos: [
@@ -482,7 +493,19 @@ export default function AdminApps() {
                   {aberta && (
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableCell colSpan={RECURSOS.length + 5} className="p-3 sm:p-4">
-                        <ChavesPainel apps={chavesDoApp(app)} />
+                        <div className="grid gap-4 lg:grid-cols-2">
+                          <ChavesPainel apps={chavesDoApp(app)} />
+                          {app.appSlug ? (
+                            <GestaoVersoesApps app={app.appSlug} />
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-sm font-semibold">Atualização</p>
+                              <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                                Este aplicativo se atualiza manualmente: baixe a versão nova acima e instale no aparelho.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}
@@ -503,8 +526,6 @@ export default function AdminApps() {
           "Adicionar à Tela de Início" (iPhone). Ele atualiza sozinho a cada abertura.
         </p>
       </div>
-
-      <GestaoVersoesApps />
 
       <Dialog open={!!ajudaAberta} onOpenChange={(aberto) => !aberto && setAjudaAberta(null)}>
         <DialogContent className="max-w-md">
