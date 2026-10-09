@@ -59,7 +59,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Telefonista ============
   { path: "/telefonista", titulo: "Telefonista", aliases: ["telefonista", "mesa de telefonista", "mesa operadora", "console da telefonista", "posicao da telefonista"] },
-  { path: "/agentes-voz", titulo: "Agentes de Voz", aliases: ["agentes de voz", "ia no telefone", "robo de ligacao", "atendente virtual", "pipecat"] },
+  { path: "/atendimento-config?tab=agentes-voz", titulo: "Agentes de Voz", aliases: ["agentes de voz", "ia no telefone", "robo de ligacao", "atendente virtual", "pipecat"] },
 
   // ============ Menu Principal - Chats ============
   { path: "/atendimento", titulo: "Painel de Chats", aliases: ["chats", "atendimento", "painel de atendimento", "painel dos chats"] },

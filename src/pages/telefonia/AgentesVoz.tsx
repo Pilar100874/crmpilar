@@ -53,7 +53,7 @@ const CHAVES = [
 
 const ROTULO_STATUS: Record<string, string> = { em_andamento: "Em andamento", finalizada: "Finalizada", erro: "Erro" };
 
-export default function AgentesVoz() {
+export default function AgentesVoz({ embedded = false }: { embedded?: boolean }) {
   const empresa = useEstabelecimento();
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [atual, setAtual] = useState<Agente>(NOVO);
@@ -149,14 +149,14 @@ export default function AgentesVoz() {
   };
 
   return (
-    <div className="min-h-full animate-fade-in bg-background p-4 sm:p-6 md:p-8">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-base font-bold text-foreground sm:text-lg">Agentes de Voz</h1>
+    <div className={embedded ? "w-full" : "min-h-full animate-fade-in bg-background p-4 sm:p-6 md:p-8"}>
+      <div className={`mb-1 flex flex-wrap items-center justify-between gap-2 ${embedded ? "justify-end" : ""}`}>
+        {!embedded && <h1 className="text-base font-bold text-foreground sm:text-lg">Agentes de Voz</h1>}
         <Button variant="outline" size="sm" onClick={() => void carregar()}><RefreshCw className="mr-1 h-4 w-4" /> Atualizar</Button>
       </div>
-      <p className="text-sm text-muted-foreground sm:text-base">IA que atende, liga e ajuda nas ligações da central telefônica.</p>
+      {!embedded && <p className="text-sm text-muted-foreground sm:text-base">IA que atende, liga e ajuda nas ligações da central telefônica.</p>}
 
-      <Tabs defaultValue="agente" className="mt-4 sm:mt-6">
+      <Tabs defaultValue="agente" className={embedded ? "" : "mt-4 sm:mt-6"}>
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="agente">Agente</TabsTrigger>
           <TabsTrigger value="chaves">Chaves</TabsTrigger>

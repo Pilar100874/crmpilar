@@ -3,4 +3,8 @@
 
 import type { ModuloInternoGerado } from "./modulosInternos.gerado";
 
-export const MODULOS_INTERNOS_EXTRAS: Record<string, ModuloInternoGerado[]> = {};
+export const MODULOS_INTERNOS_EXTRAS: Record<string, ModuloInternoGerado[]> = {
+  "Config Atendimento": [
+    { id: "agentes-voz", label: "Agentes de Voz" },
+  ],
+};

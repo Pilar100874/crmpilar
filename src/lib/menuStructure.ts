@@ -47,7 +47,6 @@ export const menuStructure: MenuCategory[] = [
     ]
   },
   { id: "Telefonista", title: "Telefonista", url: "/telefonista", icon: LucideIcons.Headset },
-  { id: "AgentesVoz", title: "Agentes de Voz", url: "/agentes-voz", icon: LucideIcons.Bot },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: LucideIcons.Megaphone },
   { 
     id: "Vendas",
