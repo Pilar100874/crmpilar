@@ -90,7 +90,9 @@ Deno.serve(async (req) => {
       .select("id, estabelecimento_id, bloqueado, app").eq("chave", chave).maybeSingle();
     // Aceita chave do tipo "voz" ou a chave de instalação do Coletor ("coletor"),
     // assim o Coletor desktop usa a mesma chave da instalação, sem segunda chave.
-    if (!reg || (reg.app !== "voz" && reg.app !== "coletor")) return json({ error: "chave inválida para o Pilar Voz" }, 403);
+    // Chaves do Coletor ficam gravadas como "coletor" ou "controle" (tipo antigo).
+    const APPS_VOZ = ["voz", "coletor", "controle"];
+    if (!reg || !APPS_VOZ.includes(String(reg.app ?? ""))) return json({ error: "chave inválida para o Pilar Voz" }, 403);
     if (reg.bloqueado) return json({ error: "chave bloqueada" }, 403);
     const empresa = reg.estabelecimento_id as string;
     await sb.from("automacao_app_chaves").update({ ultima_comunicacao: new Date().toISOString() }).eq("id", reg.id);
