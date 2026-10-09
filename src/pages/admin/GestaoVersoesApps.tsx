@@ -273,44 +273,29 @@ export default function GestaoVersoesApps({ app }: { app?: string }) {
     }
   };
 
-  // Modo compacto: usado dentro do painel expansível da tela de Apps, só com os aparelhos deste aplicativo.
+  // Modo compacto: usado dentro do cartão de chaves da tela de Apps — um botão atualiza todos os aparelhos deste aplicativo.
   if (app) {
     const disponivel = ultimaVersao[app];
+    const desatualizadosDeste = atualizaveis.filter((e) => menorQue(e.versao, disponivel));
     return (
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Atualização remota</p>
           <p className="text-xs text-muted-foreground">
-            Versão disponível: <b className="text-foreground">{disponivel || "—"}</b>
+            {atualizaveis.length === 0
+              ? "Nenhum aparelho instalado até agora."
+              : `${atualizaveis.length} aparelho${atualizaveis.length === 1 ? "" : "s"} · ${desatualizadosDeste.length} desatualizado${desatualizadosDeste.length === 1 ? "" : "s"} · versão disponível: ${disponivel || "—"}`}
           </p>
         </div>
-        {atualizaveis.length === 0 && (
-          <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
-            Nenhum aparelho deste aplicativo instalado até agora.
-          </p>
-        )}
-        {atualizaveis.map((e) => {
-          const atrasado = menorQue(e.versao, disponivel);
-          const comando = ultimoComando(e.id);
-          const statusComando = comando?.status || e.statusAtualizacao;
-          const mensagemComando = comando?.mensagem || e.resultadoAtualizacao;
-          return (
-            <div key={e.id} className="flex flex-wrap items-center gap-2 rounded-md border bg-background p-2.5 sm:gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{e.nome}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Instalada: {e.versao || "desconhecida"} · Último contato: {formatarData(e.ultimoContato)}
-                </p>
-                {mensagemComando && <p className="truncate text-xs text-muted-foreground">{mensagemComando}</p>}
-              </div>
-              <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
-              {statusComando && <Badge variant="outline">{statusComando}</Badge>}
-              <Button size="sm" variant="outline" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando || !disponivel}>
-                <Send className="mr-1.5 h-3.5 w-3.5" /> Atualizar
-              </Button>
-            </div>
-          );
-        })}
+        {desatualizadosDeste.length > 0 && <Badge variant="destructive">{desatualizadosDeste.length} desatualizado{desatualizadosDeste.length === 1 ? "" : "s"}</Badge>}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => enviarAtualizacoes(atualizaveis.map((e) => e.id))}
+          disabled={disparando || !disponivel || atualizaveis.length === 0}
+        >
+          <Send className="mr-1.5 h-3.5 w-3.5" /> Atualizar aparelhos
+        </Button>
       </div>
     );
   }
