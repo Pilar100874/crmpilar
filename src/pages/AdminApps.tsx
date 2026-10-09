@@ -466,7 +466,7 @@ export default function AdminApps() {
             </li>
           </ol>
           <p className="mt-4 text-xs text-muted-foreground">
-            Não sabe o processador? Abra o menu  (Apple) → <b>Sobre Este Mac</b>: se aparecer <b>Chip: Apple M…</b>,
+            Não sabe o processador? Abra o <b>menu da maçã</b> (canto superior esquerdo) → <b>Sobre Este Mac</b>: se aparecer <b>Chip: Apple M…</b>,
             baixe o Apple Silicon; se aparecer <b>Processador: Intel</b>, baixe o Intel.
           </p>
         </div>
