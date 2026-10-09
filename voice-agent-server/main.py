@@ -40,7 +40,12 @@ def agora():
     return datetime.now(timezone.utc).isoformat()
 
 
-def carregar_agente():
+def carregar_agente(agente_id=None):
+    if agente_id:
+        r = (db.table("voz_agentes").select("*").eq("estabelecimento_id", EMPRESA)
+             .eq("id", agente_id).eq("ativo", True).limit(1).execute())
+        if r.data:
+            return r.data[0]
     r = (db.table("voz_agentes").select("*").eq("estabelecimento_id", EMPRESA)
          .eq("ativo", True).order("created_at").limit(1).execute())
     return r.data[0] if r.data else None
@@ -185,8 +190,8 @@ def sessao_premium(call, agente, reg, modo, objetivo=None, ramal=None):
     asyncio.run(rodar_pipecat(call, agente, reg, modo, objetivo, chaves, ramal))
 
 
-def conduzir(call, modo, numero=None, ramal=None, objetivo=None):
-    agente = carregar_agente()
+def conduzir(call, modo, numero=None, ramal=None, objetivo=None, agente_id=None):
+    agente = carregar_agente(agente_id)
     if not agente:
         call.hangup(); return
     reg = Registro(agente, modo, numero, ramal)
@@ -230,7 +235,7 @@ def processar_comandos(fone):
                 call = fone.call(destino)
                 if aguardar_atender(call):
                     modo = "ligar" if cmd["tipo"] == "ligar" else "assistir"
-                    threading.Thread(target=conduzir, args=(call, modo, cmd.get("numero"), cmd.get("ramal"), cmd.get("objetivo")), daemon=True).start()
+                    threading.Thread(target=conduzir, args=(call, modo, cmd.get("numero"), cmd.get("ramal"), cmd.get("objetivo"), cmd.get("agente_id")), daemon=True).start()
                     db.table("voz_comandos").update({"status": "concluido"}).eq("id", cmd["id"]).execute()
                 else:
                     try: call.hangup()

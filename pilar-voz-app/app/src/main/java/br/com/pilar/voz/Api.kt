@@ -34,15 +34,15 @@ object Api {
     private fun voz(acao: String, extra: JSONObject = JSONObject()): JSONObject =
         post("voz-dispositivo", extra.put("chave", chave).put("acao", acao), 90_000)
 
-    fun config(): JSONObject = voz("config").getJSONObject("agente")
+    fun config(agenteId: String? = null): JSONObject = voz("config", JSONObject().put("agente_id", agenteId ?: JSONObject.NULL)).getJSONObject("agente")
 
-    fun turno(wavB64: String?, historico: JSONArray, modo: String, objetivo: String?, promptExtra: String? = null, chamadaId: String? = null, numero: String? = null): JSONObject =
+    fun turno(wavB64: String?, historico: JSONArray, modo: String, objetivo: String?, promptExtra: String? = null, chamadaId: String? = null, numero: String? = null, agenteId: String? = null): JSONObject =
         voz("turno", JSONObject().put("audio_wav_b64", wavB64 ?: JSONObject.NULL).put("historico", historico)
             .put("modo", modo).put("objetivo", objetivo ?: JSONObject.NULL).put("prompt_extra", promptExtra ?: JSONObject.NULL)
-            .put("chamada_id", chamadaId ?: JSONObject.NULL).put("numero", numero ?: JSONObject.NULL))
+            .put("chamada_id", chamadaId ?: JSONObject.NULL).put("numero", numero ?: JSONObject.NULL).put("agente_id", agenteId ?: JSONObject.NULL))
 
-    fun iniciar(modo: String, numero: String?, ramal: String?): String =
-        voz("iniciar", JSONObject().put("modo", modo).put("numero", numero ?: JSONObject.NULL).put("ramal", ramal ?: JSONObject.NULL)).getString("id")
+    fun iniciar(modo: String, numero: String?, ramal: String?, agenteId: String? = null): String =
+        voz("iniciar", JSONObject().put("agente_id", agenteId ?: JSONObject.NULL).put("modo", modo).put("numero", numero ?: JSONObject.NULL).put("ramal", ramal ?: JSONObject.NULL)).getString("id")
 
     fun fala(id: String, papel: String, texto: String) { runCatching { voz("fala", JSONObject().put("chamada_id", id).put("papel", papel).put("texto", texto)) } }
     fun sugestao(id: String, texto: String) { runCatching { voz("sugestao", JSONObject().put("chamada_id", id).put("texto", texto)) } }

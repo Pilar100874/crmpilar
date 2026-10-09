@@ -85,7 +85,8 @@ class VozService : Service() {
             val c = sip.ligar(destino)
             if (c == null) { Api.statusComando(id, "sem_resposta"); return@Thread }
             Api.statusComando(id, "concluido")
-            val cfg = runCatching { Api.config() }.getOrElse { JSONObject() }
+            val agenteId = cmd.optString("agente_id").takeIf { it.isNotBlank() && it != "null" }
+            val cfg = runCatching { Api.config(agenteId) }.getOrElse { JSONObject() }
             conduzir(c, cfg, if (tipo == "ligar") "ligar" else "assistir", cmd.optString("objetivo").ifBlank { null },
                 numero = cmd.optString("numero").ifBlank { null }, ramal = cmd.optString("ramal").ifBlank { null })
         }.start()
@@ -93,7 +94,8 @@ class VozService : Service() {
 
     /** Conversa por turnos: escuta até a pessoa parar de falar, envia à IA e toca a resposta. */
     private fun conduzir(c: Chamada, cfg: JSONObject, modo: String, objetivo: String?, numero: String? = c.numero, ramal: String? = null) {
-        val chamadaId = runCatching { Api.iniciar(modo, numero, ramal) }.getOrNull()
+        val agenteId = cfg.optString("id").ifBlank { null }
+        val chamadaId = runCatching { Api.iniciar(modo, numero, ramal, agenteId) }.getOrNull()
         val hist = JSONArray()
         Monitor.inicioLigacao(modo, numero ?: ramal ?: "?"); Monitor.avisar(this)
         fun registrar(papel: String, texto: String) {
@@ -109,7 +111,7 @@ class VozService : Service() {
             if (modo != "assistir" && saudacao.isNotBlank()) {
                 runCatching {
                     val r = Api.turno(null, JSONArray().put(JSONObject().put("papel", "cliente").put("texto", ".")), "receber", null,
-                        "Diga exatamente, sem mudar nada: $saudacao")
+                        "Diga exatamente, sem mudar nada: $saudacao", agenteId = agenteId)
                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
                 }
                 registrar("agente", saudacao)

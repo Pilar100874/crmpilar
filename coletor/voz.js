@@ -351,16 +351,16 @@ async function executarComando(cmd) {
   const c = await sip.ligar(destino);
   if (!c) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta' })); return; }
   silencioso(api('comando_status', { comando_id: cmd.id, status: 'concluido' }));
-  const cfg = (await silencioso(api('config')))?.agente || {};
+  const cfg = (await silencioso(api('config', { agente_id: cmd.agente_id || null })))?.agente || {};
   conduzir(c, cfg, tipo === 'ligar' ? 'ligar' : 'assistir', cmd.objetivo || null, cmd.numero || null, cmd.ramal || null);
 }
 
-async function turno(wav, hist, modo, objetivo, extra, chamadaId, numero) {
-  return api('turno', { audio_wav_b64: wav, historico: hist, modo, objetivo, prompt_extra: extra, chamada_id: chamadaId, numero });
+async function turno(wav, hist, modo, objetivo, extra, chamadaId, numero, agenteId = null) {
+  return api('turno', { audio_wav_b64: wav, historico: hist, modo, objetivo, prompt_extra: extra, chamada_id: chamadaId, numero, agente_id: agenteId });
 }
 
 async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
-  const chamadaId = (await silencioso(api('iniciar', { modo, numero, ramal })))?.id || null;
+  const chamadaId = (await silencioso(api('iniciar', { modo, numero, ramal, agente_id: cfg.id || null })))?.id || null;
   const hist = [];
   Object.assign(MON, { modo, destino: numero || ramal || '?', inicio: Date.now(), falaCliente: '', falaIa: '' });
   if (modo === 'receber') MON.atendidas++; else if (modo === 'ligar') MON.feitas++; else MON.assistidas++;
@@ -373,7 +373,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
   let erro = false;
   try {
     if (modo !== 'assistir' && cfg.saudacao) {
-      const r = await silencioso(turno(null, [{ papel: 'cliente', texto: '.' }], 'receber', null, `Diga exatamente, sem mudar nada: ${cfg.saudacao}`, null, null));
+      const r = await silencioso(turno(null, [{ papel: 'cliente', texto: '.' }], 'receber', null, `Diga exatamente, sem mudar nada: ${cfg.saudacao}`, null, null, cfg.id || null));
       if (r?.audio_b64) c.rtp.tocar(wavPara8k(r.audio_b64));
       registrar('agente', cfg.saudacao);
     }
