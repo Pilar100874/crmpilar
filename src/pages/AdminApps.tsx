@@ -172,7 +172,7 @@ export default function AdminApps() {
       },
     },
     {
-      nome: "Pilar Interfone",
+      nome: "Pilar Fone",
       descricao: "Interfone da portaria com abertura remota pelo CRM.",
       icone: "android",
       sistemas: ["Android"],
@@ -181,7 +181,7 @@ export default function AdminApps() {
       url: INTERFONE_URL,
       versao: "v1.7.6",
       ajuda: {
-        titulo: "Pilar Interfone — como instalar",
+        titulo: "Pilar Fone — como instalar",
         passos: [
           "Instale o APK no tablet ou celular Android da portaria.",
           "Faça login com a conta da portaria no CRM.",
