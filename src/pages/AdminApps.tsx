@@ -493,18 +493,17 @@ export default function AdminApps() {
                   {aberta && (
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableCell colSpan={RECURSOS.length + 5} className="p-3 sm:p-4">
-                        <div className="grid gap-4 lg:grid-cols-2">
+                        <div className="space-y-3">
                           <ChavesPainel apps={chavesDoApp(app)} />
-                          {app.appSlug ? (
-                            <GestaoVersoesApps app={app.appSlug} />
-                          ) : (
-                            <div className="space-y-2">
-                              <p className="text-sm font-semibold">Atualização</p>
-                              <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                                Este aplicativo se atualiza manualmente: baixe a versão nova acima e instale no aparelho.
+                          <div className="border-t pt-3">
+                            {app.appSlug ? (
+                              <GestaoVersoesApps app={app.appSlug} />
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                <b className="text-foreground">Atualização:</b> este aplicativo se atualiza manualmente — baixe a versão nova acima e instale no aparelho.
                               </p>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
