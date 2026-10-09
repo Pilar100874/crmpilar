@@ -37,7 +37,8 @@ class VozService : Service() {
 
     private fun principal() {
         val pref = getSharedPreferences(PREF, MODE_PRIVATE)
-        Api.chave = pref.getString("chave", "") ?: ""
+        // Usa a chave própria da voz, ou a chave de instalação do Coletor (uma chave só).
+        Api.chave = pref.getString("chave", "").orEmpty().ifBlank { br.com.pilar.hub.Prefs.chave(this).uppercase() }
         trava = (getSystemService(POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pilarvoz:servico").apply { acquire() }
         while (rodando) {

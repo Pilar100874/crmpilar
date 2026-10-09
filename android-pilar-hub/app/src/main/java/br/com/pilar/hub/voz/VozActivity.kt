@@ -39,7 +39,7 @@ class VozActivity : AppCompatActivity() {
         val campoChave = findViewById<EditText>(R.id.campo_chave)
 
         fun mostrar() {
-            val ativo = !pref.getString("chave", "").isNullOrBlank()
+            val ativo = !pref.getString("chave", "").isNullOrBlank() || br.com.pilar.hub.Prefs.chave(this).isNotBlank()
             ativacao.visibility = if (ativo) View.GONE else View.VISIBLE
             config.visibility = if (ativo) View.VISIBLE else View.GONE
             findViewById<View>(R.id.bloco_monitor).visibility = if (ativo) View.VISIBLE else View.GONE
