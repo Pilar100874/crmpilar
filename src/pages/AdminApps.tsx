@@ -154,10 +154,10 @@ export default function AdminApps() {
     },
     {
       nome: "Coletor Android (Pilar Hub)",
-      descricao: "Coletor Android: ponto, câmeras e automação na rede local.",
+      descricao: "Coletor Android: ponto, câmeras, automação e Pilar Voz na rede local.",
       icone: "android",
       sistemas: ["Android"],
-      recursos: ["Ponto", "Câmeras", "Automação"],
+      recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "pilar-coletor-v3.2.2.apk",
       url: HUB_URL,
       versao: "v3.2.2",

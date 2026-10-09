@@ -41,6 +41,7 @@
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚡  Coletor de Automação" android:textColor="@color/iso_text" android:textSize="15sp" android:textStyle="bold" />
                 <TextView android:id="@+id/txtAutomacaoStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@color/iso_text_secondary" android:textSize="12sp" />
                 <Button android:id="@+id/btnAutomacao" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="10dp" android:background="@drawable/iso_button_outline" android:text="Automação ligada" android:textAllCaps="false" android:textColor="@color/iso_brand" />
+                <Button android:id="@+id/btnVoz" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="10dp" android:background="@drawable/iso_button_outline" android:text="Pilar Voz (agente de voz com IA)" android:textAllCaps="false" android:textColor="@color/iso_brand" />
             </LinearLayout>
 
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="Equipamentos de ponto" android:textColor="@color/iso_text" android:textSize="16sp" android:textStyle="bold" />
