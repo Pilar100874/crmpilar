@@ -188,6 +188,13 @@ export default function AdminApps() {
         </p>
       </div>
 
+      <div className="flex items-center gap-3 pt-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-500/15 text-green-600">
+          <Smartphone className="h-5 w-5" />
+        </div>
+        <h2 className="text-lg font-bold sm:text-xl">Android</h2>
+      </div>
+
       <MobileAppCard />
 
       <InterfoneAppDownloadCard />
