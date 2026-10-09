@@ -32,7 +32,7 @@ const COLETOR_MAC_INTEL_FALLBACK_URL =
 const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 const SMS_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.11.0/pilar-sms-v1.11.0.apk";
-const HUB_URL = "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.2.2/pilar-coletor-v3.2.2.apk";
+const HUB_URL = "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.3.0/pilar-coletor-v3.3.0.apk";
 const INTERFONE_URL = "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.6/pilar-interfone-v1.7.6.apk";
 const AUTOMACAO_URL = "https://github.com/Pilar100874/crmpilar/releases/download/pilar-automacao-latest/pilar-automacao.apk";
 const TV_URL = "https://github.com/Pilar100874/crmpilar/releases/download/android-tv-signage-latest/app-release.apk";
@@ -158,16 +158,16 @@ export default function AdminApps() {
       icone: "android",
       sistemas: ["Android"],
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
-      arquivo: "pilar-coletor-v3.2.2.apk",
+      arquivo: "pilar-coletor-v3.3.0.apk",
       url: HUB_URL,
-      versao: "v3.2.2",
+      versao: "v3.3.0",
       ajuda: {
         titulo: "Coletor — como instalar",
         passos: [
           "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
           "Faça login com sua conta do CRM Pilar.",
           "Ative os módulos desejados na tela do app.",
-          "Para o agente de voz, toque em \"Pilar Voz\" (a partir da versão 3.3.0), informe a chave do Pilar Voz e os dados da central.",
+          "Para o agente de voz, toque em \"Pilar Voz\" e informe os dados da central (a chave de voz usa a própria chave de ativação do app).",
         ],
       },
     },
