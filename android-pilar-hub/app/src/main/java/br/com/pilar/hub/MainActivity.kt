@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         findViewById<Button>(R.id.btnFilial).setOnClickListener { escolherUnidade() }
+        findViewById<Button>(R.id.btnVoz).setOnClickListener { startActivity(android.content.Intent(this, br.com.pilar.hub.voz.VozActivity::class.java)) }
         findViewById<Button>(R.id.btnPonto).setOnClickListener {
             Prefs.salvarPontoAtivo(this, !Prefs.pontoAtivo(this))
             ColetorService.sincronizarAgora(this)

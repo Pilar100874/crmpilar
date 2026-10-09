@@ -30,4 +30,12 @@
     <color name="iso_warning_bg">#FEF3C7</color>
     <color name="iso_info">#2563EB</color>
     <color name="iso_info_bg">#DBEAFE</color>
+    <color name="activation_muted">#94A3B8</color>
+    <color name="activation_text">#FFFFFF</color>
+    <color name="activation_card">#182235</color>
+    <color name="activation_border">#364052</color>
+    <color name="brand_accent">#FF6B00</color>
+    <color name="brand_accent_dark">#D95B00</color>
+    <color name="activation_bg">#0D1626</color>
+    <color name="white">#FFFFFF</color>
 </resources>
