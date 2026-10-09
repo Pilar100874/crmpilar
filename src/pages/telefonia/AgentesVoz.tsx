@@ -270,14 +270,14 @@ export default function AgentesVoz() {
             </DialogContent>
           </Dialog>
           {editando && (
-          <Card>
-            <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
-              <div className="flex flex-wrap items-center gap-2 md:col-span-2">
-                <Button variant="outline" size="sm" onClick={() => setEditando(false)}><ArrowLeft className="mr-1 h-4 w-4" /> Voltar</Button>
-                {(() => { const m = MODOS.find((x) => x.id === (atual.modos[0] ?? "receber")) ?? MODOS[0]; return (
-                  <Badge variant="outline" className="gap-1"><m.icone className="h-3 w-3" /> {m.rotulo}</Badge>); })()}
-                <span className="text-sm text-muted-foreground">{atual.id ? "Editando agente" : "Novo agente"}</span>
-              </div>
+          <Card className="animate-fade-in">
+            <CardHeader className="flex flex-row flex-wrap items-center gap-2 space-y-0 p-3 sm:p-4">
+              <Button variant="outline" size="sm" onClick={() => setEditando(false)}><ArrowLeft className="mr-1 h-4 w-4" /> Voltar</Button>
+              {(() => { const m = MODOS.find((x) => x.id === (atual.modos[0] ?? "receber")) ?? MODOS[0]; return (
+                <Badge variant="outline" className="gap-1"><m.icone className="h-3 w-3" /> {m.rotulo}</Badge>); })()}
+              <CardTitle className="text-base sm:text-lg">{atual.id ? "Editar agente" : "Novo agente"}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 border-t p-3 pt-4 sm:p-4 md:grid-cols-2">
               <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => setAtual({ ...atual, nome: e.target.value })} /></div>
               <div className="flex items-end gap-2"><Switch checked={atual.ativo} onCheckedChange={(v) => setAtual({ ...atual, ativo: v })} /><Label>Ativo</Label></div>
               <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
@@ -329,7 +329,7 @@ export default function AgentesVoz() {
                   </Select>
                 </div>
               )}
-              <div className="flex gap-2 md:col-span-2">
+              <div className="flex flex-wrap gap-2 border-t pt-4 md:col-span-2">
                 <Button onClick={() => void salvar()}><Save className="mr-1 h-4 w-4" /> Salvar</Button>
                 {atual.id && <Button variant="outline" onClick={() => setExcluir(true)}><Trash2 className="mr-1 h-4 w-4" /> Excluir</Button>}
               </div>
