@@ -14,7 +14,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { enviarComando, getEstabelecimentoId, getUsuarioId } from "@/services/tvSignage/tvSignageService";
 import { toast } from "sonner";
-import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, Laptop } from "lucide-react";
+import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, Laptop, KeyRound, ChevronDown } from "lucide-react";
+import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
+
+/** Tipos de chave que cada aplicativo aceita, na ordem de preferência (mesmo mapa da tela de Apps). */
+const chavesDoApp = (app: string): string[] => {
+  if (app === "automacao") return ["automacao"];
+  if (app === "sms") return ["sms"];
+  if (app === "remotas") return ["coletor-tv"];
+  if (app === "hub") return ["controle", "voz"];
+  return ["coletor", "controle"];
+};
 
 const APPS = [
   { valor: "sms", nome: "Pilar SMS" },
