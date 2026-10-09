@@ -273,33 +273,50 @@ export default function GestaoVersoesApps({ app }: { app?: string }) {
     }
   };
 
-  // Modo compacto: usado dentro do cartão de chaves da tela de Apps — um botão atualiza todos os aparelhos deste aplicativo.
+  // Modo compacto: usado dentro do cartão de chaves da tela de Apps — cada aparelho tem seu próprio botão de atualizar.
   if (app) {
     const disponivel = ultimaVersao[app];
     const desatualizadosDeste = atualizaveis.filter((e) => menorQue(e.versao, disponivel));
     return (
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <div className="min-w-0 flex-1">
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-semibold">Atualização remota</p>
-          <p className="text-xs text-muted-foreground">
-            {atualizaveis.length === 0
-              ? "Nenhum aparelho instalado até agora."
-              : `${atualizaveis.length} aparelho${atualizaveis.length === 1 ? "" : "s"} · ${desatualizadosDeste.length} desatualizado${desatualizadosDeste.length === 1 ? "" : "s"} · versão disponível: ${disponivel || "—"}`}
-          </p>
+          {desatualizadosDeste.length > 0 && <Badge variant="destructive">{desatualizadosDeste.length} desatualizado{desatualizadosDeste.length === 1 ? "" : "s"}</Badge>}
+          <span className="text-xs text-muted-foreground">Versão disponível: {disponivel || "—"}</span>
         </div>
-        {desatualizadosDeste.length > 0 && <Badge variant="destructive">{desatualizadosDeste.length} desatualizado{desatualizadosDeste.length === 1 ? "" : "s"}</Badge>}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            if (!atualizaveis.length) return toast.error("Nenhum aparelho deste aplicativo instalado até agora");
-            if (!disponivel) return toast.error("Nenhuma versão publicada para este aplicativo");
-            enviarAtualizacoes(atualizaveis.map((e) => e.id));
-          }}
-          disabled={disparando}
-        >
-          <Send className="mr-1.5 h-3.5 w-3.5" /> Atualizar aparelhos
-        </Button>
+        {atualizaveis.length === 0 && (
+          <p className="text-xs text-muted-foreground">Nenhum aparelho instalado até agora.</p>
+        )}
+        <ul className="space-y-1.5">
+          {atualizaveis.map((e) => {
+            const atrasado = menorQue(e.versao, disponivel);
+            const comando = ultimoComando(e.id);
+            const statusComando = comando?.status || e.statusAtualizacao;
+            return (
+              <li key={e.id} className="flex flex-wrap items-center gap-2 rounded-md border bg-background px-2.5 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{e.nome}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    Instalada: {e.versao || "desconhecida"} · Último contato: {formatarData(e.ultimoContato)}
+                  </p>
+                </div>
+                <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
+                {statusComando && <Badge variant="outline">{statusComando}</Badge>}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (!disponivel) return toast.error("Nenhuma versão publicada para este aplicativo");
+                    enviarAtualizacoes([e.id]);
+                  }}
+                  disabled={disparando || !atrasado}
+                >
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> Atualizar
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     );
   }
