@@ -1206,3 +1206,9 @@ body {
 
 /* Calendário embutido abaixo do cabeçalho do cliente não reserva espaço da barra fixa */
 .cabecalho-cliente-ativo .calendario-raiz, .atendimento-com-barra .calendario-raiz { padding-top: 0 !important; }
+
+/* Regra global: nenhuma tela deve exibir barra de rolagem horizontal */
+@layer base {
+  main, [data-quadro-central], .overflow-auto, .overflow-x-auto { overflow-x: hidden !important; }
+  img, video, canvas, svg, iframe { max-width: 100%; }
+}
