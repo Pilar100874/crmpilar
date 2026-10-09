@@ -17,6 +17,10 @@ ipcRenderer.on('main-log', (_e, payload) => {
 });
 
 contextBridge.exposeInMainWorld('coletor', {
+  vozStatus: () => ipcRenderer.invoke('voz:status'),
+  vozStart: () => ipcRenderer.invoke('voz:start'),
+  vozStop: () => ipcRenderer.invoke('voz:stop'),
+  vozSalvar: (v) => ipcRenderer.invoke('voz:salvar', v),
   getStatus: () => ipcRenderer.invoke('collector:status'),
   start: () => ipcRenderer.invoke('collector:start'),
   stop: () => ipcRenderer.invoke('collector:stop'),

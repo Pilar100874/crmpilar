@@ -423,13 +423,15 @@ function stopVoz() {
   rodando = false; MON.servico = 'Parado'; MON.central = '—';
   if (sip) { sip.parar(); sip = null; }
 }
+// Ao sair do app: para sem mudar a escolha salva (volta ligado no próximo início).
+function pararVozSemSalvar() { rodando = false; if (sip) { sip.parar(); sip = null; } }
 function statusVoz() { return { ...MON, rodando, config: { ...(loadConfig().voz || {}), senha: undefined } }; }
 function salvarConfigVoz(v) {
   const atual = loadConfig().voz || {};
   const novo = { ...atual, ...v }; if (!v.senha) novo.senha = atual.senha;
   saveConfig({ voz: novo });
-  if (rodando) { stopVoz(); startVoz(); }
+  if (rodando) { pararVozSemSalvar(); setTimeout(startVoz, 500); }
   return statusVoz();
 }
 
-module.exports = { startVoz, stopVoz, statusVoz, salvarConfigVoz };
+module.exports = { startVoz, stopVoz, statusVoz, salvarConfigVoz, pararVozSemSalvar };

@@ -160,6 +160,7 @@ function createTray() {
 }
 
 const { startRemoto, stopRemoto, statusRemoto } = require('./remoto');
+const { startVoz, stopVoz, statusVoz, salvarConfigVoz, pararVozSemSalvar } = require('./voz');
 
 // ─── Início automático junto com o computador ────────────────────────────
 // Igual ao Pilar Remotas: assim que o equipamento liga, o coletor sobe sozinho
@@ -206,6 +207,7 @@ app.whenReady().then(async () => {
   await migrarInstalacaoLegada();
   startCollector();
   try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
+  try { if (loadConfig().vozEnabled) startVoz(); } catch (e) { console.error('[coletor] voz:', e.message); }
 });
 
 
@@ -217,6 +219,7 @@ app.on('window-all-closed', (e) => e.preventDefault());
 function shutdownEverything() {
   try { stopCollector(); } catch {}
   try { stopRemoto(); } catch {}
+  try { pararVozSemSalvar(); } catch {}
 
   try { if (tray) { tray.destroy(); tray = null; } } catch {}
 }
@@ -250,6 +253,10 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
     try { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('updater:progress', pct)); } catch {}
   });
 });
+ipcMain.handle('voz:status', () => statusVoz());
+ipcMain.handle('voz:start', () => { startVoz(); return statusVoz(); });
+ipcMain.handle('voz:stop', () => { stopVoz(); return statusVoz(); });
+ipcMain.handle('voz:salvar', (_e, v) => salvarConfigVoz(v || {}));
 ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('remoto:status', () => { try { return statusRemoto(); } catch { return null; } });
 
