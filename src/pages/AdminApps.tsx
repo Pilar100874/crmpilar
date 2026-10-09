@@ -167,6 +167,7 @@ export default function AdminApps() {
           "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
           "Faça login com sua conta do CRM Pilar.",
           "Ative os módulos desejados na tela do app.",
+          "Para o agente de voz, toque em \"Pilar Voz\" (a partir da versão 3.3.0), informe a chave do Pilar Voz e os dados da central.",
         ],
       },
     },
