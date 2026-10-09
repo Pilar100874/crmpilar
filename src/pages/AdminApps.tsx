@@ -95,6 +95,24 @@ const corIcone: Record<AppRow["icone"], string> = {
   tv: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
 };
 
+/** Conteúdo do painel expandido de um aplicativo: chaves + atualização remota. */
+function PainelExpandido({ app }: { app: AppRow }) {
+  return (
+    <div className="space-y-3">
+      <ChavesPainel apps={chavesDoApp(app)} />
+      <div className="border-t pt-3">
+        {app.appSlug ? (
+          <GestaoVersoesApps app={app.appSlug} />
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            <b className="text-foreground">Atualização:</b> este aplicativo se atualiza manualmente — baixe a versão nova acima e instale no aparelho.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{
     version: string;
