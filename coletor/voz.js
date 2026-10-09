@@ -86,7 +86,9 @@ const silencioso = (p) => p.catch(() => null);
 // ─── SIP ─────────────────────────────────────────────────────────────────
 const CURTOS = { v: 'via', f: 'from', t: 'to', i: 'call-id', m: 'contact', l: 'content-length', c: 'content-type' };
 function lerSip(txt) {
-  const [cabTxt, corpo = ''] = txt.split('\r\n\r\n', 2).length === 2 ? [txt.slice(0, txt.indexOf('\r\n\r\n')), txt.slice(txt.indexOf('\r\n\r\n') + 4)] : [txt, ''];
+  const sep = txt.indexOf('\r\n\r\n');
+  const cabTxt = sep >= 0 ? txt.slice(0, sep) : txt;
+  const corpo = sep >= 0 ? txt.slice(sep + 4) : '';
   const linhas = cabTxt.split('\r\n'); if (!linhas.length) return null;
   const cab = {};
   linhas.slice(1).forEach((l) => {

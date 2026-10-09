@@ -128,6 +128,9 @@ function loadConfig() {
     camerasEnabled: saved.camerasEnabled !== false,
     portariaEnabled: saved.portariaEnabled !== false,
     portariaToken: saved.portariaToken || null,
+    // Pilar Voz embutido: desligado até o usuário escolher ativar.
+    vozEnabled: saved.vozEnabled === true,
+    voz: saved.voz || {},
     filialId: saved.filialId || null,
     filialNome: saved.filialNome || null,
     videoHeight: clamp(saved.videoHeight, 240, 1080, 480),
