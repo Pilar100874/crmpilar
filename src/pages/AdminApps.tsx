@@ -154,7 +154,7 @@ export default function AdminApps() {
     },
     {
       nome: "Coletor",
-      descricao: "Coletor Android: ponto, câmeras, automação e Pilar Voz na rede local.",
+      descricao: "Ponto, câmeras, automação e Pilar Voz no aparelho Android.",
       icone: "android",
       sistemas: ["Android"],
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
