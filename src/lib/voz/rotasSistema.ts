@@ -199,7 +199,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/admin/relatorios-voz", titulo: "Relatórios por Voz", aliases: ["relatorios por voz", "relatorios de voz"] },
   { path: "/admin/relatorios-voz/snapshots", titulo: "Snapshots de Relatórios", aliases: ["snapshots", "snapshots de relatorios", "relatorios salvos"] },
   { path: "/admin/menu-customizacao", titulo: "Personalizar Menu", aliases: ["customizar menu", "personalizacao de menu", "menu customizacao"] },
-  { path: "/admin/apps/atualizacoes", titulo: "Atualizações dos Aplicativos", aliases: ["versoes dos aplicativos", "atualizar apk", "subir apk", "atualizacao remota", "atualizar celulares", "atualizar telas remotas"] },
+  { path: "/admin/apps", titulo: "Atualizações dos Aplicativos", aliases: ["versoes dos aplicativos", "atualizar apk", "subir apk", "atualizacao remota", "atualizar celulares", "atualizar telas remotas"] },
   { path: "/admin/apps", titulo: "Apps - Chaves do Aplicativo", aliases: ["chaves do aplicativo", "gerar chave do aplicativo", "ativacao dos aplicativos"] },
 
   // ============ Outras rotas úteis (fora do menu principal, mas acessíveis por voz) ============
