@@ -93,8 +93,21 @@ Deno.serve(async (req) => {
     const empresa = reg.estabelecimento_id as string;
     await sb.from("automacao_app_chaves").update({ ultima_comunicacao: new Date().toISOString() }).eq("id", reg.id);
 
-    const agente = async () => (await sb.from("voz_agentes").select("*").eq("estabelecimento_id", empresa)
-      .eq("ativo", true).order("created_at").limit(1).maybeSingle()).data;
+    // Usa o agente escolhido (agente_id ou o da chamada); senão, o primeiro ativo.
+    const agente = async () => {
+      let id = corpo.agente_id ? String(corpo.agente_id) : "";
+      if (!id && corpo.chamada_id) {
+        id = (await sb.from("voz_chamadas").select("agente_id").eq("id", String(corpo.chamada_id))
+          .eq("estabelecimento_id", empresa).maybeSingle()).data?.agente_id ?? "";
+      }
+      if (id) {
+        const esc = (await sb.from("voz_agentes").select("*").eq("id", id).eq("estabelecimento_id", empresa)
+          .eq("ativo", true).maybeSingle()).data;
+        if (esc) return esc;
+      }
+      return (await sb.from("voz_agentes").select("*").eq("estabelecimento_id", empresa)
+        .eq("ativo", true).order("created_at").limit(1).maybeSingle()).data;
+    };
 
     // Garante que a chamada pertence à empresa da chave.
     const chamadaDaEmpresa = async (id: string) =>
