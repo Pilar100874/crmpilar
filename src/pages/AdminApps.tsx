@@ -21,6 +21,7 @@ import { Check, ChevronDown, KeyRound, Download, Smartphone, Apple, HelpCircle, 
 import { baixarArquivo } from "@/lib/baixarArquivo";
 import { Fragment } from "react";
 import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
+import GestaoVersoesApps from "@/pages/admin/GestaoVersoesApps";
 
 /** Tipos de chave que cada aplicativo aceita, na ordem de preferência. */
 const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
@@ -502,6 +503,8 @@ export default function AdminApps() {
           "Adicionar à Tela de Início" (iPhone). Ele atualiza sozinho a cada abertura.
         </p>
       </div>
+
+      <GestaoVersoesApps />
 
       <Dialog open={!!ajudaAberta} onOpenChange={(aberto) => !aberto && setAjudaAberta(null)}>
         <DialogContent className="max-w-md">
