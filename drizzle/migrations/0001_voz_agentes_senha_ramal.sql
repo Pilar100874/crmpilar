@@ -1,0 +1,1 @@
+ALTER TABLE public.voz_agentes ADD COLUMN IF NOT EXISTS senha_ramal_ia text, ADD COLUMN IF NOT EXISTS codigo_escuta text DEFAULT '*45';

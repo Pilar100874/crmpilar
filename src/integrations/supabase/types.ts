@@ -30654,6 +30654,7 @@ export type Database = {
       voz_agentes: {
         Row: {
           ativo: boolean
+          codigo_escuta: string | null
           config: Json
           created_at: string
           estabelecimento_id: string
@@ -30667,6 +30668,7 @@ export type Database = {
           ramal_ia: string | null
           ramal_transferencia: string | null
           saudacao: string | null
+          senha_ramal_ia: string | null
           stt_provedor: string | null
           tts_provedor: string | null
           updated_at: string
@@ -30674,6 +30676,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          codigo_escuta?: string | null
           config?: Json
           created_at?: string
           estabelecimento_id: string
@@ -30687,6 +30690,7 @@ export type Database = {
           ramal_ia?: string | null
           ramal_transferencia?: string | null
           saudacao?: string | null
+          senha_ramal_ia?: string | null
           stt_provedor?: string | null
           tts_provedor?: string | null
           updated_at?: string
@@ -30694,6 +30698,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          codigo_escuta?: string | null
           config?: Json
           created_at?: string
           estabelecimento_id?: string
@@ -30707,6 +30712,7 @@ export type Database = {
           ramal_ia?: string | null
           ramal_transferencia?: string | null
           saudacao?: string | null
+          senha_ramal_ia?: string | null
           stt_provedor?: string | null
           tts_provedor?: string | null
           updated_at?: string
