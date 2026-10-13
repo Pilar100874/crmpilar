@@ -13,6 +13,7 @@ const MANIFESTOS: Record<string, string> = {
   hub: "/coletor/hub-version.json",
   automacao: "/apps/pilar-automacao-latest.json",
   coletor: "/coletor/version.json",
+  fone: "/coletor/interfone-version.json",
 };
 
 /** Compara versões no formato x.y.z. Retorna true quando a é menor que b. */
@@ -158,6 +159,18 @@ export default function AtualizacaoChave({
   };
 
   if (carregando) return <p className="text-xs text-muted-foreground">Verificando aparelho…</p>;
+
+  if (appSlug === "fone") {
+    return (
+      <div className="flex items-start gap-2 rounded-lg border bg-background px-3 py-2">
+        <MonitorSmartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
+          Versão disponível <span className="font-mono">{disponivel || "—"}</span>. Os aparelhos com versão antiga mostram
+          o aviso "Nova versão do Pilar Fone" com o botão <b className="text-foreground">Atualizar</b>.
+        </p>
+      </div>
+    );
+  }
 
   if (!aparelho) {
     return (
