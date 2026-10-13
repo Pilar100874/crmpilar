@@ -325,7 +325,7 @@ async function principal() {
       sip = new Sip({ host, porta, ramal, senha: v.senha || '', log, aoReceber: (c) => aoReceber(c) });
       await sip.abrir();
       if (!(await sip.registrar())) { MON.central = 'Falha no registro'; await sip.parar(); sip = null; await dormir(15_000); continue; }
-      MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${v.host}`; log(MON.central);
+      MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${host}`; log(MON.central);
       let ultimo = Date.now();
       while (rodando) {
         if (Date.now() - ultimo > 240_000) { if (!(await sip.registrar())) { MON.central = 'Registro perdido'; break; } ultimo = Date.now(); }
