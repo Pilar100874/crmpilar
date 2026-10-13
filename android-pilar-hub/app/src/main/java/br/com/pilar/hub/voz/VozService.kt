@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
  * atende ligações, executa os pedidos do CRM e conversa usando a IA do sistema.
  */
 class VozService : Service() {
+    @Volatile private var escutaAgente = ""
     private var agente: SipAgente? = null
     @Volatile private var rodando = false
     private var trava: PowerManager.WakeLock? = null
@@ -45,10 +46,12 @@ class VozService : Service() {
             try {
                 val cfg = Api.config()
                 val ramal = pref.getString("ramal", "")!!.ifBlank { cfg.optString("ramal_ia") }
-                val host = pref.getString("host", "")!!
-                val porta = pref.getString("porta", "5060")!!.toIntOrNull() ?: 5060
-                if (host.isBlank() || ramal.isBlank()) { log("Preencha o endereço da central e o ramal"); return }
-                val sip = SipAgente(host, porta, ramal, pref.getString("senha", "")!!, ::log) { c -> aoReceber(c) }
+                escutaAgente = cfg.optString("codigo_escuta")
+                val central = cfg.optJSONObject("central")
+                val host = pref.getString("host", "")!!.ifBlank { central?.optString("host") ?: "" }
+                val porta = pref.getString("porta", "")!!.toIntOrNull() ?: central?.optInt("porta", 5060) ?: 5060
+                if (host.isBlank() || ramal.isBlank()) { log(if (host.isBlank()) "Central não configurada: preencha a tela Configuração PABX Grandstream UCM" else "Agente sem ramal da IA: preencha em Agentes de Voz"); return }
+                val sip = SipAgente(host, porta, ramal, pref.getString("senha", "")!!.ifBlank { cfg.optString("senha_ramal_ia") }, ::log) { c -> aoReceber(c) }
                 agente = sip
                 if (!sip.registrar()) { Monitor.central = "Falha no registro"; Monitor.avisar(this); sip.parar(); Thread.sleep(15_000); continue }
                 Monitor.servico = "Ativo"; Monitor.central = "Ramal $ramal registrado em $host"; Monitor.avisar(this)
@@ -79,7 +82,7 @@ class VozService : Service() {
 
     private fun executarComando(sip: SipAgente, cmd: JSONObject) {
         val id = cmd.getString("id"); val tipo = cmd.optString("tipo")
-        val escuta = getSharedPreferences(PREF, MODE_PRIVATE).getString("codigo_escuta", "*45")!!
+        val escuta = getSharedPreferences(PREF, MODE_PRIVATE).getString("codigo_escuta", "")!!.ifBlank { escutaAgente.ifBlank { "*45" } }
         val destino = if (tipo == "ligar") cmd.optString("numero") else "$escuta${cmd.optString("ramal")}"
         log(if (tipo == "ligar") "Ligando para $destino" else "Escutando o ramal ${cmd.optString("ramal")}")
         Thread {

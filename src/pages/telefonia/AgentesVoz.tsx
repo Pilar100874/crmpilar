@@ -22,7 +22,7 @@ import { ptBR } from "date-fns/locale";
 const db = supabase as any;
 
 type Agente = {
-  id?: string; nome: string; ativo: boolean; modos: string[]; ramal_ia: string; ramal_transferencia: string;
+  id?: string; nome: string; ativo: boolean; modos: string[]; ramal_ia: string; ramal_transferencia: string; senha_ramal_ia?: string; codigo_escuta?: string;
   saudacao: string; prompt: string; qualidade: "gratuita" | "premium"; stt_provedor: string;
   llm_provedor: string; llm_modelo: string; tts_provedor: string; voz: string; updated_at?: string;
 };
@@ -281,6 +281,8 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
               <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => setAtual({ ...atual, nome: e.target.value })} /></div>
               <div className="flex items-end gap-2"><Switch checked={atual.ativo} onCheckedChange={(v) => setAtual({ ...atual, ativo: v })} /><Label>Ativo</Label></div>
               <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Senha do ramal da IA</Label><Input type="password" autoComplete="new-password" placeholder="senha SIP do ramal" value={atual.senha_ramal_ia ?? ""} onChange={(e) => setAtual({ ...atual, senha_ramal_ia: e.target.value })} /><p className="text-xs text-muted-foreground">Os Coletores usam esta senha automaticamente, sem digitar no aparelho.</p></div>
+              <div className="space-y-1"><Label>Código de escuta</Label><Input placeholder="*45" value={atual.codigo_escuta ?? ""} onChange={(e) => setAtual({ ...atual, codigo_escuta: e.target.value })} /></div>
               <div className="space-y-1">
                 <Label>Transferir para o ramal</Label>
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>

@@ -129,7 +129,8 @@ Deno.serve(async (req) => {
         const central = ucm?.ucm_host
           ? { host: String(ucm.remote_ip || ucm.ucm_host), porta: Number(ucm.sip_porta) || 5060 }
           : null;
-        return json({ agente: a, central });
+        // Central também dentro de "agente": os apps Android leem só esse objeto.
+        return json({ agente: { ...a, central }, central });
       }
       case "turno": {
         const a = await agente();

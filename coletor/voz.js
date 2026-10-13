@@ -304,7 +304,7 @@ const MON = {
   servico: 'Parado', central: '—', modo: null, destino: null, inicio: 0, falaCliente: '', falaIa: '',
   atendidas: 0, feitas: 0, assistidas: 0, transferidas: 0, eventos: [],
 };
-let rodando = false; let sip = null;
+let rodando = false; let sip = null; let escutaAgente = '';
 function log(t) {
   console.log('[voz]', t);
   MON.eventos.unshift({ em: new Date().toISOString(), texto: t }); MON.eventos.length = Math.min(MON.eventos.length, 40);
@@ -321,8 +321,9 @@ async function principal() {
       const host = String(v.host || central.host || '').trim();
       const porta = Number(v.porta || central.porta) || 5060;
       const ramal = String(v.ramal || agente.ramal_ia || '').trim();
-      if (!host || !ramal) { MON.central = 'Preencha o endereço da central e o ramal'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
-      sip = new Sip({ host, porta, ramal, senha: v.senha || '', log, aoReceber: (c) => aoReceber(c) });
+      escutaAgente = agente.codigo_escuta || '';
+      if (!host || !ramal) { MON.central = !host ? 'Central não configurada: preencha a tela Configuração PABX Grandstream UCM' : 'Agente sem ramal da IA: preencha em Agentes de Voz'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
+      sip = new Sip({ host, porta, ramal, senha: v.senha || agente.senha_ramal_ia || '', log, aoReceber: (c) => aoReceber(c) });
       await sip.abrir();
       if (!(await sip.registrar())) { MON.central = 'Falha no registro'; await sip.parar(); sip = null; await dormir(15_000); continue; }
       MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${host}`; log(MON.central);
@@ -351,7 +352,7 @@ async function aoReceber(c) {
 
 async function executarComando(cmd) {
   const tipo = cmd.tipo;
-  const escuta = (loadConfig().voz || {}).codigoEscuta || '*45';
+  const escuta = (loadConfig().voz || {}).codigoEscuta || escutaAgente || '*45';
   const destino = tipo === 'ligar' ? cmd.numero : `${escuta}${cmd.ramal}`;
   log(tipo === 'ligar' ? `Ligando para ${destino}` : `Escutando o ramal ${cmd.ramal}`);
   const c = await sip.ligar(destino);
