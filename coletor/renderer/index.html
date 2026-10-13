@@ -418,11 +418,11 @@
             <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Configurar central e chave</summary>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
               <div style="grid-column:1/3"><label style="font-size:11px; color:var(--text-2);">Chave do Pilar Voz (opcional — em branco, usa a chave de instalação do Coletor)</label><input id="vozChave" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Endereço da central</label><input id="vozHost" placeholder="192.168.0.10" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Porta</label><input id="vozPorta" placeholder="5060" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Endereço da central</label><input id="vozHost" placeholder="automático (tela do PABX)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Porta</label><input id="vozPorta" placeholder="automático" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
               <div><label style="font-size:11px; color:var(--text-2);">Ramal da IA (vazio = o do agente)</label><input id="vozRamal" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Senha do ramal</label><input id="vozSenha" type="password" placeholder="(mantida se vazio)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Código de escuta</label><input id="vozEscuta" placeholder="*45" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Senha do ramal</label><input id="vozSenha" type="password" placeholder="automático (Agentes de Voz)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div><label style="font-size:11px; color:var(--text-2);">Código de escuta</label><input id="vozEscuta" placeholder="automático" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
               <button class="btn" style="background:var(--brand); color:#fff; padding:6px 12px; font-size:13px;" onclick="salvarVoz()">Salvar</button>
@@ -621,7 +621,7 @@
       }catch(e){}
     }
     async function salvarVoz(){
-      await window.coletor.vozSalvar({chave:vozChave.value.trim(),host:vozHost.value.trim(),porta:vozPorta.value.trim()||'5060',ramal:vozRamal.value.trim(),senha:vozSenha.value,codigoEscuta:vozEscuta.value.trim()||'*45'});
+      await window.coletor.vozSalvar({chave:vozChave.value.trim(),host:vozHost.value.trim(),porta:vozPorta.value.trim(),ramal:vozRamal.value.trim(),senha:vozSenha.value,codigoEscuta:vozEscuta.value.trim()});
       vozSenha.value='';document.getElementById('vozMsg').textContent='Salvo.';refreshVoz();
     }
     setInterval(refreshVoz,1000); setTimeout(refreshVoz,300);

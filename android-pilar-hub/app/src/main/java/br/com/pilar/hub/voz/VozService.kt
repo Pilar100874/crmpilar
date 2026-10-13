@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
  * atende ligações, executa os pedidos do CRM e conversa usando a IA do sistema.
  */
 class VozService : Service() {
+    @Volatile private var escutaAgente = ""
     private var agente: SipAgente? = null
     @Volatile private var rodando = false
     private var trava: PowerManager.WakeLock? = null
