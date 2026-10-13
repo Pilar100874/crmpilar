@@ -122,7 +122,14 @@ Deno.serve(async (req) => {
       case "config": {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente de voz ativo. Cadastre em Agentes de Voz." }, 404);
-        return json({ agente: a });
+        // Endereço da central vem da tela Configuração PABX Grandstream UCM,
+        // assim o app e o Coletor não precisam digitar host/porta manualmente.
+        const ucm = (await sb.from("ucm_config").select("ucm_host, remote_ip, sip_porta")
+          .eq("estabelecimento_id", empresa).maybeSingle()).data;
+        const central = ucm?.ucm_host
+          ? { host: String(ucm.remote_ip || ucm.ucm_host), porta: Number(ucm.sip_porta) || 5060 }
+          : null;
+        return json({ agente: a, central });
       }
       case "turno": {
         const a = await agente();
