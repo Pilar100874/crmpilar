@@ -75,7 +75,9 @@ async function checarAtualizacao() {
     let disponivel = cmpVersion(remoto.version, local) > 0;
     const downloadUrl = (process.platform === 'linux'
       ? (remoto.downloadUrlLinux || remoto.downloadUrl)
-      : remoto.downloadUrl) || null;
+      : process.platform === 'darwin'
+        ? (process.arch === 'arm64' ? remoto.downloadUrlMacAppleSilicon : remoto.downloadUrlMacIntel)
+        : remoto.downloadUrl) || null;
 
     // Se o GitHub/release foi removido, não mostra falso aviso de atualização.
     if (disponivel && !(await urlExiste(downloadUrl))) {
@@ -156,8 +158,40 @@ async function instalarLinux(downloadUrl, onProgress) {
   return alvo;
 }
 
+// ─── Mac ──────────────────────────────────────────────────────────────
+// Baixa o .zip, extrai com ditto e um script troca o .app depois que o
+// Coletor fecha; remove a quarentena e reabre o aplicativo.
+async function instalarMac(downloadUrl, onProgress) {
+  if (!downloadUrl || !/\.zip($|\?)/i.test(downloadUrl)) throw new Error('Versão para Mac não encontrada no manifesto');
+  const appAtual = process.execPath.replace(/(\.app)\/Contents\/.*$/, '$1');
+  if (!appAtual.endsWith('.app')) throw new Error('Não foi possível localizar o aplicativo instalado');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'coletor-upd-'));
+  const zip = path.join(dir, 'coletor.zip');
+  await baixarArquivo(downloadUrl, zip, onProgress);
+  const sh = path.join(dir, 'instalar.sh');
+  const q = (v) => `'${String(v).replace(/'/g, `'\\''`)}'`;
+  fs.writeFileSync(sh, `#!/bin/bash
+exec >> ${q(path.join(os.homedir(), 'Library/Logs/ColetorPilar-update.log'))} 2>&1
+echo "== $(date) atualizando"
+while kill -0 ${process.pid} 2>/dev/null; do sleep 1; done
+mkdir -p ${q(dir + '/x')}
+/usr/bin/ditto -x -k ${q(zip)} ${q(dir + '/x')} || exit 1
+NOVO=$(find ${q(dir + '/x')} -maxdepth 2 -name '*.app' -type d | head -1)
+[ -z "$NOVO" ] && { echo "app não encontrado no zip"; exit 1; }
+rm -rf ${q(appAtual)} && /usr/bin/ditto "$NOVO" ${q(appAtual)} || exit 1
+/usr/bin/xattr -dr com.apple.quarantine ${q(appAtual)} 2>/dev/null
+/usr/bin/open ${q(appAtual)}
+rm -rf ${q(dir)}
+`, { mode: 0o755 });
+  spawn('/bin/bash', [sh], { detached: true, stdio: 'ignore' }).unref();
+  if (onProgress) onProgress(100);
+  setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
+  return appAtual;
+}
+
 async function baixarEInstalar(downloadUrl, onProgress) {
   if (process.platform === 'linux') return await instalarLinux(downloadUrl, onProgress);
+  if (process.platform === 'darwin') return await instalarMac(downloadUrl, onProgress);
   if (!downloadUrl) throw new Error('URL de download não informada');
   const ext = downloadUrl.toLowerCase().endsWith('.msi') ? '.msi' : '.exe';
   const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}${ext}`);
