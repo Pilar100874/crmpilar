@@ -27,6 +27,7 @@ const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
   if (app.nome === "Pilar Automação") return ["automacao"];
   if (app.nome === "Pilar SMS") return ["sms"];
   if (app.nome === "Pilar Fone") return ["pilar-fone"];
+  if (app.nome === "Pilar Voz") return ["voz"];
   if (app.nome === "TV Remotas") return ["coletor-tv"];
   if (app.nome === "Coletor" && app.icone === "android") return ["controle", "voz"];
   return ["coletor", "controle"];
@@ -119,6 +120,7 @@ export default function AdminApps() {
   } | null>(null);
   const [automacaoInfo, setAutomacaoInfo] = useState<{ url?: string; versionName?: string } | null>(null);
   const [tvInfo, setTvInfo] = useState<{ url?: string; versionName?: string } | null>(null);
+  const [manif, setManif] = useState<Record<string, { version?: string; downloadUrl?: string; filename?: string }>>({});
   const [ajudaAberta, setAjudaAberta] = useState<Ajuda | null>(null);
   const [chavesAberta, setChavesAberta] = useState<string | null>(null);
   const [datasDownloads, setDatasDownloads] = useState<Record<string, string>>({});
@@ -128,6 +130,12 @@ export default function AdminApps() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setColetorInfo(data))
       .catch(() => {});
+    ["sms", "hub", "interfone", "voz"].forEach((k) =>
+      fetch(`/coletor/${k}-version.json`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d && setManif((m) => ({ ...m, [k]: d })))
+        .catch(() => {}),
+    );
     fetch("/apps/pilar-automacao-latest.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setAutomacaoInfo(data))
@@ -171,9 +179,9 @@ export default function AdminApps() {
       icone: "android",
       sistemas: ["Android"],
       recursos: ["SMS"],
-      arquivo: "pilar-sms-v1.11.0.apk",
-      url: SMS_URL,
-      versao: "v1.11.0",
+      arquivo: manif.sms?.filename || "pilar-sms-v1.11.0.apk",
+      url: manif.sms?.downloadUrl || SMS_URL,
+      versao: manif.sms?.version ? `v${manif.sms.version}` : "v1.11.0",
       appSlug: "sms",
       ajuda: {
         titulo: "Pilar SMS — como instalar",
@@ -190,9 +198,9 @@ export default function AdminApps() {
       icone: "android",
       sistemas: ["Android"],
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
-      arquivo: "pilar-coletor-v3.3.0.apk",
-      url: HUB_URL,
-      versao: "v3.3.0",
+      arquivo: manif.hub?.filename || "pilar-coletor-v3.3.0.apk",
+      url: manif.hub?.downloadUrl || HUB_URL,
+      versao: manif.hub?.version ? `v${manif.hub.version}` : "v3.3.0",
       appSlug: "hub",
       ajuda: {
         titulo: "Coletor — como instalar",
@@ -200,7 +208,26 @@ export default function AdminApps() {
           "Instale o APK em um aparelho Android que fique ligado na mesma rede das câmeras e relógios de ponto.",
           "Faça login com sua conta do CRM Pilar.",
           "Ative os módulos desejados na tela do app.",
-          "Para o agente de voz, toque em \"Pilar Voz\" e informe os dados da central (a chave de voz usa a própria chave de ativação do app).",
+          "Para o agente de voz, toque em \"Pilar Voz\" e salve: a central é lida da tela Configuração PABX Grandstream UCM e a chave é a própria chave de ativação do app.",
+        ],
+      },
+    },
+    {
+      nome: "Pilar Voz",
+      descricao: "Agente de voz com IA em um celular Android ligado à central telefônica.",
+      icone: "android",
+      sistemas: ["Android"],
+      recursos: ["Voz"],
+      arquivo: manif.voz?.filename || "pilar-voz-v1.0.0.apk",
+      url: manif.voz?.downloadUrl || "https://github.com/Pilar100874/crmpilar/releases/download/voz-v1.0.0/pilar-voz-v1.0.0.apk",
+      versao: manif.voz?.version ? `v${manif.voz.version}` : "v1.0.0",
+      ajuda: {
+        titulo: "Pilar Voz — como instalar",
+        passos: [
+          "Instale o APK num celular Android na mesma rede (ou VPN) da central telefônica.",
+          "Informe a chave do aparelho (Automação → Chaves dos aplicativos, tipo Pilar Voz) e o ramal da IA.",
+          "A central é lida automaticamente da tela Configuração PABX Grandstream UCM.",
+          "Crie e ative um agente em Configurações de Atendimento → Agentes de Voz.",
         ],
       },
     },
@@ -210,9 +237,9 @@ export default function AdminApps() {
       icone: "android",
       sistemas: ["Android"],
       recursos: ["Interfone"],
-      arquivo: "pilar-interfone-v1.8.4.apk",
-      url: INTERFONE_URL,
-      versao: "v1.8.4",
+      arquivo: manif.interfone?.filename || "pilar-interfone-v1.8.4.apk",
+      url: manif.interfone?.downloadUrl || INTERFONE_URL,
+      versao: manif.interfone?.version ? `v${manif.interfone.version}` : "v1.8.4",
       appSlug: "fone",
       ajuda: {
         titulo: "Pilar Fone — como instalar",
