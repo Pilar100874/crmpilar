@@ -314,10 +314,15 @@ async function principal() {
   while (rodando) {
     try {
       const v = loadConfig().voz || {};
-      const agente = (await api('config')).agente || {};
+      const resp = (await api('config')) || {};
+      const agente = resp.agente || {};
+      // Sem host digitado, usa o servidor da tela Configuração PABX (vem em "central").
+      const central = resp.central || {};
+      const host = String(v.host || central.host || '').trim();
+      const porta = Number(v.porta || central.porta) || 5060;
       const ramal = String(v.ramal || agente.ramal_ia || '').trim();
-      if (!v.host || !ramal) { MON.central = 'Preencha o endereço da central e o ramal'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
-      sip = new Sip({ host: v.host, porta: Number(v.porta) || 5060, ramal, senha: v.senha || '', log, aoReceber: (c) => aoReceber(c) });
+      if (!host || !ramal) { MON.central = 'Preencha o endereço da central e o ramal'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
+      sip = new Sip({ host, porta, ramal, senha: v.senha || '', log, aoReceber: (c) => aoReceber(c) });
       await sip.abrir();
       if (!(await sip.registrar())) { MON.central = 'Falha no registro'; await sip.parar(); sip = null; await dormir(15_000); continue; }
       MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${v.host}`; log(MON.central);
