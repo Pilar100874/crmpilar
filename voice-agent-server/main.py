@@ -35,6 +35,19 @@ CODIGO_ESCUTA = os.environ.get("CODIGO_ESCUTA", "*45")
 db = create_client(SUPA_URL, SUPA_KEY)
 FUNC = f"{SUPA_URL}/functions/v1"
 
+# Sem UCM_HOST no ambiente, usa o servidor da tela Configuração PABX Grandstream UCM.
+if not UCM_HOST:
+    ucm = (db.table("ucm_config").select("ucm_host, remote_ip, sip_porta")
+           .eq("estabelecimento_id", EMPRESA).limit(1).execute())
+    if ucm.data:
+        UCM_HOST = ucm.data[0].get("remote_ip") or ucm.data[0].get("ucm_host") or ""
+        if not UCM_PORTA:
+            UCM_PORTA = int(ucm.data[0].get("sip_porta") or 5060)
+if not UCM_PORTA:
+    UCM_PORTA = 5060
+if not UCM_HOST:
+    raise SystemExit("Configure o servidor em Configuração PABX Grandstream UCM (ou UCM_HOST no ambiente).")
+
 
 def agora():
     return datetime.now(timezone.utc).isoformat()
