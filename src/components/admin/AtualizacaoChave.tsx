@@ -73,7 +73,7 @@ export default function AtualizacaoChave({
       }
 
       let encontrado: Aparelho | null = null;
-      if (appSlug === "coletor") {
+      if (appSlug === "coletor" || appSlug === "hub") {
         const { data } = await supabase
           .from("coletor_dispositivos")
           .select("id,hostname,versao,comando_status")
@@ -121,7 +121,7 @@ export default function AtualizacaoChave({
     if (!disponivel || !url) return toast.error("Nenhuma versão publicada para este aplicativo");
     setEnviando(true);
     try {
-      if (appSlug === "coletor") {
+      if (appSlug === "coletor" || appSlug === "hub") {
         const { error } = await supabase
           .from("coletor_dispositivos")
           .update({
