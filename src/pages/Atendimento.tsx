@@ -7164,6 +7164,7 @@ ${recentMessages}
               </div>
             </div>
           </>
+        // eslint-disable-next-line no-constant-condition -- ramo mantido desativado de propósito
         ) : false && activeTab === "visita" && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <div className="flex flex-1 min-h-0 flex-col">
