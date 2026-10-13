@@ -109,6 +109,12 @@ Deno.serve(async (req) => {
           .eq("ativo", true).maybeSingle()).data;
         if (esc) return esc;
       }
+      // Sem agente escolhido: o mais antigo ativo do tipo pedido (padrão "receber",
+      // pois config/iniciar sem id vêm do registro e de chamadas recebidas).
+      const modo = ["receber", "ligar", "assistir"].includes(String(corpo.modo)) ? String(corpo.modo) : "receber";
+      const doTipo = (await sb.from("voz_agentes").select("*").eq("estabelecimento_id", empresa)
+        .eq("ativo", true).contains("modos", [modo]).order("created_at").limit(1).maybeSingle()).data;
+      if (doTipo) return doTipo;
       return (await sb.from("voz_agentes").select("*").eq("estabelecimento_id", empresa)
         .eq("ativo", true).order("created_at").limit(1).maybeSingle()).data;
     };
