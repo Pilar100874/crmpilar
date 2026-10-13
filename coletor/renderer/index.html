@@ -415,9 +415,10 @@
           <div class="meta">Ramal da IA na central: atende, faz as ligações do Disparo em massa e ajuda o atendente. O computador precisa estar na mesma rede da central.</div>
           <div id="vozMonitor" class="meta" style="margin-top:8px; line-height:1.6;"></div>
           <details style="margin-top:10px; border-top:1px solid var(--stroke); padding-top:10px;">
-            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Configurar central e chave</summary>
+            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Ajustes avançados (opcional)</summary>
+            <p style="font-size:11px; color:var(--text-2); margin:6px 0 0;">Não precisa preencher: a chave de instalação, a central (tela do PABX) e o ramal/senha (Agentes de Voz) vêm automaticamente. Use só para trocar algum valor.</p>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-              <div style="grid-column:1/3"><label style="font-size:11px; color:var(--text-2);">Chave do Pilar Voz (opcional — em branco, usa a chave de instalação do Coletor)</label><input id="vozChave" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
+              <div style="grid-column:1/3"><label style="font-size:11px; color:var(--text-2);">Outra chave (vazio = chave de instalação)</label><input id="vozChave" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
               <div><label style="font-size:11px; color:var(--text-2);">Endereço da central</label><input id="vozHost" placeholder="automático (tela do PABX)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
               <div><label style="font-size:11px; color:var(--text-2);">Porta</label><input id="vozPorta" placeholder="automático" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
               <div><label style="font-size:11px; color:var(--text-2);">Ramal da IA (vazio = o do agente)</label><input id="vozRamal" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
