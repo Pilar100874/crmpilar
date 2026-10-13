@@ -45,7 +45,7 @@ const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 const SMS_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.11.0/pilar-sms-v1.11.0.apk";
 const HUB_URL = "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.3.0/pilar-coletor-v3.3.0.apk";
-const INTERFONE_URL = "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.6/pilar-interfone-v1.7.6.apk";
+const INTERFONE_URL = "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.8.4/pilar-interfone-v1.8.4.apk";
 const AUTOMACAO_URL = "https://github.com/Pilar100874/crmpilar/releases/download/pilar-automacao-latest/pilar-automacao.apk";
 const TV_URL = "https://github.com/Pilar100874/crmpilar/releases/download/android-tv-signage-latest/app-release.apk";
 
@@ -210,9 +210,10 @@ export default function AdminApps() {
       icone: "android",
       sistemas: ["Android"],
       recursos: ["Interfone"],
-      arquivo: "pilar-interfone-v1.7.6.apk",
+      arquivo: "pilar-interfone-v1.8.4.apk",
       url: INTERFONE_URL,
-      versao: "v1.7.6",
+      versao: "v1.8.4",
+      appSlug: "fone",
       ajuda: {
         titulo: "Pilar Fone — como instalar",
         passos: [
@@ -328,13 +329,14 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "coletor-pilar-appliance-amd64.iso",
       url: APPLIANCE_ISO_URL,
+      versao: coletorInfo?.version ? `v${coletorInfo.version}` : undefined,
       appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Appliance ISO) — como instalar",
         passos: [
           "Grave a ISO num pendrive (Rufus, Balena Etcher) e dê boot pelo mini-PC.",
           "A instalação é automática: Linux + Coletor em modo kiosk.",
-          "Para atualizar depois: sudo /opt/coletor/update.sh.",
+          "Atualização remota: abra Chaves e clique em Atualizar na chave do equipamento (ou rode sudo /opt/coletor/update.sh).",
         ],
       },
     },
