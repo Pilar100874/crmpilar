@@ -68,11 +68,17 @@ export function useStatusRamais(intervaloMs = 30000) {
           .select("ramal, origem, em_chamada, ultimo_ping")
           .gte("ultimo_ping", desde),
         logado
-          ? supabase.functions.invoke("ucm-status").catch((erro) => {
-              const status = (erro as { context?: { status?: number } })?.context?.status;
-              if (status === 401) bloqueadoPor401.current = true;
-              return { data: null, error: true };
-            })
+          ? supabase.functions
+              .invoke("ucm-status")
+              .then((r) => {
+                const status = (r.error as { context?: { status?: number } } | null)?.context?.status;
+                if (status === 401) {
+                  bloqueadoPor401.current = true;
+                  return { data: null, error: true };
+                }
+                return r;
+              })
+              .catch(() => ({ data: null, error: true }))
           : Promise.resolve({ data: null, error: true }),
       ]);
 
