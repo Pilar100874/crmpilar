@@ -2115,17 +2115,18 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     return { linha, alvoId: alvo.id, alvoAntes: { description: alvo.description, time: alvo.time, is_all_day: alvo.is_all_day } };
   };
 
-  const moverSelecao = async (confirmado = false, semPrevia = false, diaTodoResolvido = false) => {
-    if (!dataMovimento || movendoSelecao) return;
-    const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
+  const moverSelecao = async (confirmado = false, semPrevia = false, diaTodoResolvido = false, ov?: { ids: Set<string>; data: Date }) => {
+    const dataMov = ov?.data ?? dataMovimento; const idsMov = ov?.ids ?? tarefasParaMover;
+    if (!dataMov || movendoSelecao) return;
+    const selecionadas = tasks.filter(t => idsMov.has(t.id));
     if (!selecionadas.length) return;
     if (selecionadas.some(t => tarefaAtrasada(t))) { toast.error("Tarefas atrasadas não podem ser movidas manualmente."); return; }
-    if (selecaoNaMesmaData(dataMovimento, selecionadas)) { toast.info("As tarefas já estão nesta data."); return; }
-    const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMovimento, calendarioRegras) }));
+    if (selecaoNaMesmaData(dataMov, selecionadas)) { toast.info("As tarefas já estão nesta data."); return; }
+    const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMov, calendarioRegras) }));
     if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
     if (validacaoAtiva && !semPrevia) {
       setMovimentoAberto(false);
-      abrirPrevia("mover", { data: dataMovimento }, () => void moverSelecao(confirmado, true));
+      abrirPrevia("mover", { data: dataMov }, () => void moverSelecao(confirmado, true));
       return;
     }
     setMovendoSelecao(true);
@@ -2142,7 +2143,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             for (const tSel of allDaySel) {
               let q = (supabase as any).from("calendario_tarefas")
                 .select("id, title, time, is_all_day, contact_name, user_id")
-                .eq("date", format(dataMovimento, "yyyy-MM-dd"))
+                .eq("date", format(dataMov, "yyyy-MM-dd"))
                 .not("status", "in", '("concluido","cancelado","completed")');
               if (tSel.userId) q = q.eq("user_id", tSel.userId);
               const { data: outrasData } = await q;
@@ -2154,16 +2155,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             }
           }
         }
-        if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
+        if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMov)) avisos.push("A data escolhida cai em fim de semana.");
         const avisoMisto = avisoMisturaDiaTodo(selecionadas);
         if (avisoMisto) avisos.push(avisoMisto);
         if (calendarioRegras.pergunta_dia_todo) {
           for (const userId of new Set(selecionadas.filter(t => !t.isAllDay).map(t => t.userId))) {
-            if ((await checkAllDayTasks(dataMovimento, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
+            if ((await checkAllDayTasks(dataMov, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
           }
         }
         if (calendarioRegras.deteccao_conflitos && movimentos.some(m => m.updates?.time && (
-          tasks.some(t => !tarefasParaMover.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMovimento) && t.time === m.updates?.time) ||
+          tasks.some(t => !idsMov.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMov) && t.time === m.updates?.time) ||
           movimentos.some(outro => outro.task.id !== m.task.id && outro.task.userId === m.task.userId && outro.updates?.time === m.updates?.time)
         ))) avisos.push("Existem tarefas no mesmo horário; manter na data preservará todas elas.");
         if (avisos.length) { setAvisoMovimento(avisos); setMovimentoAberto(true); return; }
@@ -2177,7 +2178,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           const updates = movimento.updates;
           setTasks(atuais => atuais.map(t => t.id === movimento.task.id ? { ...t, ...updates } : t));
           const snap = snapshotMov(movimento.task);
-          const uniao = await unirTarefaMesmoContato(movimento.task, dataMovimento);
+          const uniao = await unirTarefaMesmoContato(movimento.task, dataMov);
           registro.push(uniao ? { ...snap, uniao } : snap);
         }
       }
@@ -2185,7 +2186,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       setTarefasParaMover(ids => new Set([...ids].filter(id => !movidas.has(id))));
       setAvisoMovimento([]);
       setMovimentoAberto(false);
-      if (movidas.size) toast.success(`${movidas.size} tarefa(s) movida(s) para ${format(dataMovimento, "dd/MM/yyyy")}`);
+      if (movidas.size) toast.success(`${movidas.size} tarefa(s) movida(s) para ${format(dataMov, "dd/MM/yyyy")}`);
       if (movidas.size !== selecionadas.length) toast.error("Algumas tarefas não foram movidas e continuam selecionadas.");
       await loadTasks();
       void carregarDatasDiaTodo();
