@@ -1772,6 +1772,33 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
+  // Conclui a tarefa exigindo encaminhamento: reprogramar nova tarefa ou inativar o cliente
+  const confirmarEncerramento = async (modo: "reprogramar" | "inativar") => {
+    const task = encerramentoPendente;
+    setEncerramentoPendente(null);
+    if (!task) return;
+    if (modo === "inativar") {
+      if (!task.contactId) { toast.error("Esta tarefa não tem cliente vinculado"); return; }
+      try {
+        const { error } = await supabase.rpc("inactivate_customer", { p_customer_id: task.contactId });
+        if (error) throw error;
+        toast.success("Cliente inativado");
+      } catch (e) {
+        console.error("Erro ao inativar cliente:", e);
+        toast.error("Erro ao inativar cliente");
+        return;
+      }
+    }
+    await handleToggleTaskStatus(task.id, true, true);
+    if (modo === "reprogramar") {
+      if (task.contactId) setContatoReprogramar({ id: task.contactId, nome: task.contactName || "Contato" });
+      const amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+      handleOpenNewTask(amanha);
+      toast.info("Reprograme a nova tarefa para uma data futura");
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
