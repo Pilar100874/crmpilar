@@ -936,20 +936,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       </ScrollArea>
                     </div>
                     {/* Calendário */}
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={(newDate) => {
-                        if (newDate) {
-                          setDate(newDate);
-                          setDateInput(format(newDate, "dd/MM/yyyy"));
-                          setSelectedQuickOption(null);
-                        }
-                      }}
-                      initialFocus
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
+                    <div>
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(newDate) => {
+                          if (newDate) {
+                            setDate(newDate);
+                            setDateInput(format(newDate, "dd/MM/yyyy"));
+                            setSelectedQuickOption(null);
+                          }
+                        }}
+                        initialFocus
+                        locale={ptBR}
+                        className="pointer-events-auto"
+                        modifiers={{ diaTodo: (day) => datasDiaTodoSet.has(format(day, "yyyy-MM-dd")) }}
+                        modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                      />
+                      {datasDiaTodoSet.size > 0 && (
+                        <p className="px-3 pb-2 text-[11px] text-muted-foreground">Datas em destaque já possuem tarefa de dia todo.</p>
+                      )}
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>
