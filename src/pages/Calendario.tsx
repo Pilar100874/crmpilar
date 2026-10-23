@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento, selecaoNaMesmaData } from "@/lib/calendario/movimentacao";
 import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -2063,6 +2063,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
     if (!selecionadas.length) return;
     if (selecionadas.some(t => tarefaAtrasada(t))) { toast.error("Tarefas atrasadas não podem ser movidas manualmente."); return; }
+    if (selecaoNaMesmaData(dataMovimento, selecionadas)) { toast.info("As tarefas já estão nesta data."); return; }
     const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMovimento, calendarioRegras) }));
     if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
     if (validacaoAtiva && !semPrevia) {
