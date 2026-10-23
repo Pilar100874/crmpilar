@@ -1,4 +1,6 @@
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
+import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
+import { analisarDestino, type AnaliseDestino } from "@/lib/calendario/analiseDestino";
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -582,6 +584,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [etapaAtual, setEtapaAtual] = useState(0);
   const [decisoesFluxo, setDecisoesFluxo] = useState<string[]>([]);
   const [resultadoFluxo, setResultadoFluxo] = useState<{ data: Date } | null>(null);
+  const [analiseDestino, setAnaliseDestino] = useState<AnaliseDestino | null>(null);
+  const [analisandoDestino, setAnalisandoDestino] = useState(false);
   const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[]; mover?: { taskId: string; updates: { date: Date; time: string | null }; userId?: string }; lote?: boolean } | null>(null);
   const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
@@ -1380,6 +1384,25 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   };
 
   // Carregar as datas que possuem tarefa de dia todo (para destacar no seletor de data)
+  useEffect(() => {
+    const origem = movimentoAberto && avisoMovimento.length > 0 ? dataMovimento
+      : etapasFluxo[etapaAtual] === "fimDeSemana" ? weekendPendingTask?.targetDate : undefined;
+    let cancelado = false;
+    setAnaliseDestino(null);
+    if (!origem) { setAnalisandoDestino(false); return; }
+    setAnalisandoDestino(true);
+    const usuariosAlvo = movimentoAberto
+      ? [...new Set(tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId))]
+      : [weekendPendingTask?.existingTask?.userId ?? weekendPendingTask?.taskData?.userId];
+    void analisarDestino(origem, async data => {
+      const verificacoes = await Promise.all(usuariosAlvo.map(id => checkAllDayTasks(data, id)));
+      return verificacoes.find(item => item.hasTask) ?? { hasTask: false };
+    }).then(resultado => { if (!cancelado) setAnaliseDestino(resultado); })
+      .catch(() => { if (!cancelado) toast.error("Não foi possível analisar as próximas datas. Tente novamente."); })
+      .finally(() => { if (!cancelado) setAnalisandoDestino(false); });
+    return () => { cancelado = true; };
+  }, [movimentoAberto, dataMovimento, avisoMovimento, etapasFluxo, etapaAtual, weekendPendingTask, tarefasParaMover, tasks]);
+
   const carregarDatasDiaTodo = async (userIdOverride?: string) => {
     try {
       let targetUserId = userIdOverride;
@@ -4254,7 +4277,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
-                  {dataMovimento ? `Por que preciso decidir? (${format(dataMovimento, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
+                  Análise da data e das próximas opções
                 </div>
                 <ul className="mt-2 space-y-1.5 text-sm text-foreground">
                   {avisoMovimento.map(aviso => (
@@ -4264,6 +4287,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     </li>
                   ))}
                 </ul>
+                {analisandoDestino && <p role="status" className="mt-3 text-sm text-muted-foreground">Analisando o próximo dia útil e as tarefas de dia todo…</p>}
+                {dataMovimento && analiseDestino && <div className="mt-3"><AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} /></div>}
                 {dataMovimento && (
                   <TarefasDoDiaResumo
                     date={dataMovimento}
@@ -4272,10 +4297,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     collapsible
                   />
                 )}
-                <Button size="sm" variant="secondary" className="mt-3 w-full gap-2" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>
+                <Button size="sm" variant="secondary" className="mt-3 h-auto w-full gap-2 whitespace-normal py-2" disabled={movendoSelecao || analisandoDestino} onClick={() => { if (analiseDestino?.sugerida) { setDataMovimento(analiseDestino.sugerida); setAvisoMovimento([]); setOutrasDiaTodoMov([]); } else void proximaDataSelecao(); }}>
 
                   <CalendarDays className="h-4 w-4" />
-                  Mover para o próximo dia disponível
+                  {analiseDestino?.sugerida ? `Usar sugestão: ${format(analiseDestino.sugerida, "EEEE, dd/MM", { locale: ptBR })}` : "Mover para o próximo dia disponível"}
                 </Button>
                 {outrasDiaTodoMov.length > 0 && (
                   <Button size="sm" variant="outline" className="mt-2 w-full gap-2 whitespace-normal h-auto py-2" disabled={movendoSelecao} onClick={async () => {
@@ -4434,6 +4459,9 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 {/* Etapa: fim de semana */}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && !weekendEscolherData && (
                   <div className="flex flex-col gap-2">
+                    {analisandoDestino && <p role="status" className="text-sm text-muted-foreground">Analisando o próximo dia útil e as tarefas de dia todo…</p>}
+                    {weekendPendingTask && analiseDestino && <AnaliseDestinoResumo origem={weekendPendingTask.targetDate} analise={analiseDestino} userIds={[weekendPendingTask.existingTask?.userId ?? weekendPendingTask.taskData?.userId]} />}
+                    {analiseDestino?.sugerida && <Button className="h-auto w-full whitespace-normal py-2" onClick={() => { const data = analiseDestino.sugerida; if (data) avancarParaResumo(`Usar a data sugerida (${format(data, "dd/MM/yyyy")}), evitando o fim de semana e as tarefas de dia todo`, data); }}>Usar sugestão: {format(analiseDestino.sugerida, "EEEE, dd/MM", { locale: ptBR })}</Button>}
                     <Button
                       variant="outline"
                       className="w-full whitespace-normal h-auto py-2"
