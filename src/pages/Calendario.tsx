@@ -1745,14 +1745,22 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
 
 
-  const handleToggleTaskStatus = async (taskId: string, semPrevia = false) => {
+  const [encerramentoPendente, setEncerramentoPendente] = useState<Task | null>(null);
+  const [contatoReprogramar, setContatoReprogramar] = useState<{ id: string; nome: string } | null>(null);
+
+  const handleToggleTaskStatus = async (taskId: string, semPrevia = false, forcar = false) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     if (validacaoAtiva && !semPrevia) {
       abrirPrevia(task.status === "pending" ? "concluir" : "reabrir", {}, () => handleToggleTaskStatus(taskId, true));
+       return;
+    }
+    // Regra: ao concluir, exigir reprogramação de nova tarefa ou inativação do cliente
+    if (task.status === "pending" && !forcar && calendarioRegras.encaminhamento_obrigatorio_conclusao) {
+      setEncerramentoPendente(task);
       return;
     }
-    
+
     const newStatus = task.status === "pending" ? "completed" : "pending";
     const success = await updateTaskInDatabase(taskId, { status: newStatus }, 'toggle-status');
     
