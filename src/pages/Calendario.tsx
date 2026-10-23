@@ -2151,22 +2151,22 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             }
             if (outrasMap.size) {
               setOutrasDiaTodoMov([...outrasMap.values()]);
-              avisos.push(`A tarefa de dia todo vai para um dia que já tem ${outrasMap.size} outra(s) tarefa(s). Você pode manter todas no mesmo dia ou mover as outras para o próximo dia disponível.`);
+              avisos.push(`Dia já tem outras tarefas|A tarefa de dia todo ocupa o dia inteiro, mas este dia já tem ${outrasMap.size} outra(s) tarefa(s) (veja a lista abaixo). Escolha se elas ficam junto ou vão para o próximo dia disponível.`);
             }
           }
         }
-        if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMov)) avisos.push("A data escolhida cai em fim de semana.");
+        if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMov)) avisos.push(`Fim de semana|${format(dataMov, "EEEE, dd/MM", { locale: ptBR })} é fim de semana e a regra da agenda pede confirmação para marcar nesses dias.`);
         const avisoMisto = avisoMisturaDiaTodo(selecionadas);
-        if (avisoMisto) avisos.push(avisoMisto);
+        if (avisoMisto) avisos.push(`Tarefa de dia todo perderá o "dia todo"|${avisoMisto}`);
         if (calendarioRegras.pergunta_dia_todo) {
           for (const userId of new Set(selecionadas.filter(t => !t.isAllDay).map(t => t.userId))) {
-            if ((await checkAllDayTasks(dataMov, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
+            if ((await checkAllDayTasks(dataMov, userId)).hasTask) { avisos.push("Dia ocupado por tarefa de dia todo|Este dia já está reservado por uma tarefa de dia todo. Se mantiver, sua tarefa ficará junto com ela."); break; }
           }
         }
         if (calendarioRegras.deteccao_conflitos && movimentos.some(m => m.updates?.time && (
           tasks.some(t => !idsMov.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMov) && t.time === m.updates?.time) ||
           movimentos.some(outro => outro.task.id !== m.task.id && outro.task.userId === m.task.userId && outro.updates?.time === m.updates?.time)
-        ))) avisos.push("Existem tarefas no mesmo horário; manter na data preservará todas elas.");
+        ))) avisos.push("Horário já ocupado|Já existe tarefa no mesmo horário. Se mantiver, as duas ficam no mesmo horário.");
         if (avisos.length) { if (ov) { setTarefasParaMover(new Set(ov.ids)); setDataMovimento(ov.data); } setAvisoMovimento(avisos); setMovimentoAberto(true); return; }
       }
       const movidas = new Set<string>();
@@ -4115,20 +4115,20 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
           <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
             <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Mover {tarefasParaMover.size} tarefa(s)</DialogTitle>
-            <DialogDescription>Escolha o novo dia. Os horários das tarefas são mantidos.</DialogDescription>
+            <DialogDescription>{avisoMovimento.length ? `A tarefa ainda não foi movida: encontramos ${avisoMovimento.length} motivo(s) para você decidir antes.` : "Escolha o novo dia. Os horários das tarefas são mantidos."}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
             {avisoMovimento.length > 0 && (
               <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
-                  Atenção: conflitos nesta data
+                  {dataMovimento ? `Por que preciso decidir? (${format(dataMovimento, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
                 </div>
                 <ul className="mt-2 space-y-1.5 text-sm text-foreground">
                   {avisoMovimento.map(aviso => (
                     <li key={aviso} className="flex items-start gap-2">
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                      <span>{aviso}</span>
+                      <span><strong className="block font-semibold">{aviso.split("|")[0]}</strong>{aviso.includes("|") && <span className="text-muted-foreground">{aviso.split("|").slice(1).join("|")}</span>}</span>
                     </li>
                   ))}
                 </ul>
