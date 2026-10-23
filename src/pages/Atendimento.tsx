@@ -3962,25 +3962,6 @@ ${recentMessages}
   ), [userEmails]);
 
   // Aba "Recebidos": agrupa por contato para não repetir o mesmo contato na fila.
-  // Uma conversa/e-mail por contato; soma as mensagens não lidas e usa a mais recente.
-  const conversasRecebidasAgrupadas = useMemo(() => {
-    const grupos = new Map<string, { conv: any; phones: string[]; novas: number; data: number }>();
-    conversasRecebidasNaoRespondidas.forEach((conv) => {
-      const phone = normalizePhone(conv.customer?.telefone);
-      const key = conv.customer_id || phone || conv.id;
-      const data = new Date(conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
-      const atual = grupos.get(key);
-      if (!atual) {
-        grupos.set(key, { conv, phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
-      } else {
-        if (phone && !atual.phones.includes(phone)) atual.phones.push(phone);
-        if (phone) atual.novas += chatsNaoLidosPerPhone[phone] || 0;
-        if (data > atual.data) { atual.conv = conv; atual.data = data; }
-      }
-    });
-    return Array.from(grupos.values());
-  }, [conversasRecebidasNaoRespondidas, chatsNaoLidosPerPhone]);
-
   const emailsRecebidosAgrupados = useMemo(() => {
     const grupos = new Map<string, any>();
     emailsRecebidosNaoRespondidos.forEach((email) => {
