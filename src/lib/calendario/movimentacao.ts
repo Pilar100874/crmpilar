@@ -22,3 +22,11 @@ export function prepararMovimento(
   }
   return { date: destino, time };
 }
+
+// Aviso exibido ao mover junto uma tarefa de dia todo com tarefas que não são de dia todo.
+export function avisoMisturaDiaTodo(selecionadas: { isAllDay?: boolean }[]): string | null {
+  const temDiaTodo = selecionadas.some(t => t.isAllDay);
+  const temOutras = selecionadas.some(t => !t.isAllDay);
+  if (temDiaTodo && temOutras) return "A tarefa de dia todo será movida para o novo dia sem horário definido.";
+  return null;
+}

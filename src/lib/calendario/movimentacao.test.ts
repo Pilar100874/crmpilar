@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectarDestinoCalendario, prepararMovimento } from "./movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "./movimentacao";
 
 const regras = { bloquear_datas_passadas: true, bloquear_horarios_passados: true, realocacao_diaria: false };
 const agora = new Date(2026, 9, 23, 13, 43);
@@ -28,5 +28,12 @@ describe("movimentação do calendário", () => {
   });
   it("não move quando o cursor está fora das datas", () => {
     expect(detectarDestinoCalendario({ pointerCoordinates: { x: 999, y: 999 }, droppableContainers: [], droppableRects: new Map() } as unknown as Parameters<typeof detectarDestinoCalendario>[0])).toEqual([]);
+  });
+  it("avisa ao mover junto tarefa de dia todo com tarefas sem dia todo", () => {
+    expect(avisoMisturaDiaTodo([{ isAllDay: true }, { isAllDay: false }])).toBe("A tarefa de dia todo será movida para o novo dia sem horário definido.");
+  });
+  it("não avisa quando a seleção tem só tarefas de dia todo ou só sem dia todo", () => {
+    expect(avisoMisturaDiaTodo([{ isAllDay: true }, { isAllDay: true }])).toBeNull();
+    expect(avisoMisturaDiaTodo([{ isAllDay: false }, { isAllDay: false }])).toBeNull();
   });
 });

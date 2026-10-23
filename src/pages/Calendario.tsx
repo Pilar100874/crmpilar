@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
 import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -2096,6 +2096,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       if (!confirmado) {
         const avisos: string[] = [];
         if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
+        const avisoMisto = avisoMisturaDiaTodo(selecionadas);
+        if (avisoMisto) avisos.push(avisoMisto);
         if (calendarioRegras.pergunta_dia_todo) {
           for (const userId of new Set(selecionadas.filter(t => !t.isAllDay).map(t => t.userId))) {
             if ((await checkAllDayTasks(dataMovimento, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
@@ -4033,7 +4035,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
             <div className="flex flex-wrap gap-1.5">
               {tasks.filter(t => tarefasParaMover.has(t.id)).slice(0, 6).map(t => (
-                <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
+                <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.isAllDay ? "Dia todo · " : t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
               ))}
               {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
             </div>
