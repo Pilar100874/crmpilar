@@ -4185,15 +4185,16 @@ ${recentMessages}
   // Aba "Recebidos": agrupa as conversas por contato para não repetir o mesmo contato na fila.
   // Uma conversa por contato; soma as mensagens não lidas de todos os telefones e usa a conversa mais recente.
   const conversasRecebidasAgrupadas = useMemo(() => {
-    const grupos = new Map<string, { conv: any; phones: string[]; novas: number; data: number }>();
+    const grupos = new Map<string, { conv: any; ids: string[]; phones: string[]; novas: number; data: number }>();
     conversasRecebidasNaoRespondidas.forEach((conv) => {
       const phone = normalizePhone(conv.customer?.telefone);
       const key = conv.customer_id || phone || conv.id;
       const data = new Date(conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
       const atual = grupos.get(key);
       if (!atual) {
-        grupos.set(key, { conv, phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
+        grupos.set(key, { conv, ids: [conv.id], phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
       } else {
+        atual.ids.push(conv.id);
         if (phone && !atual.phones.includes(phone)) atual.phones.push(phone);
         if (phone) atual.novas += chatsNaoLidosPerPhone[phone] || 0;
         if (data > atual.data) { atual.conv = conv; atual.data = data; }
@@ -4451,13 +4452,22 @@ ${recentMessages}
           origem: rotuloOrigemConversa(conv.canal),
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
-          selecionado: selectedConversation === conv.id,
+          selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
             limparPaineisRecebido();
             setActiveTab("chat");
             setSelectedConversation(conv.id);
             openDetailsPanel(setShowClientDetailsChat);
+            // Abre a conversa do contato que realmente tem a última mensagem recebida.
+            const idsContato = conv.customer_id
+              ? conversations.filter((c: any) => c.customer_id === conv.customer_id).map((c: any) => c.id)
+              : grupo.ids;
+            if (idsContato.length > 1 || !conv.lastMessage) {
+              void supabase.from("messages").select("conversation_id").in("conversation_id", idsContato)
+                .order("created_at", { ascending: false }).limit(1).maybeSingle()
+                .then(({ data }) => { if (data?.conversation_id && data.conversation_id !== conv.id) setSelectedConversation(data.conversation_id); });
+            }
           },
         });
       });

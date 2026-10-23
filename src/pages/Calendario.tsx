@@ -1,3 +1,4 @@
+import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -3932,6 +3933,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
               <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
             </div>
+            {dataMovimento && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
             {avisoMovimento.length > 0 && <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
           </div>
           <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
@@ -4265,6 +4267,10 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               )}
             </DialogDescription>
           </DialogHeader>
+          <TarefasDoDiaResumo
+            date={allDayEscolherData ? allDayNovaData : (allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date)}
+            userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId]}
+          />
           {allDayEscolherData ? (
             <div className="space-y-3">
               <div className="flex justify-center">
