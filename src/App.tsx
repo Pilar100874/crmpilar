@@ -28,6 +28,7 @@ const BotCreate = React.lazy(() => import("./pages/BotCreate"));
 const Email = React.lazy(() => import("./pages/Email"));
 const EmailPage = React.lazy(() => import("./pages/EmailPage"));
 const Campanhas = React.lazy(() => import("./pages/Campanhas"));
+const Calendario = React.lazy(() => import("./pages/Calendario"));
 const CalendarioConfig = React.lazy(() => import("./pages/CalendarioConfig"));
 const Funil = React.lazy(() => import("./pages/Funil"));
 const Conteudos = React.lazy(() => import("./pages/Conteudos"));
@@ -532,8 +533,7 @@ const App = () => (
               <Route path="/bot-test" element={<BotTest />} />
               <Route path="/bot-create" element={<BotCreate />} />
               <Route path="/campanhas" element={<Campanhas />} />
-              {/* Calendário usa a mesma tela da agenda do Atendimento (mesmo visual e recursos) */}
-              <Route path="/calendario" element={<Atendimento />} />
+              <Route path="/calendario" element={<Calendario />} />
               <Route path="/calendario/configuracoes" element={<CalendarioConfig />} />
               <Route path="/funil" element={<Funil />} />
               <Route path="/orcamentos" element={<Orcamentos />} />
