@@ -4637,6 +4637,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
             )}
           </DialogFooter>
           )}
+          </div>
         </DialogContent>
       </Dialog>
 
