@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "./movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento, selecaoNaMesmaData } from "./movimentacao";
 
 const regras = { bloquear_datas_passadas: true, bloquear_horarios_passados: true, realocacao_diaria: false };
 const agora = new Date(2026, 9, 23, 13, 43);
@@ -35,5 +35,14 @@ describe("movimentação do calendário", () => {
   it("não avisa quando a seleção tem só tarefas de dia todo ou só sem dia todo", () => {
     expect(avisoMisturaDiaTodo([{ isAllDay: true }, { isAllDay: true }])).toBeNull();
     expect(avisoMisturaDiaTodo([{ isAllDay: false }, { isAllDay: false }])).toBeNull();
+  });
+  it("bloqueia mover quando a data de destino é a mesma das tarefas", () => {
+    const dia = new Date(2026, 9, 27);
+    expect(selecaoNaMesmaData(dia, [{ date: dia }, { date: new Date(2026, 9, 27, 20, 0) }])).toBe(true);
+  });
+  it("permite mover quando alguma tarefa está em outra data", () => {
+    expect(selecaoNaMesmaData(new Date(2026, 9, 30), [{ date: new Date(2026, 9, 30) }, { date: new Date(2026, 9, 27) }])).toBe(false);
+    expect(selecaoNaMesmaData(undefined, [{ date: new Date(2026, 9, 27) }])).toBe(false);
+    expect(selecaoNaMesmaData(new Date(2026, 9, 30), [])).toBe(false);
   });
 });

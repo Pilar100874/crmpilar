@@ -30,3 +30,8 @@ export function avisoMisturaDiaTodo(selecionadas: { isAllDay?: boolean }[]): str
   if (temDiaTodo && temOutras) return "A tarefa de dia todo será movida para o novo dia sem horário definido.";
   return null;
 }
+
+// A seleção já está toda na data de destino: mover para a mesma data não é permitido.
+export function selecaoNaMesmaData(destino: Date | undefined, selecionadas: { date: Date }[]): boolean {
+  return !!destino && selecionadas.length > 0 && selecionadas.every(t => isSameDay(t.date, destino));
+}
