@@ -1443,6 +1443,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           nextAvailableDate: nextAvailableDay,
           allDayTaskTitle: allDayCheck.taskTitle,
           targetDate: novaData,
+          origem: "escolhaData",
+          dataOriginal: novaData,
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
@@ -1560,6 +1562,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           nextAvailableDate: nextAvailableDay,
           allDayTaskTitle: allDayCheck.taskTitle,
           targetDate: taskData.date,
+          origem: "criacao",
+          dataOriginal: taskData.date,
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
@@ -2317,6 +2321,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             nextAvailableDate: nextAvailableDay,
             allDayTaskTitle: allDayCheck.taskTitle,
             targetDate: newDate,
+            origem: "movimento",
+            dataOriginal: newDate,
           });
           setAllDayEscolherData(false);
           setAllDayNovaData(null);
