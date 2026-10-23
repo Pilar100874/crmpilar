@@ -3961,6 +3961,18 @@ ${recentMessages}
     !email.read && (email.folder === "inbox" || !email.folder)
   ), [userEmails]);
 
+  // Aba "Recebidos": agrupa por contato para não repetir o mesmo contato na fila.
+  const emailsRecebidosAgrupados = useMemo(() => {
+    const grupos = new Map<string, any>();
+    emailsRecebidosNaoRespondidos.forEach((email) => {
+      const key = (email as any).customer_id || email.from_email || email.id;
+      const data = new Date((email as any).created_at || 0).getTime();
+      const atual = grupos.get(key);
+      if (!atual || data > new Date((atual as any).created_at || 0).getTime()) grupos.set(key, email);
+    });
+    return Array.from(grupos.values());
+  }, [emailsRecebidosNaoRespondidos]);
+
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
     let result = orcamentos;
@@ -4153,6 +4165,26 @@ ${recentMessages}
       });
     return phoneMap;
   }, [conversations]);
+
+  // Aba "Recebidos": agrupa as conversas por contato para não repetir o mesmo contato na fila.
+  // Uma conversa por contato; soma as mensagens não lidas de todos os telefones e usa a conversa mais recente.
+  const conversasRecebidasAgrupadas = useMemo(() => {
+    const grupos = new Map<string, { conv: any; phones: string[]; novas: number; data: number }>();
+    conversasRecebidasNaoRespondidas.forEach((conv) => {
+      const phone = normalizePhone(conv.customer?.telefone);
+      const key = conv.customer_id || phone || conv.id;
+      const data = new Date(conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
+      const atual = grupos.get(key);
+      if (!atual) {
+        grupos.set(key, { conv, phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
+      } else {
+        if (phone && !atual.phones.includes(phone)) atual.phones.push(phone);
+        if (phone) atual.novas += chatsNaoLidosPerPhone[phone] || 0;
+        if (data > atual.data) { atual.conv = conv; atual.data = data; }
+      }
+    });
+    return Array.from(grupos.values());
+  }, [conversasRecebidasNaoRespondidas, chatsNaoLidosPerPhone]);
 
   const indicadoresPorContato = useMemo(() => {
     const mapa = new Map<string, { diasAtraso: number; dataAtraso?: string; horarioAtraso?: string; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
@@ -4385,10 +4417,11 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas.
-    (filtroFila === "recebidos" ? conversasRecebidasNaoRespondidas : [])
+    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas, agrupadas por contato.
+    (filtroFila === "recebidos" ? conversasRecebidasAgrupadas : [])
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
-      .forEach((conv) => {
+      .forEach((grupo) => {
+        const conv = grupo.conv;
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
         lista.push({
@@ -4400,7 +4433,7 @@ ${recentMessages}
           motivo: "Mensagem recebida",
           canal: "whatsapp",
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
-          mensagensNovas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0,
+          mensagensNovas: grupo.novas,
           selecionado: selectedConversation === conv.id,
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
@@ -4412,8 +4445,8 @@ ${recentMessages}
         });
       });
 
-    // Recebidos: e-mails recebidos e não respondidos
-    (filtroFila === "recebidos" ? emailsRecebidosNaoRespondidos : [])
+    // Recebidos: e-mails recebidos e não respondidos, um por contato
+    (filtroFila === "recebidos" ? emailsRecebidosAgrupados : [])
       .forEach((email) => {
         lista.push({
           id: `email-${email.id}`,
@@ -4442,15 +4475,15 @@ ${recentMessages}
       return marcada;
     }
     return lista;
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
     agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
-    recebidos: conversasRecebidasNaoRespondidas.length + emailsRecebidosNaoRespondidos.length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
+    recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
 
   // Fontes da tela de disparo em massa (mesmas regras das abas Tudo/Agendados/Recebidos)
   const fontesDisparo = useMemo(() => ({
@@ -4458,9 +4491,9 @@ ${recentMessages}
     agendados: filteredTasks
       .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
       .map((task: any) => ({ id: task.contact_id as string, data: task.date ?? null })),
-    recebidos: conversasRecebidasNaoRespondidas.map((c: any) => c.customer_id).filter(Boolean),
-    recebidosEmails: emailsRecebidosNaoRespondidos.map((e: any) => e.from_email).filter(Boolean),
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
+    recebidos: conversasRecebidasAgrupadas.map((g: any) => g.conv.customer_id).filter(Boolean),
+    recebidosEmails: emailsRecebidosAgrupados.map((e: any) => e.from_email).filter(Boolean),
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
