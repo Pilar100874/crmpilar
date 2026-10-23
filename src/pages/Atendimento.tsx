@@ -126,6 +126,12 @@ interface Conversation {
     created_at: string;
     sender?: string;
   };
+  /** Última mensagem enviada pelo cliente — base da aba Recebidos. */
+  lastCustomerMessage?: {
+    text: string;
+    created_at: string;
+    sender?: string;
+  };
   customerCompanies?: any[];
   customerLinkedUsers?: Array<{
     customer_id: string;
@@ -3114,9 +3120,15 @@ ${recentMessages}
 
         // Create a map of last messages
         const lastMessageMap = new Map();
+        // Mapa da última mensagem ENVIADA PELO CLIENTE — conversas com resposta do atendente
+        // depois da mensagem do cliente continuam pertencendo à aba Recebidos.
+        const lastCustomerMessageMap = new Map();
         lastMessages?.forEach(msg => {
           if (!lastMessageMap.has(msg.conversation_id)) {
             lastMessageMap.set(msg.conversation_id, msg);
+          }
+          if (msg.sender === "customer" && !lastCustomerMessageMap.has(msg.conversation_id)) {
+            lastCustomerMessageMap.set(msg.conversation_id, msg);
           }
         });
 
@@ -3239,6 +3251,7 @@ ${recentMessages}
             customer: finalCustomer,
             customer_id: finalCustomerId,
             lastMessage: lastMessageMap.get(conv.id) || null,
+            lastCustomerMessage: lastCustomerMessageMap.get(conv.id) || null,
             customerCompanies: companiesMap.get(finalCustomerId) || [],
             customerLinkedUsers: vinculosMap.get(finalCustomerId) || [],
           };
@@ -3974,8 +3987,10 @@ ${recentMessages}
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
   const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
     conv.chat_status !== "encerrado" &&
-    // Só entra quem realmente mandou mensagem: conversas vazias não aparecem em Recebidos.
-    !!conv.lastMessage && (!conv.lastMessage.sender || conv.lastMessage.sender === "customer")
+    // Entra toda conversa em que o cliente mandou alguma mensagem (WhatsApp, Instagram etc.),
+    // mesmo que o atendente tenha respondido depois. Conversas só com mensagem enviada
+    // (disparo) ou vazias não aparecem em Recebidos.
+    !!conv.lastCustomerMessage
   ), [conversations]);
 
   const emailsRecebidosNaoRespondidos = useMemo(() => userEmails.filter((email) =>
@@ -4194,7 +4209,7 @@ ${recentMessages}
     conversasRecebidasNaoRespondidas.forEach((conv) => {
       const phone = normalizePhone(conv.customer?.telefone);
       const key = conv.customer_id || phone || conv.id;
-      const data = new Date(conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
+      const data = new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
       const atual = grupos.get(key);
       if (!atual) {
         grupos.set(key, { conv, ids: [conv.id], phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
@@ -4455,7 +4470,7 @@ ${recentMessages}
           motivo: "Mensagem recebida",
           canal: "whatsapp",
           origem: rotuloOrigemConversa(conv.canal),
-          horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
+          horario: (conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at) ? format(new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
           selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
