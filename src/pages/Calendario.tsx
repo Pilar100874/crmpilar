@@ -4512,29 +4512,31 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                     <div className="flex flex-col gap-2">
                       <Button
                         variant="outline"
-                        className="w-full whitespace-normal h-auto py-2"
+                        className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
                         onClick={() => {
                           const alvo = dataAlvoDiaTodo();
                           if (alvo) avancarParaResumo(`Juntar com a tarefa de dia todo${allDayPendingTask?.allDayTaskTitle ? ` "${allDayPendingTask.allDayTaskTitle}"` : ""} em ${format(alvo, "dd/MM/yyyy")}`, alvo);
                         }}
                       >
-                        Juntar com a Tarefa do Dia Todo
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
+                        <span className="min-w-0"><span className="block text-sm font-semibold">Juntar com a Tarefa do Dia Todo</span><span className="block truncate text-xs text-muted-foreground">{allDayPendingTask?.allDayTaskTitle ? `Mesma tarefa: ${allDayPendingTask.allDayTaskTitle}` : "As duas tarefas viram uma só"}</span></span>
                       </Button>
                       <Button
                         variant="outline"
-                        size="icon"
+                        className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
                         aria-label="Escolher outra data"
-                        title="Escolher outra data"
                         onClick={() => setAllDayEscolherData(true)}
                       >
-                        <CalendarDays className="h-4 w-4" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                        <span className="min-w-0"><span className="block text-sm font-semibold">Escolher outra data</span><span className="block text-xs text-muted-foreground">Abrir o calendário</span></span>
                       </Button>
                       {allDayPendingTask?.nextAvailableDate && (
                         <Button
-                          className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
+                          className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left hover:bg-primary/90"
                           onClick={() => { const data = allDayPendingTask?.nextAvailableDate; if (data) avancarParaResumo(`Mover para o próximo dia disponível (${format(data, "dd/MM/yyyy")})`, data); }}
                         >
-                          Data sugerida: {format(allDayPendingTask.nextAvailableDate, "EEEE, dd/MM", { locale: ptBR })}
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20"><Check className="h-4 w-4" /></span>
+                          <span className="min-w-0"><span className="block text-sm font-semibold">Data sugerida</span><span className="block truncate text-xs capitalize text-primary-foreground/80">{format(allDayPendingTask.nextAvailableDate, "EEEE, dd/MM", { locale: ptBR })}</span></span>
                         </Button>
                       )}
                     </div>
