@@ -1444,7 +1444,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   // Abre a etapa "dia ocupado" como interferência adicional do fluxo
   const abrirEtapaDiaTodo = (
-    pendente: { taskData: any; existingTask: Task | null | undefined; isMove?: boolean; adjustedTime?: string; targetDate?: Date },
+    pendente: { taskData: any; existingTask?: Task | null; isMove?: boolean; adjustedTime?: string; targetDate?: Date },
     decisao: string,
     alvo: Date,
     tituloDiaTodo: string | undefined,
