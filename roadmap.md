@@ -109,3 +109,7 @@
 - [x] Corrigir o destino do arraste para seguir o cursor.
 - [x] Selecionar uma ou várias tarefas e preservar seleção entre datas e modos.
 - [x] Mover para a data escolhida preservando alertas e conferir salvamento na tela.
+
+## Tarefa atrasada não pode ser movida
+- [x] Desativar o quadro de seleção das tarefas atrasadas, com o motivo escrito na frente dele.
+- [x] Conferir no navegador: quadro desativado, clique sem efeito, aviso em Dia, Semana e Mês.
