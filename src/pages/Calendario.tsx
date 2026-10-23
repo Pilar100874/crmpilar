@@ -578,7 +578,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     suggestedTime: string;
   } | null>(null);
   const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
-  const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[] } | null>(null);
+  const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[]; mover?: { taskId: string; updates: { date: Date; time: string | null }; userId?: string }; lote?: boolean } | null>(null);
   const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
     taskData: {
@@ -2058,7 +2058,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setActiveId(event.active.id as string);
   };
 
-  const moverSelecao = async (confirmado = false, semPrevia = false) => {
+  const moverSelecao = async (confirmado = false, semPrevia = false, diaTodoResolvido = false) => {
     if (!dataMovimento || movendoSelecao) return;
     const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
     if (!selecionadas.length) return;
@@ -2072,6 +2072,27 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
     setMovendoSelecao(true);
     try {
+      // Ao mover tarefa de dia todo para data que já tem outras tarefas, perguntar o que fazer
+      if (!diaTodoResolvido && calendarioRegras.pergunta_dia_todo) {
+        const allDaySel = selecionadas.filter(t => t.isAllDay);
+        if (allDaySel.length) {
+          const selIds = new Set(selecionadas.map(t => t.id));
+          const outrasMap = new Map<string, any>();
+          for (const tSel of allDaySel) {
+            let q = (supabase as any).from("calendario_tarefas")
+              .select("id, title, time, is_all_day, contact_name")
+              .eq("date", format(dataMovimento, "yyyy-MM-dd"))
+              .not("status", "in", '("concluido","cancelado","completed")');
+            if (tSel.userId) q = q.eq("user_id", tSel.userId);
+            const { data: outrasData } = await q;
+            (outrasData || []).forEach((o: any) => { if (!selIds.has(o.id)) outrasMap.set(o.id, o); });
+          }
+          if (outrasMap.size) {
+            setDiaTodoOutras({ taskData: null, outras: [...outrasMap.values()], lote: true });
+            return;
+          }
+        }
+      }
       if (!confirmado) {
         const avisos: string[] = [];
         if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
@@ -2195,6 +2216,21 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       }
 
 
+      // Ao mover uma tarefa de dia todo para data que já tem outras tarefas, perguntar o que fazer
+      if (task.isAllDay && !isSameDay(task.date, newDate) && calendarioRegras.pergunta_dia_todo) {
+        let qDiaTodo = (supabase as any).from("calendario_tarefas")
+          .select("id, title, time, is_all_day, contact_name")
+          .eq("date", format(newDate, "yyyy-MM-dd"))
+          .not("status", "in", '("concluido","cancelado","completed")')
+          .neq("id", task.id);
+        if (task.userId) qDiaTodo = qDiaTodo.eq("user_id", task.userId);
+        const { data: outrasDiaTodo } = await qDiaTodo;
+        if (outrasDiaTodo?.length) {
+          void carregarDatasDiaTodo(task.userId);
+          setDiaTodoOutras({ taskData: null, outras: outrasDiaTodo, mover: { taskId: task.id, updates: { date: newDate, time: adjustedTime ?? null }, userId: task.userId } });
+          return;
+        }
+      }
       // Ao mover para data que já tem tarefa de dia todo, perguntar o que fazer
       if (!task.isAllDay && calendarioRegras.pergunta_dia_todo) {
         const allDayCheck = await checkAllDayTasks(newDate, task.userId);
