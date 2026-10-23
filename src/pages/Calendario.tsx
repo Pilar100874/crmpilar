@@ -1792,10 +1792,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
     await handleToggleTaskStatus(task.id, true, true);
     if (modo === "reprogramar") {
-      if (task.contactId) setContatoReprogramar({ id: task.contactId, nome: task.contactName || "Contato" });
       const amanha = new Date();
       amanha.setDate(amanha.getDate() + 1);
       handleOpenNewTask(amanha);
+      if (task.contactId) setContatoReprogramar({ id: task.contactId, nome: task.contactName || "Contato" });
       toast.info("Reprograme a nova tarefa para uma data futura");
     }
   };
