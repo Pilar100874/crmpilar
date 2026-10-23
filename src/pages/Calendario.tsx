@@ -4297,8 +4297,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     setOutrasDiaTodoMov([]);
                     await moverSelecao(true, true, true);
                   }}>
-                    <CalendarRange className="h-4 w-4 shrink-0" />
-                    Mover as outras tarefas do dia para o próximo dia disponível e mover esta
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
+                    <span className="min-w-0 text-left"><span className="block text-sm font-semibold">Mover as outras tarefas do dia</span><span className="block text-xs text-muted-foreground">Para o próximo dia disponível, e mover esta</span></span>
                   </Button>
                 )}
               </div>
@@ -4310,9 +4310,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
             </div>
             {(avisoMovimento.length === 0 || mostrarCalendarioMovimento) && <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>}
-            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
-              <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
+              <span className="min-w-0 truncate font-medium capitalize text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
             </div>
             {dataMovimento && avisoMovimento.length === 0 && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
           </div>
