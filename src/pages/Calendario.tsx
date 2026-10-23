@@ -1467,10 +1467,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
     // Ao virar "dia todo" (antes sem horário/com horário), avisar sobre as outras tarefas do dia
     const anterior = taskData.id ? tasks.find(t => t.id === taskData.id) : undefined;
-    if (taskData.isAllDay && !taskData.isAutomatic && !outrasResolvidas && taskData.userId && (!anterior || !anterior.isAllDay || !isSameDay(anterior.date, taskData.date))) {
+    if (taskData.isAllDay && !taskData.isAutomatic && !outrasResolvidas && (!anterior || !anterior.isAllDay || !isSameDay(anterior.date, taskData.date))) {
+      let donoId: string | undefined = taskData.userId || anterior?.userId;
+      if (!donoId) {
+        const { data: meuId } = await (supabase as any).rpc("get_current_usuario_id");
+        donoId = meuId || undefined;
+      }
       let q = (supabase as any).from("calendario_tarefas")
         .select("id, title, time, is_all_day, contact_name")
-        .eq("user_id", taskData.userId).eq("date", format(taskData.date, "yyyy-MM-dd")).not("status", "in", '("concluido","cancelado","completed")');
+        .eq("date", format(taskData.date, "yyyy-MM-dd")).not("status", "in", '("concluido","cancelado","completed")');
+      if (donoId) q = q.eq("user_id", donoId);
       if (taskData.id) q = q.neq("id", taskData.id);
       const { data: outras } = await q;
       if (outras?.length) {
