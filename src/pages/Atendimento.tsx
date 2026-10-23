@@ -3987,8 +3987,10 @@ ${recentMessages}
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
   const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
     conv.chat_status !== "encerrado" &&
-    // Só entra quem realmente mandou mensagem: conversas vazias não aparecem em Recebidos.
-    !!conv.lastMessage && (!conv.lastMessage.sender || conv.lastMessage.sender === "customer")
+    // Entra toda conversa em que o cliente mandou alguma mensagem (WhatsApp, Instagram etc.),
+    // mesmo que o atendente tenha respondido depois. Conversas só com mensagem enviada
+    // (disparo) ou vazias não aparecem em Recebidos.
+    !!conv.lastCustomerMessage
   ), [conversations]);
 
   const emailsRecebidosNaoRespondidos = useMemo(() => userEmails.filter((email) =>
