@@ -4416,10 +4416,11 @@ ${recentMessages}
       });
     });
 
-    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas.
-    (filtroFila === "recebidos" ? conversasRecebidasNaoRespondidas : [])
+    // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas, agrupadas por contato.
+    (filtroFila === "recebidos" ? conversasRecebidasAgrupadas : [])
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
-      .forEach((conv) => {
+      .forEach((grupo) => {
+        const conv = grupo.conv;
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
         lista.push({
@@ -4431,7 +4432,7 @@ ${recentMessages}
           motivo: "Mensagem recebida",
           canal: "whatsapp",
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
-          mensagensNovas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0,
+          mensagensNovas: grupo.novas,
           selecionado: selectedConversation === conv.id,
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
@@ -4443,8 +4444,8 @@ ${recentMessages}
         });
       });
 
-    // Recebidos: e-mails recebidos e não respondidos
-    (filtroFila === "recebidos" ? emailsRecebidosNaoRespondidos : [])
+    // Recebidos: e-mails recebidos e não respondidos, um por contato
+    (filtroFila === "recebidos" ? emailsRecebidosAgrupados : [])
       .forEach((email) => {
         lista.push({
           id: `email-${email.id}`,
