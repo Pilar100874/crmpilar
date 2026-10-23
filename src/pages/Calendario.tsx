@@ -2129,29 +2129,30 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
     setMovendoSelecao(true);
     try {
-      // Ao mover tarefa de dia todo para data que já tem outras tarefas, perguntar o que fazer
-      if (!diaTodoResolvido && calendarioRegras.pergunta_dia_todo) {
-        const allDaySel = selecionadas.filter(t => t.isAllDay);
-        if (allDaySel.length) {
-          const selIds = new Set(selecionadas.map(t => t.id));
-          const outrasMap = new Map<string, any>();
-          for (const tSel of allDaySel) {
-            let q = (supabase as any).from("calendario_tarefas")
-              .select("id, title, time, is_all_day, contact_name")
-              .eq("date", format(dataMovimento, "yyyy-MM-dd"))
-              .not("status", "in", '("concluido","cancelado","completed")');
-            if (tSel.userId) q = q.eq("user_id", tSel.userId);
-            const { data: outrasData } = await q;
-            (outrasData || []).forEach((o: any) => { if (!selIds.has(o.id)) outrasMap.set(o.id, o); });
-          }
-          if (outrasMap.size) {
-            setDiaTodoOutras({ taskData: null, outras: [...outrasMap.values()], lote: true });
-            return;
-          }
-        }
-      }
       if (!confirmado) {
         const avisos: string[] = [];
+        setOutrasDiaTodoMov([]);
+        // Tarefa de dia todo indo para data com outras tarefas: prever no mesmo popup
+        if (!diaTodoResolvido && calendarioRegras.pergunta_dia_todo) {
+          const allDaySel = selecionadas.filter(t => t.isAllDay);
+          if (allDaySel.length) {
+            const selIds = new Set(selecionadas.map(t => t.id));
+            const outrasMap = new Map<string, any>();
+            for (const tSel of allDaySel) {
+              let q = (supabase as any).from("calendario_tarefas")
+                .select("id, title, time, is_all_day, contact_name, user_id")
+                .eq("date", format(dataMovimento, "yyyy-MM-dd"))
+                .not("status", "in", '("concluido","cancelado","completed")');
+              if (tSel.userId) q = q.eq("user_id", tSel.userId);
+              const { data: outrasData } = await q;
+              (outrasData || []).forEach((o: any) => { if (!selIds.has(o.id)) outrasMap.set(o.id, o); });
+            }
+            if (outrasMap.size) {
+              setOutrasDiaTodoMov([...outrasMap.values()]);
+              avisos.push(`A tarefa de dia todo vai para um dia que já tem ${outrasMap.size} outra(s) tarefa(s). Você pode manter todas no mesmo dia ou mover as outras para o próximo dia disponível.`);
+            }
+          }
+        }
         if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
         const avisoMisto = avisoMisturaDiaTodo(selecionadas);
         if (avisoMisto) avisos.push(avisoMisto);
