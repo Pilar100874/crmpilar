@@ -537,6 +537,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   } | null>(null);
   const [allDayEscolherData, setAllDayEscolherData] = useState(false);
   const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
+  const [weekendEscolherData, setWeekendEscolherData] = useState(false);
+  const [weekendNovaData, setWeekendNovaData] = useState<Date | null>(null);
+
   const [datasDiaTodo, setDatasDiaTodo] = useState<Set<string>>(new Set());
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
@@ -1336,6 +1339,54 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setAllDayEscolherData(false);
     setAllDayNovaData(null);
   };
+
+  // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
+  const aplicarDataFimDeSemana = async (novaData: Date) => {
+    const pendente = weekendPendingTask;
+    if (!pendente) return;
+    const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    // Se a data escolhida já tem tarefa de dia todo, pergunta o que fazer
+    if (calendarioRegras.validacao_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
+      if (allDayCheck.hasTask) {
+        let nextAvailableDay = getNextBusinessDay(novaData);
+        while ((await checkAllDayTasks(nextAvailableDay, userIdDaTarefa)).hasTask) {
+          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+        }
+        setAllDayPendingTask({
+          taskData: pendente.taskData,
+          existingTask: pendente.existingTask,
+          isMove: pendente.isMove,
+          adjustedTime: pendente.adjustedTime,
+          nextAvailableDate: nextAvailableDay,
+          allDayTaskTitle: allDayCheck.taskTitle,
+          targetDate: novaData,
+        });
+        setAllDayEscolherData(false);
+        setAllDayNovaData(null);
+        setWeekendEscolherData(false);
+        setWeekendNovaData(null);
+        setIsAllDayDialogOpen(true);
+        setIsWeekendDialogOpen(false);
+        return;
+      }
+    }
+    if (pendente.isMove && pendente.existingTask) {
+      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      if (success) {
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+      }
+    } else if (pendente.taskData) {
+      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+    }
+    setIsWeekendDialogOpen(false);
+    setWeekendPendingTask(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+  };
+
 
   // Adicionar tarefa
   const validacaoAtiva = isAdmin && modoValidacao;
@@ -3788,17 +3839,52 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
       </Dialog>
 
       {/* Dialog de fim de semana */}
-      <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
+      <Dialog open={isWeekendDialogOpen} onOpenChange={(open) => { setIsWeekendDialogOpen(open); if (!open) { setWeekendEscolherData(false); setWeekendNovaData(null); } }}>
         <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl">Tarefa em Fim de Semana</DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
               Esta tarefa está agendada para <span className="font-medium text-foreground">{format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}</span>.
               <br />
-              <span className="block mt-2">O que você deseja fazer?</span>
+              {!weekendEscolherData && (
+                <span className="block mt-2">O que você deseja fazer?</span>
+              )}
+
             </DialogDescription>
           </DialogHeader>
+          {weekendEscolherData ? (
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <CalendarPicker
+                  mode="single"
+                  selected={weekendNovaData || undefined}
+                  onSelect={(d) => setWeekendNovaData(d || null)}
+                  locale={ptBR}
+                  modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
+                  modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
+              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => { setWeekendEscolherData(false); setWeekendNovaData(null); }}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  disabled={!weekendNovaData}
+                  onClick={() => { if (weekendNovaData) void aplicarDataFimDeSemana(weekendNovaData); }}
+                >
+                  Usar esta data
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mt-6">
+
             <Button
               variant="outline"
               className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
@@ -3843,6 +3929,14 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               Manter na Data
             </Button>
             <Button
+              variant="outline"
+              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
+              onClick={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }}
+            >
+              Escolher Outra Data
+            </Button>
+            <Button
+
               className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center bg-primary hover:bg-primary/90"
               onClick={async () => {
                 if (weekendPendingTask) {
@@ -3903,8 +3997,10 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               Mover para Próximo Dia Útil
             </Button>
           </div>
+          )}
         </DialogContent>
       </Dialog>
+
 
       {/* Dialog de horário comercial */}
       <Dialog open={isBusinessHoursDialogOpen} onOpenChange={setIsBusinessHoursDialogOpen}>
