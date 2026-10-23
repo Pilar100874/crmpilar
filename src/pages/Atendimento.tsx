@@ -1738,6 +1738,19 @@ export default function Atendimento() {
 
       const dateStr = format(date, 'yyyy-MM-dd');
 
+      // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
+      // atual — pendências com data anterior (ou remarcadas) voltam para hoje,
+      // preservando a data original ("Deveria ter contatado em").
+      if (dateStr === format(new Date(), 'yyyy-MM-dd')) {
+        const { error: erroAlinhamento } = await supabase
+          .from('calendario_tarefas')
+          .update({ date: dateStr })
+          .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
+          .or(`date.lt.${dateStr},and(data_original.lt.${dateStr},date.neq.${dateStr})`)
+          .not('status', 'in', '("concluido","cancelado","completed")');
+        if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+      }
+
       // Fetch tasks first - usar o ID da tabela usuarios
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
