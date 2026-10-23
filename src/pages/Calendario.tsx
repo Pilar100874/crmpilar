@@ -220,7 +220,7 @@ function DraggableTask({
         concluida ? "border-border bg-muted text-muted-foreground" : atrasada ? "border-destructive/20 border-l-destructive bg-destructive/5" : retorno ? "border-info/20 border-l-info bg-info/5" : "border-primary/20 border-l-primary bg-primary/5",
       )}
     >
-      <div className="mb-1 flex items-center gap-1" onClick={e => e.stopPropagation()}><SelecionarTarefa task={task} /></div>
+      <div className="mb-1 flex items-center gap-1" onClick={e => e.stopPropagation()}><SelecionarTarefa task={task} compacto={compacto} /></div>
       <div className={cn("mb-1 min-w-0 items-center justify-between gap-1", compacto ? "hidden lg:flex" : "flex")}>
         <div {...attributes} {...listeners} className="flex min-w-0 cursor-grab items-center gap-1 touch-none active:cursor-grabbing" title="Mover tarefa">
           {getOrigemIconWithColor(task.origem, "sm") || <CalendarDays className="h-3 w-3 text-primary" />}
