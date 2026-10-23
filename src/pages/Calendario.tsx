@@ -3788,11 +3788,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
           </div>
         </div>
-        {tarefasParaMover.size > 0 && <div className="sticky top-0 z-20 mb-3 flex min-w-0 flex-wrap items-center gap-2 border-y border-primary/30 bg-background px-3 py-2" role="toolbar" aria-label="Movimentar tarefas selecionadas">
-          <Badge variant="secondary">{tarefasParaMover.size} selecionada(s)</Badge>
-          <Button size="sm" variant="outline" onClick={() => { setMovimentoAberto(true); setAvisoMovimento([]); void carregarDatasDiaTodo(); }}><CalendarRange className="mr-2 h-4 w-4" />{dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : "Escolher data"}</Button>
-          <Button size="sm" disabled={!dataMovimento || movendoSelecao} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover selecionadas</Button>
-          <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Cancelar seleção" title="Cancelar seleção" disabled={movendoSelecao} onClick={() => { setTarefasParaMover(new Set()); setDataMovimento(undefined); }}><X className="h-4 w-4" /></Button>
+        {tarefasParaMover.size > 0 && <div className="sticky top-0 z-20 mb-3 flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-card px-3 py-2 shadow-md" role="toolbar" aria-label="Movimentar tarefas selecionadas">
+          <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-primary px-2 text-xs font-bold text-primary-foreground">{tarefasParaMover.size}</span>
+          <div className="mr-auto min-w-0 leading-tight">
+            <p className="text-sm font-medium">tarefa(s) selecionada(s)</p>
+            <p className="truncate text-xs text-muted-foreground">Navegue pelo calendário e escolha o dia de destino</p>
+          </div>
+          <Button size="sm" variant="outline" className="rounded-full" onClick={() => { setMovimentoAberto(true); setAvisoMovimento([]); void carregarDatasDiaTodo(); }}><CalendarRange className="mr-2 h-4 w-4" />{dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : "Escolher data"}</Button>
+          <Button size="sm" className="rounded-full" disabled={!dataMovimento || movendoSelecao} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover</Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" aria-label="Cancelar seleção" title="Cancelar seleção" disabled={movendoSelecao} onClick={() => { setTarefasParaMover(new Set()); setDataMovimento(undefined); }}><X className="h-4 w-4" /></Button>
         </div>}
         {viewMode === "month" && renderMonthView()}
         {viewMode === "week" && renderWeekView()}
@@ -3851,11 +3855,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       </div>
 
       <Dialog open={movimentoAberto} onOpenChange={aberto => { if (!movendoSelecao) setMovimentoAberto(aberto); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Mover {tarefasParaMover.size} tarefa(s)</DialogTitle><DialogDescription>{dataMovimento ? `Data de destino: ${format(dataMovimento, "dd/MM/yyyy")}` : "Escolha a data de destino."}</DialogDescription></DialogHeader>
-          <div className="flex justify-center"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
-          {avisoMovimento.length > 0 && <div className="space-y-2 border-l-2 border-primary bg-muted p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
-          <DialogFooter className="flex-wrap gap-2"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao} onClick={() => void moverSelecao(avisoMovimento.length > 0)}>{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover selecionadas"}</Button></DialogFooter>
+        <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
+          <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
+            <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Mover {tarefasParaMover.size} tarefa(s)</DialogTitle>
+            <DialogDescription>Escolha o novo dia. Os horários das tarefas são mantidos.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
+            <div className="flex flex-wrap gap-1.5">
+              {tasks.filter(t => tarefasParaMover.has(t.id)).slice(0, 6).map(t => (
+                <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
+              ))}
+              {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
+            </div>
+            <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
+              <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
+            </div>
+            {avisoMovimento.length > 0 && <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
+          </div>
+          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
