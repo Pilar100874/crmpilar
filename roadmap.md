@@ -106,6 +106,6 @@
 - [x] Conferir no navegador a nova aba, o redirecionamento, o menu sem o item e a permissão por grupo.
 
 ## Movimentação de tarefas
-- [ ] Corrigir o destino do arraste para seguir o cursor.
-- [ ] Selecionar uma ou várias tarefas e preservar seleção entre datas e modos.
-- [ ] Mover para a data escolhida preservando alertas e conferir salvamento na tela.
+- [x] Corrigir o destino do arraste para seguir o cursor.
+- [x] Selecionar uma ou várias tarefas e preservar seleção entre datas e modos.
+- [x] Mover para a data escolhida preservando alertas e conferir salvamento na tela.
