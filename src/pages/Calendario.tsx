@@ -812,6 +812,25 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         currentUsuarioId = currentUsuario?.id;
       }
 
+      // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
+      // atual — pendências com data anterior (ou remarcadas para outro dia) voltam
+      // para hoje, preservando a data original ("Deveria ter contatado em").
+      if (realocacaoRef.current) {
+        const hojeStr = format(new Date(), 'yyyy-MM-dd');
+        let alinhar = (supabase as any)
+          .from('calendario_tarefas')
+          .update({ date: hojeStr })
+          .eq('estabelecimento_id', estabelecimentoId)
+          .or(`date.lt.${hojeStr},and(data_original.lt.${hojeStr},date.neq.${hojeStr})`)
+          .not('status', 'in', '("concluido","cancelado","completed")');
+        if (isAdmin) {
+          if (selectedUserIds.length > 0) alinhar = alinhar.in('user_id', selectedUserIds);
+        } else if (currentUsuarioId) {
+          alinhar = alinhar.eq('user_id', currentUsuarioId);
+        }
+        const { error: erroAlinhamento } = await alinhar;
+        if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+      }
 
       let query = (supabase as any)
         .from('calendario_tarefas')
