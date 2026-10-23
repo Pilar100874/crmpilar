@@ -4559,7 +4559,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
-              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+              <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
                 <Button
                   variant="outline"
                   className="w-full sm:w-auto"
@@ -4577,7 +4577,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               </DialogFooter>
             </div>
           ) : (
-          <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
             <Button
               variant="outline"
               className="w-full sm:w-auto order-1"
