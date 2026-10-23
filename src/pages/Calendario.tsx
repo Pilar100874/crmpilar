@@ -548,6 +548,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     suggestedTime: string;
   } | null>(null);
   const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
+  const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[] } | null>(null);
+  const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
     taskData: {
       contactId: string;
@@ -1457,11 +1459,24 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     isAllDay?: boolean;
     userId?: string;
     isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
-  }, semPrevia = false) => {
+  }, semPrevia = false, outrasResolvidas = false) => {
     if (validacaoAtiva && !semPrevia) {
       const dados = { ...taskData };
       abrirPrevia(taskData.id ? "editar" : "criar", { data: taskData.date, horario: taskData.isAllDay ? undefined : taskData.time, diaTodo: taskData.isAllDay, automatica: taskData.isAutomatic, conflitos: contarConflitos(taskData.userId, taskData.date, taskData.time, taskData.id) }, () => handleSaveTask(dados, true));
       return;
+    }
+    // Ao virar "dia todo" (antes sem horário/com horário), avisar sobre as outras tarefas do dia
+    const anterior = taskData.id ? tasks.find(t => t.id === taskData.id) : undefined;
+    if (taskData.isAllDay && !taskData.isAutomatic && !outrasResolvidas && taskData.userId && (!anterior || !anterior.isAllDay || !isSameDay(anterior.date, taskData.date))) {
+      let q = (supabase as any).from("calendario_tarefas")
+        .select("id, title, time, is_all_day, contact_name")
+        .eq("user_id", taskData.userId).eq("date", format(taskData.date, "yyyy-MM-dd")).not("status", "in", '("concluido","cancelado","completed")');
+      if (taskData.id) q = q.neq("id", taskData.id);
+      const { data: outras } = await q;
+      if (outras?.length) {
+        setDiaTodoOutras({ taskData: { ...taskData }, outras });
+        return;
+      }
     }
     // Verificar regra "dia todo" - SOMENTE se a data for FUTURA e for inserção automática
     if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo && taskData.isAutomatic) {
@@ -4418,6 +4433,47 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
       </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
+      <Dialog open={!!diaTodoOutras} onOpenChange={(o) => { if (!o && !diaTodoOutrasAcao) setDiaTodoOutras(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Já existem tarefas neste dia</DialogTitle>
+            <DialogDescription>
+              Esta tarefa passará a ser de dia todo em {diaTodoOutras && format(diaTodoOutras.taskData.date, "dd/MM/yyyy")}. O que fazer com as outras {diaTodoOutras?.outras.length} tarefa(s)?
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border bg-muted/30 p-2 text-sm">
+            {diaTodoOutras?.outras.map((t) => (
+              <li key={t.id} className="flex gap-2">
+                <span className="w-16 shrink-0 text-muted-foreground">{t.is_all_day ? "Dia todo" : t.time ? String(t.time).slice(0, 5) : "Sem hora"}</span>
+                <span className="truncate text-foreground">{t.contact_name || t.title}</span>
+              </li>
+            ))}
+          </ul>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button disabled={diaTodoOutrasAcao} onClick={async () => {
+              if (!diaTodoOutras) return;
+              const { taskData, outras } = diaTodoOutras;
+              setDiaTodoOutrasAcao(true);
+              try {
+                let proxima = getNextBusinessDay(taskData.date);
+                for (let i = 0; i < 366 && (await checkAllDayTasks(proxima, taskData.userId)).hasTask; i++) proxima = getNextBusinessDay(proxima);
+                const { error } = await (supabase as any).from("calendario_tarefas").update({ date: format(proxima, "yyyy-MM-dd") }).in("id", outras.map((t) => t.id));
+                if (error) { toast.error("Não foi possível mover as outras tarefas"); return; }
+                toast.success(`${outras.length} tarefa(s) movida(s) para ${format(proxima, "dd/MM/yyyy")}`);
+                setDiaTodoOutras(null);
+                await handleSaveTask(taskData, true, true);
+              } finally { setDiaTodoOutrasAcao(false); }
+            }}>Mover as outras para o próximo dia disponível</Button>
+            <Button variant="outline" disabled={diaTodoOutrasAcao} onClick={async () => {
+              if (!diaTodoOutras) return;
+              const { taskData } = diaTodoOutras;
+              setDiaTodoOutras(null);
+              await handleSaveTask(taskData, true, true);
+            }}>Manter todas no mesmo dia</Button>
+            <Button variant="ghost" disabled={diaTodoOutrasAcao} onClick={() => setDiaTodoOutras(null)}>Cancelar (não salvar)</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DeleteConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
