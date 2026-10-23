@@ -446,7 +446,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
-  useEffect(() => { if (viewMode !== "list") setFiltroAtrasados(false); }, [viewMode]);
+  useEffect(() => { if (viewMode !== "table") setFiltroAtrasados(false); }, [viewMode]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
@@ -2810,24 +2810,30 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
             </div>
           ) : agendaCompacta ? (
-            <div data-agenda-tabela-compacta>
-              <div className="flex items-center gap-2 border-b border-border py-2">
-                <span className="text-xs text-muted-foreground">Ordenar por</span>
+            <div data-agenda-tabela-compacta className="space-y-3 py-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2">
+                <span className="shrink-0 text-xs font-medium text-muted-foreground">Ordenar por</span>
                 <Select value={sortConfig?.key || "title"} onValueChange={handleSort}>
-                  <SelectTrigger className="h-9 min-w-0 flex-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8 min-w-0 flex-1 border-border/60 bg-muted/30 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>{visibleColumns.filter(col => col.id !== "actions" && col.id !== "status").map(col => <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              {sortedTasks.map(task => <article key={task.id} className="space-y-2 border-b border-border py-3">
-                <DraggableTask task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />
-                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-2 text-xs">
-                  <div><dt className="text-muted-foreground">Data</dt><dd className="font-medium">{format(task.date, "dd/MM/yyyy")}</dd></div>
-                  {dataPrevistaAtraso(task) && <div className="col-span-2 rounded-md bg-destructive/10 px-2 py-1"><dt className="inline text-destructive">Deveria ter contatado em: </dt><dd className="inline font-semibold text-destructive">{format(dataPrevistaAtraso(task)!, "dd/MM/yyyy")}</dd></div>}
-                  <div><dt className="text-muted-foreground">Status</dt><dd>{task.status === "completed" ? "Concluída" : "Pendente"}</dd></div>
-                  <div className="min-w-0"><dt className="text-muted-foreground">Origem</dt><dd className="break-words">{getOrigemLabel(task.origem, task.campaignName)}</dd></div>
-                  <div className="min-w-0"><dt className="text-muted-foreground">Atribuído a</dt><dd className="break-words">{task.assignedTo || task.userName || "—"}</dd></div>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {sortedTasks.map(task => {
+                const prevista = dataPrevistaAtraso(task);
+                const atrasada = tarefaAtrasada(task);
+                return <article key={task.id} className={cn("min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md", atrasada ? "border-destructive/30" : "border-border/60")}>
+                <div className="p-2"><DraggableTask task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} /></div>
+                {prevista && <div className="mx-3 mb-2 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-1.5 text-xs text-destructive"><Clock3 className="h-3.5 w-3.5 shrink-0" /><span>Deveria ter contatado em <strong>{format(prevista, "dd/MM/yyyy")}</strong></span></div>}
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border/60 bg-muted/30 px-4 py-3 text-xs sm:grid-cols-4">
+                  <div className="min-w-0"><dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Data</dt><dd className="font-semibold">{format(task.date, "dd/MM/yyyy")}</dd></div>
+                  <div className="min-w-0"><dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Status</dt><dd><Badge variant={task.status === "completed" ? "secondary" : atrasada ? "destructive" : "outline"} className="px-1.5 py-0 text-[10px]">{task.status === "completed" ? "Concluída" : atrasada ? "Atrasada" : "Pendente"}</Badge></dd></div>
+                  <div className="min-w-0"><dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Origem</dt><dd className="truncate font-medium" title={getOrigemLabel(task.origem, task.campaignName)}>{getOrigemLabel(task.origem, task.campaignName)}</dd></div>
+                  <div className="min-w-0"><dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Atribuído a</dt><dd className="truncate font-medium">{task.assignedTo || task.userName || "—"}</dd></div>
                 </dl>
-              </article>)}
+              </article>;
+              })}
+              </div>
             </div>
           ) : (
             <table className="w-full table-fixed">
@@ -3319,7 +3325,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
-                  onClick={() => { setFiltroAtrasados(true); setViewMode("list"); }}
+                  onClick={() => { setFiltroAtrasados(true); setViewMode("table"); }}
                   className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
