@@ -4534,7 +4534,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 </ul>
                 <TarefasDoDiaResumo
                   date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
-                  userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentUserId]}
+                  userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
                   className="mt-3 border-amber-500/40 bg-background/70"
                   collapsible
                 />
@@ -4543,7 +4543,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
             {motivosDiaTodo().length === 0 && (
               <TarefasDoDiaResumo
                 date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
-                userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentUserId]}
+                userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
               />
             )}
           {allDayEscolherData ? (
