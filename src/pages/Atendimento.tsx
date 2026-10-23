@@ -3102,11 +3102,15 @@ ${recentMessages}
         const convIds = data.map(c => c.id);
         
         // Get last message for each conversation using a lateral join approach
-        const { data: lastMessages } = await supabase
+        // Consulta em lotes pequenos: uma única consulta é cortada em 1000 linhas e deixava conversas sem "última mensagem".
+        const lotes: string[][] = [];
+        for (let i = 0; i < convIds.length; i += 15) lotes.push(convIds.slice(i, i + 15));
+        const respostas = await Promise.all(lotes.map((ids) => supabase
           .from("messages")
           .select("conversation_id, text, created_at, sender")
-          .in("conversation_id", convIds)
-          .order("created_at", { ascending: false });
+          .in("conversation_id", ids)
+          .order("created_at", { ascending: false })));
+        const lastMessages = respostas.flatMap((r) => r.data || []);
 
         // Create a map of last messages
         const lastMessageMap = new Map();
@@ -3970,7 +3974,8 @@ ${recentMessages}
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
   const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
     conv.chat_status !== "encerrado" &&
-    (!conv.lastMessage?.sender || conv.lastMessage.sender === "customer")
+    // Só entra quem realmente mandou mensagem: conversas vazias não aparecem em Recebidos.
+    !!conv.lastMessage && (!conv.lastMessage.sender || conv.lastMessage.sender === "customer")
   ), [conversations]);
 
   const emailsRecebidosNaoRespondidos = useMemo(() => userEmails.filter((email) =>
