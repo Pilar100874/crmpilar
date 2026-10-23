@@ -533,7 +533,8 @@ const App = () => (
               <Route path="/bot-test" element={<BotTest />} />
               <Route path="/bot-create" element={<BotCreate />} />
               <Route path="/campanhas" element={<Campanhas />} />
-              <Route path="/calendario" element={<Calendario />} />
+              {/* Calendário usa a mesma tela da agenda do Atendimento (mesmo visual e recursos) */}
+              <Route path="/calendario" element={<Atendimento />} />
               <Route path="/calendario/configuracoes" element={<CalendarioConfig />} />
               <Route path="/funil" element={<Funil />} />
               <Route path="/orcamentos" element={<Orcamentos />} />
