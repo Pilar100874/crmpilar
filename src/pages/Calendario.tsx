@@ -4653,9 +4653,6 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
         </DialogContent>
       </Dialog>
 
-</antml :parameter>
-
-
       {/* Dialog de confirmação de exclusão */}
       <Dialog open={!!diaTodoOutras} onOpenChange={(o) => { if (!o && !diaTodoOutrasAcao) setDiaTodoOutras(null); }}>
         <DialogContent className="max-w-md">
