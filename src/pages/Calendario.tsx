@@ -4442,12 +4442,13 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                     >
                       Manter na Data
                     </Button>
-                    <Button
-                      className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
+                    {(!analiseDestino?.sugerida || !isSameDay(analiseDestino.sugerida, analiseDestino.proximoDiaUtil)) && <Button
+                      variant="outline"
+                      className="w-full whitespace-normal h-auto py-2"
                       onClick={() => void decidirProximoDiaUtil()}
                     >
-                      Mover para Próximo Dia Útil
-                    </Button>
+                      {analiseDestino ? `Usar ${format(analiseDestino.proximoDiaUtil, "EEEE, dd/MM", { locale: ptBR })}` : "Mover para Próximo Dia Útil"}
+                    </Button>}
                   </div>
                 )}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && weekendEscolherData && (
@@ -4477,11 +4478,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 {etapasFluxo[etapaAtual] === "diaTodo" && !allDayEscolherData && (
                   <>
                     {motivosDiaTodo().length > 0 && (
-                      <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
-                          <AlertTriangle className="h-4 w-4 shrink-0" />
-                          {dataAlvoDiaTodo() ? `Por que preciso decidir? (${format(dataAlvoDiaTodo()!, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
-                        </div>
+                      <details className="group rounded-md border border-border bg-background p-3">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">Resumo da análise<ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" /></summary>
                         <ul className="mt-2 space-y-1.5 text-sm text-foreground">
                           {motivosDiaTodo().map(motivo => (
                             <li key={motivo} className="flex items-start gap-2">
@@ -4496,7 +4494,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                           className="mt-3 border-amber-500/40 bg-background/70"
                           collapsible
                         />
-                      </div>
+                      </details>
                     )}
                     {motivosDiaTodo().length === 0 && (
                       <TarefasDoDiaResumo
@@ -4517,17 +4515,19 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full whitespace-normal h-auto py-2"
+                        size="icon"
+                        aria-label="Escolher outra data"
+                        title="Escolher outra data"
                         onClick={() => setAllDayEscolherData(true)}
                       >
-                        Escolher Outra Data
+                        <CalendarDays className="h-4 w-4" />
                       </Button>
                       {allDayPendingTask?.nextAvailableDate && (
                         <Button
                           className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
-                          onClick={() => avancarParaResumo(`Mover para o próximo dia disponível (${format(allDayPendingTask.nextAvailableDate!, "dd/MM/yyyy")})`, allDayPendingTask.nextAvailableDate!)}
+                          onClick={() => { const data = allDayPendingTask?.nextAvailableDate; if (data) avancarParaResumo(`Mover para o próximo dia disponível (${format(data, "dd/MM/yyyy")})`, data); }}
                         >
-                          Mover para Próximo Dia Disponível
+                          Data sugerida: {format(allDayPendingTask.nextAvailableDate, "EEEE, dd/MM", { locale: ptBR })}
                         </Button>
                       )}
                     </div>
