@@ -2146,6 +2146,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           movidas.add(movimento.task.id);
           const updates = movimento.updates;
           setTasks(atuais => atuais.map(t => t.id === movimento.task.id ? { ...t, ...updates } : t));
+          await unirTarefaMesmoContato(movimento.task, dataMovimento);
         }
       }
       setTarefasParaMover(ids => new Set([...ids].filter(id => !movidas.has(id))));
@@ -2316,6 +2317,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         );
         setTasks(updatedTasks);
         toast.success("Tarefa movida com sucesso");
+        await unirTarefaMesmoContato(task, newDate);
       } else {
         toast.error("Não foi possível mover a tarefa (regras/permissões).");
       }
