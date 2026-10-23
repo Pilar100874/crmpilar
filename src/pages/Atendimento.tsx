@@ -1750,9 +1750,23 @@ export default function Atendimento() {
         return;
       }
 
+      // Tarefas atrasadas: pendentes com data original anterior à agenda —
+      // entram na fila mesmo que tenham sido remarcadas para uma data futura.
+      const { data: atrasadasData } = await supabase
+        .from('calendario_tarefas')
+        .select('*')
+        .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
+        .or(`date.lt.${dateStr},data_original.lt.${dateStr}`)
+        .not('status', 'in', '("concluido","cancelado","completed")');
+      const tarefasAtrasadasLista = (atrasadasData || []).filter(
+        (t: any) => !["concluido", "cancelado", "completed"].includes(t.status) &&
+          // já estão na lista do dia (remarcadas para hoje) — não duplicar
+          !(tasksData || []).some((td: any) => td.id === t.id)
+      );
+
       // Get unique contact_ids that are not null
       const contactIds = [...new Set(
-        (tasksData || [])
+        [...(tasksData || []), ...tarefasAtrasadasLista]
           .map(t => t.contact_id)
           .filter(Boolean)
       )];
@@ -1809,8 +1823,8 @@ export default function Atendimento() {
         }
       }
 
-      // Merge customers and vinculos into tasks
-      const tasksWithCustomers = (tasksData || []).map(task => ({
+      // Merge customers and vinculos into tasks (inclui as tarefas atrasadas)
+      const tasksWithCustomers = [...(tasksData || []), ...tarefasAtrasadasLista].map(task => ({
         ...task,
         customers: task.contact_id ? customersMap[task.contact_id] || null : null,
         linkedUsers: task.contact_id ? vinculosMap[task.contact_id] || [] : []
@@ -4395,7 +4409,7 @@ ${recentMessages}
         motivo,
         canal,
         horario: (task.time || "").slice(0, 5),
-        data: task.data_original ? format(new Date(task.data_original), "dd/MM") : undefined,
+        data: task.data_original ? format(new Date(task.data_original), "dd/MM") : (task.date ? format(new Date(task.date), "dd/MM") : undefined),
         atrasado,
         selecionado: selectedTaskId === task.id,
         bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
