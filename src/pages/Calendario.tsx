@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
+import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -438,12 +439,14 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   // Sempre o mesmo visual da agenda do Atendimento, em qualquer tela e largura.
   void agendaWidth;
   const agendaCompacta = true;
+  const [filtroAtrasados, setFiltroAtrasados] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   // Avisa o Atendimento quando a data muda, para a aba Agendados acompanhar
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
+  useEffect(() => { if (viewMode !== "list") setFiltroAtrasados(false); }, [viewMode]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
@@ -2684,6 +2687,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   // Filtrar e ordenar tarefas para a tabela
   const filteredTasks = tasks.filter(task => {
+    if (filtroAtrasados && !tarefaAtrasada(task)) return false;
     // Filtro de busca
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -2794,6 +2798,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
             
             <div className="ml-auto shrink-0 text-xs text-muted-foreground">
+              {filtroAtrasados && <Badge variant="destructive" className="mr-2 cursor-pointer" onClick={() => setFiltroAtrasados(false)} title="Mostrar todas">Só atrasados ✕</Badge>}
               {sortedTasks.length} tarefa{sortedTasks.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -2817,6 +2822,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 <DraggableTask task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-2 text-xs">
                   <div><dt className="text-muted-foreground">Data</dt><dd className="font-medium">{format(task.date, "dd/MM/yyyy")}</dd></div>
+                  {dataPrevistaAtraso(task) && <div className="col-span-2 rounded-md bg-destructive/10 px-2 py-1"><dt className="inline text-destructive">Deveria ter contatado em: </dt><dd className="inline font-semibold text-destructive">{format(dataPrevistaAtraso(task)!, "dd/MM/yyyy")}</dd></div>}
                   <div><dt className="text-muted-foreground">Status</dt><dd>{task.status === "completed" ? "Concluída" : "Pendente"}</dd></div>
                   <div className="min-w-0"><dt className="text-muted-foreground">Origem</dt><dd className="break-words">{getOrigemLabel(task.origem, task.campaignName)}</dd></div>
                   <div className="min-w-0"><dt className="text-muted-foreground">Atribuído a</dt><dd className="break-words">{task.assignedTo || task.userName || "—"}</dd></div>
@@ -3155,10 +3161,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const hoje = startOfDay(new Date());
   const tarefasPendentes = tasks.filter(task => task.status === "pending");
   const horaAgora = format(new Date(), "HH:mm");
-  const tarefasAtrasadas = tarefasPendentes.filter(task =>
-    isBefore(startOfDay(task.date), hoje) ||
-    (isSameDay(task.date, hoje) && !!task.time && task.time < horaAgora)
-  ).length;
+  void horaAgora;
+  const tarefasAtrasadas = tarefasPendentes.filter(task => tarefaAtrasada(task)).length;
   const resumoDias = Array.from({ length: 5 }, (_, index) => {
     const date = addDays(hoje, index);
     return {
@@ -3315,7 +3319,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
-                  onClick={() => setViewMode("list")}
+                  onClick={() => { setFiltroAtrasados(true); setViewMode("list"); }}
                   className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
