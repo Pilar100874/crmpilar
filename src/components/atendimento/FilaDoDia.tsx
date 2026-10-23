@@ -54,6 +54,8 @@ export interface FilaItem {
   data?: string;
   atrasado?: boolean;
   mensagensNovas?: number;
+  /** Origem visível da mensagem recebida (ex.: WhatsApp, Instagram, E-mail). */
+  origem?: string;
   selecionado?: boolean;
   bloqueado?: boolean;
   /** Tarefa de outro usuário assumido (cor diferente). */
@@ -469,6 +471,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                      <p className={cn("text-[14px] font-semibold text-foreground leading-tight", tablet ? "break-words" : "truncate")}>
                       {item.nome}
                     </p>
+                     {item.tipo === "recebido" && (() => {
+                       const cfg = CANAL_CONFIG[item.canal];
+                       const Ic = cfg.icon;
+                       return (
+                         <span className={cn("mt-1 inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", cfg.fundo, cfg.cor)}>
+                           <Ic className="h-3 w-3 shrink-0" />
+                           <span className="truncate">{item.origem || cfg.label}{item.horario ? ` · ${item.horario}` : ""}</span>
+                         </span>
+                       );
+                     })()}
                      {(item.empresa || item.atrasado) && (
                         <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[11px] leading-tight">
                           {item.empresa && (

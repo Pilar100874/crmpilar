@@ -256,6 +256,22 @@ export default function Atendimento() {
       setVisible(false);
     }
   };
+
+  // Ao abrir uma mensagem da aba Recebidos, fecha painéis que cobririam a conversa/e-mail.
+  const limparPaineisRecebido = () => {
+    setShowDisparoMassa(false);
+    setShowEnvioMassaWizard(false);
+    setHistoricoCliente(null);
+    setAgendaContato(null);
+    setOrcamentosCliente(null);
+    setOrcamentoSheetOpen(false);
+    setShowCustomerSearchForTask(false);
+    setShowCustomerSearchForChat(false);
+    setShowCustomerSearchForEmail(false);
+    setShowCustomerSearchForOrcamento(false);
+    setAgendaViewMode("default");
+    setMobileView("main");
+  };
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -4432,15 +4448,16 @@ ${recentMessages}
           empresa: empresaNome,
           motivo: "Mensagem recebida",
           canal: "whatsapp",
+          origem: rotuloOrigemConversa(conv.canal),
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
           selecionado: selectedConversation === conv.id,
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
+            limparPaineisRecebido();
             setActiveTab("chat");
             setSelectedConversation(conv.id);
             openDetailsPanel(setShowClientDetailsChat);
-            setHistoricoCliente(filtroFila !== "recebidos" && conv.customer_id ? { customerId: conv.customer_id, nome: conv.customer?.nome || "Cliente" } : null);
           },
         });
       });
@@ -4451,17 +4468,22 @@ ${recentMessages}
         lista.push({
           id: `email-${email.id}`,
           tipo: "recebido",
+          contactId: (email as any).customer_id || undefined,
           nome: (email as any).from_name || email.from_email || "Sem nome",
           motivo: "E-mail recebido",
           canal: "email",
+          origem: "E-mail",
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
           selecionado: selectedEmailId === email.id,
           onClick: () => {
             const remetente = email.from_email || "";
+            limparPaineisRecebido();
             setActiveTab("email");
+            if ((email as any).folder) setEmailFolder((email as any).folder);
             setContatoEmailSelecionado({ id: (email as any).customer_id || `email-${remetente}`, nome: (email as any).from_name || remetente || "Sem nome", email: remetente });
             setSelectedEmailId(email.id);
-            setHistoricoCliente(null);
+            setSelectedEmailData(email as any);
+            openDetailsPanel(setShowClientDetailsEmail);
           },
         });
       });
@@ -8957,4 +8979,14 @@ function MobileMainContent({
       </div>
     </div>
   );
+}
+
+function rotuloOrigemConversa(canal?: string | null): string {
+  const c = (canal || "").toLowerCase();
+  if (c.includes("insta")) return "Instagram";
+  if (c.includes("face") || c.includes("messenger")) return "Facebook";
+  if (c.includes("tele")) return "Telegram";
+  if (c.includes("sms")) return "SMS";
+  if (c.includes("web") || c.includes("site")) return "Chat do site";
+  return "WhatsApp";
 }
