@@ -256,6 +256,22 @@ export default function Atendimento() {
       setVisible(false);
     }
   };
+
+  // Ao abrir uma mensagem da aba Recebidos, fecha painéis que cobririam a conversa/e-mail.
+  const limparPaineisRecebido = () => {
+    setShowDisparoMassa(false);
+    setShowEnvioMassaWizard(false);
+    setHistoricoCliente(null);
+    setAgendaContato(null);
+    setOrcamentosCliente(null);
+    setOrcamentoSheetOpen(false);
+    setShowCustomerSearchForTask(false);
+    setShowCustomerSearchForChat(false);
+    setShowCustomerSearchForEmail(false);
+    setShowCustomerSearchForOrcamento(false);
+    setAgendaViewMode("default");
+    setMobileView("main");
+  };
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
