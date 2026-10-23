@@ -2563,12 +2563,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     <span className="text-sm font-semibold">{format(dia, "d")}</span>
                     {quantidade > 0 ? (
                       <span className={cn("inline-flex h-4 max-w-full items-center gap-0.5 rounded-full bg-primary/10 px-1.5 text-[9px] font-semibold leading-none tabular-nums", isToday(dia) ? "text-primary" : "text-primary/90")}>
-                        {quantidade}<span className="hidden xs:inline">{quantidade === 1 ? " tarefa" : " tarefas"}</span>
+                        {quantidade}<span className="hidden sm:inline">{quantidade === 1 ? " tarefa" : " tarefas"}</span>
                       </span>
                     ) : <span className="h-4" />}
                     {contatos > 0 && (
                       <span className="inline-flex h-3 max-w-full items-center gap-0.5 text-[8px] leading-none text-muted-foreground">
-                        <User className="h-2 w-2 shrink-0" />{contatos}<span className="hidden xs:inline"> {contatos === 1 ? "contato" : "contatos"}</span>
+                        <User className="h-2 w-2 shrink-0" />{contatos}<span className="hidden sm:inline"> {contatos === 1 ? "contato" : "contatos"}</span>
                       </span>
                     )}
                   </Button>
@@ -2650,11 +2650,19 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                   </Button>
                 )}
               </div>
-              {dayTasks.length > 0 && (
-                <span className="text-[10px] sm:text-xs text-muted-foreground bg-muted px-1 sm:px-1.5 py-0.5 rounded">
-                  {dayTasks.length}
-                </span>
-              )}
+              {dayTasks.length > 0 && (() => {
+                const contatos = new Set(dayTasks.map(t => t.contactId).filter(Boolean)).size;
+                return (
+                  <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary sm:text-xs">
+                    {dayTasks.length} <span className="hidden md:inline">{dayTasks.length === 1 ? "tarefa" : "tarefas"}</span>
+                    {contatos > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-normal text-muted-foreground sm:text-xs">
+                        <User className="h-2.5 w-2.5" />{contatos}
+                      </span>
+                    )}
+                  </span>
+                );
+              })()}
             </div>
             {/* Mobile: mostrar apenas indicadores coloridos */}
             <div className="flex-1 p-0.5 sm:p-2 overflow-hidden">
