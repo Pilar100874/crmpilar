@@ -599,6 +599,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     nextAvailableDate?: Date;
     allDayTaskTitle?: string;
     targetDate?: Date;
+    origem?: "fimDeSemana" | "escolhaData" | "movimento" | "criacao";
+    dataOriginal?: Date;
   } | null>(null);
   const [allDayEscolherData, setAllDayEscolherData] = useState(false);
   const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
@@ -1420,6 +1422,29 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setAllDayPendingTask(null);
     setAllDayEscolherData(false);
     setAllDayNovaData(null);
+  };
+
+  // Data alvo da janela de "dia já ocupado com tarefa de dia todo"
+  const dataAlvoDiaTodo = (): Date | null =>
+    allDayPendingTask?.targetDate ?? allDayPendingTask?.taskData?.date ?? allDayPendingTask?.existingTask?.date ?? null;
+
+  // Motivos explicados na janela de "dia já ocupado com tarefa de dia todo" (formato "título|explicação")
+  const motivosDiaTodo = (): string[] => {
+    const pend = allDayPendingTask;
+    if (!pend) return [];
+    const alvo = dataAlvoDiaTodo();
+    const dia = (d: Date | null | undefined) => (d ? format(d, "EEEE, dd/MM", { locale: ptBR }) : "outro dia");
+    const motivos: string[] = [];
+    if (pend.origem === "fimDeSemana" && pend.dataOriginal) {
+      motivos.push(`Fim de semana|Você pediu para mover para ${dia(pend.dataOriginal)}, que é fim de semana, e escolheu o próximo dia útil. A tarefa iria para ${dia(alvo)}.`);
+    }
+    if (pend.allDayTaskTitle) {
+      motivos.push(`Dia ocupado por tarefa de dia todo|${dia(alvo)} já está reservado pela tarefa de dia todo "${pend.allDayTaskTitle}". Se mantiver, sua tarefa ficará junto com ela.`);
+    }
+    if (pend.nextAvailableDate) {
+      motivos.push(`Próximo dia disponível|${dia(pend.nextAvailableDate)} é o primeiro dia sem tarefa de dia todo.`);
+    }
+    return motivos;
   };
 
   // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
