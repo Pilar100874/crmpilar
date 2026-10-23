@@ -537,6 +537,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   } | null>(null);
   const [allDayEscolherData, setAllDayEscolherData] = useState(false);
   const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
+  const [weekendEscolherData, setWeekendEscolherData] = useState(false);
+  const [weekendNovaData, setWeekendNovaData] = useState<Date | null>(null);
+
   const [datasDiaTodo, setDatasDiaTodo] = useState<Set<string>>(new Set());
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
@@ -1336,6 +1339,54 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setAllDayEscolherData(false);
     setAllDayNovaData(null);
   };
+
+  // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
+  const aplicarDataFimDeSemana = async (novaData: Date) => {
+    const pendente = weekendPendingTask;
+    if (!pendente) return;
+    const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    // Se a data escolhida já tem tarefa de dia todo, pergunta o que fazer
+    if (calendarioRegras.validacao_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
+      if (allDayCheck.hasTask) {
+        let nextAvailableDay = getNextBusinessDay(novaData);
+        while ((await checkAllDayTasks(nextAvailableDay, userIdDaTarefa)).hasTask) {
+          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+        }
+        setAllDayPendingTask({
+          taskData: pendente.taskData,
+          existingTask: pendente.existingTask,
+          isMove: pendente.isMove,
+          adjustedTime: pendente.adjustedTime,
+          nextAvailableDate: nextAvailableDay,
+          allDayTaskTitle: allDayCheck.taskTitle,
+          targetDate: novaData,
+        });
+        setAllDayEscolherData(false);
+        setAllDayNovaData(null);
+        setWeekendEscolherData(false);
+        setWeekendNovaData(null);
+        setIsAllDayDialogOpen(true);
+        setIsWeekendDialogOpen(false);
+        return;
+      }
+    }
+    if (pendente.isMove && pendente.existingTask) {
+      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      if (success) {
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+      }
+    } else if (pendente.taskData) {
+      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+    }
+    setIsWeekendDialogOpen(false);
+    setWeekendPendingTask(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+  };
+
 
   // Adicionar tarefa
   const validacaoAtiva = isAdmin && modoValidacao;
