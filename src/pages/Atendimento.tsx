@@ -3120,9 +3120,15 @@ ${recentMessages}
 
         // Create a map of last messages
         const lastMessageMap = new Map();
+        // Mapa da última mensagem ENVIADA PELO CLIENTE — conversas com resposta do atendente
+        // depois da mensagem do cliente continuam pertencendo à aba Recebidos.
+        const lastCustomerMessageMap = new Map();
         lastMessages?.forEach(msg => {
           if (!lastMessageMap.has(msg.conversation_id)) {
             lastMessageMap.set(msg.conversation_id, msg);
+          }
+          if (msg.sender === "customer" && !lastCustomerMessageMap.has(msg.conversation_id)) {
+            lastCustomerMessageMap.set(msg.conversation_id, msg);
           }
         });
 
