@@ -1354,6 +1354,28 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       }
     }
 
+    // Ao criar/editar manualmente em data que já tem tarefa de dia todo, perguntar o que fazer
+    if (!taskData.isAllDay && !taskData.isAutomatic) {
+      const allDayCheck = await checkAllDayTasks(taskData.date, taskData.userId);
+      if (allDayCheck.hasTask) {
+        const nextAvailableDay = await getNextAvailableDay(taskData.date, taskData.userId);
+        void carregarDatasDiaTodo(taskData.userId);
+        setAllDayPendingTask({
+          taskData: taskData,
+          existingTask: null,
+          isMove: false,
+          adjustedTime: taskData.time,
+          nextAvailableDate: nextAvailableDay,
+          allDayTaskTitle: allDayCheck.taskTitle,
+          targetDate: taskData.date,
+        });
+        setAllDayEscolherData(false);
+        setAllDayNovaData(null);
+        setIsAllDayDialogOpen(true);
+        return;
+      }
+    }
+
     // Para inserções MANUAIS (usuário criando), NUNCA bloquear ou realocar
     // O usuário tem controle total sobre suas tarefas manuais
 
@@ -1760,6 +1782,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setContatoReprogramar(null);
     setSelectedDate(date || null);
     setShowTaskDialog(true);
+    void carregarDatasDiaTodo();
   };
 
   useEffect(() => {
