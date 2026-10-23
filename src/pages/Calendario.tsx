@@ -2268,6 +2268,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         regraBloqueioAtiva: calendarioRegras.bloqueio_finais_semana
       });
       
+      // Arraste para outro dia: usa o mesmo popup único de mover, que prevê todos os conflitos
+      if (slotTime === undefined && !isSameDay(task.date, newDate)) {
+        void carregarDatasDiaTodo(task.userId);
+        await moverSelecao(false, true, false, { ids: new Set([task.id]), data: newDate });
+        return;
+      }
       if (checkWeekend(newDate) && calendarioRegras.bloqueio_finais_semana) {
         console.log('[DRAG] Fim de semana detectado - mostrando dialog de confirmação');
         // Drag é ação MANUAL, então deve perguntar ao usuário
