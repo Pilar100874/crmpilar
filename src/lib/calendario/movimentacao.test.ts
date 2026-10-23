@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectarDestinoCalendario, prepararMovimento } from "./movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "./movimentacao";
 
 const regras = { bloquear_datas_passadas: true, bloquear_horarios_passados: true, realocacao_diaria: false };
 const agora = new Date(2026, 9, 23, 13, 43);
