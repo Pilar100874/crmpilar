@@ -4432,15 +4432,16 @@ ${recentMessages}
           empresa: empresaNome,
           motivo: "Mensagem recebida",
           canal: "whatsapp",
+          origem: rotuloOrigemConversa(conv.canal),
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
           selecionado: selectedConversation === conv.id,
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
+            limparPaineisRecebido();
             setActiveTab("chat");
             setSelectedConversation(conv.id);
             openDetailsPanel(setShowClientDetailsChat);
-            setHistoricoCliente(filtroFila !== "recebidos" && conv.customer_id ? { customerId: conv.customer_id, nome: conv.customer?.nome || "Cliente" } : null);
           },
         });
       });
@@ -4451,17 +4452,22 @@ ${recentMessages}
         lista.push({
           id: `email-${email.id}`,
           tipo: "recebido",
+          contactId: (email as any).customer_id || undefined,
           nome: (email as any).from_name || email.from_email || "Sem nome",
           motivo: "E-mail recebido",
           canal: "email",
+          origem: "E-mail",
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
           selecionado: selectedEmailId === email.id,
           onClick: () => {
             const remetente = email.from_email || "";
+            limparPaineisRecebido();
             setActiveTab("email");
+            if ((email as any).folder) setEmailFolder((email as any).folder);
             setContatoEmailSelecionado({ id: (email as any).customer_id || `email-${remetente}`, nome: (email as any).from_name || remetente || "Sem nome", email: remetente });
             setSelectedEmailId(email.id);
-            setHistoricoCliente(null);
+            setSelectedEmailData(email as any);
+            openDetailsPanel(setShowClientDetailsEmail);
           },
         });
       });
