@@ -2124,11 +2124,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (selecaoNaMesmaData(dataMov, selecionadas)) { toast.info("As tarefas já estão nesta data."); return; }
     const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMov, calendarioRegras) }));
     if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
-    if (validacaoAtiva && !semPrevia) {
-      setMovimentoAberto(false);
-      abrirPrevia("mover", { data: dataMov }, () => void moverSelecao(confirmado, true, diaTodoResolvido, ov));
-      return;
-    }
+    // Prévia de regras não abre outra janela: os conflitos aparecem no próprio popup de mover
     setMovendoSelecao(true);
     try {
       if (!confirmado) {
@@ -2218,7 +2214,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       toast.error("Tarefa atrasada não pode ser movida manualmente. Ela passa sozinha para a próxima data na virada da noite.");
       return;
     }
-    if (validacaoAtiva && !semPrevia && over.data.current?.date) {
+    if (validacaoAtiva && !semPrevia && over.data.current?.date && !(over.data.current.slotTime === undefined && !isSameDay(task.date, over.data.current.date as Date))) {
       const novaData = over.data.current.date as Date;
       abrirPrevia("mover", { data: novaData, dataOriginal: task.date, horario: task.time || undefined, conflitos: contarConflitos(task.userId, novaData, task.time, task.id) }, () => handleDragEnd(event, true));
       return;
