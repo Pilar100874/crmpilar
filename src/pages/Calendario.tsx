@@ -87,8 +87,31 @@ const SelecaoMovimento = createContext<{
   escolherData: (date: Date) => void;
 }>({ ids: new Set(), alternar: () => {}, escolherData: () => {} });
 
-function SelecionarTarefa({ task }: { task: Task }) {
+function SelecionarTarefa({ task, compacto = false }: { task: Task; compacto?: boolean }) {
   const selecao = useContext(SelecaoMovimento);
+  const atrasada = tarefaAtrasada(task);
+  // Tarefas atrasadas nunca entram na seleção: o quadro fica desativado e o
+  // motivo aparece escrito logo na frente dele.
+  useEffect(() => {
+    if (atrasada && selecao.ids.has(task.id)) selecao.alternar(task.id);
+  }, [atrasada, task.id, selecao]);
+  if (atrasada) {
+    return (
+      <span className="flex min-w-0 items-center gap-1" title="Tarefa atrasada não pode ser movida">
+        <span className={cn("min-w-0 truncate font-medium leading-none text-destructive", compacto ? "text-[8px]" : "text-[10px]")}>
+          Tarefa atrasada não pode ser movida
+        </span>
+        <Checkbox
+          checked={false}
+          disabled
+          aria-label={`Selecionar tarefa: ${task.title}`}
+          aria-disabled
+          onClick={e => e.stopPropagation()}
+          className="shrink-0 cursor-not-allowed"
+        />
+      </span>
+    );
+  }
   return <Checkbox checked={selecao.ids.has(task.id)} aria-label={`Selecionar tarefa: ${task.title}`} onCheckedChange={() => selecao.alternar(task.id)} onClick={e => e.stopPropagation()} className="shrink-0" />;
 }
 
