@@ -4452,7 +4452,7 @@ ${recentMessages}
           origem: rotuloOrigemConversa(conv.canal),
           horario: conv.lastMessage?.created_at ? format(new Date(conv.lastMessage.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
-          selecionado: selectedConversation === conv.id,
+          selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
             limparPaineisRecebido();
