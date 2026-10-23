@@ -1748,6 +1748,14 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   const [encerramentoPendente, setEncerramentoPendente] = useState<Task | null>(null);
   const [contatoReprogramar, setContatoReprogramar] = useState<{ id: string; nome: string } | null>(null);
+  // Próxima tarefa pendente do mesmo contato com data futura (a partir de hoje)
+  const tarefaFuturaDoContato = (task: Task | null) => {
+    if (!task?.contactId) return undefined;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    return tasks
+      .filter(t => t.id !== task.id && t.contactId === task.contactId && t.status === "pending" && new Date(t.date) >= hoje)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  };
 
   const handleToggleTaskStatus = async (taskId: string, semPrevia = false, forcar = false) => {
     const task = tasks.find(t => t.id === taskId);
@@ -1774,10 +1782,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   };
 
   // Conclui a tarefa exigindo encaminhamento: reprogramar nova tarefa ou inativar o cliente
-  const confirmarEncerramento = async (modo: "reprogramar" | "inativar") => {
+  const confirmarEncerramento = async (modo: "reprogramar" | "inativar" | "manter" | "modificar") => {
     const task = encerramentoPendente;
     setEncerramentoPendente(null);
     if (!task) return;
+    const futura = tarefaFuturaDoContato(task);
     if (modo === "inativar") {
       if (!task.contactId) { toast.error("Esta tarefa não tem cliente vinculado"); return; }
       try {
@@ -1791,7 +1800,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       }
     }
     await handleToggleTaskStatus(task.id, true, true);
-    if (modo === "reprogramar") {
+    if (modo === "manter") {
+      toast.success("Tarefa concluída — mantida a data já estabelecida");
+    } else if (modo === "modificar" && futura) {
+      setSelectedTaskId(futura.id);
+      toast.info("Altere a data da tarefa já existente para a nova data");
+    } else if (modo === "reprogramar") {
       const amanha = new Date();
       amanha.setDate(amanha.getDate() + 1);
       handleOpenNewTask(amanha);
@@ -3600,13 +3614,29 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
           <DialogHeader>
             <DialogTitle>Concluir tarefa</DialogTitle>
             <DialogDescription>
-              Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente.
+              {tarefaFuturaDoContato(encerramentoPendente)
+                ? `Este contato já tem uma tarefa para ${format(new Date(tarefaFuturaDoContato(encerramentoPendente)!.date), "dd/MM/yyyy")}. Escolha como seguir.`
+                : "Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
-              <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
-            </Button>
+            {tarefaFuturaDoContato(encerramentoPendente) ? (
+              <>
+                <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("manter")}>
+                  <CalendarDays className="h-4 w-4" /> Manter a data já estabelecida
+                </Button>
+                <Button variant="secondary" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("modificar")}>
+                  <CalendarRange className="h-4 w-4" /> Modificar para a nova data
+                </Button>
+                <Button variant="secondary" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+                  <CalendarPlus className="h-4 w-4" /> Manter as duas tarefas
+                </Button>
+              </>
+            ) : (
+              <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+                <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
+              </Button>
+            )}
             {encerramentoPendente?.contactId && (
               <Button variant="destructive" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("inativar")}>
                 <UserX className="h-4 w-4" /> Inativar cliente
