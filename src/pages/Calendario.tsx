@@ -551,6 +551,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     horario_comercial: boolean;
     validacao_dia_todo: boolean;
     realocacao_diaria: boolean;
+    encaminhamento_obrigatorio_conclusao: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
@@ -559,6 +560,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     horario_comercial: false,
     validacao_dia_todo: false,
     realocacao_diaria: false,
+    encaminhamento_obrigatorio_conclusao: true,
   });
   
   // Configuração de colunas da tabela
