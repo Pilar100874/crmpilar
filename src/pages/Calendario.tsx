@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
+import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
 import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -2096,6 +2096,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       if (!confirmado) {
         const avisos: string[] = [];
         if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
+        const avisoMisto = avisoMisturaDiaTodo(selecionadas);
+        if (avisoMisto) avisos.push(avisoMisto);
         if (calendarioRegras.pergunta_dia_todo) {
           for (const userId of new Set(selecionadas.filter(t => !t.isAllDay).map(t => t.userId))) {
             if ((await checkAllDayTasks(dataMovimento, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
