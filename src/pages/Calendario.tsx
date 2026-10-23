@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX, Undo2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX, Undo2, AlertTriangle } from "lucide-react";
 import { format, addDays, addWeeks, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -4109,6 +4109,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             <DialogDescription>Escolha o novo dia. Os horários das tarefas são mantidos.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
+            {avisoMovimento.length > 0 && (
+              <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  Atenção: conflitos nesta data
+                </div>
+                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                  {avisoMovimento.map(aviso => (
+                    <li key={aviso} className="flex items-start gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                      <span>{aviso}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button size="sm" variant="secondary" className="mt-3 w-full gap-2" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>
+                  <CalendarDays className="h-4 w-4" />
+                  Mover para o próximo dia disponível
+                </Button>
+              </div>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {tasks.filter(t => tarefasParaMover.has(t.id)).slice(0, 6).map(t => (
                 <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.isAllDay ? "Dia todo · " : t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
@@ -4121,7 +4141,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
             </div>
             {dataMovimento && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
-            {avisoMovimento.length > 0 && <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
           </div>
           <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
         </DialogContent>
