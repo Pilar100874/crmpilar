@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -3591,7 +3591,33 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         titulo={previa?.titulo || ""}
         passos={previa?.passos || []}
         onCancelar={() => { setPrevia(null); setTaskToDelete(null); }}
-        onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
+onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
+        />
+
+      {/* Encerramento de tarefa: exige reprogramar nova tarefa ou inativar o cliente */}
+      <Dialog open={!!encerramentoPendente} onOpenChange={(open) => { if (!open) setEncerramentoPendente(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Concluir tarefa</DialogTitle>
+            <DialogDescription>
+              Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+              <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
+            </Button>
+            {encerramentoPendente?.contactId && (
+              <Button variant="destructive" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("inativar")}>
+                <UserX className="h-4 w-4" /> Inativar cliente
+              </Button>
+            )}
+            <Button variant="outline" className="w-full" onClick={() => setEncerramentoPendente(null)}>
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       />
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
