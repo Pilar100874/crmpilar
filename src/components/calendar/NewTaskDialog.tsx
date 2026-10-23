@@ -62,6 +62,8 @@ interface NewTaskDialogProps {
   suggestedContact?: { id: string; nome: string };
   // Quando true (ex.: fluxo "Concluir tarefa" onde o usuário já escolheu manter as duas), pula o diálogo de tarefa duplicada
   pularDuplicata?: boolean;
+  // Datas (yyyy-MM-dd) que já possuem tarefa de dia todo — destacadas no seletor de data
+  datasDiaTodo?: string[];
   editingTask?: {
     id: string;
     contactId?: string;
@@ -77,7 +79,8 @@ interface NewTaskDialogProps {
   };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata, datasDiaTodo }: NewTaskDialogProps) {
+  const datasDiaTodoSet = new Set(datasDiaTodo || []);
   // Função centralizada para obter cor de origem
   const getOrigemColor = (origem: string) => {
     switch (origem) {
@@ -933,20 +936,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       </ScrollArea>
                     </div>
                     {/* Calendário */}
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={(newDate) => {
-                        if (newDate) {
-                          setDate(newDate);
-                          setDateInput(format(newDate, "dd/MM/yyyy"));
-                          setSelectedQuickOption(null);
-                        }
-                      }}
-                      initialFocus
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
+                    <div>
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(newDate) => {
+                          if (newDate) {
+                            setDate(newDate);
+                            setDateInput(format(newDate, "dd/MM/yyyy"));
+                            setSelectedQuickOption(null);
+                          }
+                        }}
+                        initialFocus
+                        locale={ptBR}
+                        className="pointer-events-auto"
+                        modifiers={{ diaTodo: (day) => datasDiaTodoSet.has(format(day, "yyyy-MM-dd")) }}
+                        modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                      />
+                      {datasDiaTodoSet.size > 0 && (
+                        <p className="px-3 pb-2 text-[11px] text-muted-foreground">Datas em destaque já possuem tarefa de dia todo.</p>
+                      )}
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>

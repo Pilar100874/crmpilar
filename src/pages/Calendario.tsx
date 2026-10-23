@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
 import { TaskDetailsSidebar } from "@/components/calendar/TaskDetailsSidebar";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -534,6 +535,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     allDayTaskTitle?: string;
     targetDate?: Date;
   } | null>(null);
+  const [allDayEscolherData, setAllDayEscolherData] = useState(false);
+  const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
+  const [datasDiaTodo, setDatasDiaTodo] = useState<Set<string>>(new Set());
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
@@ -552,6 +556,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     validacao_dia_todo: boolean;
     realocacao_diaria: boolean;
     encaminhamento_obrigatorio_conclusao: boolean;
+    pergunta_dia_todo: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
@@ -561,6 +566,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     validacao_dia_todo: false,
     realocacao_diaria: false,
     encaminhamento_obrigatorio_conclusao: true,
+    pergunta_dia_todo: true,
   });
   
   // Configuração de colunas da tabela
@@ -875,6 +881,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   useEffect(() => {
     loadTasks();
+    void carregarDatasDiaTodo();
   }, [loadTasks]);
 
   // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
@@ -931,6 +938,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
             realocacao_diaria: regrasMap.realocacao_diaria ?? false,
             encaminhamento_obrigatorio_conclusao: regrasMap.encaminhamento_obrigatorio_conclusao ?? true,
+            pergunta_dia_todo: regrasMap.pergunta_dia_todo ?? true,
           });
           
           console.log('[REGRAS] Regras do calendário carregadas:', {
@@ -1254,7 +1262,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       if (!targetUserId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { hasTask: false };
-        targetUserId = user.id;
+        // user_id referencia usuarios.id, não auth.users — resolver antes de consultar
+        const { data: usuarioData } = await (supabase as any)
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        targetUserId = usuarioData?.id || user.id;
       }
 
       const { data: allDayTasks } = await (supabase as any)
@@ -1273,6 +1287,54 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       console.error('Erro ao verificar tarefas de dia todo:', error);
       return { hasTask: false };
     }
+  };
+
+  // Carregar as datas que possuem tarefa de dia todo (para destacar no seletor de data)
+  const carregarDatasDiaTodo = async (userIdOverride?: string) => {
+    try {
+      let targetUserId = userIdOverride;
+      if (!targetUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        // user_id referencia usuarios.id, não auth.users — resolver antes de consultar
+        const { data: usuarioData } = await (supabase as any)
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        targetUserId = usuarioData?.id || user.id;
+      }
+      const { data } = await (supabase as any)
+        .from('calendario_tarefas')
+        .select('date')
+        .eq('user_id', targetUserId)
+        .eq('is_all_day', true)
+        .gte('date', format(new Date(), 'yyyy-MM-dd'))
+        .limit(370);
+      setDatasDiaTodo(new Set((data || []).map((r: any) => String(r.date))));
+    } catch (e) {
+      console.error('Erro ao carregar datas de dia todo:', e);
+    }
+  };
+
+  // Aplica a data escolhida na janela de tarefa de dia todo (mover tarefa existente ou salvar nova/editada)
+  const aplicarDataDiaTodo = async (novaData: Date) => {
+    const pendente = allDayPendingTask;
+    if (!pendente) return;
+    if (pendente.isMove && pendente.existingTask) {
+      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      if (success) {
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+      }
+    } else if (pendente.taskData) {
+      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+    }
+    setIsAllDayDialogOpen(false);
+    setAllDayPendingTask(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
   };
 
   // Adicionar tarefa
@@ -1325,6 +1387,32 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           taskData.date = nextDate;
           toast.info(`Tarefa automática realocada para ${format(nextDate, "dd/MM/yyyy")} devido a tarefa de dia todo`);
         }
+      }
+    }
+
+    // Ao criar/editar manualmente em data que já tem tarefa de dia todo, perguntar o que fazer
+    if (!taskData.isAllDay && !taskData.isAutomatic && calendarioRegras.pergunta_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(taskData.date, taskData.userId);
+      if (allDayCheck.hasTask) {
+        // Próximo dia útil sem tarefa de dia todo
+        let nextAvailableDay = getNextBusinessDay(taskData.date);
+        while ((await checkAllDayTasks(nextAvailableDay, taskData.userId)).hasTask) {
+          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+        }
+        void carregarDatasDiaTodo(taskData.userId);
+        setAllDayPendingTask({
+          taskData: taskData,
+          existingTask: null,
+          isMove: false,
+          adjustedTime: taskData.time,
+          nextAvailableDate: nextAvailableDay,
+          allDayTaskTitle: allDayCheck.taskTitle,
+          targetDate: taskData.date,
+        });
+        setAllDayEscolherData(false);
+        setAllDayNovaData(null);
+        setIsAllDayDialogOpen(true);
+        return;
       }
     }
 
@@ -1734,6 +1822,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setContatoReprogramar(null);
     setSelectedDate(date || null);
     setShowTaskDialog(true);
+    void carregarDatasDiaTodo();
   };
 
   useEffect(() => {
@@ -1891,6 +1980,31 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         return;
       }
 
+
+      // Ao mover para data que já tem tarefa de dia todo, perguntar o que fazer
+      if (!task.isAllDay && calendarioRegras.pergunta_dia_todo) {
+        const allDayCheck = await checkAllDayTasks(newDate, task.userId);
+        if (allDayCheck.hasTask) {
+          let nextAvailableDay = getNextBusinessDay(newDate);
+          while ((await checkAllDayTasks(nextAvailableDay, task.userId)).hasTask) {
+            nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+          }
+          void carregarDatasDiaTodo(task.userId);
+          setAllDayPendingTask({
+            taskData: null,
+            existingTask: task,
+            isMove: true,
+            adjustedTime: adjustedTime,
+            nextAvailableDate: nextAvailableDay,
+            allDayTaskTitle: allDayCheck.taskTitle,
+            targetDate: newDate,
+          });
+          setAllDayEscolherData(false);
+          setAllDayNovaData(null);
+          setIsAllDayDialogOpen(true);
+          return;
+        }
+      }
 
       // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
       // Admin validando: verificar conflitos apenas para o usuário vinculado à tarefa
@@ -3548,6 +3662,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 initialDate={creating ? selectedDate || undefined : undefined}
                 suggestedContact={creating ? (contatoReprogramar || contatoSugerido) : undefined}
                 pularDuplicata={creating && !!contatoReprogramar}
+                datasDiaTodo={[...datasDiaTodo]}
                 editingTask={selectedTask || undefined}
               />}
               onUpdate={async (updates) => {
@@ -3730,6 +3845,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                         allDayTaskTitle: allDayCheck.taskTitle,
                         targetDate: nextBusinessDay, // Data com tarefa de dia todo
                       });
+                      setAllDayEscolherData(false);
+                      setAllDayNovaData(null);
                       setIsAllDayDialogOpen(true);
                       setIsWeekendDialogOpen(false);
                       return;
@@ -3821,12 +3938,12 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
       </Dialog>
 
       {/* Dialog de tarefa dia todo */}
-      <Dialog open={isAllDayDialogOpen} onOpenChange={setIsAllDayDialogOpen}>
+      <Dialog open={isAllDayDialogOpen} onOpenChange={(open) => { setIsAllDayDialogOpen(open); if (!open) { setAllDayEscolherData(false); setAllDayNovaData(null); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
             <DialogDescription>
-              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
+              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
               {allDayPendingTask?.allDayTaskTitle && (
                 <>
                   <br />
@@ -3834,18 +3951,53 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   <strong>Tarefa existente:</strong> {allDayPendingTask.allDayTaskTitle}
                 </>
               )}
-              {allDayPendingTask?.nextAvailableDate && (
+              {allDayPendingTask?.nextAvailableDate && !allDayEscolherData && (
                 <>
                   <br />
                   <br />
                   Próximo dia disponível: {format(allDayPendingTask.nextAvailableDate, "dd/MM/yyyy", { locale: ptBR })}
                 </>
               )}
-              <br />
-              <br />
-              O que você deseja fazer?
+              {!allDayEscolherData && (
+                <>
+                  <br />
+                  <br />
+                  O que você deseja fazer?
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
+          {allDayEscolherData ? (
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <CalendarPicker
+                  mode="single"
+                  selected={allDayNovaData || undefined}
+                  onSelect={(d) => setAllDayNovaData(d || null)}
+                  locale={ptBR}
+                  modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
+                  modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
+              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => { setAllDayEscolherData(false); setAllDayNovaData(null); }}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  disabled={!allDayNovaData}
+                  onClick={() => { if (allDayNovaData) void aplicarDataDiaTodo(allDayNovaData); }}
+                >
+                  Usar esta data
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
           <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
             <Button
               variant="outline"
@@ -3853,6 +4005,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               onClick={() => {
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
+                setAllDayEscolherData(false);
+                setAllDayNovaData(null);
                 // Restaurar dialog de fim de semana se foi cancelado
                 if (allDayPendingTask?.isMove !== undefined) {
                   setWeekendPendingTask(null);
@@ -3865,7 +4019,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               variant="outline"
               className="w-full sm:w-auto order-2 whitespace-normal h-auto py-2"
               onClick={async () => {
-                // Permitir agendar no dia com tarefa de dia todo
+                // Deixar na data escolhida, junto com a tarefa de dia todo
                 if (allDayPendingTask?.isMove && allDayPendingTask.existingTask) {
                   // Caso 1: Movendo uma tarefa existente
                   const targetDate = allDayPendingTask.targetDate || allDayPendingTask.taskData?.date || allDayPendingTask.existingTask.date;
@@ -3890,13 +4044,22 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 }
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
+                setAllDayEscolherData(false);
+                setAllDayNovaData(null);
               }}
             >
-              Permitir Junto com Dia Todo
+              Deixar na Data Escolhida
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto order-3 whitespace-normal h-auto py-2"
+              onClick={() => setAllDayEscolherData(true)}
+            >
+              Escolher Outra Data
             </Button>
             {allDayPendingTask?.nextAvailableDate && (
               <Button
-                className="w-full sm:w-auto order-3 bg-primary hover:bg-primary/90 whitespace-normal h-auto py-2"
+                className="w-full sm:w-auto order-4 bg-primary hover:bg-primary/90 whitespace-normal h-auto py-2"
                 onClick={async () => {
                   if (allDayPendingTask?.nextAvailableDate) {
                     if (allDayPendingTask.isMove && allDayPendingTask.existingTask) {
@@ -3921,12 +4084,15 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   }
                   setIsAllDayDialogOpen(false);
                   setAllDayPendingTask(null);
+                  setAllDayEscolherData(false);
+                  setAllDayNovaData(null);
                 }}
               >
                 Mover para Próximo Dia Disponível
               </Button>
             )}
           </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
