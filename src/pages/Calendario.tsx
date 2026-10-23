@@ -4282,7 +4282,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                   <span className="min-w-0"><span className="block text-sm font-semibold">Mover para a data escolhida</span><span className="block truncate text-xs capitalize text-muted-foreground">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })} · Manter as outras tarefas neste dia</span></span>
                 </Button>
                 {outrasDiaTodoMov.length > 0 && (
-                  <Button size="sm" variant="outline" className="mt-2 w-full gap-2 whitespace-normal h-auto py-2" disabled={movendoSelecao} onClick={async () => {
+                  <Button size="sm" variant="outline" className="mt-2 h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
                     setMovendoSelecao(true);
                     let movidas = 0; let destino = dataMovimento;
