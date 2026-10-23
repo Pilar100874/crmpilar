@@ -545,7 +545,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     });
   }, [tasks, userColors]);
   
-  const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
       contactId: string;
@@ -578,7 +577,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     } | null;
     suggestedTime: string;
   } | null>(null);
-  const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
+  // Fluxo em etapas (fim de semana / dia ocupado / resumo)
+  const [etapasFluxo, setEtapasFluxo] = useState<("fimDeSemana" | "diaTodo" | "resumo")[]>([]);
+  const [etapaAtual, setEtapaAtual] = useState(0);
+  const [decisoesFluxo, setDecisoesFluxo] = useState<string[]>([]);
+  const [resultadoFluxo, setResultadoFluxo] = useState<{ data: Date } | null>(null);
   const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[]; mover?: { taskId: string; updates: { date: Date; time: string | null }; userId?: string }; lote?: boolean } | null>(null);
   const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
@@ -1404,31 +1407,87 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
-  // Aplica a data escolhida na janela de tarefa de dia todo (mover tarefa existente ou salvar nova/editada)
-  const aplicarDataDiaTodo = async (novaData: Date) => {
-    const pendente = allDayPendingTask;
-    if (!pendente) return;
-    if (pendente.isMove && pendente.existingTask) {
-      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
-      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
-      if (success) {
-        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
-        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
-      }
-    } else if (pendente.taskData) {
-      await saveTaskInternal({ ...pendente.taskData, date: novaData });
-    }
-    setIsAllDayDialogOpen(false);
+  // ===== Fluxo em etapas: fim de semana → dia ocupado → resumo =====
+  const pendenteFluxo = allDayPendingTask ?? weekendPendingTask;
+
+  const abrirFluxo = (etapaInicial: "fimDeSemana" | "diaTodo") => {
+    setEtapasFluxo([etapaInicial]);
+    setEtapaAtual(0);
+    setDecisoesFluxo([]);
+    setResultadoFluxo(null);
+  };
+
+  const fecharFluxo = () => {
+    setEtapasFluxo([]);
+    setEtapaAtual(0);
+    setDecisoesFluxo([]);
+    setResultadoFluxo(null);
+    setWeekendPendingTask(null);
     setAllDayPendingTask(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
     setAllDayEscolherData(false);
     setAllDayNovaData(null);
   };
 
-  // Data alvo da janela de "dia já ocupado com tarefa de dia todo"
+  // Avança para a etapa de resumo guardando a decisão e a data final
+  const avancarParaResumo = (decisao: string, dataFinal: Date) => {
+    setDecisoesFluxo(d => [...d, decisao]);
+    setResultadoFluxo({ data: dataFinal });
+    setEtapasFluxo(e => [...e, "resumo"]);
+    setEtapaAtual(i => i + 1);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  // Abre a etapa "dia ocupado" como interferência adicional do fluxo
+  const abrirEtapaDiaTodo = (
+    pendente: { taskData: any; existingTask?: Task | null; isMove?: boolean; adjustedTime?: string; targetDate?: Date },
+    decisao: string,
+    alvo: Date,
+    tituloDiaTodo: string | undefined,
+    proximoDisponivel: Date
+  ) => {
+    const veioDoFimDeSemana = etapasFluxo[0] === "fimDeSemana";
+    setAllDayPendingTask({
+      taskData: pendente.taskData ?? null,
+      existingTask: pendente.existingTask ?? null,
+      isMove: pendente.isMove,
+      adjustedTime: pendente.adjustedTime,
+      nextAvailableDate: proximoDisponivel,
+      allDayTaskTitle: tituloDiaTodo,
+      targetDate: alvo,
+      origem: veioDoFimDeSemana ? "fimDeSemana" : "escolhaData",
+      dataOriginal: veioDoFimDeSemana ? (pendente.targetDate ?? alvo) : alvo,
+    });
+    setDecisoesFluxo(d => [...d, decisao]);
+    setEtapasFluxo(e => [...e, "diaTodo"]);
+    setEtapaAtual(i => i + 1);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  const voltarEtapa = () => {
+    if (etapaAtual === 0) return;
+    setEtapasFluxo(e => e.slice(0, -1));
+    setDecisoesFluxo(d => d.slice(0, -1));
+    setEtapaAtual(i => i - 1);
+    setResultadoFluxo(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  // Data alvo da etapa "dia ocupado"
   const dataAlvoDiaTodo = (): Date | null =>
     allDayPendingTask?.targetDate ?? allDayPendingTask?.taskData?.date ?? allDayPendingTask?.existingTask?.date ?? null;
 
-  // Motivos explicados na janela de "dia já ocupado com tarefa de dia todo" (formato "título|explicação")
+  // Motivos explicados na etapa "dia ocupado" (formato "título|explicação")
   const motivosDiaTodo = (): string[] => {
     const pend = allDayPendingTask;
     if (!pend) return [];
@@ -1447,53 +1506,80 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     return motivos;
   };
 
-  // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
+  // Próximo dia sem tarefa de dia todo para o usuário da tarefa
+  const proximoDiaSemDiaTodo = async (aPartirDe: Date, userId?: string) => {
+    let dia = getNextBusinessDay(aPartirDe);
+    while ((await checkAllDayTasks(dia, userId)).hasTask) {
+      dia = getNextBusinessDay(dia);
+    }
+    return dia;
+  };
+
+  // Etapa fim de semana: decisão "Mover para Próximo Dia Útil"
+  const decidirProximoDiaUtil = async () => {
+    const pendente = weekendPendingTask;
+    if (!pendente) return;
+    const nextBusinessDay = getNextBusinessDay(pendente.targetDate);
+    const taskUserId = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    if (calendarioRegras.validacao_dia_todo || calendarioRegras.pergunta_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(nextBusinessDay, taskUserId);
+      if (allDayCheck.hasTask) {
+        const nextAvailableDay = await getNextAvailableDay(pendente.targetDate, taskUserId);
+        abrirEtapaDiaTodo(pendente, `Mover para o próximo dia útil (${format(nextBusinessDay, "dd/MM")})`, nextBusinessDay, allDayCheck.taskTitle, nextAvailableDay);
+        return;
+      }
+    }
+    avancarParaResumo(`Mover para o próximo dia útil (${format(nextBusinessDay, "dd/MM/yyyy")})`, nextBusinessDay);
+  };
+
+  // Etapa fim de semana: data escolhida no calendário (pode gerar nova etapa se também estiver ocupada)
   const aplicarDataFimDeSemana = async (novaData: Date) => {
     const pendente = weekendPendingTask;
     if (!pendente) return;
     const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
-    // Se a data escolhida já tem tarefa de dia todo, pergunta o que fazer
     if (calendarioRegras.validacao_dia_todo) {
       const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
       if (allDayCheck.hasTask) {
-        let nextAvailableDay = getNextBusinessDay(novaData);
-        while ((await checkAllDayTasks(nextAvailableDay, userIdDaTarefa)).hasTask) {
-          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
-        }
-        setAllDayPendingTask({
-          taskData: pendente.taskData,
-          existingTask: pendente.existingTask,
-          isMove: pendente.isMove,
-          adjustedTime: pendente.adjustedTime,
-          nextAvailableDate: nextAvailableDay,
-          allDayTaskTitle: allDayCheck.taskTitle,
-          targetDate: novaData,
-          origem: "escolhaData",
-          dataOriginal: novaData,
-        });
-        setAllDayEscolherData(false);
-        setAllDayNovaData(null);
-        setWeekendEscolherData(false);
-        setWeekendNovaData(null);
-        setIsAllDayDialogOpen(true);
-        setIsWeekendDialogOpen(false);
+        const nextAvailableDay = await proximoDiaSemDiaTodo(novaData, userIdDaTarefa);
+        abrirEtapaDiaTodo(pendente, `Escolher outra data (${format(novaData, "dd/MM")}), que também está ocupada`, novaData, allDayCheck.taskTitle, nextAvailableDay);
         return;
       }
     }
+    avancarParaResumo(`Escolher outra data (${format(novaData, "dd/MM/yyyy")})`, novaData);
+  };
+
+  // Etapa dia ocupado: data escolhida no calendário (pode gerar nova etapa se também estiver ocupada)
+  const aplicarDataDiaTodo = async (novaData: Date) => {
+    const pendente = allDayPendingTask;
+    if (!pendente) return;
+    const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    if (calendarioRegras.validacao_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
+      if (allDayCheck.hasTask) {
+        const nextAvailableDay = await proximoDiaSemDiaTodo(novaData, userIdDaTarefa);
+        abrirEtapaDiaTodo(pendente, `Escolher outra data (${format(novaData, "dd/MM")}), que também está ocupada`, novaData, allDayCheck.taskTitle, nextAvailableDay);
+        return;
+      }
+    }
+    avancarParaResumo(`Escolher outra data (${format(novaData, "dd/MM/yyyy")})`, novaData);
+  };
+
+  // Etapa resumo: executa o que foi decidido
+  const executarFluxo = async () => {
+    const resultado = resultadoFluxo;
+    const pendente = pendenteFluxo;
+    if (!resultado || !pendente) return;
     if (pendente.isMove && pendente.existingTask) {
       const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
-      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: resultado.data, time: adjustedTime }, 'drag');
       if (success) {
-        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
-        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: resultado.data, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(resultado.data, "dd/MM/yyyy", { locale: ptBR })}`);
       }
     } else if (pendente.taskData) {
-      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+      await saveTaskInternal({ ...pendente.taskData, date: resultado.data });
     }
-    setIsWeekendDialogOpen(false);
-    setWeekendPendingTask(null);
-    setWeekendEscolherData(false);
-    setWeekendNovaData(null);
+    fecharFluxo();
   };
 
 
@@ -1592,7 +1678,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
-        setIsAllDayDialogOpen(true);
+        abrirFluxo("diaTodo");
         return;
       }
     }
@@ -1610,7 +1696,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           targetDate: taskData.date,
           isMove: false
         });
-        setIsWeekendDialogOpen(true);
+        abrirFluxo("fimDeSemana");
         return;
       } else {
         // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia disponível
@@ -2309,7 +2395,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           isMove: true,
           adjustedTime: adjustedTime
         });
-        setIsWeekendDialogOpen(true);
+        abrirFluxo("fimDeSemana");
         return;
       }
 
@@ -2351,7 +2437,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           });
           setAllDayEscolherData(false);
           setAllDayNovaData(null);
-          setIsAllDayDialogOpen(true);
+          abrirFluxo("diaTodo");
           return;
         }
       }
@@ -4291,167 +4377,224 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de fim de semana */}
-      <Dialog open={isWeekendDialogOpen} onOpenChange={(open) => { setIsWeekendDialogOpen(open); if (!open) { setWeekendEscolherData(false); setWeekendNovaData(null); } }}>
-        <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-xl">Tarefa em Fim de Semana</DialogTitle>
-            <DialogDescription className="text-base leading-relaxed">
-              Esta tarefa está agendada para <span className="font-medium text-foreground">{format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}</span>.
-              <br />
-              {!weekendEscolherData && (
-                <span className="block mt-2">O que você deseja fazer?</span>
-              )}
-
-            </DialogDescription>
-          </DialogHeader>
-          {weekendEscolherData ? (
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                <CalendarPicker
-                  mode="single"
-                  selected={weekendNovaData || undefined}
-                  onSelect={(d) => setWeekendNovaData(d || null)}
-                  locale={ptBR}
-                  modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
-                  modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
-                />
+      {/* Fluxo em etapas: fim de semana → dia ocupado → resumo */}
+      <Dialog open={etapasFluxo.length > 0} onOpenChange={(open) => { if (!open) fecharFluxo(); }}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
+          {etapasFluxo.length > 0 && (
+            <>
+              <DialogHeader className="space-y-2 border-b bg-primary/5 px-5 py-4 text-left">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  {etapasFluxo.map((etapa, idx) => (
+                    <span key={`${etapa}-${idx}`} className="flex items-center gap-1.5">
+                      {idx > 0 && <ChevronRight className="h-3 w-3" />}
+                      <span className={idx === etapaAtual ? "font-semibold text-primary" : idx < etapaAtual ? "text-foreground" : ""}>
+                        Etapa {idx + 1}: {etapa === "fimDeSemana" ? "Fim de semana" : etapa === "diaTodo" ? "Dia ocupado" : "Resumo"}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+                <DialogTitle className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    {etapasFluxo[etapaAtual] === "resumo" ? <Check className="h-4 w-4" /> : <CalendarRange className="h-4 w-4" />}
+                  </span>
+                  {etapasFluxo[etapaAtual] === "fimDeSemana" && "Tarefa em fim de semana"}
+                  {etapasFluxo[etapaAtual] === "diaTodo" && "Dia já ocupado com tarefa de dia todo"}
+                  {etapasFluxo[etapaAtual] === "resumo" && "Resumo do agendamento"}
+                </DialogTitle>
+                <DialogDescription>
+                  {etapasFluxo[etapaAtual] === "fimDeSemana" && (
+                    <>Esta tarefa está agendada para <span className="font-medium text-foreground">{format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}</span>, que é fim de semana. O que você deseja fazer?</>
+                  )}
+                  {etapasFluxo[etapaAtual] === "diaTodo" && (
+                    <>{allDayPendingTask?.isMove ? "A tarefa ainda não foi movida" : "A tarefa ainda não foi salva"}: {motivosDiaTodo().length ? `encontramos ${motivosDiaTodo().length} motivo(s) para você decidir antes.` : "este dia já tem uma tarefa de dia todo."}</>
+                  )}
+                  {etapasFluxo[etapaAtual] === "resumo" && "Confira o que vai acontecer antes de finalizar."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
+                {/* Etapa: fim de semana */}
+                {etapasFluxo[etapaAtual] === "fimDeSemana" && !weekendEscolherData && (
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full whitespace-normal h-auto py-2"
+                      onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}
+                    >
+                      Manter na Data
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full whitespace-normal h-auto py-2"
+                      onClick={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }}
+                    >
+                      Escolher Outra Data
+                    </Button>
+                    <Button
+                      className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
+                      onClick={() => void decidirProximoDiaUtil()}
+                    >
+                      Mover para Próximo Dia Útil
+                    </Button>
+                  </div>
+                )}
+                {etapasFluxo[etapaAtual] === "fimDeSemana" && weekendEscolherData && (
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <CalendarPicker
+                        mode="single"
+                        selected={weekendNovaData || undefined}
+                        onSelect={(d) => setWeekendNovaData(d || null)}
+                        locale={ptBR}
+                        modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
+                        modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button variant="outline" className="w-full sm:w-auto" onClick={() => { setWeekendEscolherData(false); setWeekendNovaData(null); }}>
+                        Voltar
+                      </Button>
+                      <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={!weekendNovaData} onClick={() => { if (weekendNovaData) void aplicarDataFimDeSemana(weekendNovaData); }}>
+                        Usar esta data
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {/* Etapa: dia ocupado */}
+                {etapasFluxo[etapaAtual] === "diaTodo" && !allDayEscolherData && (
+                  <>
+                    {motivosDiaTodo().length > 0 && (
+                      <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                          <AlertTriangle className="h-4 w-4 shrink-0" />
+                          {dataAlvoDiaTodo() ? `Por que preciso decidir? (${format(dataAlvoDiaTodo()!, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
+                        </div>
+                        <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                          {motivosDiaTodo().map(motivo => (
+                            <li key={motivo} className="flex items-start gap-2">
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                              <span><strong className="block font-semibold">{motivo.split("|")[0]}</strong>{motivo.includes("|") && <span className="text-muted-foreground">{motivo.split("|").slice(1).join("|")}</span>}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <TarefasDoDiaResumo
+                          date={dataAlvoDiaTodo()}
+                          userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
+                          className="mt-3 border-amber-500/40 bg-background/70"
+                          collapsible
+                        />
+                      </div>
+                    )}
+                    {motivosDiaTodo().length === 0 && (
+                      <TarefasDoDiaResumo
+                        date={dataAlvoDiaTodo()}
+                        userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
+                      />
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        className="w-full whitespace-normal h-auto py-2"
+                        onClick={() => {
+                          const alvo = dataAlvoDiaTodo();
+                          if (alvo) avancarParaResumo(`Juntar com a tarefa de dia todo${allDayPendingTask?.allDayTaskTitle ? ` "${allDayPendingTask.allDayTaskTitle}"` : ""} em ${format(alvo, "dd/MM/yyyy")}`, alvo);
+                        }}
+                      >
+                        Juntar com a Tarefa do Dia Todo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full whitespace-normal h-auto py-2"
+                        onClick={() => setAllDayEscolherData(true)}
+                      >
+                        Escolher Outra Data
+                      </Button>
+                      {allDayPendingTask?.nextAvailableDate && (
+                        <Button
+                          className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
+                          onClick={() => avancarParaResumo(`Mover para o próximo dia disponível (${format(allDayPendingTask.nextAvailableDate!, "dd/MM/yyyy")})`, allDayPendingTask.nextAvailableDate!)}
+                        >
+                          Mover para Próximo Dia Disponível
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
+                {etapasFluxo[etapaAtual] === "diaTodo" && allDayEscolherData && (
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <CalendarPicker
+                        mode="single"
+                        selected={allDayNovaData || undefined}
+                        onSelect={(d) => setAllDayNovaData(d || null)}
+                        locale={ptBR}
+                        modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
+                        modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button variant="outline" className="w-full sm:w-auto" onClick={() => { setAllDayEscolherData(false); setAllDayNovaData(null); }}>
+                        Voltar
+                      </Button>
+                      <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={!allDayNovaData} onClick={() => { if (allDayNovaData) void aplicarDataDiaTodo(allDayNovaData); }}>
+                        Usar esta data
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {/* Etapa: resumo */}
+                {etapasFluxo[etapaAtual] === "resumo" && (
+                  <div className="space-y-3">
+                    <div className="rounded-lg border bg-muted/40 p-3.5">
+                      <div className="text-sm font-semibold">Suas escolhas neste fluxo</div>
+                      <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                        {decisoesFluxo.map((decisao, idx) => (
+                          <li key={`${decisao}-${idx}`} className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <span>{decisao}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {resultadoFluxo && (
+                      <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-3.5 text-sm">
+                        <div className="flex items-center gap-2 font-semibold text-primary">
+                          <CalendarDays className="h-4 w-4" />
+                          O que vai acontecer
+                        </div>
+                        <p className="mt-1.5">
+                          {pendenteFluxo?.isMove ? "A tarefa" : "A nova tarefa"}
+                          {pendenteFluxo?.taskData?.contactName ? ` de ${pendenteFluxo.taskData.contactName}` : pendenteFluxo?.existingTask?.contactName ? ` de ${pendenteFluxo.existingTask.contactName}` : ""}
+                          {" "}será {pendenteFluxo?.isMove ? "movida" : "salva"} para <strong>{format(resultadoFluxo.data, "EEEE, dd/MM/yyyy", { locale: ptBR })}</strong>.
+                        </p>
+                        <TarefasDoDiaResumo
+                          date={resultadoFluxo.data}
+                          userIds={[pendenteFluxo?.existingTask?.userId, pendenteFluxo?.taskData?.userId, currentAdminId]}
+                          className="mt-3"
+                          collapsible
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
-              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => { setWeekendEscolherData(false); setWeekendNovaData(null); }}
-                >
-                  Voltar
+              <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={fecharFluxo}>
+                  Cancelar
                 </Button>
-                <Button
-                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                  disabled={!weekendNovaData}
-                  onClick={() => { if (weekendNovaData) void aplicarDataFimDeSemana(weekendNovaData); }}
-                >
-                  Usar esta data
-                </Button>
+                {etapaAtual > 0 && !weekendEscolherData && !allDayEscolherData && (
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={voltarEtapa}>
+                    Voltar
+                  </Button>
+                )}
+                {etapasFluxo[etapaAtual] === "resumo" && (
+                  <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={!resultadoFluxo} onClick={() => void executarFluxo()}>
+                    <Check className="mr-1 h-4 w-4" /> Finalizar
+                  </Button>
+                )}
               </DialogFooter>
-            </div>
-          ) : (
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mt-6">
-
-            <Button
-              variant="outline"
-              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
-              onClick={() => {
-                setIsWeekendDialogOpen(false);
-                setWeekendPendingTask(null);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center hover:bg-orange-500 hover:text-white transition-colors"
-              onClick={async () => {
-                if (weekendPendingTask) {
-                  if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
-                    // Mover tarefa existente para fim de semana com horário ajustado (se houver)
-                    const adjustedTime = weekendPendingTask.adjustedTime ?? weekendPendingTask.existingTask.time;
-                    const success = await updateTaskInDatabase(
-                      weekendPendingTask.existingTask.id, 
-                      { date: weekendPendingTask.targetDate, time: adjustedTime },
-                      'drag'
-                    );
-                    if (success) {
-                      const updatedTasks = tasks.map(t =>
-                        t.id === weekendPendingTask.existingTask!.id 
-                          ? { ...t, date: weekendPendingTask.targetDate, time: adjustedTime } 
-                          : t
-                      );
-                      setTasks(updatedTasks);
-                      toast.success("Tarefa movida para fim de semana");
-                    }
-                  } else if (weekendPendingTask.taskData) {
-                    // Criar nova tarefa
-                    await saveTaskInternal(weekendPendingTask.taskData);
-                  }
-                }
-                setIsWeekendDialogOpen(false);
-                setWeekendPendingTask(null);
-              }}
-            >
-              Manter na Data
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
-              onClick={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }}
-            >
-              Escolher Outra Data
-            </Button>
-            <Button
-
-              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center bg-primary hover:bg-primary/90"
-              onClick={async () => {
-                if (weekendPendingTask) {
-                  const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
-                  
-                  // Verificar se o próximo dia útil tem tarefa de dia todo (validar pelo usuário da tarefa)
-                  if (calendarioRegras.validacao_dia_todo || calendarioRegras.pergunta_dia_todo) {
-                    const taskUserId = weekendPendingTask.existingTask?.userId;
-                    const allDayCheck = await checkAllDayTasks(nextBusinessDay, taskUserId);
-                    
-                    if (allDayCheck.hasTask) {
-                      // Calcular o próximo dia disponível (sem tarefa de dia todo para o usuário)
-                      const nextAvailableDay = await getNextAvailableDay(weekendPendingTask.targetDate, taskUserId);
-                      
-                      // Mostrar dialog de confirmação
-                      setAllDayPendingTask({
-                        taskData: weekendPendingTask.taskData,
-                        existingTask: weekendPendingTask.existingTask,
-                        isMove: weekendPendingTask.isMove,
-                        adjustedTime: weekendPendingTask.adjustedTime,
-                        nextAvailableDate: nextAvailableDay,
-                        allDayTaskTitle: allDayCheck.taskTitle,
-                        targetDate: nextBusinessDay, // Data com tarefa de dia todo
-                        origem: "fimDeSemana",
-                        dataOriginal: weekendPendingTask.targetDate,
-                      });
-                      setAllDayEscolherData(false);
-                      setAllDayNovaData(null);
-                      setIsAllDayDialogOpen(true);
-                      setIsWeekendDialogOpen(false);
-                      return;
-                    }
-                  }
-                  
-                  // Se não tem tarefa de dia todo, move normalmente
-                  if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
-                    const adjustedTime = weekendPendingTask.adjustedTime ?? weekendPendingTask.existingTask.time;
-                    const success = await updateTaskInDatabase(
-                      weekendPendingTask.existingTask.id, 
-                      { date: nextBusinessDay, time: adjustedTime },
-                      'drag'
-                    );
-                    if (success) {
-                      const updatedTasks = tasks.map(t =>
-                        t.id === weekendPendingTask.existingTask!.id 
-                          ? { ...t, date: nextBusinessDay, time: adjustedTime } 
-                          : t
-                      );
-                      setTasks(updatedTasks);
-                      toast.success(`Tarefa movida para ${format(nextBusinessDay, "dd/MM/yyyy", { locale: ptBR })}`);
-                    }
-                  } else if (weekendPendingTask.taskData) {
-                    await saveTaskInternal({ ...weekendPendingTask.taskData, date: nextBusinessDay });
-                  }
-                }
-                setIsWeekendDialogOpen(false);
-                setWeekendPendingTask(null);
-              }}
-            >
-              Mover para Próximo Dia Útil
-            </Button>
-          </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
@@ -4507,172 +4650,6 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               Usar Horário Sugerido
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de tarefa dia todo */}
-      <Dialog open={isAllDayDialogOpen} onOpenChange={(open) => { setIsAllDayDialogOpen(open); if (!open) { setAllDayEscolherData(false); setAllDayNovaData(null); } }}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
-          <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
-            <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Dia já ocupado com tarefa de dia todo</DialogTitle>
-            <DialogDescription>{allDayPendingTask?.isMove ? "A tarefa ainda não foi movida" : "A tarefa ainda não foi salva"}: {motivosDiaTodo().length ? `encontramos ${motivosDiaTodo().length} motivo(s) para você decidir antes.` : "este dia já tem uma tarefa de dia todo."}</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
-            {motivosDiaTodo().length > 0 && (
-              <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
-                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  {dataAlvoDiaTodo() ? `Por que preciso decidir? (${format(dataAlvoDiaTodo()!, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
-                </div>
-                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
-                  {motivosDiaTodo().map(motivo => (
-                    <li key={motivo} className="flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                      <span><strong className="block font-semibold">{motivo.split("|")[0]}</strong>{motivo.includes("|") && <span className="text-muted-foreground">{motivo.split("|").slice(1).join("|")}</span>}</span>
-                    </li>
-                  ))}
-                </ul>
-                <TarefasDoDiaResumo
-                  date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
-                  userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
-                  className="mt-3 border-amber-500/40 bg-background/70"
-                  collapsible
-                />
-              </div>
-            )}
-            {motivosDiaTodo().length === 0 && (
-              <TarefasDoDiaResumo
-                date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
-                userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
-              />
-            )}
-          {allDayEscolherData ? (
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                <CalendarPicker
-                  mode="single"
-                  selected={allDayNovaData || undefined}
-                  onSelect={(d) => setAllDayNovaData(d || null)}
-                  locale={ptBR}
-                  modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
-                  modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
-              <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => { setAllDayEscolherData(false); setAllDayNovaData(null); }}
-                >
-                  Voltar
-                </Button>
-                <Button
-                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                  disabled={!allDayNovaData}
-                  onClick={() => { if (allDayNovaData) void aplicarDataDiaTodo(allDayNovaData); }}
-                >
-                  Usar esta data
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : (
-          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto order-1"
-              onClick={() => {
-                setIsAllDayDialogOpen(false);
-                setAllDayPendingTask(null);
-                setAllDayEscolherData(false);
-                setAllDayNovaData(null);
-                // Restaurar dialog de fim de semana se foi cancelado
-                if (allDayPendingTask?.isMove !== undefined) {
-                  setWeekendPendingTask(null);
-                }
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto order-2 whitespace-normal h-auto py-2"
-              onClick={async () => {
-                // Deixar na data escolhida, junto com a tarefa de dia todo
-                if (allDayPendingTask?.isMove && allDayPendingTask.existingTask) {
-                  // Caso 1: Movendo uma tarefa existente
-                  const targetDate = allDayPendingTask.targetDate || allDayPendingTask.taskData?.date || allDayPendingTask.existingTask.date;
-                  const adjustedTime = allDayPendingTask.adjustedTime ?? allDayPendingTask.existingTask.time;
-                  const success = await updateTaskInDatabase(
-                    allDayPendingTask.existingTask.id,
-                    { date: targetDate, time: adjustedTime },
-                    'drag'
-                  );
-                  if (success) {
-                    const updatedTasks = tasks.map(t =>
-                      t.id === allDayPendingTask.existingTask!.id
-                        ? { ...t, date: targetDate, time: adjustedTime }
-                        : t
-                    );
-                    setTasks(updatedTasks);
-                    toast.success(`Tarefa movida para ${format(targetDate, "dd/MM/yyyy", { locale: ptBR })}`);
-                  }
-                } else if (allDayPendingTask?.taskData) {
-                  // Caso 2: Criando nova tarefa
-                  await saveTaskInternal({ ...allDayPendingTask.taskData, date: allDayPendingTask.targetDate || allDayPendingTask.taskData.date });
-                }
-                setIsAllDayDialogOpen(false);
-                setAllDayPendingTask(null);
-                setAllDayEscolherData(false);
-                setAllDayNovaData(null);
-              }}
-            >
-              Juntar com a Tarefa do Dia Todo
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto order-3 whitespace-normal h-auto py-2"
-              onClick={() => setAllDayEscolherData(true)}
-            >
-              Escolher Outra Data
-            </Button>
-            {allDayPendingTask?.nextAvailableDate && (
-              <Button
-                className="w-full sm:w-auto order-4 bg-primary hover:bg-primary/90 whitespace-normal h-auto py-2"
-                onClick={async () => {
-                  if (allDayPendingTask?.nextAvailableDate) {
-                    if (allDayPendingTask.isMove && allDayPendingTask.existingTask) {
-                      const adjustedTime = allDayPendingTask.adjustedTime ?? allDayPendingTask.existingTask.time;
-                      const success = await updateTaskInDatabase(
-                        allDayPendingTask.existingTask.id,
-                        { date: allDayPendingTask.nextAvailableDate, time: adjustedTime },
-                        'drag'
-                      );
-                      if (success) {
-                        const updatedTasks = tasks.map(t =>
-                          t.id === allDayPendingTask.existingTask!.id
-                            ? { ...t, date: allDayPendingTask.nextAvailableDate!, time: adjustedTime }
-                            : t
-                        );
-                        setTasks(updatedTasks);
-                        toast.success(`Tarefa movida para ${format(allDayPendingTask.nextAvailableDate, "dd/MM/yyyy", { locale: ptBR })}`);
-                      }
-                    } else if (allDayPendingTask.taskData) {
-                      await saveTaskInternal({ ...allDayPendingTask.taskData, date: allDayPendingTask.nextAvailableDate });
-                    }
-                  }
-                  setIsAllDayDialogOpen(false);
-                  setAllDayPendingTask(null);
-                  setAllDayEscolherData(false);
-                  setAllDayNovaData(null);
-                }}
-              >
-                Mover para Próximo Dia Disponível
-              </Button>
-            )}
-          </DialogFooter>
-          )}
-          </div>
         </DialogContent>
       </Dialog>
 
