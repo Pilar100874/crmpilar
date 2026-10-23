@@ -28,7 +28,6 @@ const BotCreate = React.lazy(() => import("./pages/BotCreate"));
 const Email = React.lazy(() => import("./pages/Email"));
 const EmailPage = React.lazy(() => import("./pages/EmailPage"));
 const Campanhas = React.lazy(() => import("./pages/Campanhas"));
-const Calendario = React.lazy(() => import("./pages/Calendario"));
 const CalendarioConfig = React.lazy(() => import("./pages/CalendarioConfig"));
 const Funil = React.lazy(() => import("./pages/Funil"));
 const Conteudos = React.lazy(() => import("./pages/Conteudos"));
