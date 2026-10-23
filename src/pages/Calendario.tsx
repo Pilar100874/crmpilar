@@ -545,7 +545,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     });
   }, [tasks, userColors]);
   
-  const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
       contactId: string;
@@ -578,7 +577,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     } | null;
     suggestedTime: string;
   } | null>(null);
-  const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
+  // Fluxo em etapas (fim de semana / dia ocupado / resumo)
+  const [etapasFluxo, setEtapasFluxo] = useState<("fimDeSemana" | "diaTodo" | "resumo")[]>([]);
+  const [etapaAtual, setEtapaAtual] = useState(0);
+  const [decisoesFluxo, setDecisoesFluxo] = useState<string[]>([]);
+  const [resultadoFluxo, setResultadoFluxo] = useState<{ data: Date } | null>(null);
   const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[]; mover?: { taskId: string; updates: { date: Date; time: string | null }; userId?: string }; lote?: boolean } | null>(null);
   const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
@@ -1404,31 +1407,87 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
-  // Aplica a data escolhida na janela de tarefa de dia todo (mover tarefa existente ou salvar nova/editada)
-  const aplicarDataDiaTodo = async (novaData: Date) => {
-    const pendente = allDayPendingTask;
-    if (!pendente) return;
-    if (pendente.isMove && pendente.existingTask) {
-      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
-      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
-      if (success) {
-        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
-        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
-      }
-    } else if (pendente.taskData) {
-      await saveTaskInternal({ ...pendente.taskData, date: novaData });
-    }
-    setIsAllDayDialogOpen(false);
+  // ===== Fluxo em etapas: fim de semana → dia ocupado → resumo =====
+  const pendenteFluxo = allDayPendingTask ?? weekendPendingTask;
+
+  const abrirFluxo = (etapaInicial: "fimDeSemana" | "diaTodo") => {
+    setEtapasFluxo([etapaInicial]);
+    setEtapaAtual(0);
+    setDecisoesFluxo([]);
+    setResultadoFluxo(null);
+  };
+
+  const fecharFluxo = () => {
+    setEtapasFluxo([]);
+    setEtapaAtual(0);
+    setDecisoesFluxo([]);
+    setResultadoFluxo(null);
+    setWeekendPendingTask(null);
     setAllDayPendingTask(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
     setAllDayEscolherData(false);
     setAllDayNovaData(null);
   };
 
-  // Data alvo da janela de "dia já ocupado com tarefa de dia todo"
+  // Avança para a etapa de resumo guardando a decisão e a data final
+  const avancarParaResumo = (decisao: string, dataFinal: Date) => {
+    setDecisoesFluxo(d => [...d, decisao]);
+    setResultadoFluxo({ data: dataFinal });
+    setEtapasFluxo(e => [...e, "resumo"]);
+    setEtapaAtual(i => i + 1);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  // Abre a etapa "dia ocupado" como interferência adicional do fluxo
+  const abrirEtapaDiaTodo = (
+    pendente: { taskData: any; existingTask: Task | null | undefined; isMove?: boolean; adjustedTime?: string; targetDate?: Date },
+    decisao: string,
+    alvo: Date,
+    tituloDiaTodo: string | undefined,
+    proximoDisponivel: Date
+  ) => {
+    const veioDoFimDeSemana = etapasFluxo[0] === "fimDeSemana";
+    setAllDayPendingTask({
+      taskData: pendente.taskData ?? null,
+      existingTask: pendente.existingTask ?? null,
+      isMove: pendente.isMove,
+      adjustedTime: pendente.adjustedTime,
+      nextAvailableDate: proximoDisponivel,
+      allDayTaskTitle: tituloDiaTodo,
+      targetDate: alvo,
+      origem: veioDoFimDeSemana ? "fimDeSemana" : "escolhaData",
+      dataOriginal: veioDoFimDeSemana ? (pendente.targetDate ?? alvo) : alvo,
+    });
+    setDecisoesFluxo(d => [...d, decisao]);
+    setEtapasFluxo(e => [...e, "diaTodo"]);
+    setEtapaAtual(i => i + 1);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  const voltarEtapa = () => {
+    if (etapaAtual === 0) return;
+    setEtapasFluxo(e => e.slice(0, -1));
+    setDecisoesFluxo(d => d.slice(0, -1));
+    setEtapaAtual(i => i - 1);
+    setResultadoFluxo(null);
+    setWeekendEscolherData(false);
+    setWeekendNovaData(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
+  // Data alvo da etapa "dia ocupado"
   const dataAlvoDiaTodo = (): Date | null =>
     allDayPendingTask?.targetDate ?? allDayPendingTask?.taskData?.date ?? allDayPendingTask?.existingTask?.date ?? null;
 
-  // Motivos explicados na janela de "dia já ocupado com tarefa de dia todo" (formato "título|explicação")
+  // Motivos explicados na etapa "dia ocupado" (formato "título|explicação")
   const motivosDiaTodo = (): string[] => {
     const pend = allDayPendingTask;
     if (!pend) return [];
@@ -1447,53 +1506,80 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     return motivos;
   };
 
-  // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
+  // Próximo dia sem tarefa de dia todo para o usuário da tarefa
+  const proximoDiaSemDiaTodo = async (aPartirDe: Date, userId?: string) => {
+    let dia = getNextBusinessDay(aPartirDe);
+    while ((await checkAllDayTasks(dia, userId)).hasTask) {
+      dia = getNextBusinessDay(dia);
+    }
+    return dia;
+  };
+
+  // Etapa fim de semana: decisão "Mover para Próximo Dia Útil"
+  const decidirProximoDiaUtil = async () => {
+    const pendente = weekendPendingTask;
+    if (!pendente) return;
+    const nextBusinessDay = getNextBusinessDay(pendente.targetDate);
+    const taskUserId = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    if (calendarioRegras.validacao_dia_todo || calendarioRegras.pergunta_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(nextBusinessDay, taskUserId);
+      if (allDayCheck.hasTask) {
+        const nextAvailableDay = await getNextAvailableDay(pendente.targetDate, taskUserId);
+        abrirEtapaDiaTodo(pendente, `Mover para o próximo dia útil (${format(nextBusinessDay, "dd/MM")})`, nextBusinessDay, allDayCheck.taskTitle, nextAvailableDay);
+        return;
+      }
+    }
+    avancarParaResumo(`Mover para o próximo dia útil (${format(nextBusinessDay, "dd/MM/yyyy")})`, nextBusinessDay);
+  };
+
+  // Etapa fim de semana: data escolhida no calendário (pode gerar nova etapa se também estiver ocupada)
   const aplicarDataFimDeSemana = async (novaData: Date) => {
     const pendente = weekendPendingTask;
     if (!pendente) return;
     const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
-    // Se a data escolhida já tem tarefa de dia todo, pergunta o que fazer
     if (calendarioRegras.validacao_dia_todo) {
       const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
       if (allDayCheck.hasTask) {
-        let nextAvailableDay = getNextBusinessDay(novaData);
-        while ((await checkAllDayTasks(nextAvailableDay, userIdDaTarefa)).hasTask) {
-          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
-        }
-        setAllDayPendingTask({
-          taskData: pendente.taskData,
-          existingTask: pendente.existingTask,
-          isMove: pendente.isMove,
-          adjustedTime: pendente.adjustedTime,
-          nextAvailableDate: nextAvailableDay,
-          allDayTaskTitle: allDayCheck.taskTitle,
-          targetDate: novaData,
-          origem: "escolhaData",
-          dataOriginal: novaData,
-        });
-        setAllDayEscolherData(false);
-        setAllDayNovaData(null);
-        setWeekendEscolherData(false);
-        setWeekendNovaData(null);
-        setIsAllDayDialogOpen(true);
-        setIsWeekendDialogOpen(false);
+        const nextAvailableDay = await proximoDiaSemDiaTodo(novaData, userIdDaTarefa);
+        abrirEtapaDiaTodo(pendente, `Escolher outra data (${format(novaData, "dd/MM")}), que também está ocupada`, novaData, allDayCheck.taskTitle, nextAvailableDay);
         return;
       }
     }
+    avancarParaResumo(`Escolher outra data (${format(novaData, "dd/MM/yyyy")})`, novaData);
+  };
+
+  // Etapa dia ocupado: data escolhida no calendário (pode gerar nova etapa se também estiver ocupada)
+  const aplicarDataDiaTodo = async (novaData: Date) => {
+    const pendente = allDayPendingTask;
+    if (!pendente) return;
+    const userIdDaTarefa = pendente.existingTask?.userId ?? pendente.taskData?.userId;
+    if (calendarioRegras.validacao_dia_todo) {
+      const allDayCheck = await checkAllDayTasks(novaData, userIdDaTarefa);
+      if (allDayCheck.hasTask) {
+        const nextAvailableDay = await proximoDiaSemDiaTodo(novaData, userIdDaTarefa);
+        abrirEtapaDiaTodo(pendente, `Escolher outra data (${format(novaData, "dd/MM")}), que também está ocupada`, novaData, allDayCheck.taskTitle, nextAvailableDay);
+        return;
+      }
+    }
+    avancarParaResumo(`Escolher outra data (${format(novaData, "dd/MM/yyyy")})`, novaData);
+  };
+
+  // Etapa resumo: executa o que foi decidido
+  const executarFluxo = async () => {
+    const resultado = resultadoFluxo;
+    const pendente = pendenteFluxo;
+    if (!resultado || !pendente) return;
     if (pendente.isMove && pendente.existingTask) {
       const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
-      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: resultado.data, time: adjustedTime }, 'drag');
       if (success) {
-        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
-        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: resultado.data, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(resultado.data, "dd/MM/yyyy", { locale: ptBR })}`);
       }
     } else if (pendente.taskData) {
-      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+      await saveTaskInternal({ ...pendente.taskData, date: resultado.data });
     }
-    setIsWeekendDialogOpen(false);
-    setWeekendPendingTask(null);
-    setWeekendEscolherData(false);
-    setWeekendNovaData(null);
+    fecharFluxo();
   };
 
 
@@ -1592,7 +1678,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
-        setIsAllDayDialogOpen(true);
+        abrirFluxo("diaTodo");
         return;
       }
     }
@@ -1610,7 +1696,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           targetDate: taskData.date,
           isMove: false
         });
-        setIsWeekendDialogOpen(true);
+        abrirFluxo("fimDeSemana");
         return;
       } else {
         // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia disponível
@@ -2309,7 +2395,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           isMove: true,
           adjustedTime: adjustedTime
         });
-        setIsWeekendDialogOpen(true);
+        abrirFluxo("fimDeSemana");
         return;
       }
 
@@ -2351,7 +2437,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           });
           setAllDayEscolherData(false);
           setAllDayNovaData(null);
-          setIsAllDayDialogOpen(true);
+          abrirFluxo("diaTodo");
           return;
         }
       }
