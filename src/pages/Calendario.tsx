@@ -3968,7 +3968,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             <p className="truncate text-xs text-muted-foreground">Navegue pelo calendário e escolha o dia de destino</p>
           </div>
           <Button size="sm" variant="outline" className="rounded-full" onClick={() => { setMovimentoAberto(true); setAvisoMovimento([]); void carregarDatasDiaTodo(); }}><CalendarRange className="mr-2 h-4 w-4" />{dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : "Escolher data"}</Button>
-          <Button size="sm" className="rounded-full" disabled={!dataMovimento || movendoSelecao} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover</Button>
+          <Button size="sm" className="rounded-full" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} title={selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id))) ? "As tarefas já estão nesta data" : undefined} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover</Button>
           <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" aria-label="Cancelar seleção" title="Cancelar seleção" disabled={movendoSelecao} onClick={() => { setTarefasParaMover(new Set()); setDataMovimento(undefined); }}><X className="h-4 w-4" /></Button>
         </div>}
         {viewMode === "month" && renderMonthView()}
@@ -4048,7 +4048,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             {dataMovimento && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
             {avisoMovimento.length > 0 && <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
           </div>
-          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
+          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
