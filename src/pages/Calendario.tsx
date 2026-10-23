@@ -879,6 +879,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   useEffect(() => {
     loadTasks();
+    void carregarDatasDiaTodo();
   }, [loadTasks]);
 
   // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
