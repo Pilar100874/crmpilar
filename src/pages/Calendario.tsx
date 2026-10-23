@@ -3614,13 +3614,29 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
           <DialogHeader>
             <DialogTitle>Concluir tarefa</DialogTitle>
             <DialogDescription>
-              Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente.
+              {tarefaFuturaDoContato(encerramentoPendente)
+                ? `Este contato já tem uma tarefa para ${format(new Date(tarefaFuturaDoContato(encerramentoPendente)!.date), "dd/MM/yyyy")}. Escolha como seguir.`
+                : "Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
-              <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
-            </Button>
+            {tarefaFuturaDoContato(encerramentoPendente) ? (
+              <>
+                <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("manter")}>
+                  <CalendarDays className="h-4 w-4" /> Manter a data já estabelecida
+                </Button>
+                <Button variant="secondary" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("modificar")}>
+                  <CalendarRange className="h-4 w-4" /> Modificar para a nova data
+                </Button>
+                <Button variant="secondary" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+                  <CalendarPlus className="h-4 w-4" /> Manter as duas tarefas
+                </Button>
+              </>
+            ) : (
+              <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+                <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
+              </Button>
+            )}
             {encerramentoPendente?.contactId && (
               <Button variant="destructive" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("inativar")}>
                 <UserX className="h-4 w-4" /> Inativar cliente
