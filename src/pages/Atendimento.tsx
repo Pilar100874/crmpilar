@@ -126,6 +126,12 @@ interface Conversation {
     created_at: string;
     sender?: string;
   };
+  /** Última mensagem enviada pelo cliente — base da aba Recebidos. */
+  lastCustomerMessage?: {
+    text: string;
+    created_at: string;
+    sender?: string;
+  };
   customerCompanies?: any[];
   customerLinkedUsers?: Array<{
     customer_id: string;
