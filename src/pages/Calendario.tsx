@@ -3619,14 +3619,36 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <Plus className="h-3.5 w-3.5" />
               Tarefa
             </Button>
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-full">
-              <TabsList className="grid h-10 w-full grid-cols-4 bg-muted/60">
-                <TabsTrigger value="day" className="h-8 px-1 text-xs">Dia</TabsTrigger>
-                <TabsTrigger value="week" className="h-8 px-1 text-xs">Semana</TabsTrigger>
-                <TabsTrigger value="month" className="h-8 px-1 text-xs">Mês</TabsTrigger>
-                <TabsTrigger value="table" className="h-8 px-1 text-xs">Tabela</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex w-full items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-9 shrink-0"
+                aria-label="Período anterior"
+                disabled={viewMode !== "day" && viewMode !== "week" && viewMode !== "month"}
+                onClick={() => setCurrentDate((d) => (viewMode === "day" ? addDays(d, -1) : viewMode === "week" ? addWeeks(d, -1) : addMonths(d, -1)))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="w-full">
+                <TabsList className="grid h-10 w-full grid-cols-4 bg-muted/60">
+                  <TabsTrigger value="day" className="h-8 px-1 text-xs">Dia</TabsTrigger>
+                  <TabsTrigger value="week" className="h-8 px-1 text-xs">Semana</TabsTrigger>
+                  <TabsTrigger value="month" className="h-8 px-1 text-xs">Mês</TabsTrigger>
+                  <TabsTrigger value="table" className="h-8 px-1 text-xs">Tabela</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-9 shrink-0"
+                aria-label="Próximo período"
+                disabled={viewMode !== "day" && viewMode !== "week" && viewMode !== "month"}
+                onClick={() => setCurrentDate((d) => (viewMode === "day" ? addDays(d, 1) : viewMode === "week" ? addWeeks(d, 1) : addMonths(d, 1)))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
         {viewMode === "month" && renderMonthView()}
