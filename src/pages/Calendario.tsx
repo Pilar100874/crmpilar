@@ -3536,6 +3536,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               />}
               onUpdate={async (updates) => {
                 if (!selectedTask) return false;
+                // Ao marcar como concluída, passar pelo fluxo de encerramento (reprogramar ou inativar)
+                if (updates.status === "completed" && selectedTask.status === "pending") {
+                  void handleToggleTaskStatus(selectedTask.id);
+                  return true;
+                }
                 const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
                 if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
                 return success;
