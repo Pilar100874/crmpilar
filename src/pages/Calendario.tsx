@@ -477,6 +477,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [movimentoAberto, setMovimentoAberto] = useState(false);
   const [movendoSelecao, setMovendoSelecao] = useState(false);
   const [avisoMovimento, setAvisoMovimento] = useState<string[]>([]);
+  const [outrasDiaTodoMov, setOutrasDiaTodoMov] = useState<any[]>([]);
   const alternarSelecaoMovimento = (id: string) => {
     const alvo = tasks.find(t => t.id === id);
     if (alvo && tarefaAtrasada(alvo) && !tarefasParaMover.has(id)) {
