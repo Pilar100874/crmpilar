@@ -8980,3 +8980,13 @@ function MobileMainContent({
     </div>
   );
 }
+
+function rotuloOrigemConversa(canal?: string | null): string {
+  const c = (canal || "").toLowerCase();
+  if (c.includes("insta")) return "Instagram";
+  if (c.includes("face") || c.includes("messenger")) return "Facebook";
+  if (c.includes("tele")) return "Telegram";
+  if (c.includes("sms")) return "SMS";
+  if (c.includes("web") || c.includes("site")) return "Chat do site";
+  return "WhatsApp";
+}
