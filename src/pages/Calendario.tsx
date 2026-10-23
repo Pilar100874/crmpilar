@@ -3547,6 +3547,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 onSave={handleSaveTask}
                 initialDate={creating ? selectedDate || undefined : undefined}
                 suggestedContact={creating ? (contatoReprogramar || contatoSugerido) : undefined}
+                pularDuplicata={creating && !!contatoReprogramar}
                 editingTask={selectedTask || undefined}
               />}
               onUpdate={async (updates) => {
