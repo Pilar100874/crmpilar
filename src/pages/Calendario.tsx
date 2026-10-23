@@ -4408,10 +4408,11 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               <DialogHeader className="space-y-2 border-b bg-primary/5 px-5 py-4 text-left">
                 <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   {etapasFluxo.map((etapa, idx) => (
-                    <span key={`${etapa}-${idx}`} className="flex items-center gap-1.5">
-                      {idx > 0 && <ChevronRight className="h-3 w-3" />}
-                      <span className={idx === etapaAtual ? "font-semibold text-primary" : idx < etapaAtual ? "text-foreground" : ""}>
-                        Etapa {idx + 1}: {etapa === "fimDeSemana" ? "Fim de semana" : etapa === "diaTodo" ? "Dia ocupado" : "Resumo"}
+                    <span key={`${etapa}-${idx}`} className="flex items-center gap-1">
+                      {idx > 0 && <ChevronRight className="h-3 w-3 opacity-50" />}
+                      <span className={cn("flex items-center gap-1.5 rounded-full px-2 py-0.5", idx === etapaAtual ? "bg-primary text-primary-foreground" : idx < etapaAtual ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                        {idx < etapaAtual ? <Check className="h-3 w-3" /> : <span className="text-[10px] font-bold">{idx + 1}</span>}
+                        <span className={cn("text-xs", idx === etapaAtual && "font-semibold")}>{etapa === "fimDeSemana" ? "Fim de semana" : etapa === "diaTodo" ? "Dia ocupado" : "Resumo"}</span>
                       </span>
                     </span>
                   ))}
