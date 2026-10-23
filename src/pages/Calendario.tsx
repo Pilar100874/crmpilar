@@ -454,11 +454,18 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [movimentoAberto, setMovimentoAberto] = useState(false);
   const [movendoSelecao, setMovendoSelecao] = useState(false);
   const [avisoMovimento, setAvisoMovimento] = useState<string[]>([]);
-  const alternarSelecaoMovimento = (id: string) => setTarefasParaMover(ids => {
+  const alternarSelecaoMovimento = (id: string) => {
+    const alvo = tasks.find(t => t.id === id);
+    if (alvo && tarefaAtrasada(alvo) && !tarefasParaMover.has(id)) {
+      toast.error("Tarefa atrasada não pode ser movida manualmente. Ela passa sozinha para a próxima data na virada da noite.");
+      return;
+    }
+    setTarefasParaMover(ids => {
     const proximos = new Set(ids);
     if (proximos.has(id)) proximos.delete(id); else proximos.add(id);
     return proximos;
   });
+  };
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -2032,6 +2039,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (!dataMovimento || movendoSelecao) return;
     const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
     if (!selecionadas.length) return;
+    if (selecionadas.some(t => tarefaAtrasada(t))) { toast.error("Tarefas atrasadas não podem ser movidas manualmente."); return; }
     const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMovimento, calendarioRegras) }));
     if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
     if (validacaoAtiva && !semPrevia) {
@@ -2095,6 +2103,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const taskId = active.id as string;
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
+    if (tarefaAtrasada(task) && over.data.current?.date && !isSameDay(over.data.current.date as Date, task.date)) {
+      toast.error("Tarefa atrasada não pode ser movida manualmente. Ela passa sozinha para a próxima data na virada da noite.");
+      return;
+    }
     if (validacaoAtiva && !semPrevia && over.data.current?.date) {
       const novaData = over.data.current.date as Date;
       abrirPrevia("mover", { data: novaData, dataOriginal: task.date, horario: task.time || undefined, conflitos: contarConflitos(task.userId, novaData, task.time, task.id) }, () => handleDragEnd(event, true));
