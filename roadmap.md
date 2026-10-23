@@ -104,3 +104,8 @@
 - [x] Adicionar "Agentes de Voz" como item novo da tela de Configurações de Atendimento.
 - [x] Remover o item do menu principal e manter o endereço antigo abrindo a nova aba.
 - [x] Conferir no navegador a nova aba, o redirecionamento, o menu sem o item e a permissão por grupo.
+
+## Movimentação de tarefas
+- [x] Corrigir o destino do arraste para seguir o cursor.
+- [x] Selecionar uma ou várias tarefas e preservar seleção entre datas e modos.
+- [x] Mover para a data escolhida preservando alertas e conferir salvamento na tela.
