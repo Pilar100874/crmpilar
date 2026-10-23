@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX, Undo2 } from "lucide-react";
 import { format, addDays, addWeeks, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -2059,8 +2059,34 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   };
 
   // Após mover: se o mesmo contato já tem tarefa pendente no dia de destino, une as duas
-  const unirTarefaMesmoContato = async (task: Task, novaData: Date): Promise<boolean> => {
-    if (!task.contactId) return false;
+  type DesfazerItem = { id: string; date: string; time: string | null; is_all_day: boolean; uniao?: { linha: any; alvoId: string; alvoAntes: any } };
+  const [ultimoMovimento, setUltimoMovimento] = useState<DesfazerItem[] | null>(null);
+  const [desfazendo, setDesfazendo] = useState(false);
+  const snapshotMov = (t: Task): DesfazerItem => ({ id: t.id, date: format(t.date, "yyyy-MM-dd"), time: t.time || null, is_all_day: !!t.isAllDay });
+  const desfazerUltimoMovimento = async () => {
+    if (!ultimoMovimento?.length || desfazendo) return;
+    setDesfazendo(true);
+    try {
+      let falhas = 0;
+      for (const item of ultimoMovimento) {
+        if (item.uniao) {
+          const { error: e1 } = await (supabase as any).from("calendario_tarefas").update(item.uniao.alvoAntes).eq("id", item.uniao.alvoId);
+          const { error: e2 } = await (supabase as any).from("calendario_tarefas").insert({ ...item.uniao.linha, date: item.date, time: item.time, is_all_day: item.is_all_day });
+          if (e1 || e2) falhas++;
+        } else {
+          const { error } = await (supabase as any).from("calendario_tarefas").update({ date: item.date, time: item.time, is_all_day: item.is_all_day }).eq("id", item.id);
+          if (error) falhas++;
+        }
+      }
+      setUltimoMovimento(null);
+      if (falhas) toast.error(`${falhas} tarefa(s) não puderam ser restauradas.`); else toast.success("Última movimentação desfeita");
+      await loadTasks();
+      void carregarDatasDiaTodo();
+    } finally { setDesfazendo(false); }
+  };
+
+  const unirTarefaMesmoContato = async (task: Task, novaData: Date): Promise<DesfazerItem["uniao"] | null> => {
+    if (!task.contactId) return null;
     const { data: existentes } = await (supabase as any).from("calendario_tarefas")
       .select("id, title, description, time, is_all_day")
       .eq("contact_id", task.contactId)
@@ -2070,7 +2096,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       .order("created_at", { ascending: true })
       .limit(1);
     const alvo = existentes?.[0];
-    if (!alvo) return false;
+    if (!alvo) return null;
     const extra = [task.title, task.description].filter(Boolean).join(" — ");
     const descricao = [alvo.description, extra && `Unida: ${extra}`].filter(Boolean).join("\n");
     const horarios = [alvo.time, task.time].filter(Boolean).sort() as string[];
@@ -2079,12 +2105,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       is_all_day: !!(alvo.is_all_day || task.isAllDay),
       time: alvo.is_all_day || task.isAllDay ? null : (horarios[0] || null),
     }).eq("id", alvo.id);
-    if (erroUp) return false;
+    if (erroUp) return null;
+    const { data: linha } = await (supabase as any).from("calendario_tarefas").select("*").eq("id", task.id).maybeSingle();
     const { error: erroDel } = await (supabase as any).from("calendario_tarefas").delete().eq("id", task.id);
-    if (erroDel) return false;
+    if (erroDel) return null;
     setTasks(atuais => atuais.filter(t => t.id !== task.id));
     toast.info(`Tarefa unida à tarefa já existente de ${task.contactName || "contato"} neste dia`);
-    return true;
+    return { linha, alvoId: alvo.id, alvoAntes: { description: alvo.description, time: alvo.time, is_all_day: alvo.is_all_day } };
   };
 
   const moverSelecao = async (confirmado = false, semPrevia = false, diaTodoResolvido = false) => {
@@ -2140,15 +2167,19 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         if (avisos.length) { setAvisoMovimento(avisos); return; }
       }
       const movidas = new Set<string>();
+      const registro: DesfazerItem[] = [];
       for (const movimento of movimentos) {
         if (!movimento.updates) continue;
         if (await updateTaskInDatabase(movimento.task.id, movimento.updates, 'drag')) {
           movidas.add(movimento.task.id);
           const updates = movimento.updates;
           setTasks(atuais => atuais.map(t => t.id === movimento.task.id ? { ...t, ...updates } : t));
-          await unirTarefaMesmoContato(movimento.task, dataMovimento);
+          const snap = snapshotMov(movimento.task);
+          const uniao = await unirTarefaMesmoContato(movimento.task, dataMovimento);
+          registro.push(uniao ? { ...snap, uniao } : snap);
         }
       }
+      if (registro.length) setUltimoMovimento(registro);
       setTarefasParaMover(ids => new Set([...ids].filter(id => !movidas.has(id))));
       setAvisoMovimento([]);
       setMovimentoAberto(false);
@@ -2317,7 +2348,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         );
         setTasks(updatedTasks);
         toast.success("Tarefa movida com sucesso");
-        await unirTarefaMesmoContato(task, newDate);
+        const snap = snapshotMov(task);
+        const uniao = await unirTarefaMesmoContato(task, newDate);
+        setUltimoMovimento([uniao ? { ...snap, uniao } : snap]);
       } else {
         toast.error("Não foi possível mover a tarefa (regras/permissões).");
       }
@@ -3988,6 +4021,17 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 onClick={() => setCurrentDate((d) => (viewMode === "day" ? addDays(d, 1) : viewMode === "week" ? addWeeks(d, 1) : addMonths(d, 1)))}
               >
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-9 shrink-0"
+                aria-label="Desfazer última movimentação"
+                title={ultimoMovimento?.length ? "Desfazer última movimentação" : "Nenhuma movimentação para desfazer"}
+                disabled={!ultimoMovimento?.length || desfazendo}
+                onClick={() => void desfazerUltimoMovimento()}
+              >
+                <Undo2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
