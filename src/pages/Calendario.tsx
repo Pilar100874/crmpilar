@@ -446,7 +446,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
-  useEffect(() => { if (viewMode !== "list") setFiltroAtrasados(false); }, [viewMode]);
+  useEffect(() => { if (viewMode !== "table") setFiltroAtrasados(false); }, [viewMode]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
@@ -3319,7 +3319,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
-                  onClick={() => { setFiltroAtrasados(true); setViewMode("list"); }}
+                  onClick={() => { setFiltroAtrasados(true); setViewMode("table"); }}
                   className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
