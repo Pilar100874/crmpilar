@@ -2164,7 +2164,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           tasks.some(t => !tarefasParaMover.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMovimento) && t.time === m.updates?.time) ||
           movimentos.some(outro => outro.task.id !== m.task.id && outro.task.userId === m.task.userId && outro.updates?.time === m.updates?.time)
         ))) avisos.push("Existem tarefas no mesmo horário; manter na data preservará todas elas.");
-        if (avisos.length) { setAvisoMovimento(avisos); return; }
+        if (avisos.length) { setAvisoMovimento(avisos); setMovimentoAberto(true); return; }
       }
       const movidas = new Set<string>();
       const registro: DesfazerItem[] = [];
@@ -4043,7 +4043,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             <p className="truncate text-xs text-muted-foreground">Navegue pelo calendário e escolha o dia de destino</p>
           </div>
           <Button size="sm" variant="outline" className="rounded-full" onClick={() => { setMovimentoAberto(true); setAvisoMovimento([]); void carregarDatasDiaTodo(); }}><CalendarRange className="mr-2 h-4 w-4" />{dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : "Escolher data"}</Button>
-          <Button size="sm" className="rounded-full" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} title={selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id))) ? "As tarefas já estão nesta data" : undefined} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover</Button>
+          <Button size="sm" className="rounded-full" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} title={selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id))) ? "As tarefas já estão nesta data" : undefined} onClick={() => { void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover</Button>
           <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" aria-label="Cancelar seleção" title="Cancelar seleção" disabled={movendoSelecao} onClick={() => { setTarefasParaMover(new Set()); setDataMovimento(undefined); }}><X className="h-4 w-4" /></Button>
         </div>}
         {viewMode === "month" && renderMonthView()}
