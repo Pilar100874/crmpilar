@@ -60,6 +60,8 @@ interface NewTaskDialogProps {
   }) => void;
   initialDate?: Date;
   suggestedContact?: { id: string; nome: string };
+  // Quando true (ex.: fluxo "Concluir tarefa" onde o usuário já escolheu manter as duas), pula o diálogo de tarefa duplicada
+  pularDuplicata?: boolean;
   editingTask?: {
     id: string;
     contactId?: string;
@@ -75,7 +77,7 @@ interface NewTaskDialogProps {
   };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata }: NewTaskDialogProps) {
   // Função centralizada para obter cor de origem
   const getOrigemColor = (origem: string) => {
     switch (origem) {
