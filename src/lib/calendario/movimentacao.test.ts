@@ -36,4 +36,13 @@ describe("movimentação do calendário", () => {
     expect(avisoMisturaDiaTodo([{ isAllDay: true }, { isAllDay: true }])).toBeNull();
     expect(avisoMisturaDiaTodo([{ isAllDay: false }, { isAllDay: false }])).toBeNull();
   });
+  it("bloqueia mover quando a data de destino é a mesma das tarefas", () => {
+    const dia = new Date(2026, 9, 27);
+    expect(selecaoNaMesmaData(dia, [{ date: dia }, { date: new Date(2026, 9, 27, 20, 0) }])).toBe(true);
+  });
+  it("permite mover quando alguma tarefa está em outra data", () => {
+    expect(selecaoNaMesmaData(new Date(2026, 9, 30), [{ date: new Date(2026, 9, 30) }, { date: new Date(2026, 9, 27) }])).toBe(false);
+    expect(selecaoNaMesmaData(undefined, [{ date: new Date(2026, 9, 27) }])).toBe(false);
+    expect(selecaoNaMesmaData(new Date(2026, 9, 30), [])).toBe(false);
+  });
 });
