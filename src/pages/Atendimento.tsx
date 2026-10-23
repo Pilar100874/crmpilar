@@ -3251,6 +3251,7 @@ ${recentMessages}
             customer: finalCustomer,
             customer_id: finalCustomerId,
             lastMessage: lastMessageMap.get(conv.id) || null,
+            lastCustomerMessage: lastCustomerMessageMap.get(conv.id) || null,
             customerCompanies: companiesMap.get(finalCustomerId) || [],
             customerLinkedUsers: vinculosMap.get(finalCustomerId) || [],
           };
