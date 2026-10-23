@@ -16,7 +16,7 @@ interface Props {
 export function PreviaRegrasDialog({ aberto, titulo, passos, onCancelar, onConfirmar }: Props) {
   return (
     <AlertDialog open={aberto} onOpenChange={(o) => !o && onCancelar()}>
-      <AlertDialogContent className="z-[900] max-w-lg">
+      <AlertDialogContent className="max-w-lg">
         <AlertDialogHeader>
           <AlertDialogTitle>Modo validação · {titulo}</AlertDialogTitle>
           <AlertDialogDescription>Estes são os passos que o sistema fará, nesta ordem, se você confirmar.</AlertDialogDescription>
