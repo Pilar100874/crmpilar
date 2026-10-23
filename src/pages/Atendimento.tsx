@@ -4406,7 +4406,7 @@ ${recentMessages}
         motivo,
         canal,
         horario: (task.time || "").slice(0, 5),
-        data: task.data_original ? format(new Date(task.data_original), "dd/MM") : undefined,
+        data: task.data_original ? format(new Date(task.data_original), "dd/MM") : (task.date ? format(new Date(task.date), "dd/MM") : undefined),
         atrasado,
         selecionado: selectedTaskId === task.id,
         bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
