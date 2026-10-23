@@ -1258,7 +1258,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       if (!targetUserId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { hasTask: false };
-        targetUserId = user.id;
+        // user_id referencia usuarios.id, não auth.users — resolver antes de consultar
+        const { data: usuarioData } = await (supabase as any)
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        targetUserId = usuarioData?.id || user.id;
       }
 
       const { data: allDayTasks } = await (supabase as any)
@@ -1286,7 +1292,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       if (!targetUserId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        targetUserId = user.id;
+        // user_id referencia usuarios.id, não auth.users — resolver antes de consultar
+        const { data: usuarioData } = await (supabase as any)
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        targetUserId = usuarioData?.id || user.id;
       }
       const { data } = await (supabase as any)
         .from('calendario_tarefas')
