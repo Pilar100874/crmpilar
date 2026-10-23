@@ -4283,7 +4283,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 </Button>
 
                 {outrasDiaTodoMov.length > 0 && (
-                  <Button size="sm" variant="outline" className="mt-2 h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={movendoSelecao} onClick={async () => {
+                  <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl border-warning/40 py-3 text-left hover:border-warning" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
                     setMovendoSelecao(true);
                     let movidas = 0; let destino = dataMovimento;
@@ -4298,8 +4298,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     setOutrasDiaTodoMov([]);
                     await moverSelecao(true, true, true);
                   }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
-                    <span className="min-w-0 text-left"><span className="block text-sm font-semibold">Mover as outras tarefas do dia</span><span className="block text-xs text-muted-foreground">Para o próximo dia disponível, e mover esta</span></span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
+                    <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-warning">Outras tarefas</span><span className="block text-sm font-semibold text-foreground">Mover as outras para o próximo dia</span><span className="block text-xs text-muted-foreground">Depois mover esta para a data escolhida</span></span>
+
                   </Button>
                 )}
               </div>
