@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
 import { TaskDetailsSidebar } from "@/components/calendar/TaskDetailsSidebar";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -534,6 +535,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     allDayTaskTitle?: string;
     targetDate?: Date;
   } | null>(null);
+  const [allDayEscolherData, setAllDayEscolherData] = useState(false);
+  const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
+  const [datasDiaTodo, setDatasDiaTodo] = useState<Set<string>>(new Set());
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
@@ -1272,6 +1276,28 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     } catch (error) {
       console.error('Erro ao verificar tarefas de dia todo:', error);
       return { hasTask: false };
+    }
+  };
+
+  // Carregar as datas que possuem tarefa de dia todo (para destacar no seletor de data)
+  const carregarDatasDiaTodo = async (userIdOverride?: string) => {
+    try {
+      let targetUserId = userIdOverride;
+      if (!targetUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        targetUserId = user.id;
+      }
+      const { data } = await (supabase as any)
+        .from('calendario_tarefas')
+        .select('date')
+        .eq('user_id', targetUserId)
+        .eq('is_all_day', true)
+        .gte('date', format(new Date(), 'yyyy-MM-dd'))
+        .limit(370);
+      setDatasDiaTodo(new Set((data || []).map((r: any) => String(r.date))));
+    } catch (e) {
+      console.error('Erro ao carregar datas de dia todo:', e);
     }
   };
 
