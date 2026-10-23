@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -35,7 +37,6 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
-  closestCenter,
   DragOverEvent,
   useDroppable,
 } from "@dnd-kit/core";
@@ -78,6 +79,17 @@ interface Task {
 
 type ViewMode = "day" | "week" | "month" | "list" | "table";
 
+const SelecaoMovimento = createContext<{
+  ids: Set<string>;
+  alternar: (id: string) => void;
+  escolherData: (date: Date) => void;
+}>({ ids: new Set(), alternar: () => {}, escolherData: () => {} });
+
+function SelecionarTarefa({ task }: { task: Task }) {
+  const selecao = useContext(SelecaoMovimento);
+  return <Checkbox checked={selecao.ids.has(task.id)} aria-label={`Selecionar tarefa: ${task.title}`} onCheckedChange={() => selecao.alternar(task.id)} onClick={e => e.stopPropagation()} className="shrink-0" />;
+}
+
 // Componente de dia com drop zone
 function DroppableDay({ 
   date, 
@@ -90,6 +102,7 @@ function DroppableDay({
   className?: string; 
   onClick?: () => void;
 }) {
+  const selecao = useContext(SelecaoMovimento);
   const { setNodeRef, isOver } = useDroppable({
     id: format(date, "yyyy-MM-dd"),
     data: { date },
@@ -98,8 +111,9 @@ function DroppableDay({
   return (
     <div
       ref={setNodeRef}
+      data-calendar-date={format(date, "yyyy-MM-dd")}
       className={`${className} ${isOver ? "ring-2 ring-primary ring-inset bg-primary/10" : ""} relative`}
-      onClick={onClick}
+      onClick={() => { if (selecao.ids.size) selecao.escolherData(date); onClick?.(); }}
     >
       {isOver && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
@@ -181,6 +195,7 @@ function DraggableTask({
         concluida ? "border-border bg-muted text-muted-foreground" : atrasada ? "border-destructive/20 border-l-destructive bg-destructive/5" : retorno ? "border-info/20 border-l-info bg-info/5" : "border-primary/20 border-l-primary bg-primary/5",
       )}
     >
+      <div className="mb-1 flex items-center gap-1" onClick={e => e.stopPropagation()}><SelecionarTarefa task={task} /></div>
       <div className={cn("mb-1 min-w-0 items-center justify-between gap-1", compacto ? "hidden lg:flex" : "flex")}>
         <div {...attributes} {...listeners} className="flex min-w-0 cursor-grab items-center gap-1 touch-none active:cursor-grabbing" title="Mover tarefa">
           {getOrigemIconWithColor(task.origem, "sm") || <CalendarDays className="h-3 w-3 text-primary" />}
@@ -283,6 +298,7 @@ function DraggableTaskCard({
       )}
 
       {/* Concluir tarefa */}
+      <SelecionarTarefa task={task} />
       <input
         type="checkbox"
         checked={concluida}
@@ -295,8 +311,8 @@ function DraggableTaskCard({
       <div
         {...attributes}
         {...listeners}
-        title="Arraste para reordenar"
-        className="shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[13px] text-foreground/70 cursor-grab active:cursor-grabbing"
+        title="Mover tarefa"
+        className="shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[13px] text-foreground/70 cursor-grab touch-none active:cursor-grabbing"
       >
         {iniciais}
       </div>
@@ -427,6 +443,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
+  const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
+  const [movimentoAberto, setMovimentoAberto] = useState(false);
+  const [movendoSelecao, setMovendoSelecao] = useState(false);
+  const [avisoMovimento, setAvisoMovimento] = useState<string[]>([]);
+  const alternarSelecaoMovimento = (id: string) => setTarefasParaMover(ids => {
+    const proximos = new Set(ids);
+    if (proximos.has(id)) proximos.delete(id); else proximos.add(id);
+    return proximos;
+  });
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -1958,6 +1984,64 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setActiveId(event.active.id as string);
   };
 
+  const moverSelecao = async (confirmado = false, semPrevia = false) => {
+    if (!dataMovimento || movendoSelecao) return;
+    const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
+    if (!selecionadas.length) return;
+    const movimentos = selecionadas.map(task => ({ task, updates: prepararMovimento(task, dataMovimento, calendarioRegras) }));
+    if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
+    if (validacaoAtiva && !semPrevia) {
+      setMovimentoAberto(false);
+      abrirPrevia("mover", { data: dataMovimento }, () => void moverSelecao(confirmado, true));
+      return;
+    }
+    setMovendoSelecao(true);
+    try {
+      if (!confirmado) {
+        const avisos: string[] = [];
+        if (calendarioRegras.bloqueio_finais_semana && checkWeekend(dataMovimento)) avisos.push("A data escolhida cai em fim de semana.");
+        if (calendarioRegras.pergunta_dia_todo) {
+          for (const userId of new Set(selecionadas.filter(t => !t.isAllDay).map(t => t.userId))) {
+            if ((await checkAllDayTasks(dataMovimento, userId)).hasTask) { avisos.push("A data escolhida já possui tarefa de dia todo."); break; }
+          }
+        }
+        if (calendarioRegras.deteccao_conflitos && movimentos.some(m => m.updates?.time && (
+          tasks.some(t => !tarefasParaMover.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMovimento) && t.time === m.updates?.time) ||
+          movimentos.some(outro => outro.task.id !== m.task.id && outro.task.userId === m.task.userId && outro.updates?.time === m.updates?.time)
+        ))) avisos.push("Existem tarefas no mesmo horário; manter na data preservará todas elas.");
+        if (avisos.length) { setAvisoMovimento(avisos); return; }
+      }
+      const movidas = new Set<string>();
+      for (const movimento of movimentos) {
+        if (!movimento.updates) continue;
+        if (await updateTaskInDatabase(movimento.task.id, movimento.updates, 'drag')) {
+          movidas.add(movimento.task.id);
+          const updates = movimento.updates;
+          setTasks(atuais => atuais.map(t => t.id === movimento.task.id ? { ...t, ...updates } : t));
+        }
+      }
+      setTarefasParaMover(ids => new Set([...ids].filter(id => !movidas.has(id))));
+      setAvisoMovimento([]);
+      setMovimentoAberto(false);
+      if (movidas.size) toast.success(`${movidas.size} tarefa(s) movida(s) para ${format(dataMovimento, "dd/MM/yyyy")}`);
+      if (movidas.size !== selecionadas.length) toast.error("Algumas tarefas não foram movidas e continuam selecionadas.");
+      await loadTasks();
+      void carregarDatasDiaTodo();
+    } finally { setMovendoSelecao(false); }
+  };
+
+  const proximaDataSelecao = async () => {
+    if (!dataMovimento) return;
+    let proxima = getNextBusinessDay(dataMovimento);
+    const usuariosAlvo = [...new Set(tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId))];
+    for (let i = 0; i < 366; i++) {
+      const ocupado = (await Promise.all(usuariosAlvo.map(id => checkAllDayTasks(proxima, id)))).some(r => r.hasTask);
+      if (!ocupado) { setDataMovimento(proxima); setAvisoMovimento([]); return; }
+      proxima = getNextBusinessDay(proxima);
+    }
+    toast.error("Não foi encontrada uma data disponível no próximo ano. Escolha outra data.");
+  };
+
   const handleDragEnd = async (event: DragEndEvent, semPrevia = false) => {
     const { active, over } = event;
     setActiveId(null);
@@ -3146,11 +3230,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   }, []);
 
   return (
+    <SelecaoMovimento.Provider value={{ ids: tarefasParaMover, alternar: alternarSelecaoMovimento, escolherData: setDataMovimento }}>
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={detectarDestinoCalendario}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveId(null)}
     >
       <div className="calendario-raiz flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
       <div
@@ -3702,6 +3788,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
           </div>
         </div>
+        {tarefasParaMover.size > 0 && <div className="sticky top-0 z-20 mb-3 flex min-w-0 flex-wrap items-center gap-2 border-y border-primary/30 bg-background px-3 py-2" role="toolbar" aria-label="Movimentar tarefas selecionadas">
+          <Badge variant="secondary">{tarefasParaMover.size} selecionada(s)</Badge>
+          <Button size="sm" variant="outline" onClick={() => { setMovimentoAberto(true); setAvisoMovimento([]); void carregarDatasDiaTodo(); }}><CalendarRange className="mr-2 h-4 w-4" />{dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : "Escolher data"}</Button>
+          <Button size="sm" disabled={!dataMovimento || movendoSelecao} onClick={() => { setMovimentoAberto(true); void moverSelecao(); }}><CalendarDays className="mr-2 h-4 w-4" />Mover selecionadas</Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Cancelar seleção" title="Cancelar seleção" disabled={movendoSelecao} onClick={() => { setTarefasParaMover(new Set()); setDataMovimento(undefined); }}><X className="h-4 w-4" /></Button>
+        </div>}
         {viewMode === "month" && renderMonthView()}
         {viewMode === "week" && renderWeekView()}
         {viewMode === "day" && renderDayView()}
@@ -3757,6 +3849,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         return hospedeOculto && quadro ? createPortal(painelTarefa, quadro) : painelTarefa;
       })()}
       </div>
+
+      <Dialog open={movimentoAberto} onOpenChange={aberto => { if (!movendoSelecao) setMovimentoAberto(aberto); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Mover {tarefasParaMover.size} tarefa(s)</DialogTitle><DialogDescription>{dataMovimento ? `Data de destino: ${format(dataMovimento, "dd/MM/yyyy")}` : "Escolha a data de destino."}</DialogDescription></DialogHeader>
+          <div className="flex justify-center"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
+          {avisoMovimento.length > 0 && <div className="space-y-2 border-l-2 border-primary bg-muted p-3 text-sm">{avisoMovimento.map(aviso => <p key={aviso}>{aviso}</p>)}<Button size="sm" variant="outline" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>Próximo dia disponível</Button></div>}
+          <DialogFooter className="flex-wrap gap-2"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao} onClick={() => void moverSelecao(avisoMovimento.length > 0)}>{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover selecionadas"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de conflito */}
       <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
@@ -4234,5 +4335,6 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
       </DragOverlay>
     </div>
     </DndContext>
+    </SelecaoMovimento.Provider>
   );
 }
