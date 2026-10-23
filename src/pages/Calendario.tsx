@@ -3618,7 +3618,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
           </div>
         </DialogContent>
       </Dialog>
-      />
+
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
         <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
