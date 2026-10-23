@@ -4035,7 +4035,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
             <div className="flex flex-wrap gap-1.5">
               {tasks.filter(t => tarefasParaMover.has(t.id)).slice(0, 6).map(t => (
-                <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
+                <span key={t.id} className="max-w-full truncate rounded-full border bg-muted px-2.5 py-0.5 text-xs text-foreground" title={t.title}>{t.isAllDay ? "Dia todo · " : t.time ? `${t.time} · ` : ""}{t.contactName || t.title}</span>
               ))}
               {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
             </div>
