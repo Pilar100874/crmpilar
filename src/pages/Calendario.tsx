@@ -812,6 +812,25 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         currentUsuarioId = currentUsuario?.id;
       }
 
+      // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
+      // atual — pendências com data anterior (ou remarcadas para outro dia) voltam
+      // para hoje, preservando a data original ("Deveria ter contatado em").
+      if (realocacaoRef.current) {
+        const hojeStr = format(new Date(), 'yyyy-MM-dd');
+        let alinhar = (supabase as any)
+          .from('calendario_tarefas')
+          .update({ date: hojeStr })
+          .eq('estabelecimento_id', estabelecimentoId)
+          .or(`date.lt.${hojeStr},and(data_original.lt.${hojeStr},date.neq.${hojeStr})`)
+          .not('status', 'in', '("concluido","cancelado","completed")');
+        if (isAdmin) {
+          if (selectedUserIds.length > 0) alinhar = alinhar.in('user_id', selectedUserIds);
+        } else if (currentUsuarioId) {
+          alinhar = alinhar.eq('user_id', currentUsuarioId);
+        }
+        const { error: erroAlinhamento } = await alinhar;
+        if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+      }
 
       let query = (supabase as any)
         .from('calendario_tarefas')
@@ -913,10 +932,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   const loadTasksRef = useRef(loadTasks);
   loadTasksRef.current = loadTasks;
+  // Ref da regra "Realocação Diária de Tarefas" — evita recarregar loadTasks quando a regra muda
+  const realocacaoRef = useRef(true);
 
   useEffect(() => {
-    loadTasks();
-    void carregarDatasDiaTodo();
+    (async () => {
+      // Primeiro realoca as atrasadas para a data atual, depois conta os dias
+      await loadTasks();
+      void carregarDatasDiaTodo();
+    })();
   }, [loadTasks]);
 
   // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
@@ -963,6 +987,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           regras.forEach((regra: any) => {
             regrasMap[regra.tipo] = regra.ativa;
           });
+          realocacaoRef.current = regrasMap.realocacao_diaria_tarefas ?? true;
 
           setCalendarioRegras({
             bloquear_datas_passadas: regrasMap.bloquear_datas_passadas ?? true,
@@ -1202,18 +1227,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
-  // Verificar tarefas atrasadas ao carregar e a cada hora (com proteção de repetição diária)
+  // Verificar tarefas atrasadas ao carregar e a cada hora.
+  // A realocação para a data atual acontece dentro de loadTasks (regra "Realocação Diária de Tarefas").
   const processOverdueIfNeeded = async () => {
-    console.log("=== DESABILITADO: Movimentação automática de tarefas atrasadas ===");
-    // DESABILITADO TEMPORARIAMENTE - estava movendo tarefas automaticamente
-    // const now = new Date();
-    // const todayKey = format(now, 'yyyy-MM-dd');
-    // const lastProcessed = sessionStorage.getItem('calendar_overdue_last_processed');
-    // if (lastProcessed === todayKey) {
-    //   return;
-    // }
-    // await moveOverdueTasks();
-    // sessionStorage.setItem('calendar_overdue_last_processed', todayKey);
+    await loadTasksRef.current();
   };
 
   useEffect(() => {
