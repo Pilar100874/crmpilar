@@ -24,7 +24,7 @@ describe("movimentação do calendário", () => {
     ];
     const rect = (left: number) => ({ left, top: 0, right: left + 100, bottom: 100, width: 100, height: 100 });
     const args = { pointerCoordinates: { x: 125, y: 50 }, droppableContainers: containers, droppableRects: new Map([[containers[0].id, rect(0)], [containers[1].id, rect(100)], [containers[2].id, rect(100)]]), collisionRect: rect(0) };
-    expect(detectarDestinoCalendario(args as Parameters<typeof detectarDestinoCalendario>[0]).map(c => c.id)).toEqual(["2026-11-06"]);
+    expect(detectarDestinoCalendario(args as unknown as Parameters<typeof detectarDestinoCalendario>[0]).map(c => c.id)).toEqual(["2026-11-06"]);
   });
   it("não move quando o cursor está fora das datas", () => {
     expect(detectarDestinoCalendario({ pointerCoordinates: { x: 999, y: 999 }, droppableContainers: [], droppableRects: new Map() } as unknown as Parameters<typeof detectarDestinoCalendario>[0])).toEqual([]);
