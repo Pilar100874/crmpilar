@@ -1358,7 +1358,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (!taskData.isAllDay && !taskData.isAutomatic) {
       const allDayCheck = await checkAllDayTasks(taskData.date, taskData.userId);
       if (allDayCheck.hasTask) {
-        const nextAvailableDay = await getNextAvailableDay(taskData.date, taskData.userId);
+        // Próximo dia útil sem tarefa de dia todo
+        let nextAvailableDay = getNextBusinessDay(taskData.date);
+        while ((await checkAllDayTasks(nextAvailableDay, taskData.userId)).hasTask) {
+          nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+        }
         void carregarDatasDiaTodo(taskData.userId);
         setAllDayPendingTask({
           taskData: taskData,
@@ -1940,6 +1944,31 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         return;
       }
 
+
+      // Ao mover para data que já tem tarefa de dia todo, perguntar o que fazer
+      if (!task.isAllDay) {
+        const allDayCheck = await checkAllDayTasks(newDate, task.userId);
+        if (allDayCheck.hasTask) {
+          let nextAvailableDay = getNextBusinessDay(newDate);
+          while ((await checkAllDayTasks(nextAvailableDay, task.userId)).hasTask) {
+            nextAvailableDay = getNextBusinessDay(nextAvailableDay);
+          }
+          void carregarDatasDiaTodo(task.userId);
+          setAllDayPendingTask({
+            taskData: null,
+            existingTask: task,
+            isMove: true,
+            adjustedTime: adjustedTime,
+            nextAvailableDate: nextAvailableDay,
+            allDayTaskTitle: allDayCheck.taskTitle,
+            targetDate: newDate,
+          });
+          setAllDayEscolherData(false);
+          setAllDayNovaData(null);
+          setIsAllDayDialogOpen(true);
+          return;
+        }
+      }
 
       // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
       // Admin validando: verificar conflitos apenas para o usuário vinculado à tarefa
