@@ -556,6 +556,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     validacao_dia_todo: boolean;
     realocacao_diaria: boolean;
     encaminhamento_obrigatorio_conclusao: boolean;
+    pergunta_dia_todo: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
@@ -565,6 +566,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     validacao_dia_todo: false,
     realocacao_diaria: false,
     encaminhamento_obrigatorio_conclusao: true,
+    pergunta_dia_todo: true,
   });
   
   // Configuração de colunas da tabela
@@ -936,6 +938,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
             realocacao_diaria: regrasMap.realocacao_diaria ?? false,
             encaminhamento_obrigatorio_conclusao: regrasMap.encaminhamento_obrigatorio_conclusao ?? true,
+            pergunta_dia_todo: regrasMap.pergunta_dia_todo ?? true,
           });
           
           console.log('[REGRAS] Regras do calendário carregadas:', {
