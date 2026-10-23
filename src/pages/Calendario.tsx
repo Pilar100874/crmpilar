@@ -4442,22 +4442,16 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && !weekendEscolherData && (
                   <div className="flex flex-col gap-2">
                     {weekendPendingTask && <AnaliseDestinoResumo origem={weekendPendingTask.targetDate} analise={analiseDestino} userIds={[weekendPendingTask.existingTask?.userId ?? weekendPendingTask.taskData?.userId]} disabled={analisandoDestino} onOutraData={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }} onSugestao={data => avancarParaResumo(`Usar a data sugerida (${format(data, "dd/MM/yyyy")}), evitando o fim de semana e as tarefas de dia todo`, data)} />}
-                    <Button
-                      variant="outline"
-                      className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                      onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
-                      <span className="min-w-0"><span className="block text-sm font-semibold">Manter na Data</span><span className="block truncate text-xs capitalize text-muted-foreground">{weekendPendingTask && format(weekendPendingTask.targetDate, "EEEE, dd/MM", { locale: ptBR })} · mesmo sendo fim de semana</span></span>
+                    <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                      <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Manter data</span><span className="block text-sm font-semibold text-foreground">Manter na data escolhida</span><span className="block text-xs capitalize text-muted-foreground">{weekendPendingTask && format(weekendPendingTask.targetDate, "EEEE, dd/MM", { locale: ptBR })} · mesmo sendo fim de semana</span></span>
                     </Button>
-                    {(!analiseDestino?.sugerida || !isSameDay(analiseDestino.sugerida, analiseDestino.proximoDiaUtil)) && <Button
-                      variant="outline"
-                      className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                      onClick={() => void decidirProximoDiaUtil()}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarRange className="h-4 w-4" /></span>
-                      <span className="min-w-0"><span className="block text-sm font-semibold">Mover para o Próximo Dia Útil</span><span className="block truncate text-xs capitalize text-muted-foreground">{analiseDestino ? format(analiseDestino.proximoDiaUtil, "EEEE, dd/MM", { locale: ptBR }) : "calculando…"}</span></span>
+
+                    {(!analiseDestino?.sugerida || !isSameDay(analiseDestino.sugerida, analiseDestino.proximoDiaUtil)) && <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" onClick={() => void decidirProximoDiaUtil()}>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarRange className="h-4 w-4" /></span>
+                      <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próximo dia útil</span><span className="block text-sm font-semibold text-foreground">Mover para o próximo dia útil</span><span className="block text-xs capitalize text-muted-foreground">{analiseDestino ? format(analiseDestino.proximoDiaUtil, "EEEE, dd/MM", { locale: ptBR }) : "calculando…"}</span></span>
                     </Button>}
+
                   </div>
                 )}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && weekendEscolherData && (
