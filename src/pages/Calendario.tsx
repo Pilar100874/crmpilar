@@ -2058,6 +2058,35 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setActiveId(event.active.id as string);
   };
 
+  // Após mover: se o mesmo contato já tem tarefa pendente no dia de destino, une as duas
+  const unirTarefaMesmoContato = async (task: Task, novaData: Date): Promise<boolean> => {
+    if (!task.contactId) return false;
+    const { data: existentes } = await (supabase as any).from("calendario_tarefas")
+      .select("id, title, description, time, is_all_day")
+      .eq("contact_id", task.contactId)
+      .eq("date", format(novaData, "yyyy-MM-dd"))
+      .not("status", "in", '("concluido","cancelado","completed")')
+      .neq("id", task.id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const alvo = existentes?.[0];
+    if (!alvo) return false;
+    const extra = [task.title, task.description].filter(Boolean).join(" — ");
+    const descricao = [alvo.description, extra && `Unida: ${extra}`].filter(Boolean).join("\n");
+    const horarios = [alvo.time, task.time].filter(Boolean).sort() as string[];
+    const { error: erroUp } = await (supabase as any).from("calendario_tarefas").update({
+      description: descricao,
+      is_all_day: !!(alvo.is_all_day || task.isAllDay),
+      time: alvo.is_all_day || task.isAllDay ? null : (horarios[0] || null),
+    }).eq("id", alvo.id);
+    if (erroUp) return false;
+    const { error: erroDel } = await (supabase as any).from("calendario_tarefas").delete().eq("id", task.id);
+    if (erroDel) return false;
+    setTasks(atuais => atuais.filter(t => t.id !== task.id));
+    toast.info(`Tarefa unida à tarefa já existente de ${task.contactName || "contato"} neste dia`);
+    return true;
+  };
+
   const moverSelecao = async (confirmado = false, semPrevia = false, diaTodoResolvido = false) => {
     if (!dataMovimento || movendoSelecao) return;
     const selecionadas = tasks.filter(t => tarefasParaMover.has(t.id));
@@ -2117,6 +2146,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           movidas.add(movimento.task.id);
           const updates = movimento.updates;
           setTasks(atuais => atuais.map(t => t.id === movimento.task.id ? { ...t, ...updates } : t));
+          await unirTarefaMesmoContato(movimento.task, dataMovimento);
         }
       }
       setTarefasParaMover(ids => new Set([...ids].filter(id => !movidas.has(id))));
@@ -2287,6 +2317,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         );
         setTasks(updatedTasks);
         toast.success("Tarefa movida com sucesso");
+        await unirTarefaMesmoContato(task, newDate);
       } else {
         toast.error("Não foi possível mover a tarefa (regras/permissões).");
       }
