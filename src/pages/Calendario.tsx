@@ -913,6 +913,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   const loadTasksRef = useRef(loadTasks);
   loadTasksRef.current = loadTasks;
+  // Ref da regra "Realocação Diária de Tarefas" — evita recarregar loadTasks quando a regra muda
+  const realocacaoRef = useRef(true);
+  realocacaoRef.current = realocacaoRef.current && true;
 
   useEffect(() => {
     loadTasks();
