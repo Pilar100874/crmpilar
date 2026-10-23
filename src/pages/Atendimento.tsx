@@ -1750,15 +1750,18 @@ export default function Atendimento() {
         return;
       }
 
-      // Tarefas atrasadas: pendentes em datas anteriores à agenda — sempre entram na fila.
+      // Tarefas atrasadas: pendentes com data original anterior à agenda —
+      // entram na fila mesmo que tenham sido remarcadas para uma data futura.
       const { data: atrasadasData } = await supabase
         .from('calendario_tarefas')
         .select('*')
         .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
-        .lt('date', dateStr)
+        .or(`date.lt.${dateStr},data_original.lt.${dateStr}`)
         .not('status', 'in', '("concluido","cancelado","completed")');
       const tarefasAtrasadasLista = (atrasadasData || []).filter(
-        (t: any) => !["concluido", "cancelado", "completed"].includes(t.status)
+        (t: any) => !["concluido", "cancelado", "completed"].includes(t.status) &&
+          // já estão na lista do dia (remarcadas para hoje) — não duplicar
+          !(tasksData || []).some((td: any) => td.id === t.id)
       );
 
       // Get unique contact_ids that are not null
