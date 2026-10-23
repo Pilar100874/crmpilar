@@ -4277,6 +4277,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             {avisoMovimento.length > 0 && (
               <div className="space-y-3">
                 {dataMovimento && <AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} avisos={avisoMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} disabled={movendoSelecao || analisandoDestino} onOutraData={() => setMostrarCalendarioMovimento(v => !v)} onSugestao={data => { setDataMovimento(data); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} />}
+                <Button variant="outline" className="h-auto w-full justify-start gap-2 whitespace-normal py-3 text-left" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(true)}>
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  <span><span className="block font-medium">Mover para a data escolhida</span><span className="block text-xs text-muted-foreground">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })} · Manter as outras tarefas neste dia</span></span>
+                </Button>
                 {outrasDiaTodoMov.length > 0 && (
                   <Button size="sm" variant="outline" className="mt-2 w-full gap-2 whitespace-normal h-auto py-2" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
@@ -4312,7 +4316,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
             {dataMovimento && avisoMovimento.length === 0 && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
           </div>
-          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
+          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button>{avisoMovimento.length === 0 && <Button disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao()}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : "Mover para este dia"}</Button>}</DialogFooter>
         </DialogContent>
       </Dialog>
 
