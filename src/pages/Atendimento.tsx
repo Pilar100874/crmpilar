@@ -4460,8 +4460,11 @@ ${recentMessages}
             setSelectedConversation(conv.id);
             openDetailsPanel(setShowClientDetailsChat);
             // Abre a conversa do contato que realmente tem a última mensagem recebida.
-            if (grupo.ids.length > 1 || !conv.lastMessage) {
-              void supabase.from("messages").select("conversation_id").in("conversation_id", grupo.ids)
+            const idsContato = conv.customer_id
+              ? conversations.filter((c: any) => c.customer_id === conv.customer_id).map((c: any) => c.id)
+              : grupo.ids;
+            if (idsContato.length > 1 || !conv.lastMessage) {
+              void supabase.from("messages").select("conversation_id").in("conversation_id", idsContato)
                 .order("created_at", { ascending: false }).limit(1).maybeSingle()
                 .then(({ data }) => { if (data?.conversation_id && data.conversation_id !== conv.id) setSelectedConversation(data.conversation_id); });
             }
