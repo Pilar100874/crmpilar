@@ -4312,7 +4312,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
                   
                   // Verificar se o próximo dia útil tem tarefa de dia todo (validar pelo usuário da tarefa)
-                  if (calendarioRegras.validacao_dia_todo) {
+                  if (calendarioRegras.validacao_dia_todo || calendarioRegras.pergunta_dia_todo) {
                     const taskUserId = weekendPendingTask.existingTask?.userId;
                     const allDayCheck = await checkAllDayTasks(nextBusinessDay, taskUserId);
                     
@@ -4531,7 +4531,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   }
                 } else if (allDayPendingTask?.taskData) {
                   // Caso 2: Criando nova tarefa
-                  await saveTaskInternal(allDayPendingTask.taskData);
+                  await saveTaskInternal({ ...allDayPendingTask.taskData, date: allDayPendingTask.targetDate || allDayPendingTask.taskData.date });
                 }
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
@@ -4539,7 +4539,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 setAllDayNovaData(null);
               }}
             >
-              Deixar na Data Escolhida
+              Juntar com a Tarefa do Dia Todo
             </Button>
             <Button
               variant="outline"
