@@ -1282,7 +1282,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       </AlertDialogContent>
     </AlertDialog>
 
-    <AlertDialog open={!!payloadDuplicado} onOpenChange={(o) => { if (!o) { setPayloadDuplicado(null); setTarefasDoContato([]); } }}>
+    <AlertDialog open={!!payloadDuplicado && !replaceConfirmOpen} onOpenChange={(o) => { if (!o) { setPayloadDuplicado(null); setTarefasDoContato([]); } }}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle>Este contato já tem tarefa na agenda</AlertDialogTitle>
