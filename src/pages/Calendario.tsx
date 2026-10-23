@@ -2428,23 +2428,71 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       <DraggableTask key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} userColor={task.userId ? userColors[task.userId] : undefined} />
     );
     if (agendaCompacta) {
+      const agora = new Date();
       return <div className="min-w-0 space-y-3" data-agenda-semana-compacta>
-        {dias.map((dia, i) => <section key={dia.toISOString()} className="min-w-0 border-b border-border pb-3">
-          <div className={cn("mb-2 flex items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2", isToday(dia) && "bg-primary/10")}>
-            <Button variant="ghost" onClick={() => { setCurrentDate(dia); setViewMode("day"); }} className="h-8 min-w-0 justify-start px-0 text-sm font-semibold capitalize">{format(dia, "EEE, dd/MM", { locale: ptBR })}{isToday(dia) && <span className="ml-2 text-xs text-primary">Hoje</span>}</Button>
-            <span className="shrink-0 text-xs text-muted-foreground">{tarefasPorDia[i].length} tarefas</span>
-          </div>
-          <DroppableSlot date={dia} slotTime="" className="min-h-10 space-y-2">
-            {tarefasPorDia[i].filter(t => !t.time || t.isAllDay).map(renderTarefa)}
-          </DroppableSlot>
-          {Array.from({ length: 24 }, (_, hora) => {
-            const horario = `${String(hora).padStart(2, "0")}:00`;
-            const lista = tarefasPorDia[i].filter(t => !t.isAllDay && t.time?.startsWith(horario.slice(0, 2)));
-            if (!lista.length) return null;
-            return <DroppableSlot key={hora} date={dia} slotTime={horario} className="mb-2 space-y-2">{lista.map(renderTarefa)}</DroppableSlot>;
-          })}
-          {!tarefasPorDia[i].length && <p className="px-3 text-xs text-muted-foreground">Nenhuma tarefa</p>}
-        </section>)}
+        {dias.map((dia, i) => {
+          const tarefasDia = tarefasPorDia[i];
+          const semHora = tarefasDia.filter(t => !t.time || t.isAllDay);
+          const comHora = tarefasDia.filter(t => !t.isAllDay && !!t.time);
+          const atrasadas = tarefasDia.filter(t => tarefaAtrasada(t)).length;
+          const fimDeSemana = isWeekend(dia);
+          const passou = isBefore(dia, startOfDay(agora)) && !isToday(dia);
+          return <section key={dia.toISOString()} className={cn(
+            "min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm transition-colors",
+            isToday(dia) ? "border-primary/40 ring-1 ring-primary/25" : "border-border/60"
+          )}>
+            <div className={cn(
+              "flex items-center gap-3 border-b px-3 py-2.5",
+              isToday(dia) ? "border-primary/20 bg-primary/10" : fimDeSemana ? "border-border/60 bg-muted/60" : "border-border/60 bg-muted/30"
+            )}>
+              <Button
+                variant="ghost"
+                title="Ver dia"
+                onClick={() => { setCurrentDate(dia); setViewMode("day"); }}
+                className={cn(
+                  "flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-full p-0 leading-none",
+                  isToday(dia) ? "bg-primary text-primary-foreground hover:bg-primary/90" : passou ? "bg-muted text-muted-foreground hover:bg-muted" : "bg-background text-foreground hover:bg-accent"
+                )}
+              >
+                <span className="text-sm font-bold tabular-nums">{format(dia, "d")}</span>
+                <span className={cn("text-[9px] uppercase", isToday(dia) ? "text-primary-foreground/80" : "text-muted-foreground")}>{format(dia, "MMM", { locale: ptBR })}</span>
+              </Button>
+              <button onClick={() => { setCurrentDate(dia); setViewMode("day"); }} className="min-w-0 flex-1 text-left">
+                <p className={cn("flex items-center gap-2 truncate text-sm font-semibold capitalize", passou ? "text-muted-foreground" : "text-foreground")}>
+                  {format(dia, "EEEE", { locale: ptBR })}
+                  {isToday(dia) && <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary-foreground">Hoje</span>}
+                  {fimDeSemana && !isToday(dia) && <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Fim de semana</span>}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{format(dia, "dd/MM/yyyy", { locale: ptBR })}</p>
+              </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {atrasadas > 0 && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">{atrasadas} atrasada{atrasadas > 1 ? "s" : ""}</span>}
+                <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", tarefasDia.length ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                  {tarefasDia.length ? `${tarefasDia.length} tarefa${tarefasDia.length > 1 ? "s" : ""}` : "Livre"}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-2.5 px-3 py-3">
+              {(semHora.length > 0) && (
+                <DroppableSlot date={dia} slotTime="" className="space-y-2">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><CalendarDays className="h-3 w-3" />Sem hora / Dia todo</p>
+                  {semHora.map(renderTarefa)}
+                </DroppableSlot>
+              )}
+              {comHora.map(t => t.time).filter((hora, idx, arr) => hora && arr.indexOf(hora) === idx).sort().map(hora => (
+                <DroppableSlot key={hora} date={dia} slotTime={hora} className="flex items-start gap-2.5">
+                  <span className="mt-1.5 w-11 shrink-0 rounded-md bg-muted px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-muted-foreground">{hora.slice(0, 5)}</span>
+                  <div className="min-w-0 flex-1 space-y-2">{comHora.filter(t => t.time === hora).map(renderTarefa)}</div>
+                </DroppableSlot>
+              ))}
+              {!tarefasDia.length && (
+                <p className="flex items-center justify-center gap-1.5 rounded-lg bg-muted/40 py-3 text-xs text-muted-foreground">
+                  <CalendarDays className="h-3.5 w-3.5" />Nenhuma tarefa neste dia
+                </p>
+              )}
+            </div>
+          </section>;
+        })}
       </div>;
     }
     return (
