@@ -4138,6 +4138,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                   <CalendarDays className="h-4 w-4" />
                   Mover para o próximo dia disponível
                 </Button>
+                {outrasDiaTodoMov.length > 0 && (
+                  <Button size="sm" variant="outline" className="mt-2 w-full gap-2 whitespace-normal h-auto py-2" disabled={movendoSelecao} onClick={async () => {
+                    if (!dataMovimento) return;
+                    setMovendoSelecao(true);
+                    let movidas = 0; let destino = dataMovimento;
+                    try {
+                      for (const o of outrasDiaTodoMov) {
+                        let proxima = getNextBusinessDay(dataMovimento);
+                        for (let i = 0; i < 366 && o.user_id && (await checkAllDayTasks(proxima, o.user_id)).hasTask; i++) proxima = getNextBusinessDay(proxima);
+                        if (await updateTaskInDatabase(o.id, { date: proxima }, 'drag')) { movidas++; destino = proxima; }
+                      }
+                    } finally { setMovendoSelecao(false); }
+                    if (movidas) toast.success(`${movidas} outra(s) tarefa(s) movida(s) para ${format(destino, "dd/MM/yyyy")}`);
+                    setOutrasDiaTodoMov([]);
+                    await moverSelecao(true, true, true);
+                  }}>
+                    <CalendarRange className="h-4 w-4 shrink-0" />
+                    Mover as outras tarefas do dia para o próximo dia disponível e mover esta
+                  </Button>
+                )}
               </div>
             )}
             <div className="flex flex-wrap gap-1.5">
@@ -4146,7 +4166,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               ))}
               {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
             </div>
-            <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
+            <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); setOutrasDiaTodoMov([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
               <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
