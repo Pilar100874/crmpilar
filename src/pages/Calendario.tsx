@@ -599,6 +599,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     nextAvailableDate?: Date;
     allDayTaskTitle?: string;
     targetDate?: Date;
+    origem?: "fimDeSemana" | "escolhaData" | "movimento" | "criacao";
+    dataOriginal?: Date;
   } | null>(null);
   const [allDayEscolherData, setAllDayEscolherData] = useState(false);
   const [allDayNovaData, setAllDayNovaData] = useState<Date | null>(null);
@@ -1422,6 +1424,29 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     setAllDayNovaData(null);
   };
 
+  // Data alvo da janela de "dia já ocupado com tarefa de dia todo"
+  const dataAlvoDiaTodo = (): Date | null =>
+    allDayPendingTask?.targetDate ?? allDayPendingTask?.taskData?.date ?? allDayPendingTask?.existingTask?.date ?? null;
+
+  // Motivos explicados na janela de "dia já ocupado com tarefa de dia todo" (formato "título|explicação")
+  const motivosDiaTodo = (): string[] => {
+    const pend = allDayPendingTask;
+    if (!pend) return [];
+    const alvo = dataAlvoDiaTodo();
+    const dia = (d: Date | null | undefined) => (d ? format(d, "EEEE, dd/MM", { locale: ptBR }) : "outro dia");
+    const motivos: string[] = [];
+    if (pend.origem === "fimDeSemana" && pend.dataOriginal) {
+      motivos.push(`Fim de semana|Você pediu para mover para ${dia(pend.dataOriginal)}, que é fim de semana, e escolheu o próximo dia útil. A tarefa iria para ${dia(alvo)}.`);
+    }
+    if (pend.allDayTaskTitle) {
+      motivos.push(`Dia ocupado por tarefa de dia todo|${dia(alvo)} já está reservado pela tarefa de dia todo "${pend.allDayTaskTitle}". Se mantiver, sua tarefa ficará junto com ela.`);
+    }
+    if (pend.nextAvailableDate) {
+      motivos.push(`Próximo dia disponível|${dia(pend.nextAvailableDate)} é o primeiro dia sem tarefa de dia todo.`);
+    }
+    return motivos;
+  };
+
   // Aplica a data escolhida na janela de fim de semana (mover tarefa existente ou salvar nova/editada)
   const aplicarDataFimDeSemana = async (novaData: Date) => {
     const pendente = weekendPendingTask;
@@ -1443,6 +1468,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           nextAvailableDate: nextAvailableDay,
           allDayTaskTitle: allDayCheck.taskTitle,
           targetDate: novaData,
+          origem: "escolhaData",
+          dataOriginal: novaData,
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
@@ -1560,6 +1587,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           nextAvailableDate: nextAvailableDay,
           allDayTaskTitle: allDayCheck.taskTitle,
           targetDate: taskData.date,
+          origem: "criacao",
+          dataOriginal: taskData.date,
         });
         setAllDayEscolherData(false);
         setAllDayNovaData(null);
@@ -2317,6 +2346,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             nextAvailableDate: nextAvailableDay,
             allDayTaskTitle: allDayCheck.taskTitle,
             targetDate: newDate,
+            origem: "movimento",
+            dataOriginal: newDate,
           });
           setAllDayEscolherData(false);
           setAllDayNovaData(null);
@@ -4382,6 +4413,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                         nextAvailableDate: nextAvailableDay,
                         allDayTaskTitle: allDayCheck.taskTitle,
                         targetDate: nextBusinessDay, // Data com tarefa de dia todo
+                        origem: "fimDeSemana",
+                        dataOriginal: weekendPendingTask.targetDate,
                       });
                       setAllDayEscolherData(false);
                       setAllDayNovaData(null);
@@ -4479,38 +4512,40 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
 
       {/* Dialog de tarefa dia todo */}
       <Dialog open={isAllDayDialogOpen} onOpenChange={(open) => { setIsAllDayDialogOpen(open); if (!open) { setAllDayEscolherData(false); setAllDayNovaData(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
-            <DialogDescription>
-              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
-              {allDayPendingTask?.allDayTaskTitle && (
-                <>
-                  <br />
-                  <br />
-                  <strong>Tarefa existente:</strong> {allDayPendingTask.allDayTaskTitle}
-                </>
-              )}
-              {allDayPendingTask?.nextAvailableDate && !allDayEscolherData && (
-                <>
-                  <br />
-                  <br />
-                  Próximo dia disponível: {format(allDayPendingTask.nextAvailableDate, "dd/MM/yyyy", { locale: ptBR })}
-                </>
-              )}
-              {!allDayEscolherData && (
-                <>
-                  <br />
-                  <br />
-                  O que você deseja fazer?
-                </>
-              )}
-            </DialogDescription>
+        <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
+          <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
+            <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Dia já ocupado com tarefa de dia todo</DialogTitle>
+            <DialogDescription>{allDayPendingTask?.isMove ? "A tarefa ainda não foi movida" : "A tarefa ainda não foi salva"}: {motivosDiaTodo().length ? `encontramos ${motivosDiaTodo().length} motivo(s) para você decidir antes.` : "este dia já tem uma tarefa de dia todo."}</DialogDescription>
           </DialogHeader>
-          <TarefasDoDiaResumo
-            date={allDayEscolherData ? allDayNovaData : (allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date)}
-            userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId]}
-          />
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
+            {motivosDiaTodo().length > 0 && (
+              <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {dataAlvoDiaTodo() ? `Por que preciso decidir? (${format(dataAlvoDiaTodo()!, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
+                </div>
+                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                  {motivosDiaTodo().map(motivo => (
+                    <li key={motivo} className="flex items-start gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                      <span><strong className="block font-semibold">{motivo.split("|")[0]}</strong>{motivo.includes("|") && <span className="text-muted-foreground">{motivo.split("|").slice(1).join("|")}</span>}</span>
+                    </li>
+                  ))}
+                </ul>
+                <TarefasDoDiaResumo
+                  date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
+                  userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
+                  className="mt-3 border-amber-500/40 bg-background/70"
+                  collapsible
+                />
+              </div>
+            )}
+            {motivosDiaTodo().length === 0 && (
+              <TarefasDoDiaResumo
+                date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
+                userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId, currentAdminId]}
+              />
+            )}
           {allDayEscolherData ? (
             <div className="space-y-3">
               <div className="flex justify-center">
@@ -4524,7 +4559,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
-              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+              <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
                 <Button
                   variant="outline"
                   className="w-full sm:w-auto"
@@ -4542,7 +4577,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               </DialogFooter>
             </div>
           ) : (
-          <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+          <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3">
             <Button
               variant="outline"
               className="w-full sm:w-auto order-1"
@@ -4637,6 +4672,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
             )}
           </DialogFooter>
           )}
+          </div>
         </DialogContent>
       </Dialog>
 
