@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { detectarDestinoCalendario, prepararMovimento } from "@/lib/calendario/movimentacao";
+import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -438,6 +439,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   // Sempre o mesmo visual da agenda do Atendimento, em qualquer tela e largura.
   void agendaWidth;
   const agendaCompacta = true;
+  const [filtroAtrasados, setFiltroAtrasados] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   // Avisa o Atendimento quando a data muda, para a aba Agendados acompanhar
   useEffect(() => {
@@ -2684,6 +2686,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   // Filtrar e ordenar tarefas para a tabela
   const filteredTasks = tasks.filter(task => {
+    if (filtroAtrasados && !tarefaAtrasada(task)) return false;
     // Filtro de busca
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -2817,6 +2820,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 <DraggableTask task={task} onClick={() => setSelectedTaskId(task.id)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-2 text-xs">
                   <div><dt className="text-muted-foreground">Data</dt><dd className="font-medium">{format(task.date, "dd/MM/yyyy")}</dd></div>
+                  {dataPrevistaAtraso(task) && <div className="col-span-2 rounded-md bg-destructive/10 px-2 py-1"><dt className="inline text-destructive">Deveria ter contatado em: </dt><dd className="inline font-semibold text-destructive">{format(dataPrevistaAtraso(task)!, "dd/MM/yyyy")}</dd></div>}
                   <div><dt className="text-muted-foreground">Status</dt><dd>{task.status === "completed" ? "Concluída" : "Pendente"}</dd></div>
                   <div className="min-w-0"><dt className="text-muted-foreground">Origem</dt><dd className="break-words">{getOrigemLabel(task.origem, task.campaignName)}</dd></div>
                   <div className="min-w-0"><dt className="text-muted-foreground">Atribuído a</dt><dd className="break-words">{task.assignedTo || task.userName || "—"}</dd></div>
@@ -3155,10 +3159,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const hoje = startOfDay(new Date());
   const tarefasPendentes = tasks.filter(task => task.status === "pending");
   const horaAgora = format(new Date(), "HH:mm");
-  const tarefasAtrasadas = tarefasPendentes.filter(task =>
-    isBefore(startOfDay(task.date), hoje) ||
-    (isSameDay(task.date, hoje) && !!task.time && task.time < horaAgora)
-  ).length;
+  void horaAgora;
+  const tarefasAtrasadas = tarefasPendentes.filter(task => tarefaAtrasada(task)).length;
   const resumoDias = Array.from({ length: 5 }, (_, index) => {
     const date = addDays(hoje, index);
     return {
