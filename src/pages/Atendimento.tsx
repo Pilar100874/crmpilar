@@ -4474,15 +4474,15 @@ ${recentMessages}
       return marcada;
     }
     return lista;
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos, chatsNaoLidosPerPhone, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
     agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
-    recebidos: conversasRecebidasNaoRespondidas.length + emailsRecebidosNaoRespondidos.length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
+    recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
 
   // Fontes da tela de disparo em massa (mesmas regras das abas Tudo/Agendados/Recebidos)
   const fontesDisparo = useMemo(() => ({
@@ -4490,9 +4490,9 @@ ${recentMessages}
     agendados: filteredTasks
       .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
       .map((task: any) => ({ id: task.contact_id as string, data: task.date ?? null })),
-    recebidos: conversasRecebidasNaoRespondidas.map((c: any) => c.customer_id).filter(Boolean),
-    recebidosEmails: emailsRecebidosNaoRespondidos.map((e: any) => e.from_email).filter(Boolean),
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasNaoRespondidas, emailsRecebidosNaoRespondidos]);
+    recebidos: conversasRecebidasAgrupadas.map((g: any) => g.conv.customer_id).filter(Boolean),
+    recebidosEmails: emailsRecebidosAgrupados.map((e: any) => e.from_email).filter(Boolean),
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
