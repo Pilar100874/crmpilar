@@ -435,7 +435,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     observer.observe(area);
     return () => observer.disconnect();
   }, []);
-  const agendaCompacta = agendaWidth > 0 && agendaWidth < 900;
+  // Sempre o mesmo visual da agenda do Atendimento, em qualquer tela e largura.
+  void agendaWidth;
+  const agendaCompacta = true;
   const [currentDate, setCurrentDate] = useState<Date>(dataInicial ?? new Date());
   // Avisa o Atendimento quando a data muda, para a aba Agendados acompanhar
   useEffect(() => {
