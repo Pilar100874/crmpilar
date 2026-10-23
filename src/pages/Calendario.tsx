@@ -4463,9 +4463,10 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               try {
                 let proxima = getNextBusinessDay(taskData.date);
                 for (let i = 0; i < 366 && (await checkAllDayTasks(proxima, taskData.userId)).hasTask; i++) proxima = getNextBusinessDay(proxima);
-                const { error } = await (supabase as any).from("calendario_tarefas").update({ date: format(proxima, "yyyy-MM-dd") }).in("id", outras.map((t) => t.id));
-                if (error) { toast.error("Não foi possível mover as outras tarefas"); return; }
-                toast.success(`${outras.length} tarefa(s) movida(s) para ${format(proxima, "dd/MM/yyyy")}`);
+                let movidas = 0;
+                for (const t of outras) if (await updateTaskInDatabase(t.id, { date: proxima }, 'drag')) movidas++;
+                if (!movidas) return;
+                toast.success(`${movidas} tarefa(s) movida(s) para ${format(proxima, "dd/MM/yyyy")}`);
                 setDiaTodoOutras(null);
                 await handleSaveTask(taskData, true, true);
               } finally { setDiaTodoOutrasAcao(false); }
