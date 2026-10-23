@@ -930,6 +930,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             horario_comercial: regrasMap.horario_comercial ?? false,
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
             realocacao_diaria: regrasMap.realocacao_diaria ?? false,
+            encaminhamento_obrigatorio_conclusao: regrasMap.encaminhamento_obrigatorio_conclusao ?? true,
           });
           
           console.log('[REGRAS] Regras do calendário carregadas:', {
