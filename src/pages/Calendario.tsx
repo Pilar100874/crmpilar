@@ -4278,11 +4278,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="space-y-3">
                 {dataMovimento && <AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} avisos={avisoMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} disabled={movendoSelecao || analisandoDestino} onOutraData={() => setMostrarCalendarioMovimento(v => !v)} onSugestao={data => { setDataMovimento(data); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} />}
                 <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(true)}>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
-                  <span className="min-w-0"><span className="block text-sm font-semibold">Mover para a data escolhida</span><span className="block truncate text-xs capitalize text-muted-foreground">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })} · Manter as outras tarefas neste dia</span></span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                  <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Data escolhida</span><span className="block text-sm font-semibold text-foreground">Mover para esta data</span><span className="block text-xs text-muted-foreground"><span className="capitalize">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })}</span> · as outras tarefas ficam aqui</span></span>
                 </Button>
+
                 {outrasDiaTodoMov.length > 0 && (
-                  <Button size="sm" variant="outline" className="mt-2 h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={movendoSelecao} onClick={async () => {
+                  <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl border-warning/40 py-3 text-left hover:border-warning" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
                     setMovendoSelecao(true);
                     let movidas = 0; let destino = dataMovimento;
@@ -4297,8 +4298,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     setOutrasDiaTodoMov([]);
                     await moverSelecao(true, true, true);
                   }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
-                    <span className="min-w-0 text-left"><span className="block text-sm font-semibold">Mover as outras tarefas do dia</span><span className="block text-xs text-muted-foreground">Para o próximo dia disponível, e mover esta</span></span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
+                    <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-warning">Outras tarefas</span><span className="block text-sm font-semibold text-foreground">Mover as outras para o próximo dia</span><span className="block text-xs text-muted-foreground">Depois mover esta para a data escolhida</span></span>
+
                   </Button>
                 )}
               </div>
@@ -4440,22 +4442,16 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && !weekendEscolherData && (
                   <div className="flex flex-col gap-2">
                     {weekendPendingTask && <AnaliseDestinoResumo origem={weekendPendingTask.targetDate} analise={analiseDestino} userIds={[weekendPendingTask.existingTask?.userId ?? weekendPendingTask.taskData?.userId]} disabled={analisandoDestino} onOutraData={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }} onSugestao={data => avancarParaResumo(`Usar a data sugerida (${format(data, "dd/MM/yyyy")}), evitando o fim de semana e as tarefas de dia todo`, data)} />}
-                    <Button
-                      variant="outline"
-                      className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                      onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
-                      <span className="min-w-0"><span className="block text-sm font-semibold">Manter na Data</span><span className="block truncate text-xs capitalize text-muted-foreground">{weekendPendingTask && format(weekendPendingTask.targetDate, "EEEE, dd/MM", { locale: ptBR })} · mesmo sendo fim de semana</span></span>
+                    <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                      <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Manter data</span><span className="block text-sm font-semibold text-foreground">Manter na data escolhida</span><span className="block text-xs text-muted-foreground"><span className="capitalize">{weekendPendingTask && format(weekendPendingTask.targetDate, "EEEE, dd/MM", { locale: ptBR })}</span> · mesmo sendo fim de semana</span></span>
                     </Button>
-                    {(!analiseDestino?.sugerida || !isSameDay(analiseDestino.sugerida, analiseDestino.proximoDiaUtil)) && <Button
-                      variant="outline"
-                      className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                      onClick={() => void decidirProximoDiaUtil()}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarRange className="h-4 w-4" /></span>
-                      <span className="min-w-0"><span className="block text-sm font-semibold">Mover para o Próximo Dia Útil</span><span className="block truncate text-xs capitalize text-muted-foreground">{analiseDestino ? format(analiseDestino.proximoDiaUtil, "EEEE, dd/MM", { locale: ptBR }) : "calculando…"}</span></span>
+
+                    {(!analiseDestino?.sugerida || !isSameDay(analiseDestino.sugerida, analiseDestino.proximoDiaUtil)) && <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" onClick={() => void decidirProximoDiaUtil()}>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarRange className="h-4 w-4" /></span>
+                      <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próximo dia útil</span><span className="block text-sm font-semibold text-foreground">Mover para o próximo dia útil</span><span className="block text-xs capitalize text-muted-foreground">{analiseDestino ? format(analiseDestino.proximoDiaUtil, "EEEE, dd/MM", { locale: ptBR }) : "calculando…"}</span></span>
                     </Button>}
+
                   </div>
                 )}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && weekendEscolherData && (
@@ -4510,35 +4506,24 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                       />
                     )}
                     <div className="flex flex-col gap-2">
-                      <Button
-                        variant="outline"
-                        className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                        onClick={() => {
-                          const alvo = dataAlvoDiaTodo();
-                          if (alvo) avancarParaResumo(`Juntar com a tarefa de dia todo${allDayPendingTask?.allDayTaskTitle ? ` "${allDayPendingTask.allDayTaskTitle}"` : ""} em ${format(alvo, "dd/MM/yyyy")}`, alvo);
-                        }}
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
-                        <span className="min-w-0"><span className="block text-sm font-semibold">Juntar com a Tarefa do Dia Todo</span><span className="block truncate text-xs text-muted-foreground">{allDayPendingTask?.allDayTaskTitle ? `Mesma tarefa: ${allDayPendingTask.allDayTaskTitle}` : "As duas tarefas viram uma só"}</span></span>
+                      <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl border-warning/40 py-3 text-left hover:border-warning" onClick={() => {
+                        const alvo = dataAlvoDiaTodo();
+                        if (alvo) avancarParaResumo(`Juntar com a tarefa de dia todo${allDayPendingTask?.allDayTaskTitle ? ` "${allDayPendingTask.allDayTaskTitle}"` : ""} em ${format(alvo, "dd/MM/yyyy")}`, alvo);
+                      }}>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/15"><CalendarRange className="h-4 w-4 text-warning" /></span>
+                        <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-warning">Juntar tarefas</span><span className="block text-sm font-semibold text-foreground">Juntar com a tarefa do dia todo</span><span className="block text-xs text-muted-foreground">{allDayPendingTask?.allDayTaskTitle ? `Mesma tarefa: ${allDayPendingTask.allDayTaskTitle}` : "As duas tarefas viram uma só"}</span></span>
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left"
-                        aria-label="Escolher outra data"
-                        onClick={() => setAllDayEscolherData(true)}
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
-                        <span className="min-w-0"><span className="block text-sm font-semibold">Escolher outra data</span><span className="block text-xs text-muted-foreground">Abrir o calendário</span></span>
+                      <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" aria-label="Escolher outra data" onClick={() => setAllDayEscolherData(true)}>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                        <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Outra data</span><span className="block text-sm font-semibold text-foreground">Escolher outra data</span><span className="block text-xs text-muted-foreground">Abrir o calendário para marcar outro dia</span></span>
                       </Button>
                       {allDayPendingTask?.nextAvailableDate && (
-                        <Button
-                          className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left hover:bg-primary/90"
-                          onClick={() => { const data = allDayPendingTask?.nextAvailableDate; if (data) avancarParaResumo(`Mover para o próximo dia disponível (${format(data, "dd/MM/yyyy")})`, data); }}
-                        >
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20"><Check className="h-4 w-4" /></span>
-                          <span className="min-w-0"><span className="block text-sm font-semibold">Data sugerida</span><span className="block truncate text-xs capitalize text-primary-foreground/80">{format(allDayPendingTask.nextAvailableDate, "EEEE, dd/MM", { locale: ptBR })}</span></span>
+                        <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl border-primary/50 bg-primary/5 py-3 text-left hover:border-primary hover:bg-primary/10" onClick={() => { const data = allDayPendingTask?.nextAvailableDate; if (data) avancarParaResumo(`Mover para o próximo dia disponível (${format(data, "dd/MM/yyyy")})`, data); }}>
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Check className="h-4 w-4" /></span>
+                          <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-primary">Sugestão</span><span className="block text-sm font-semibold capitalize text-foreground">{format(allDayPendingTask.nextAvailableDate, "EEEE, dd/MM", { locale: ptBR })}</span><span className="block text-xs text-muted-foreground">Primeiro dia sem tarefa de dia todo</span></span>
                         </Button>
                       )}
+
                     </div>
                   </>
                 )}
