@@ -3899,12 +3899,12 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
       </Dialog>
 
       {/* Dialog de tarefa dia todo */}
-      <Dialog open={isAllDayDialogOpen} onOpenChange={setIsAllDayDialogOpen}>
+      <Dialog open={isAllDayDialogOpen} onOpenChange={(open) => { setIsAllDayDialogOpen(open); if (!open) { setAllDayEscolherData(false); setAllDayNovaData(null); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
             <DialogDescription>
-              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
+              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
               {allDayPendingTask?.allDayTaskTitle && (
                 <>
                   <br />
@@ -3912,18 +3912,53 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   <strong>Tarefa existente:</strong> {allDayPendingTask.allDayTaskTitle}
                 </>
               )}
-              {allDayPendingTask?.nextAvailableDate && (
+              {allDayPendingTask?.nextAvailableDate && !allDayEscolherData && (
                 <>
                   <br />
                   <br />
                   Próximo dia disponível: {format(allDayPendingTask.nextAvailableDate, "dd/MM/yyyy", { locale: ptBR })}
                 </>
               )}
-              <br />
-              <br />
-              O que você deseja fazer?
+              {!allDayEscolherData && (
+                <>
+                  <br />
+                  <br />
+                  O que você deseja fazer?
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
+          {allDayEscolherData ? (
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <CalendarPicker
+                  mode="single"
+                  selected={allDayNovaData || undefined}
+                  onSelect={(d) => setAllDayNovaData(d || null)}
+                  locale={ptBR}
+                  modifiers={{ diaTodo: (day) => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }}
+                  modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Datas em destaque já possuem tarefa de dia todo.</p>
+              <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => { setAllDayEscolherData(false); setAllDayNovaData(null); }}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  disabled={!allDayNovaData}
+                  onClick={() => { if (allDayNovaData) void aplicarDataDiaTodo(allDayNovaData); }}
+                >
+                  Usar esta data
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
           <DialogFooter className="gap-2 flex-col sm:flex-row sm:justify-center">
             <Button
               variant="outline"
@@ -3931,6 +3966,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               onClick={() => {
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
+                setAllDayEscolherData(false);
+                setAllDayNovaData(null);
                 // Restaurar dialog de fim de semana se foi cancelado
                 if (allDayPendingTask?.isMove !== undefined) {
                   setWeekendPendingTask(null);
@@ -3943,7 +3980,7 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
               variant="outline"
               className="w-full sm:w-auto order-2 whitespace-normal h-auto py-2"
               onClick={async () => {
-                // Permitir agendar no dia com tarefa de dia todo
+                // Deixar na data escolhida, junto com a tarefa de dia todo
                 if (allDayPendingTask?.isMove && allDayPendingTask.existingTask) {
                   // Caso 1: Movendo uma tarefa existente
                   const targetDate = allDayPendingTask.targetDate || allDayPendingTask.taskData?.date || allDayPendingTask.existingTask.date;
@@ -3968,13 +4005,22 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 }
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
+                setAllDayEscolherData(false);
+                setAllDayNovaData(null);
               }}
             >
-              Permitir Junto com Dia Todo
+              Deixar na Data Escolhida
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto order-3 whitespace-normal h-auto py-2"
+              onClick={() => setAllDayEscolherData(true)}
+            >
+              Escolher Outra Data
             </Button>
             {allDayPendingTask?.nextAvailableDate && (
               <Button
-                className="w-full sm:w-auto order-3 bg-primary hover:bg-primary/90 whitespace-normal h-auto py-2"
+                className="w-full sm:w-auto order-4 bg-primary hover:bg-primary/90 whitespace-normal h-auto py-2"
                 onClick={async () => {
                   if (allDayPendingTask?.nextAvailableDate) {
                     if (allDayPendingTask.isMove && allDayPendingTask.existingTask) {
@@ -3999,12 +4045,15 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                   }
                   setIsAllDayDialogOpen(false);
                   setAllDayPendingTask(null);
+                  setAllDayEscolherData(false);
+                  setAllDayNovaData(null);
                 }}
               >
                 Mover para Próximo Dia Disponível
               </Button>
             )}
           </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
