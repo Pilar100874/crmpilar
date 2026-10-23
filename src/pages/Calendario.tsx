@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram, Clock3, List as ListIcon, CalendarDays, CalendarRange, MoreVertical, CalendarPlus, UserX } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -551,6 +551,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     horario_comercial: boolean;
     validacao_dia_todo: boolean;
     realocacao_diaria: boolean;
+    encaminhamento_obrigatorio_conclusao: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
@@ -559,6 +560,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     horario_comercial: false,
     validacao_dia_todo: false,
     realocacao_diaria: false,
+    encaminhamento_obrigatorio_conclusao: true,
   });
   
   // Configuração de colunas da tabela
@@ -928,6 +930,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             horario_comercial: regrasMap.horario_comercial ?? false,
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
             realocacao_diaria: regrasMap.realocacao_diaria ?? false,
+            encaminhamento_obrigatorio_conclusao: regrasMap.encaminhamento_obrigatorio_conclusao ?? true,
           });
           
           console.log('[REGRAS] Regras do calendário carregadas:', {
@@ -1728,6 +1731,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const handleOpenNewTask = (date?: Date) => {
     setSelectedTaskId(null);
     setEditingTask(null);
+    setContatoReprogramar(null);
     setSelectedDate(date || null);
     setShowTaskDialog(true);
   };
@@ -1742,14 +1746,22 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
 
 
-  const handleToggleTaskStatus = async (taskId: string, semPrevia = false) => {
+  const [encerramentoPendente, setEncerramentoPendente] = useState<Task | null>(null);
+  const [contatoReprogramar, setContatoReprogramar] = useState<{ id: string; nome: string } | null>(null);
+
+  const handleToggleTaskStatus = async (taskId: string, semPrevia = false, forcar = false) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     if (validacaoAtiva && !semPrevia) {
       abrirPrevia(task.status === "pending" ? "concluir" : "reabrir", {}, () => handleToggleTaskStatus(taskId, true));
+       return;
+    }
+    // Regra: ao concluir, exigir reprogramação de nova tarefa ou inativação do cliente
+    if (task.status === "pending" && !forcar && calendarioRegras.encaminhamento_obrigatorio_conclusao) {
+      setEncerramentoPendente(task);
       return;
     }
-    
+
     const newStatus = task.status === "pending" ? "completed" : "pending";
     const success = await updateTaskInDatabase(taskId, { status: newStatus }, 'toggle-status');
     
@@ -1758,6 +1770,33 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         t.id === taskId ? { ...t, status: newStatus as "pending" | "completed" } : t
       );
       setTasks(updatedTasks);
+    }
+  };
+
+  // Conclui a tarefa exigindo encaminhamento: reprogramar nova tarefa ou inativar o cliente
+  const confirmarEncerramento = async (modo: "reprogramar" | "inativar") => {
+    const task = encerramentoPendente;
+    setEncerramentoPendente(null);
+    if (!task) return;
+    if (modo === "inativar") {
+      if (!task.contactId) { toast.error("Esta tarefa não tem cliente vinculado"); return; }
+      try {
+        const { error } = await supabase.rpc("inactivate_customer", { p_customer_id: task.contactId });
+        if (error) throw error;
+        toast.success("Cliente inativado");
+      } catch (e) {
+        console.error("Erro ao inativar cliente:", e);
+        toast.error("Erro ao inativar cliente");
+        return;
+      }
+    }
+    await handleToggleTaskStatus(task.id, true, true);
+    if (modo === "reprogramar") {
+      const amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+      handleOpenNewTask(amanha);
+      if (task.contactId) setContatoReprogramar({ id: task.contactId, nome: task.contactName || "Contato" });
+      toast.info("Reprograme a nova tarefa para uma data futura");
     }
   };
 
@@ -3475,7 +3514,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         if (!selectedTask && !creating) return null;
         const task = selectedTask || {
           id: "nova-tarefa", title: "Nova tarefa", date: selectedDate || new Date(),
-          status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
+          status: "pending" as const, contactId: (contatoReprogramar || contatoSugerido)?.id, contactName: (contatoReprogramar || contatoSugerido)?.nome,
           origem: "manual" as Task["origem"], createdAt: new Date(),
         };
         const painelTarefa = (
@@ -3493,11 +3532,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 onOpenChange={(open) => { if (!open) { setShowTaskDialog(false); setSelectedTaskId(null); setEditingTask(null); } }}
                 onSave={handleSaveTask}
                 initialDate={creating ? selectedDate || undefined : undefined}
-                suggestedContact={creating ? contatoSugerido : undefined}
+                suggestedContact={creating ? (contatoReprogramar || contatoSugerido) : undefined}
                 editingTask={selectedTask || undefined}
               />}
               onUpdate={async (updates) => {
                 if (!selectedTask) return false;
+                // Ao marcar como concluída, passar pelo fluxo de encerramento (reprogramar ou inativar)
+                if (updates.status === "completed" && selectedTask.status === "pending") {
+                  void handleToggleTaskStatus(selectedTask.id);
+                  return true;
+                }
                 const success = await updateTaskInDatabase(selectedTask.id, updates, updates.status ? 'toggle-status' : 'explicit');
                 if (success) setTasks(current => current.map(task => task.id === selectedTask.id ? { ...task, ...updates } : task));
                 return success;
@@ -3547,8 +3591,34 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         titulo={previa?.titulo || ""}
         passos={previa?.passos || []}
         onCancelar={() => { setPrevia(null); setTaskToDelete(null); }}
-        onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
-      />
+onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
+        />
+
+      {/* Encerramento de tarefa: exige reprogramar nova tarefa ou inativar o cliente */}
+      <Dialog open={!!encerramentoPendente} onOpenChange={(open) => { if (!open) setEncerramentoPendente(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Concluir tarefa</DialogTitle>
+            <DialogDescription>
+              Para concluir esta tarefa, reprograme uma nova tarefa para o contato ou inative o cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Button className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("reprogramar")}>
+              <CalendarPlus className="h-4 w-4" /> Reprogramar nova tarefa
+            </Button>
+            {encerramentoPendente?.contactId && (
+              <Button variant="destructive" className="w-full justify-start gap-2" onClick={() => void confirmarEncerramento("inativar")}>
+                <UserX className="h-4 w-4" /> Inativar cliente
+              </Button>
+            )}
+            <Button variant="outline" className="w-full" onClick={() => setEncerramentoPendente(null)}>
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
         <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
