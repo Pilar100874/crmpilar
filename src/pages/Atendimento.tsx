@@ -4209,7 +4209,7 @@ ${recentMessages}
     conversasRecebidasNaoRespondidas.forEach((conv) => {
       const phone = normalizePhone(conv.customer?.telefone);
       const key = conv.customer_id || phone || conv.id;
-      const data = new Date(conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
+      const data = new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at || conv.updated_at || 0).getTime();
       const atual = grupos.get(key);
       if (!atual) {
         grupos.set(key, { conv, ids: [conv.id], phones: phone ? [phone] : [], novas: phone ? chatsNaoLidosPerPhone[phone] || 0 : 0, data });
