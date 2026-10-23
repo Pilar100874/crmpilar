@@ -548,6 +548,8 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     suggestedTime: string;
   } | null>(null);
   const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
+  const [diaTodoOutras, setDiaTodoOutras] = useState<{ taskData: any; outras: any[] } | null>(null);
+  const [diaTodoOutrasAcao, setDiaTodoOutrasAcao] = useState(false);
   const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
     taskData: {
       contactId: string;
@@ -1457,11 +1459,24 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     isAllDay?: boolean;
     userId?: string;
     isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
-  }, semPrevia = false) => {
+  }, semPrevia = false, outrasResolvidas = false) => {
     if (validacaoAtiva && !semPrevia) {
       const dados = { ...taskData };
       abrirPrevia(taskData.id ? "editar" : "criar", { data: taskData.date, horario: taskData.isAllDay ? undefined : taskData.time, diaTodo: taskData.isAllDay, automatica: taskData.isAutomatic, conflitos: contarConflitos(taskData.userId, taskData.date, taskData.time, taskData.id) }, () => handleSaveTask(dados, true));
       return;
+    }
+    // Ao virar "dia todo" (antes sem horário/com horário), avisar sobre as outras tarefas do dia
+    const anterior = taskData.id ? tasks.find(t => t.id === taskData.id) : undefined;
+    if (taskData.isAllDay && !taskData.isAutomatic && !outrasResolvidas && taskData.userId && (!anterior || !anterior.isAllDay || !isSameDay(anterior.date, taskData.date))) {
+      let q = (supabase as any).from("calendario_tarefas")
+        .select("id, title, time, is_all_day, contact_name")
+        .eq("user_id", taskData.userId).eq("date", format(taskData.date, "yyyy-MM-dd")).neq("status", "concluida");
+      if (taskData.id) q = q.neq("id", taskData.id);
+      const { data: outras } = await q;
+      if (outras?.length) {
+        setDiaTodoOutras({ taskData: { ...taskData }, outras });
+        return;
+      }
     }
     // Verificar regra "dia todo" - SOMENTE se a data for FUTURA e for inserção automática
     if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo && taskData.isAutomatic) {
