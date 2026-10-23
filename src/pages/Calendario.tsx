@@ -1731,6 +1731,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const handleOpenNewTask = (date?: Date) => {
     setSelectedTaskId(null);
     setEditingTask(null);
+    setContatoReprogramar(null);
     setSelectedDate(date || null);
     setShowTaskDialog(true);
   };
@@ -3513,7 +3514,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         if (!selectedTask && !creating) return null;
         const task = selectedTask || {
           id: "nova-tarefa", title: "Nova tarefa", date: selectedDate || new Date(),
-          status: "pending" as const, contactId: contatoSugerido?.id, contactName: contatoSugerido?.nome,
+          status: "pending" as const, contactId: (contatoReprogramar || contatoSugerido)?.id, contactName: (contatoReprogramar || contatoSugerido)?.nome,
           origem: "manual" as Task["origem"], createdAt: new Date(),
         };
         const painelTarefa = (
@@ -3531,7 +3532,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 onOpenChange={(open) => { if (!open) { setShowTaskDialog(false); setSelectedTaskId(null); setEditingTask(null); } }}
                 onSave={handleSaveTask}
                 initialDate={creating ? selectedDate || undefined : undefined}
-                suggestedContact={creating ? contatoSugerido : undefined}
+                suggestedContact={creating ? (contatoReprogramar || contatoSugerido) : undefined}
                 editingTask={selectedTask || undefined}
               />}
               onUpdate={async (updates) => {
