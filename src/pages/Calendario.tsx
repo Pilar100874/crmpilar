@@ -477,6 +477,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
   const [movimentoAberto, setMovimentoAberto] = useState(false);
+  const [mostrarCalendarioMovimento, setMostrarCalendarioMovimento] = useState(false);
   const [movendoSelecao, setMovendoSelecao] = useState(false);
   const [avisoMovimento, setAvisoMovimento] = useState<string[]>([]);
   const [outrasDiaTodoMov, setOutrasDiaTodoMov] = useState<any[]>([]);
@@ -4270,38 +4271,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
           <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
             <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Mover {tarefasParaMover.size} tarefa(s)</DialogTitle>
-            <DialogDescription>{avisoMovimento.length ? `A tarefa ainda não foi movida: encontramos ${avisoMovimento.length} motivo(s) para você decidir antes.` : "Escolha o novo dia. Os horários das tarefas são mantidos."}</DialogDescription>
+            <DialogDescription>{avisoMovimento.length ? "Escolha uma sugestão ou mantenha a data selecionada." : "Escolha o novo dia. Os horários das tarefas são mantidos."}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
             {avisoMovimento.length > 0 && (
-              <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
-                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  Análise da data e das próximas opções
-                </div>
-                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
-                  {avisoMovimento.map(aviso => (
-                    <li key={aviso} className="flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                      <span><strong className="block font-semibold">{aviso.split("|")[0]}</strong>{aviso.includes("|") && <span className="text-muted-foreground">{aviso.split("|").slice(1).join("|")}</span>}</span>
-                    </li>
-                  ))}
-                </ul>
-                {analisandoDestino && <p role="status" className="mt-3 text-sm text-muted-foreground">Analisando o próximo dia útil e as tarefas de dia todo…</p>}
-                {dataMovimento && analiseDestino && <div className="mt-3"><AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} /></div>}
-                {dataMovimento && (
-                  <TarefasDoDiaResumo
-                    date={dataMovimento}
-                    userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)}
-                    className="mt-3 border-amber-500/40 bg-background/70"
-                    collapsible
-                  />
-                )}
-                <Button size="sm" variant="secondary" className="mt-3 h-auto w-full gap-2 whitespace-normal py-2" disabled={movendoSelecao || analisandoDestino} onClick={() => { if (analiseDestino?.sugerida) { setDataMovimento(analiseDestino.sugerida); setAvisoMovimento([]); setOutrasDiaTodoMov([]); } else void proximaDataSelecao(); }}>
-
-                  <CalendarDays className="h-4 w-4" />
-                  {analiseDestino?.sugerida ? `Usar sugestão: ${format(analiseDestino.sugerida, "EEEE, dd/MM", { locale: ptBR })}` : "Mover para o próximo dia disponível"}
-                </Button>
+              <div className="space-y-3">
+                {dataMovimento && <AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} avisos={avisoMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} disabled={movendoSelecao || analisandoDestino} onOutraData={() => setMostrarCalendarioMovimento(v => !v)} onSugestao={data => { setDataMovimento(data); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} />}
                 {outrasDiaTodoMov.length > 0 && (
                   <Button size="sm" variant="outline" className="mt-2 w-full gap-2 whitespace-normal h-auto py-2" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
@@ -4330,7 +4305,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               ))}
               {tarefasParaMover.size > 6 && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">+{tarefasParaMover.size - 6}</span>}
             </div>
-            <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); setOutrasDiaTodoMov([]); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>
+            {(avisoMovimento.length === 0 || mostrarCalendarioMovimento) && <div className="flex justify-center rounded-lg border bg-card"><CalendarPicker mode="single" defaultMonth={dataMovimento || currentDate} selected={dataMovimento} onSelect={date => { setDataMovimento(date); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} disabled={calendarioRegras.bloquear_datas_passadas ? { before: startOfDay(new Date()) } : undefined} locale={ptBR} modifiers={{ diaTodo: day => datasDiaTodo.has(format(day, "yyyy-MM-dd")) }} modifiersClassNames={{ diaTodo: "bg-primary/20 text-primary font-bold" }} /></div>}
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
               <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
@@ -4459,22 +4434,13 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                 {/* Etapa: fim de semana */}
                 {etapasFluxo[etapaAtual] === "fimDeSemana" && !weekendEscolherData && (
                   <div className="flex flex-col gap-2">
-                    {analisandoDestino && <p role="status" className="text-sm text-muted-foreground">Analisando o próximo dia útil e as tarefas de dia todo…</p>}
-                    {weekendPendingTask && analiseDestino && <AnaliseDestinoResumo origem={weekendPendingTask.targetDate} analise={analiseDestino} userIds={[weekendPendingTask.existingTask?.userId ?? weekendPendingTask.taskData?.userId]} />}
-                    {analiseDestino?.sugerida && <Button className="h-auto w-full whitespace-normal py-2" onClick={() => { const data = analiseDestino.sugerida; if (data) avancarParaResumo(`Usar a data sugerida (${format(data, "dd/MM/yyyy")}), evitando o fim de semana e as tarefas de dia todo`, data); }}>Usar sugestão: {format(analiseDestino.sugerida, "EEEE, dd/MM", { locale: ptBR })}</Button>}
+                    {weekendPendingTask && <AnaliseDestinoResumo origem={weekendPendingTask.targetDate} analise={analiseDestino} userIds={[weekendPendingTask.existingTask?.userId ?? weekendPendingTask.taskData?.userId]} disabled={analisandoDestino} onOutraData={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }} onSugestao={data => avancarParaResumo(`Usar a data sugerida (${format(data, "dd/MM/yyyy")}), evitando o fim de semana e as tarefas de dia todo`, data)} />}
                     <Button
                       variant="outline"
                       className="w-full whitespace-normal h-auto py-2"
                       onClick={() => weekendPendingTask && avancarParaResumo(`Manter na data (${format(weekendPendingTask.targetDate, "dd/MM/yyyy")}), mesmo sendo fim de semana`, weekendPendingTask.targetDate)}
                     >
                       Manter na Data
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full whitespace-normal h-auto py-2"
-                      onClick={() => { setWeekendEscolherData(true); setWeekendNovaData(null); }}
-                    >
-                      Escolher Outra Data
                     </Button>
                     <Button
                       className="w-full whitespace-normal h-auto py-2 bg-primary hover:bg-primary/90"
