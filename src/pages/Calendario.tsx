@@ -2126,7 +2126,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (movimentos.some(m => !m.updates)) { toast.error("Não é possível mover tarefa para data passada"); return; }
     if (validacaoAtiva && !semPrevia) {
       setMovimentoAberto(false);
-      abrirPrevia("mover", { data: dataMov }, () => void moverSelecao(confirmado, true));
+      abrirPrevia("mover", { data: dataMov }, () => void moverSelecao(confirmado, true, diaTodoResolvido, ov));
       return;
     }
     setMovendoSelecao(true);
@@ -2167,7 +2167,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           tasks.some(t => !idsMov.has(t.id) && t.userId === m.task.userId && isSameDay(t.date, dataMov) && t.time === m.updates?.time) ||
           movimentos.some(outro => outro.task.id !== m.task.id && outro.task.userId === m.task.userId && outro.updates?.time === m.updates?.time)
         ))) avisos.push("Existem tarefas no mesmo horário; manter na data preservará todas elas.");
-        if (avisos.length) { setAvisoMovimento(avisos); setMovimentoAberto(true); return; }
+        if (avisos.length) { if (ov) { setTarefasParaMover(new Set(ov.ids)); setDataMovimento(ov.data); } setAvisoMovimento(avisos); setMovimentoAberto(true); return; }
       }
       const movidas = new Set<string>();
       const registro: DesfazerItem[] = [];
