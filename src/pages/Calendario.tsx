@@ -1224,18 +1224,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
-  // Verificar tarefas atrasadas ao carregar e a cada hora (com proteção de repetição diária)
+  // Verificar tarefas atrasadas ao carregar e a cada hora.
+  // A realocação para a data atual acontece dentro de loadTasks (regra "Realocação Diária de Tarefas").
   const processOverdueIfNeeded = async () => {
-    console.log("=== DESABILITADO: Movimentação automática de tarefas atrasadas ===");
-    // DESABILITADO TEMPORARIAMENTE - estava movendo tarefas automaticamente
-    // const now = new Date();
-    // const todayKey = format(now, 'yyyy-MM-dd');
-    // const lastProcessed = sessionStorage.getItem('calendar_overdue_last_processed');
-    // if (lastProcessed === todayKey) {
-    //   return;
-    // }
-    // await moveOverdueTasks();
-    // sessionStorage.setItem('calendar_overdue_last_processed', todayKey);
+    await loadTasksRef.current();
   };
 
   useEffect(() => {
