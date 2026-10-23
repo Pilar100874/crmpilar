@@ -1391,7 +1391,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
 
     // Ao criar/editar manualmente em data que já tem tarefa de dia todo, perguntar o que fazer
-    if (!taskData.isAllDay && !taskData.isAutomatic) {
+    if (!taskData.isAllDay && !taskData.isAutomatic && calendarioRegras.pergunta_dia_todo) {
       const allDayCheck = await checkAllDayTasks(taskData.date, taskData.userId);
       if (allDayCheck.hasTask) {
         // Próximo dia útil sem tarefa de dia todo
@@ -1982,7 +1982,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
 
       // Ao mover para data que já tem tarefa de dia todo, perguntar o que fazer
-      if (!task.isAllDay) {
+      if (!task.isAllDay && calendarioRegras.pergunta_dia_todo) {
         const allDayCheck = await checkAllDayTasks(newDate, task.userId);
         if (allDayCheck.hasTask) {
           let nextAvailableDay = getNextBusinessDay(newDate);
