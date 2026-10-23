@@ -4382,6 +4382,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                         nextAvailableDate: nextAvailableDay,
                         allDayTaskTitle: allDayCheck.taskTitle,
                         targetDate: nextBusinessDay, // Data com tarefa de dia todo
+                        origem: "fimDeSemana",
+                        dataOriginal: weekendPendingTask.targetDate,
                       });
                       setAllDayEscolherData(false);
                       setAllDayNovaData(null);
