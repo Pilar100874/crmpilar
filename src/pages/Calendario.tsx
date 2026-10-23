@@ -1301,6 +1301,26 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     }
   };
 
+  // Aplica a data escolhida na janela de tarefa de dia todo (mover tarefa existente ou salvar nova/editada)
+  const aplicarDataDiaTodo = async (novaData: Date) => {
+    const pendente = allDayPendingTask;
+    if (!pendente) return;
+    if (pendente.isMove && pendente.existingTask) {
+      const adjustedTime = pendente.adjustedTime ?? pendente.existingTask.time;
+      const success = await updateTaskInDatabase(pendente.existingTask.id, { date: novaData, time: adjustedTime }, 'drag');
+      if (success) {
+        setTasks(tasks.map(t => t.id === pendente.existingTask!.id ? { ...t, date: novaData, time: adjustedTime } : t));
+        toast.success(`Tarefa movida para ${format(novaData, "dd/MM/yyyy", { locale: ptBR })}`);
+      }
+    } else if (pendente.taskData) {
+      await saveTaskInternal({ ...pendente.taskData, date: novaData });
+    }
+    setIsAllDayDialogOpen(false);
+    setAllDayPendingTask(null);
+    setAllDayEscolherData(false);
+    setAllDayNovaData(null);
+  };
+
   // Adicionar tarefa
   const validacaoAtiva = isAdmin && modoValidacao;
   const abrirPrevia = (acao: AcaoAgenda, ctx: Partial<Parameters<typeof montarPassos>[0]>, executar: () => void) => {
@@ -3626,6 +3646,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 initialDate={creating ? selectedDate || undefined : undefined}
                 suggestedContact={creating ? (contatoReprogramar || contatoSugerido) : undefined}
                 pularDuplicata={creating && !!contatoReprogramar}
+                datasDiaTodo={[...datasDiaTodo]}
                 editingTask={selectedTask || undefined}
               />}
               onUpdate={async (updates) => {
@@ -3808,6 +3829,8 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
                         allDayTaskTitle: allDayCheck.taskTitle,
                         targetDate: nextBusinessDay, // Data com tarefa de dia todo
                       });
+                      setAllDayEscolherData(false);
+                      setAllDayNovaData(null);
                       setIsAllDayDialogOpen(true);
                       setIsWeekendDialogOpen(false);
                       return;
