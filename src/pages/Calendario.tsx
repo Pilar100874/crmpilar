@@ -4123,7 +4123,16 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                     </li>
                   ))}
                 </ul>
+                {dataMovimento && (
+                  <TarefasDoDiaResumo
+                    date={dataMovimento}
+                    userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)}
+                    className="mt-3 border-amber-500/40 bg-background/70"
+                    collapsible
+                  />
+                )}
                 <Button size="sm" variant="secondary" className="mt-3 w-full gap-2" disabled={movendoSelecao} onClick={() => void proximaDataSelecao()}>
+
                   <CalendarDays className="h-4 w-4" />
                   Mover para o próximo dia disponível
                 </Button>
@@ -4140,7 +4149,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-primary/20" />Dia com tarefa de dia todo</span>
               <span className="font-medium text-foreground">{dataMovimento ? format(dataMovimento, "EEE, dd 'de' MMM", { locale: ptBR }) : "Nenhum dia escolhido"}</span>
             </div>
-            {dataMovimento && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
+            {dataMovimento && avisoMovimento.length === 0 && <TarefasDoDiaResumo date={dataMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} />}
           </div>
           <DialogFooter className="flex-wrap gap-2 border-t bg-muted/40 px-5 py-3"><Button variant="outline" disabled={movendoSelecao} onClick={() => setMovimentoAberto(false)}>Cancelar</Button><Button disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(avisoMovimento.length > 0)}><CalendarDays className="mr-2 h-4 w-4" />{movendoSelecao ? "Movendo…" : avisoMovimento.length ? "Manter na data e mover" : "Mover para este dia"}</Button></DialogFooter>
         </DialogContent>
