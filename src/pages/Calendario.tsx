@@ -4515,7 +4515,13 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
           <DialogHeader>
             <DialogTitle>Já existem tarefas neste dia</DialogTitle>
             <DialogDescription>
-              Esta tarefa passará a ser de dia todo em {diaTodoOutras && format(diaTodoOutras.taskData.date, "dd/MM/yyyy")}. O que fazer com as outras {diaTodoOutras?.outras.length} tarefa(s)?
+              {diaTodoOutras?.mover ? (
+                <>A tarefa de dia todo será movida para {diaTodoOutras.mover.updates.date ? format(diaTodoOutras.mover.updates.date, "dd/MM/yyyy") : ""}. O que fazer com as outras {diaTodoOutras.outras.length} tarefa(s)?</>
+              ) : diaTodoOutras?.lote ? (
+                <>As tarefas de dia todo selecionadas serão movidas para {dataMovimento ? format(dataMovimento, "dd/MM/yyyy") : ""}. O que fazer com as outras {diaTodoOutras.outras.length} tarefa(s)?</>
+              ) : (
+                <>Esta tarefa passará a ser de dia todo em {diaTodoOutras && format(diaTodoOutras.taskData.date, "dd/MM/yyyy")}. O que fazer com as outras {diaTodoOutras?.outras.length} tarefa(s)?</>
+              )}
             </DialogDescription>
           </DialogHeader>
           <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border bg-muted/30 p-2 text-sm">
@@ -4529,24 +4535,48 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button disabled={diaTodoOutrasAcao} onClick={async () => {
               if (!diaTodoOutras) return;
-              const { taskData, outras } = diaTodoOutras;
+              const { taskData, outras, mover, lote } = diaTodoOutras;
               setDiaTodoOutrasAcao(true);
               try {
-                let proxima = getNextBusinessDay(taskData.date);
-                for (let i = 0; i < 366 && (await checkAllDayTasks(proxima, taskData.userId)).hasTask; i++) proxima = getNextBusinessDay(proxima);
+                const origem = mover ? mover.updates.date : (taskData?.date || dataMovimento);
+                const donoId = mover?.userId || taskData?.userId;
+                let proxima = getNextBusinessDay(origem);
+                for (let i = 0; i < 366 && donoId && (await checkAllDayTasks(proxima, donoId)).hasTask; i++) proxima = getNextBusinessDay(proxima);
                 let movidas = 0;
                 for (const t of outras) if (await updateTaskInDatabase(t.id, { date: proxima }, 'drag')) movidas++;
                 if (!movidas) return;
                 toast.success(`${movidas} tarefa(s) movida(s) para ${format(proxima, "dd/MM/yyyy")}`);
                 setDiaTodoOutras(null);
-                await handleSaveTask(taskData, true, true);
+                if (mover) {
+                  const ok = await updateTaskInDatabase(mover.taskId, mover.updates, 'drag');
+                  if (ok) {
+                    setTasks(atuais => atuais.map(t => t.id === mover.taskId ? { ...t, ...mover.updates } : t));
+                    toast.success("Tarefa movida com sucesso");
+                    await loadTasks();
+                  } else toast.error("Não foi possível mover a tarefa");
+                } else if (lote) {
+                  await moverSelecao(true, true, true);
+                } else {
+                  await handleSaveTask(taskData, true, true);
+                }
               } finally { setDiaTodoOutrasAcao(false); }
             }}>Mover as outras para o próximo dia disponível</Button>
             <Button variant="outline" disabled={diaTodoOutrasAcao} onClick={async () => {
               if (!diaTodoOutras) return;
-              const { taskData } = diaTodoOutras;
+              const { taskData, mover, lote } = diaTodoOutras;
               setDiaTodoOutras(null);
-              await handleSaveTask(taskData, true, true);
+              if (mover) {
+                const ok = await updateTaskInDatabase(mover.taskId, mover.updates, 'drag');
+                if (ok) {
+                  setTasks(atuais => atuais.map(t => t.id === mover.taskId ? { ...t, ...mover.updates } : t));
+                  toast.success("Tarefa movida com sucesso");
+                  await loadTasks();
+                } else toast.error("Não foi possível mover a tarefa");
+              } else if (lote) {
+                await moverSelecao(true, true, true);
+              } else {
+                await handleSaveTask(taskData, true, true);
+              }
             }}>Manter todas no mesmo dia</Button>
             <Button variant="ghost" disabled={diaTodoOutrasAcao} onClick={() => setDiaTodoOutras(null)}>Cancelar (não salvar)</Button>
           </DialogFooter>
