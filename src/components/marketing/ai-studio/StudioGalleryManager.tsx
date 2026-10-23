@@ -883,7 +883,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       {/* Delete item confirm */}
       {deleteConfirm && (
         <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
-          <AlertDialogContent className="z-[300]" onClick={(e) => e.stopPropagation()}>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Remover item</AlertDialogTitle>
               <AlertDialogDescription>
@@ -909,7 +909,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       {/* Delete folder confirm */}
       {deleteFolderConfirm && (
         <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteFolderConfirm(null); }}>
-          <AlertDialogContent className="z-[300]" onClick={(e) => e.stopPropagation()}>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Excluir pasta "{deleteFolderConfirm}"?</AlertDialogTitle>
               <AlertDialogDescription>
