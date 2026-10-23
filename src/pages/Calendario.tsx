@@ -446,6 +446,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
+  useEffect(() => { if (viewMode !== "list") setFiltroAtrasados(false); }, [viewMode]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
