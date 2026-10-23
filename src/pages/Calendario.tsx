@@ -936,8 +936,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const realocacaoRef = useRef(true);
 
   useEffect(() => {
-    loadTasks();
-    void carregarDatasDiaTodo();
+    (async () => {
+      // Primeiro realoca as atrasadas para a data atual, depois conta os dias
+      await loadTasks();
+      void carregarDatasDiaTodo();
+    })();
   }, [loadTasks]);
 
   // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
