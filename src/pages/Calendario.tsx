@@ -4278,9 +4278,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="space-y-3">
                 {dataMovimento && <AnaliseDestinoResumo origem={dataMovimento} analise={analiseDestino} avisos={avisoMovimento} userIds={tasks.filter(t => tarefasParaMover.has(t.id)).map(t => t.userId)} disabled={movendoSelecao || analisandoDestino} onOutraData={() => setMostrarCalendarioMovimento(v => !v)} onSugestao={data => { setDataMovimento(data); setAvisoMovimento([]); setOutrasDiaTodoMov([]); setMostrarCalendarioMovimento(false); }} />}
                 <Button variant="outline" className="h-auto w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={!dataMovimento || movendoSelecao || tarefasParaMover.size === 0 || selecaoNaMesmaData(dataMovimento, tasks.filter(t => tarefasParaMover.has(t.id)))} onClick={() => void moverSelecao(true)}>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
-                  <span className="min-w-0"><span className="block text-sm font-semibold">Mover para a data escolhida</span><span className="block truncate text-xs capitalize text-muted-foreground">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })} · Manter as outras tarefas neste dia</span></span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays className="h-4 w-4" /></span>
+                  <span className="min-w-0 leading-tight"><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Data escolhida</span><span className="block text-sm font-semibold text-foreground">Mover para esta data</span><span className="block text-xs capitalize text-muted-foreground">{dataMovimento && format(dataMovimento, "EEEE, dd/MM", { locale: ptBR })} · as outras tarefas ficam aqui</span></span>
                 </Button>
+
                 {outrasDiaTodoMov.length > 0 && (
                   <Button size="sm" variant="outline" className="mt-2 h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-3 text-left" disabled={movendoSelecao} onClick={async () => {
                     if (!dataMovimento) return;
