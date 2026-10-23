@@ -599,6 +599,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     }
 
     void (async () => {
+      // Fluxo "Concluir tarefa": o usuário já escolheu manter as duas tarefas — não perguntar novamente
+      if (pularDuplicata) { onSave(payload); return; }
       let q = supabase
         .from("calendario_tarefas")
         .select("id, date, time, title")
