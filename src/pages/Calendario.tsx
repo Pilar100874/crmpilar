@@ -4479,38 +4479,40 @@ onConfirmar={() => { const f = previa?.executar; setPrevia(null); f?.(); }}
 
       {/* Dialog de tarefa dia todo */}
       <Dialog open={isAllDayDialogOpen} onOpenChange={(open) => { setIsAllDayDialogOpen(open); if (!open) { setAllDayEscolherData(false); setAllDayNovaData(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
-            <DialogDescription>
-              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
-              {allDayPendingTask?.allDayTaskTitle && (
-                <>
-                  <br />
-                  <br />
-                  <strong>Tarefa existente:</strong> {allDayPendingTask.allDayTaskTitle}
-                </>
-              )}
-              {allDayPendingTask?.nextAvailableDate && !allDayEscolherData && (
-                <>
-                  <br />
-                  <br />
-                  Próximo dia disponível: {format(allDayPendingTask.nextAvailableDate, "dd/MM/yyyy", { locale: ptBR })}
-                </>
-              )}
-              {!allDayEscolherData && (
-                <>
-                  <br />
-                  <br />
-                  O que você deseja fazer?
-                </>
-              )}
-            </DialogDescription>
+        <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
+          <DialogHeader className="space-y-1 border-b bg-primary/5 px-5 py-4 text-left">
+            <DialogTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CalendarRange className="h-4 w-4" /></span>Dia já ocupado com tarefa de dia todo</DialogTitle>
+            <DialogDescription>{allDayPendingTask?.isMove ? "A tarefa ainda não foi movida" : "A tarefa ainda não foi salva"}: {motivosDiaTodo().length ? `encontramos ${motivosDiaTodo().length} motivo(s) para você decidir antes.` : "este dia já tem uma tarefa de dia todo."}</DialogDescription>
           </DialogHeader>
-          <TarefasDoDiaResumo
-            date={allDayEscolherData ? allDayNovaData : (allDayPendingTask?.targetDate || allDayPendingTask?.taskData?.date)}
-            userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId]}
-          />
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto px-5 py-4">
+            {motivosDiaTodo().length > 0 && (
+              <div className="rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3.5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {dataAlvoDiaTodo() ? `Por que preciso decidir? (${format(dataAlvoDiaTodo()!, "dd/MM/yyyy")})` : "Por que preciso decidir?"}
+                </div>
+                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                  {motivosDiaTodo().map(motivo => (
+                    <li key={motivo} className="flex items-start gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                      <span><strong className="block font-semibold">{motivo.split("|")[0]}</strong>{motivo.includes("|") && <span className="text-muted-foreground">{motivo.split("|").slice(1).join("|")}</span>}</span>
+                    </li>
+                  ))}
+                </ul>
+                <TarefasDoDiaResumo
+                  date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
+                  userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId]}
+                  className="mt-3 border-amber-500/40 bg-background/70"
+                  collapsible
+                />
+              </div>
+            )}
+            {motivosDiaTodo().length === 0 && (
+              <TarefasDoDiaResumo
+                date={allDayEscolherData ? allDayNovaData : dataAlvoDiaTodo()}
+                userIds={[allDayPendingTask?.existingTask?.userId, allDayPendingTask?.taskData?.userId]}
+              />
+            )}
           {allDayEscolherData ? (
             <div className="space-y-3">
               <div className="flex justify-center">
