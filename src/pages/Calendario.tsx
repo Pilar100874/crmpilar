@@ -2797,6 +2797,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
             
             <div className="ml-auto shrink-0 text-xs text-muted-foreground">
+              {filtroAtrasados && <Badge variant="destructive" className="mr-2 cursor-pointer" onClick={() => setFiltroAtrasados(false)} title="Mostrar todas">Só atrasados ✕</Badge>}
               {sortedTasks.length} tarefa{sortedTasks.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -3317,7 +3318,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
-                  onClick={() => setViewMode("list")}
+                  onClick={() => { setFiltroAtrasados(true); setViewMode("list"); }}
                   className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
