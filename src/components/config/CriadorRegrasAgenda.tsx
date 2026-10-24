@@ -256,30 +256,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
         </div>
       </div>
 
-      <Tabs defaultValue="fluxo" className="mt-3 min-w-0">
-        <TabsList>
-          <TabsTrigger value="regras">Regras por tela</TabsTrigger>
-          <TabsTrigger value="fluxo"><Network className="mr-1 h-4 w-4" /> Organograma</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="regras" className="space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Buscar regras" placeholder="Buscar regra, acontecimento ou tela" value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-9" /></div>
-            <Select value={telaFiltro} onValueChange={setTelaFiltro}><SelectTrigger className="w-full sm:w-64" aria-label="Filtrar por tela"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as telas</SelectItem>{telas.filter((t) => regras.some((r) => telaDe(r) === t)).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
-          </div>
-          {carregando ? <p className="py-6 text-sm text-muted-foreground">Carregando regras...</p> : visiveis.length === 0 ? <p className="py-6 text-sm text-muted-foreground">Nenhuma regra encontrada.</p> : telas.filter((t) => visiveis.some((r) => telaDe(r) === t)).map((t) => (
-            <section key={t} className="space-y-3">
-              <div className="flex items-center gap-2 border-b pb-2"><h3 className="text-base font-semibold">{t}</h3><Badge variant="secondary">{visiveis.filter((r) => telaDe(r) === t).length} regras</Badge></div>
-              <div className="space-y-2">{visiveis.filter((r) => telaDe(r) === t).map(cartaoRegra)}</div>
-            </section>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="fluxo">
-          <FluxoVisualRegrasAgenda regras={regras} />
-        </TabsContent>
-
-      </Tabs>
+      {carregando ? <p className="py-6 text-sm text-muted-foreground">Carregando fluxos...</p> : <FluxoVisualRegrasAgenda regras={regras} />}
 
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">

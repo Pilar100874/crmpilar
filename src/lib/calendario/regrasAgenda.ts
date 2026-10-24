@@ -1,8 +1,14 @@
-import { rotuloGatilho, type RegraBase } from "./regrasAutomacao";
+import { rotuloGatilho, telaDoGatilho, type RegraBase } from "./regrasAutomacao";
 
 export type RegraCatalogo = RegraBase & { chave: string | null; descricao: string | null; tela: string | null; execucoes: number };
 export type ModoRegra = "automatico" | "usuario";
 export interface ExplicacaoRegra { modo: ModoRegra; disparador: string; condicao: string; resultado: string }
+
+export const ORIGEM_DATA = "Disparos automáticos por data";
+export function origemFluxo(regra: RegraCatalogo): string {
+  if (["agenda_aberta", "horario_vencido", "sem_contato_dias"].includes(regra.gatilho)) return ORIGEM_DATA;
+  return regra.tela || telaDoGatilho(regra.gatilho);
+}
 
 // Documentação de comportamentos já implementados. Não cria automações nem altera estados salvos.
 const existentes = [
