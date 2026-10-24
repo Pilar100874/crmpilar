@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, CalendarDays, GitBranch, Hand, Play, Zap } from "lucide-react";
+import { ArrowDown, CalendarDays, GitBranch, Hand, Play, Zap, Monitor, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { explicarRegra, fluxoMovimentacao, type EtapaFluxo, type RegraCatalogo } from "@/lib/calendario/regrasAgenda";
+import { explicarRegra, fluxoMovimentacao, origemFluxo, ORIGEM_DATA, type EtapaFluxo, type RegraCatalogo } from "@/lib/calendario/regrasAgenda";
 import { rotuloGatilho } from "@/lib/calendario/regrasAutomacao";
 import { cn } from "@/lib/utils";
 
@@ -32,12 +33,24 @@ function Etapa({ etapa, raiz = false }: { etapa: EtapaFluxo; raiz?: boolean }) {
 
 export function FluxoVisualRegrasAgenda({ regras }: { regras: RegraCatalogo[] }) {
   const [gatilho, setGatilho] = useState("tarefa_arrastada");
-  const opcoes = useMemo(() => Array.from(new Set(regras.map(r => r.gatilho))), [regras]);
+  const [origem, setOrigem] = useState("Calendário");
+  const origens = useMemo(() => Array.from(new Set(regras.map(origemFluxo))).sort((a, b) => a === ORIGEM_DATA ? 1 : b === ORIGEM_DATA ? -1 : a.localeCompare(b)), [regras]);
+  const origemAtual = origens.includes(origem) ? origem : origens[0];
+  const daOrigem = regras.filter(r => origemFluxo(r) === origemAtual);
+  const opcoes = Array.from(new Set(daOrigem.map(r => r.gatilho)));
   const atual = opcoes.includes(gatilho) ? gatilho : opcoes[0];
-  const diretas = regras.filter(r => r.gatilho === atual);
+  const diretas = daOrigem.filter(r => r.gatilho === atual);
   const fluxo = useMemo(() => fluxoMovimentacao(regras), [regras]);
   return (
     <div className="min-w-0 space-y-5 pt-3">
+      <h2 className="flex items-center gap-2 text-base font-semibold"><GitBranch className="h-5 w-5 text-primary" />Fluxo visual</h2>
+      <nav aria-label="Telas que disparam os fluxos" className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {origens.map(item => <Button key={item} variant={item === origemAtual ? "default" : "outline"} className="h-auto min-h-12 min-w-0 justify-start gap-2 whitespace-normal px-3 py-2 text-left" aria-pressed={item === origemAtual} onClick={() => { setOrigem(item); setGatilho(item === "Calendário" ? "tarefa_arrastada" : ""); }}>
+          {item === ORIGEM_DATA ? <Clock className="h-4 w-4 shrink-0" /> : <Monitor className="h-4 w-4 shrink-0" />}
+          <span className="min-w-0 flex-1 break-words text-xs">{item}</span><span className="shrink-0 text-xs">{regras.filter(r => origemFluxo(r) === item).length}</span>
+        </Button>)}
+      </nav>
+      <div className="space-y-1 border-b pb-3"><h3 className="font-semibold">{origemAtual}</h3>{origemAtual === ORIGEM_DATA && <p className="text-xs leading-relaxed text-muted-foreground">Data atual, mudança de dia e horário vencido. A realocação de pendências é verificada ao abrir ou atualizar a agenda; este fluxo não indica execução com a agenda fechada.</p>}</div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Select value={atual} onValueChange={setGatilho}><SelectTrigger className="w-full sm:max-w-sm" aria-label="Escolher acontecimento do organograma"><Play className="mr-2 h-4 w-4 shrink-0 text-primary" /><SelectValue placeholder="Escolha um acontecimento" /></SelectTrigger><SelectContent>{opcoes.map(v => <SelectItem key={v} value={v}>{rotuloGatilho(v)}</SelectItem>)}</SelectContent></Select>
         <div className="flex flex-wrap gap-2"><Badge variant="secondary" className="gap-1"><Zap className="h-3 w-3" />Automático</Badge><Badge className="gap-1"><Hand className="h-3 w-3" />Interação do usuário</Badge></div>
