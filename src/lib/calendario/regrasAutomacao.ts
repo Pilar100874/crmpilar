@@ -20,6 +20,8 @@ export const GATILHOS: OpcaoGatilho[] = [
   { valor: "ligacao_discador", rotulo: "Ao concluir ligação do discador", tela: "Atendimento", condicoes: [], somenteSistema: true, evento: "atendimento" },
   { valor: "tarefa_criada_manual", rotulo: "Ao criar tarefa manualmente", tela: "Calendário", condicoes: [], somenteSistema: true, evento: "agenda" },
   { valor: "tarefa_arrastada", rotulo: "Ao arrastar tarefa", tela: "Calendário", condicoes: [], somenteSistema: true, evento: "agenda" },
+  { valor: "tarefa_movimento_desfeito", rotulo: "Ao desfazer movimentação", tela: "Calendário", condicoes: [], somenteSistema: true, evento: "agenda" },
+  { valor: "agenda_aberta", rotulo: "Ao abrir a agenda", tela: "Calendário", condicoes: [], somenteSistema: true, evento: "agenda" },
   { valor: "horario_vencido", rotulo: "Quando o horário da tarefa vence", tela: "Calendário", condicoes: [], somenteSistema: true, evento: "agenda" },
   { valor: "sem_contato_dias", rotulo: "Cliente sem contato há X dias", tela: "Verificação diária", condicoes: ["dias"], evento: "diario" },
   { valor: "orcamento_criado", rotulo: "Ao criar orçamento", tela: "Orçamentos", condicoes: ["valor"], evento: "orcamento" },
