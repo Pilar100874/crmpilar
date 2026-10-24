@@ -170,7 +170,7 @@ export const menuItems: MenuItem[] = [
     icon: Megaphone,
     subItems: [
       { id: "Calendario Painel", title: "Calendário", url: "/calendario", icon: Megaphone },
-      { id: "Config Calendario", title: "Configurações do Calendário", url: "/calendario/configuracoes", icon: Settings },
+      { id: "Config Calendario", title: "Regras do CRM", url: "/calendario/configuracoes", icon: Settings },
     ]
   },
   { 

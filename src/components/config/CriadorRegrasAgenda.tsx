@@ -14,6 +14,7 @@ import { AjustesAlertaAgenda } from "@/components/config/AjustesAlertaAgenda";
 import { FluxoVisualRegrasAgenda } from "@/components/config/FluxoVisualRegrasAgenda";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
+import { completarCatalogo, explicarRegra } from "@/lib/calendario/regrasAgenda";
 import {
   ACOES, CANAIS_REGRA, DIAS_SEMANA, GATILHOS, MODOS_RELACAO, analisarInterferencias, relacaoEntre,
   rotuloAcao, rotuloGatilho, telaDoGatilho, type Interferencia, type RegraBase,
@@ -68,7 +69,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
           prioridade: 20 + (validacao.ordem || 0), execucoes: 0 });
       }
     }
-    setRegras(catalogo.sort((a, b) => a.prioridade - b.prioridade));
+    setRegras(completarCatalogo(catalogo));
   };
   useEffect(() => {
     (async () => {
@@ -87,7 +88,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
 
   const editar = (r: Regra) => {
     if (["cal_alerta_urgente", "cal_alerta_tarefas_urgentes"].includes(r.chave || "")) { setAjusteAlerta(r); return; }
-    if (r.id.startsWith("validacao-")) { toast.info("Esta validação faz parte do funcionamento do calendário"); return; }
+    if (r.id.startsWith("validacao-") || r.id.startsWith("catalogo-")) { toast.info("Esta regra faz parte do funcionamento da agenda"); return; }
     const c = r.condicoes || {}, a = r.acao_config || {};
     setForm({
       ...vazio(), id: r.id, nome: r.nome, descricao: r.descricao || "", gatilho: r.gatilho, acao: r.acao, prioridade: r.prioridade,
@@ -191,6 +192,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
   const cartaoRegra = (r: Regra) => {
     const itens = interferenciasDe(r);
     const aberta = expandidas.has(r.id);
+    const explicacao = explicarRegra(r);
     return (
       <article key={r.id} className="overflow-hidden rounded-md border bg-card">
         <div className="flex items-start gap-1 p-2 sm:p-3">
@@ -200,6 +202,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
               <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
                 {r.nome}
                 <Badge variant="secondary" className="text-[10px]">{r.sistema ? "Sistema" : "Personalizada"}</Badge>
+                <Badge variant="outline" className="text-[10px]">{explicacao.modo === "automatico" ? "Automático" : "Interação do usuário"}</Badge>
                 {!r.ativa && <Badge variant="outline" className="text-[10px]">Não está em execução</Badge>}
               </span>
               <span className="flex flex-wrap items-center gap-1.5 text-xs font-normal text-muted-foreground">
@@ -210,13 +213,18 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
             <ChevronDown className={cn("mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform", aberta && "rotate-180")} />
           </Button>
           <div className="flex shrink-0 flex-col sm:flex-row">
-            {!r.id.startsWith("validacao-") && <Button size="icon" variant="ghost" className="h-8 w-8" title={`Editar ${r.nome}`} aria-label={`Editar ${r.nome}`} onClick={() => editar(r)}><Pencil className="h-4 w-4" /></Button>}
+            {!r.id.startsWith("validacao-") && !r.id.startsWith("catalogo-") && <Button size="icon" variant="ghost" className="h-8 w-8" title={`Editar ${r.nome}`} aria-label={`Editar ${r.nome}`} onClick={() => editar(r)}><Pencil className="h-4 w-4" /></Button>}
             {!r.sistema && <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title={`Excluir ${r.nome}`} aria-label={`Excluir ${r.nome}`} onClick={() => setExcluir(r)}><Trash2 className="h-4 w-4" /></Button>}
           </div>
         </div>
         {aberta && <div id={`detalhes-${r.id}`} className="space-y-4 border-t bg-muted/20 p-4 sm:pl-12">
           <div className="space-y-2"><p className="text-sm">{r.descricao || resumo(r)}</p><p className="text-xs text-muted-foreground">{resumo(r)}</p>
-            <div className="flex flex-wrap gap-2"><Badge variant="outline">Prioridade {r.prioridade}</Badge><Badge variant="outline">{r.executor === "tela" ? "Executada na tela" : "Automática"}</Badge>{!r.sistema && <Badge variant="outline">{r.execucoes} execuções</Badge>}</div>
+            <dl className="grid gap-3 text-xs sm:grid-cols-3">
+              <div><dt className="font-semibold text-primary">O que dispara</dt><dd className="mt-1 leading-relaxed text-muted-foreground">{explicacao.disparador}</dd></div>
+              <div><dt className="font-semibold text-primary">Em quais condições</dt><dd className="mt-1 leading-relaxed text-muted-foreground">{explicacao.condicao}</dd></div>
+              <div><dt className="font-semibold text-primary">O que acontece</dt><dd className="mt-1 leading-relaxed text-muted-foreground">{explicacao.resultado}</dd></div>
+            </dl>
+            <div className="flex flex-wrap gap-2"><Badge variant="outline">Prioridade {r.prioridade}</Badge><Badge variant="outline">{explicacao.modo === "usuario" ? "Exige escolha do usuário" : "Sem decisão adicional"}</Badge>{!r.sistema && <Badge variant="outline">{r.execucoes} execuções</Badge>}</div>
           </div>
           {["cal_alerta_urgente", "cal_alerta_tarefas_urgentes"].includes(r.chave || "") && <Button variant="outline" size="sm" onClick={() => setAjusteAlerta(r)}><Pencil className="h-3.5 w-3.5" /> Ajustar níveis de alerta</Button>}
           <div><h4 className="mb-2 flex items-center gap-2 text-sm font-semibold"><AlertTriangle className="h-4 w-4 text-warning" />Interferências e relações</h4>
@@ -243,16 +251,16 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold"><Wand2 className="h-5 w-5 text-primary" /> Regras do calendário e da agenda</h2>
+          <h2 className="flex items-center gap-2 text-base font-semibold"><Wand2 className="h-5 w-5 text-primary" /> Catálogo de regras</h2>
           <p className="text-xs text-muted-foreground">{regras.length} regras · {telas.filter((t) => regras.some((r) => telaDe(r) === t)).length} telas e processos</p>
         </div>
         <Button size="sm" onClick={() => setForm(vazio())}><Plus className="h-4 w-4" /> Nova regra</Button>
       </div>
 
-      <Tabs defaultValue="regras" className="mt-3">
+      <Tabs defaultValue="fluxo" className="mt-3 min-w-0">
         <TabsList>
           <TabsTrigger value="regras">Regras por tela</TabsTrigger>
-          <TabsTrigger value="fluxo"><Network className="mr-1 h-4 w-4" /> Fluxo visual</TabsTrigger>
+          <TabsTrigger value="fluxo"><Network className="mr-1 h-4 w-4" /> Organograma</TabsTrigger>
         </TabsList>
 
         <TabsContent value="regras" className="space-y-6">
@@ -269,7 +277,7 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
         </TabsContent>
 
         <TabsContent value="fluxo">
-          <FluxoVisualRegrasAgenda regras={regras} onEditar={editar} />
+          <FluxoVisualRegrasAgenda regras={regras} />
         </TabsContent>
 
       </Tabs>

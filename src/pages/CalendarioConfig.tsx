@@ -24,11 +24,11 @@ export default function CalendarioConfig() {
       <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
         <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
           <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          Configurações do Calendário
+          Regras do CRM
         </h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1 flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5" />
-          Regras e automações do seu calendário
+          Agenda, atendimento e automações por processo
         </p>
       </div>
       <div className="flex-1 overflow-auto p-3 sm:p-6 space-y-4">
