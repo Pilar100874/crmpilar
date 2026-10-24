@@ -1,6 +1,7 @@
 # Roteiro
 
 ## Regras do CRM
+- [x] Manter somente Fluxo visual, separado por tela e com grupo de disparos automáticos por data; conferir navegação e testes.
 - [x] Conferir e complementar o catálogo das regras existentes sem mudar sua execução.
 - [x] Renomear a tela e seus atalhos para Regras do CRM.
 - [x] Exibir organograma com condições, alternativas, disparadores e identificação de ações automáticas ou decisões do usuário.
