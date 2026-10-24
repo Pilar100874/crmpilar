@@ -71,7 +71,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Calendário ============
   { path: "/calendario", titulo: "Calendário", aliases: ["agenda", "calendario de eventos"] },
-  { path: "/calendario/configuracoes", titulo: "Configurações do Calendário", aliases: ["configuracao do calendario", "config do calendario", "config calendario"] },
+  { path: "/calendario/configuracoes", titulo: "Regras do CRM", aliases: ["regras do crm", "regras crm", "configuracao do calendario", "config do calendario", "config calendario"] },
 
   // ============ Menu Principal - Vendas ============
   { path: "/orcamentos", titulo: "Orçamento", aliases: ["orcamentos", "pedidos de venda", "novo orcamento"] },
