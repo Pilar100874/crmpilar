@@ -17,7 +17,10 @@ const existentes = [
 ] as const;
 
 export function completarCatalogo(regras: RegraCatalogo[]): RegraCatalogo[] {
-  const catalogo = [...regras];
+  const catalogo = regras.map(regra => {
+    const gatilhos: Record<string, string> = { cal_encaminhamento_obrigatorio_conclusao: "tarefa_concluida", cal_realocacao_diaria_tarefas: "agenda_aberta", cal_alerta_urgente: "agenda_aberta" };
+    return { ...regra, gatilho: gatilhos[regra.chave || ""] || regra.gatilho };
+  });
   for (const [chave, nome, gatilho, acao, descricao] of existentes) {
     if (catalogo.some(r => r.chave === chave || r.chave === `cal_${chave}`)) continue;
     catalogo.push({ id: `catalogo-${chave}`, chave, nome, gatilho, acao, descricao, tela: "Calendário", ativa: true,
@@ -38,6 +41,15 @@ const explicacoes: Record<string, ExplicacaoRegra> = {
   bloqueio_finais_semana: { modo: "usuario", disparador: "Criar ou mover uma tarefa para sábado ou domingo.", condicao: "A regra está em execução e a data é fim de semana.", resultado: "Escolha manter a data, usar a sugestão ou escolher outra data. Confira o resumo e finalize." },
   pergunta_dia_todo: { modo: "usuario", disparador: "Criar, editar ou mover uma tarefa para um dia ocupado.", condicao: "Há tarefa de dia todo para o responsável, ou a tarefa de dia todo encontra outras tarefas no destino.", resultado: "Escolha a sugestão, mantenha as tarefas juntas ou mova as demais quando essa alternativa estiver disponível. Confira e finalize." },
   encaminhamento_obrigatorio_conclusao: { modo: "usuario", disparador: "Marcar a tarefa como concluída pela agenda ou pelo painel lateral.", condicao: "É necessário garantir o próximo contato ou inativar o cliente.", resultado: "Reprograme uma tarefa futura ou inative o cliente. Se já houver tarefa futura, mantenha a data, altere-a ou mantenha ambas. Cancelar não conclui." },
+  bloquear_datas_passadas: { modo: "automatico", disparador: "Escolher uma data ao criar, editar ou mover uma tarefa.", condicao: "A regra está em execução e a data solicitada está no passado.", resultado: "Impede salvar ou mover para a data passada. Escolha uma data permitida." },
+  bloquear_horarios_passados: { modo: "automatico", disparador: "Mover uma tarefa com horário para hoje.", condicao: "O horário da tarefa já passou e a regra está em execução.", resultado: "Ajusta o horário passado conforme a validação da movimentação; não mantém horário vencido." },
+  deteccao_conflitos: { modo: "usuario", disparador: "Criar, editar ou mover uma tarefa com horário.", condicao: "Outra tarefa do mesmo responsável ocupa o mesmo horário, com a regra em execução.", resultado: "O aviso apresenta o conflito. Escolha manter as tarefas no horário ou a alternativa oferecida e confirme." },
+  horario_comercial: { modo: "usuario", disparador: "Criar ou editar uma tarefa com horário definido.", condicao: "O horário solicitado fica fora do período de trabalho do responsável, com a regra em execução.", resultado: "Para tarefa manual, escolha ajustar ou manter conforme o aviso. Tarefas automáticas são ajustadas sem essa escolha." },
+  validacao_dia_todo: { modo: "automatico", disparador: "Gerar uma tarefa automática futura ou analisar reservas de dia todo.", condicao: "Há reserva de dia todo para o mesmo responsável e a regra está em execução.", resultado: "Tarefas automáticas avançam para o próximo dia disponível. Tarefas manuais seguem a escolha do usuário no aviso de conflito." },
+  realocacao_diaria_tarefas: { modo: "automatico", disparador: "Abrir a agenda e verificar as pendências, ou mudar o dia de uma tarefa.", condicao: "Há tarefa pendente vencida ou uma mudança de dia, conforme a configuração de realocação.", resultado: "Realoca as pendências para hoje preservando a data original; a movimentação entre dias pode retirar o horário conforme a configuração." },
+  alerta_urgente: { modo: "automatico", disparador: "Visualizar os contatos e tarefas na agenda.", condicao: "A tarefa atinge os níveis de dias configurados para os alertas.", resultado: "Mostra o destaque de urgência correspondente. Os níveis podem ser ajustados no catálogo." },
+  substituir_contato_inativado: { modo: "usuario", disparador: "Solicitar a inativação de um contato.", condicao: "A inativação exige motivo e escolha de substituto conforme o fluxo do cadastro.", resultado: "Informe o motivo e escolha o substituto solicitado antes de concluir a inativação." },
+  nova_tarefa_conflito: { modo: "usuario", disparador: "Criar uma nova tarefa para um contato com tarefa futura pendente.", condicao: "O mesmo contato já possui uma tarefa futura.", resultado: "Escolha trocar pela nova tarefa ou manter as duas. A escolha não exige uma segunda confirmação de exclusão nesse fluxo." },
 };
 
 export function explicarRegra(regra: RegraCatalogo): ExplicacaoRegra {
@@ -61,7 +73,6 @@ export function fluxoMovimentacao(regras: RegraCatalogo[]): EtapaFluxo {
   const fimSemana = ativa("cal_bloqueio_finais_semana");
   const diaTodo = ativa("cal_pergunta_dia_todo");
   const horario = ativa("cal_deteccao_conflitos");
-  const resumo: EtapaFluxo = { id: "resumo", titulo: "Conferir e finalizar", detalhe: "Revise a data e as tarefas que serão alteradas; clique em Finalizar. Cancelar não aplica a movimentação.", modo: "usuario", tipo: "resultado" };
   const opcoes: EtapaFluxo[] = [
     { id: "sugerida", titulo: "Usar a data sugerida", detalhe: "Escolha o primeiro dia útil sem reserva de dia todo. Exemplo: sábado → segunda ocupada → terça disponível.", modo: "usuario" },
     { id: "manter", titulo: "Manter a data solicitada", detalhe: "Escolha manter no sábado/domingo ou junto com a tarefa de dia todo. As tarefas existentes ficam no dia.", modo: "usuario" },
