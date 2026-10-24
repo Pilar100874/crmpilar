@@ -1,5 +1,11 @@
 # Roteiro
 
+## Regras do CRM
+- [ ] Conferir e complementar o catálogo das regras existentes sem mudar sua execução.
+- [ ] Renomear a tela e seus atalhos para Regras do CRM.
+- [ ] Exibir organograma com condições, alternativas, disparadores e identificação de ações automáticas ou decisões do usuário.
+- [ ] Conferir o catálogo e o organograma na tela e executar os testes relevantes.
+
 ## Agenda no celular e tablet
 - [x] Melhorar a leitura dos modos Dia, Mês, Semana e Tabela sem rolagem horizontal.
 - [x] Manter Tudo, Agendados e Recebidos na mesma linha, com contadores.
