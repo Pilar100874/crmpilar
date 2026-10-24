@@ -1,6 +1,7 @@
 - Keep CRM-rule visualization read-only and driven by the saved catalog plus documented built-in calendar behaviors in regrasAgenda; render responsive condition trees with triggers and automatic/user-decision metadata without implying relationship-based chained execution or changing saved configuration.
 - Use a shared read-only destination preview for calendar conflicts, looking ahead through business days and all-day reservations; applying a suggested date must remain an explicit user choice through existing persistence.
 - Present calendar validations and agenda automations through one catalog in the rule builder, merging legacy validations by key and preserving their configuration storage, to avoid duplicate lists and keep execution unchanged.
+- Whenever implementing or changing a calendar-affecting behavior, update its keyed catalog entry and read-only flow metadata in the same change; Regras do CRM has no manual rule-creation entry point, so documentation stays synchronized with actual behavior.
 - Keep the calendar header host mounted when central agenda content is replaced by mass-dispatch panels, so its shared title and date bar remain available.
 - Route central panel openings and tab navigation through one cleanup helper that clears competing visual panels without clearing dialer state or pending services, so navigation displays only the requested content.
 - Keep calendar view selectors outside date tiles and propagate their chosen mode through the shared calendar opening event; date tiles send day mode, so central navigation stays consistent.

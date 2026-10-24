@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, ChevronDown, Network, Pencil, Plus, Search, Trash2, Wand2, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, Network, Pencil, Search, Trash2, Wand2, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,7 +254,6 @@ export function CriadorRegrasAgenda({ estabelecimentoId }: { estabelecimentoId: 
           <h2 className="flex items-center gap-2 text-base font-semibold"><Wand2 className="h-5 w-5 text-primary" /> Catálogo de regras</h2>
           <p className="text-xs text-muted-foreground">{regras.length} regras · {telas.filter((t) => regras.some((r) => telaDe(r) === t)).length} telas e processos</p>
         </div>
-        <Button size="sm" onClick={() => setForm(vazio())}><Plus className="h-4 w-4" /> Nova regra</Button>
       </div>
 
       <Tabs defaultValue="fluxo" className="mt-3 min-w-0">
