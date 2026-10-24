@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { completarCatalogo, explicarRegra, fluxoMovimentacao, type EtapaFluxo, type RegraCatalogo } from "./regrasAgenda";
+import { completarCatalogo, explicarRegra, fluxoMovimentacao, origemFluxo, ORIGEM_DATA, type EtapaFluxo, type RegraCatalogo } from "./regrasAgenda";
 
 const regra = (chave: string, ativa = true): RegraCatalogo => ({ id: chave, chave, nome: chave, ativa, gatilho: "tarefa_arrastada", acao: "perguntar_conflito", descricao: null, tela: "Calendário", execucoes: 0, condicoes: {}, acao_config: {}, relacoes: {}, sistema: true, executor: "tela", prioridade: 10 });
 const ids = (etapa: EtapaFluxo): string[] => [etapa.id, ...(etapa.filhos || []).flatMap(ids)];
 describe("catálogo explicativo das regras do CRM", () => {
+  it("separa mudança de dia e horário vencido dos disparos manuais do calendário", () => {
+    expect(origemFluxo({ ...regra("atrasados_hoje"), gatilho: "agenda_aberta" })).toBe(ORIGEM_DATA);
+    expect(origemFluxo({ ...regra("horario_vencido"), gatilho: "horario_vencido" })).toBe(ORIGEM_DATA);
+    expect(origemFluxo(regra("arrastar_tarefa"))).toBe("Calendário");
+  });
   it("completa comportamentos existentes sem duplicar uma regra salva", () => {
     const salva = regra("unir_mesmo_contato", false);
     const catalogo = completarCatalogo([salva]);
