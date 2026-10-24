@@ -73,6 +73,7 @@ export function fluxoMovimentacao(regras: RegraCatalogo[]): EtapaFluxo {
   const fimSemana = ativa("cal_bloqueio_finais_semana");
   const diaTodo = ativa("cal_pergunta_dia_todo");
   const horario = ativa("cal_deteccao_conflitos");
+  const resumo: EtapaFluxo = { id: "resumo", titulo: "Conferir e finalizar", detalhe: "Revise a data e as tarefas que serão alteradas; confirme no botão Mover ou Finalizar, conforme o fluxo aberto. Cancelar não aplica a movimentação.", modo: "usuario", tipo: "resultado" };
   const opcoes: EtapaFluxo[] = [
     { id: "sugerida", titulo: "Usar a data sugerida", detalhe: "Escolha o primeiro dia útil sem reserva de dia todo. Exemplo: sábado → segunda ocupada → terça disponível.", modo: "usuario" },
     { id: "manter", titulo: "Manter a data solicitada", detalhe: "Escolha manter no sábado/domingo ou junto com a tarefa de dia todo. As tarefas existentes ficam no dia.", modo: "usuario" },

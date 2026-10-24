@@ -46,7 +46,8 @@ export function FluxoVisualRegrasAgenda({ regras }: { regras: RegraCatalogo[] })
         {diretas.map(r => {
           const explicacao = explicarRegra(r);
           const temCondicao = Object.keys(r.condicoes || {}).length > 0;
-          return <Etapa key={r.id} raiz etapa={{ id: r.id, titulo: r.nome, detalhe: explicacao.disparador, modo: "usuario", filhos: [
+          const automatico = ["agenda_aberta", "horario_vencido", "sem_contato_dias", "email_aberto", "email_recebido", "whatsapp_recebido", "ligacao_recebida"].includes(r.gatilho);
+          return <Etapa key={r.id} raiz etapa={{ id: r.id, titulo: r.nome, detalhe: explicacao.disparador, modo: automatico ? "automatico" : "usuario", filhos: [
             { id: `${r.id}-condicao`, titulo: "Quando a regra se aplica?", detalhe: r.ativa ? explicacao.condicao : "Esta regra não está em execução na configuração salva. O caminho abaixo descreve seu comportamento configurado, sem ativá-la.", modo: "automatico", tipo: "condicao", filhos: [
               { id: `${r.id}-resultado`, rotulo: "Condições atendidas", titulo: "O que acontece", detalhe: explicacao.resultado, modo: explicacao.modo, tipo: "resultado" },
               ...(temCondicao || !r.ativa ? [{ id: `${r.id}-nao`, rotulo: "Condições não atendidas", titulo: "Esta regra não é aplicada", detalhe: "Não realiza a ação deste caminho. As demais regras continuam seguindo suas próprias condições.", modo: "automatico" as const, tipo: "resultado" as const }] : []),
