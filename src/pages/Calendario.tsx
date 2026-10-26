@@ -497,8 +497,14 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
   };
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  // Abertura externa (menu "Tarefa" do Atendimento): abre a tarefa assim que ela estiver carregada
-  const tarefaInicialAplicada = useRef<number>(0);
+  // Abertura externa: mantém o corpo do calendário invisível até o painel da tarefa abrir,
+  // para o calendário não aparecer antes do conteúdo (menu "Tarefa" do Atendimento)
+  const [aguardandoTarefaInicial, setAguardandoTarefaInicial] = useState(() => !!tarefaInicialId);
+  useEffect(() => {
+    if (!aguardandoTarefaInicial) return;
+    const t = setTimeout(() => setAguardandoTarefaInicial(false), 8000);
+    return () => clearTimeout(t);
+  }, [aguardandoTarefaInicial]);
   // Abertura programática não deve disparar a seleção do contato na fila do Atendimento
   const tarefaAbertaProgramaticaRef = useRef(false);
   useEffect(() => {
@@ -507,6 +513,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (!tasks.some(t => t.id === tarefaInicialId)) return;
     tarefaInicialAplicada.current = tarefaInicialNonce;
     tarefaAbertaProgramaticaRef.current = true;
+    setAguardandoTarefaInicial(false);
     setSelectedTaskId(tarefaInicialId);
   }, [tarefaInicialId, tarefaInicialNonce, tasks]);
   // Painéis centrais do atendimento (histórico, agenda do contato etc.) fecham o painel da tarefa.
