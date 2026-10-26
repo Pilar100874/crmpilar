@@ -5945,7 +5945,7 @@ ${recentMessages}
                   }}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
-                  onTarefa={() => { setHistoricoCliente(null); setAgendaContato(null); void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
+                  onTarefa={() => { void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
                   tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
@@ -6860,9 +6860,7 @@ ${recentMessages}
             tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
             agendaAtiva={!!agendaContato}
             onTarefa={() => {
-              setHistoricoCliente(null);
-              setAgendaContato(null);
-              setOrcamentosCliente(null);
+              // A troca de painéis acontece só depois da tarefa carregar, para o topo da agenda não piscar
               void abrirUltimaTarefaDoContato((clienteCabecalho as any)?.id, clienteCabecalho?.nome || "Cliente");
             }}
             onAgenda={() => {
