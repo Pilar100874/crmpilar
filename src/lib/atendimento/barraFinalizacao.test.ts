@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contatoDaBarraFinalizacao } from "./barraFinalizacao";
+import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 
 describe("finalização pelo cartão clicado", () => {
   it("não abre pendências sem clicar num cartão", () => {
@@ -19,5 +19,18 @@ describe("finalização pelo cartão clicado", () => {
   });
   it("não finaliza um cartão anterior quando outro contato está aberto", () => {
     expect(contatoDaBarraFinalizacao("a", "b", ["a", "b"])).toBeNull();
+  });
+});
+
+describe("filtro de contatos não finalizados", () => {
+  it("mantém no filtro o contato com atendimento pendente", () => {
+    expect(itemNaoFinalizado("a", ["a", "b"])).toBe(true);
+  });
+  it("remove do filtro o contato já finalizado", () => {
+    expect(itemNaoFinalizado("c", ["a", "b"])).toBe(false);
+  });
+  it("remove itens sem contato vinculado", () => {
+    expect(itemNaoFinalizado(null, ["a"])).toBe(false);
+    expect(itemNaoFinalizado(undefined, ["a"])).toBe(false);
   });
 });
