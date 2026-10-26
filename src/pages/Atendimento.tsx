@@ -2757,8 +2757,7 @@ export default function Atendimento() {
         .from("calendario_tarefas")
         .select("id")
         .eq("contact_id", contatoId)
-        .order("date", { ascending: false })
-        .order("time", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
