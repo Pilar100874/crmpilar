@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
+import { itemNaoFinalizado } from "@/lib/atendimento/barraFinalizacao";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
@@ -162,6 +163,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const pendencias = usePendenciasAtendimento();
   const [simultaneo] = useModoSimultaneo();
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
+  const [somenteNaoFinalizados, setSomenteNaoFinalizados] = useState(false);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -182,11 +184,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     return items;
   }, [items, filtro]);
 
+  /** Contatos da aba atual com atendimento ainda não finalizado. */
+  const totalNaoFinalizados = useMemo(
+    () => baseAba.filter((item) => itemNaoFinalizado(item.contactId, pendencias)).length,
+    [baseAba, pendencias]
+  );
+
   const visiveis = useMemo(() => {
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
     if (canaisAtivos.size > 0) lista = lista.filter((item) => temCanalItem(item, canaisAtivos));
+    if (somenteNaoFinalizados) lista = lista.filter((item) => itemNaoFinalizado(item.contactId, pendencias));
 
 
     const ordenada = [...lista];
@@ -205,7 +214,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
       });
     }
     return ordenada;
-  }, [items, filtro, ordenacao, canaisAtivos]);
+  }, [items, filtro, ordenacao, canaisAtivos, somenteNaoFinalizados, pendencias]);
 
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
@@ -368,7 +377,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtro por canal */}
-        <div className="flex items-center gap-1.5 mt-2">
+        <div className="flex flex-wrap items-center gap-1.5 mt-2">
           {(Object.keys(CANAL_CONFIG) as FilaCanal[]).map((canal) => {
             const cfg = CANAL_CONFIG[canal];
             const Icone = cfg.icon;
@@ -403,22 +412,38 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               Limpar
             </button>
           )}
-          {filtro === "recebidos" && onToggleSinalizados && (
+          <div className="ml-auto flex items-center gap-1.5">
             <button
               type="button"
-              onClick={onToggleSinalizados}
-              aria-pressed={!!verSinalizados}
-              title="Ver itens sinalizados"
+              onClick={() => setSomenteNaoFinalizados((v) => !v)}
+              aria-pressed={somenteNaoFinalizados}
+              title="Ver somente contatos com atendimento não finalizado"
               className={cn(
-                "ml-auto flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
-                verSinalizados ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                somenteNaoFinalizados ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
-              <Flag className="h-4 w-4" />
-              <span>Sinalizados</span>
-              <span className="tabular-nums">{totalSinalizados ?? 0}</span>
+              <CalendarCheck className="h-4 w-4" />
+              <span>Não finalizados</span>
+              <span className="tabular-nums">{totalNaoFinalizados}</span>
             </button>
-          )}
+            {filtro === "recebidos" && onToggleSinalizados && (
+              <button
+                type="button"
+                onClick={onToggleSinalizados}
+                aria-pressed={!!verSinalizados}
+                title="Ver itens sinalizados"
+                className={cn(
+                  "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                  verSinalizados ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <Flag className="h-4 w-4" />
+                <span>Sinalizados</span>
+                <span className="tabular-nums">{totalSinalizados ?? 0}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Disparo em massa: WhatsApp, E-mail ou Telefone */}
@@ -460,7 +485,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             </div>
             <p className="text-sm font-medium">Fila vazia</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {vazioTexto || "Nenhum item para exibir"}
+              {somenteNaoFinalizados ? "Nenhum contato com atendimento pendente de finalização" : vazioTexto || "Nenhum item para exibir"}
             </p>
           </div>
         ) : (
