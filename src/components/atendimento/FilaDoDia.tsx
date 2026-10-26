@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bot, CalendarCheck, CalendarDays, FileText, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
+import { Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -69,6 +69,9 @@ export interface FilaItem {
   onHistorico?: () => void;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
+  /** Recebidos: item sinalizado como tratado sem resposta. */
+  sinalizado?: boolean;
+  onSinalizar?: () => void;
 }
 
 type FiltroFila = "tudo" | "agendados" | "recebidos";
@@ -119,6 +122,10 @@ interface FilaDoDiaProps {
   assumirContatos?: AssumirContatosConfig;
   /** Totais fixos de cada aba (não dependem da aba ativa). */
   totais?: { tudo: number; agendados: number; recebidos: number };
+  /** Recebidos: alterna a visão dos itens sinalizados como tratados sem resposta. */
+  verSinalizados?: boolean;
+  onToggleSinalizados?: () => void;
+  totalSinalizados?: number;
 }
 
 /** O item pertence ao canal se for o canal de origem ou se o contato tiver esse canal disponível. */
@@ -396,6 +403,22 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               Limpar
             </button>
           )}
+          {filtro === "recebidos" && onToggleSinalizados && (
+            <button
+              type="button"
+              onClick={onToggleSinalizados}
+              aria-pressed={!!verSinalizados}
+              title="Ver itens sinalizados"
+              className={cn(
+                "ml-auto flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                verSinalizados ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              )}
+            >
+              <Flag className="h-4 w-4" />
+              <span>Sinalizados</span>
+              <span className="tabular-nums">{totalSinalizados ?? 0}</span>
+            </button>
+          )}
         </div>
 
         {/* Disparo em massa: WhatsApp, E-mail ou Telefone */}
@@ -493,6 +516,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                           )}
                         </p>
                      )}
+                    {item.onSinalizar && (
+                      <button type="button"
+                        title={item.sinalizado ? "Remover sinalização (volta para Recebidos)" : "Sinalizar como tratado sem responder"}
+                        aria-pressed={!!item.sinalizado}
+                        onClick={(e) => { e.stopPropagation(); item.onSinalizar!(); }}
+                        className={cn("mt-1 mr-1 inline-flex h-6 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors",
+                          item.sinalizado ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground")}>
+                        <Flag className="h-3 w-3" /> {item.sinalizado ? "Sinalizado · desfazer" : "Sinalizar"}
+                      </button>
+                    )}
                     {item.contactId && pendencias.includes(item.contactId) && (
                       <button type="button" title="Finalizar atendimento (próximo contato)"
                         onClick={(e) => { e.stopPropagation(); pedirFinalizacao({ customerId: item.contactId!, nome: item.nome }); }}
