@@ -4107,7 +4107,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         if (!shouldShowLegend) return null;
         
         return (
-          <div className="border-b border-border bg-muted/30 px-3 sm:px-6 py-2 sm:py-3">
+          <div className={cn("border-b border-border bg-muted/30 px-3 sm:px-6 py-2 sm:py-3", aguardandoTarefaInicial && "invisible")}>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <span className="text-xs font-semibold text-muted-foreground uppercase hidden sm:inline">Legenda:</span>
               {Array.from(uniqueUserIds).map(userId => {
@@ -4136,7 +4136,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
       {/* Content */}
       <div className="relative flex min-h-0 flex-1">
-      <div ref={agendaAreaRef} className={`min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-3 py-3 ${(selectedTaskId || showTaskDialog) ? "hidden" : ""}`}>
+      <div ref={agendaAreaRef} className={cn("min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-3 py-3", aguardandoTarefaInicial && "invisible", (selectedTaskId || showTaskDialog) && "hidden")}>
         {/* Navegação e filtros do calendário (dentro da área central) */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1">
