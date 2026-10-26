@@ -4550,6 +4550,8 @@ ${recentMessages}
           origem: rotuloOrigemConversa(conv.canal),
           horario: (conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at) ? format(new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
+          sinalizado: convSinalizada(conv),
+          onSinalizar: () => void alternarSinalizacao("whatsapp", conv.id, !convSinalizada(conv)),
           selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
@@ -4581,6 +4583,8 @@ ${recentMessages}
           motivo: "E-mail recebido",
           canal: "email",
           origem: "E-mail",
+          sinalizado: emailSinalizado(email),
+          onSinalizar: () => void alternarSinalizacao("email", email.id, !emailSinalizado(email)),
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
           selecionado: selectedEmailId === email.id,
           onClick: () => {
@@ -4605,7 +4609,7 @@ ${recentMessages}
       return marcada;
     }
     return lista;
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
@@ -6070,6 +6074,9 @@ ${recentMessages}
                   onFiltroChange={aoTrocarFiltroFila}
                   assumirContatos={assumirContatosConfig}
                   totais={totaisFila}
+          verSinalizados={verSinalizados}
+          onToggleSinalizados={() => setVerSinalizados((v) => !v)}
+          totalSinalizados={totalSinalizados}
                 />
               </div>
               <div className="flex flex-shrink-0 items-center gap-1 border-t border-border/50 bg-card px-2 py-1">
@@ -6681,6 +6688,9 @@ ${recentMessages}
           onFiltroChange={aoTrocarFiltroFila}
           assumirContatos={assumirContatosConfig}
           totais={totaisFila}
+          verSinalizados={verSinalizados}
+          onToggleSinalizados={() => setVerSinalizados((v) => !v)}
+          totalSinalizados={totalSinalizados}
         />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
