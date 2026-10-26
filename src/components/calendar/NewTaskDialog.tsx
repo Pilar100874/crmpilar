@@ -64,6 +64,8 @@ interface NewTaskDialogProps {
   pularDuplicata?: boolean;
   // Datas (yyyy-MM-dd) que já possuem tarefa de dia todo — destacadas no seletor de data
   datasDiaTodo?: string[];
+  // Quando true, o formulário vira somente leitura: sem Cancelar/Atualizar e com todos os campos travados
+  somenteLeitura?: boolean;
   editingTask?: {
     id: string;
     contactId?: string;
@@ -79,7 +81,7 @@ interface NewTaskDialogProps {
   };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata, datasDiaTodo }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata, datasDiaTodo, somenteLeitura }: NewTaskDialogProps) {
   const datasDiaTodoSet = new Set(datasDiaTodo || []);
   // Função centralizada para obter cor de origem
   const getOrigemColor = (origem: string) => {
@@ -750,7 +752,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
   return (
     <>
-    <div className="space-y-4">
+    <fieldset
+      disabled={somenteLeitura}
+      onClickCapture={somenteLeitura ? (event => { event.preventDefault(); event.stopPropagation(); }) : undefined}
+      className="m-0 min-w-0 space-y-4 border-0 p-0"
+    >
           {/* Campo de busca de contato */}
           <div className="relative">
             <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
@@ -1245,7 +1251,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </>
           )}
 
-          {/* Botões de ação */}
+          {/* Botões de ação — ocultos quando o painel está em modo somente leitura */}
+          {!somenteLeitura && (
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={() => onOpenChange(false)} size="default">
               Cancelar
@@ -1254,7 +1261,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               {editingTaskId ? 'Atualizar' : 'Salvar Tarefa'}
             </Button>
           </div>
-    </div>
+          )}
+    </fieldset>
 
     {/* Diálogo de conflito */}
     <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>

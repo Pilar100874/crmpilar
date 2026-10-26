@@ -33,13 +33,14 @@ interface Props {
   onDelete: () => void;
   editor?: ReactNode;
   creating?: boolean;
+  readOnly?: boolean;
   onUpdate: (updates: Partial<SidebarTask>) => Promise<boolean>;
 }
 
 interface Contact { id: string; nome: string; telefone: string | null; tel: string | null; email: string | null; empresa?: string }
 
 /** Painel lateral da tarefa, encaixado à direita como a aba de detalhes do cliente (encolhe o conteúdo central). */
-export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating }: Props) {
+export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, editor, creating, readOnly }: Props) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -123,7 +124,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
           </div>
         </section>}
         {!creating && <section className="space-y-2">
-          <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
+          <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2"><span className="text-xs text-muted-foreground">Status</span><Select disabled={saving || readOnly} value={task.status} onValueChange={value => void update({ status: value as SidebarTask["status"] })}><SelectTrigger className="h-8" aria-label="Status da tarefa"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="completed">Concluída</SelectItem></SelectContent></Select></div>
         </section>}
       </div>
     </aside>
