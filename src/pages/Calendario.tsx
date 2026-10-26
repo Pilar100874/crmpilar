@@ -452,7 +452,7 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean }) {
+export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial, tarefaInicialId, tarefaInicialNonce }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean; tarefaInicialId?: string | null; tarefaInicialNonce?: number }) {
   const agendaAreaRef = useRef<HTMLDivElement>(null);
   const [agendaWidth, setAgendaWidth] = useState(0);
   useEffect(() => {
