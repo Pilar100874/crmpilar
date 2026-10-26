@@ -292,12 +292,15 @@ export default function Atendimento() {
   const [agendaCentralKey, setAgendaCentralKey] = useState(0);
   const [atrasadosAgendaCentral, setAtrasadosAgendaCentral] = useState(false);
   const contatoSelecionarPendenteRef = useRef<string | null>(null);
+  // Marca aberturas centrais vindas da seleção de contato pelo painel da tarefa (não fecham o painel)
+  const selecaoViaPainelTarefaRef = useRef(false);
   const [selecaoContatoTick, setSelecaoContatoTick] = useState(0);
   // Clique numa tarefa do calendário: muda para a aba "Tudo" e seleciona o contato
   useEffect(() => {
     const selecionar = (event: Event) => {
       const id = (event as CustomEvent).detail?.contactId;
       if (!id) return;
+      selecaoViaPainelTarefaRef.current = true;
       contatoSelecionarPendenteRef.current = id;
       setFiltroFila("tudo");
       setSelecaoContatoTick((t) => t + 1);
@@ -572,6 +575,12 @@ export default function Atendimento() {
     setShowComposeEmail(false);
     setComposeEmailInline(false);
     if (!discadorRodandoRef.current) setAgendaViewMode('default');
+    // O painel da tarefa (agenda) é um painel central: fecha quando outro conteúdo central abre,
+    // exceto durante a seleção de contato disparada pelo próprio painel da tarefa
+    // (a flag é limpa ao fim dessa cascata, no efeito que clica o item da fila).
+    if (!selecaoViaPainelTarefaRef.current) {
+      window.dispatchEvent(new CustomEvent("calendario:fechar-tarefa-central"));
+    }
   }
   function setActiveTab(aba: string) {
     fecharConteudoCentral();
@@ -4680,11 +4689,13 @@ ${recentMessages}
     const id = contatoSelecionarPendenteRef.current;
     if (!id || filtroFila !== "tudo") return;
     const item = filaItems.find((i) => i.contactId === id);
-    if (!item) return;
+    if (!item) { selecaoViaPainelTarefaRef.current = false; return; }
     contatoSelecionarPendenteRef.current = null;
     setTimeout(() => {
       item.onClick?.();
       document.querySelector(`[data-fila-contato="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      // A cascata do clique do item termina de forma síncrona; libera o fechamento do painel da tarefa depois dela.
+      setTimeout(() => { selecaoViaPainelTarefaRef.current = false; }, 0);
     }, 0);
   }, [filaItems, filtroFila, selecaoContatoTick]);
 
@@ -6804,7 +6815,7 @@ ${recentMessages}
           />
         )}
         {clienteCabecalho && !isMobile && (
-          <div ref={cabecalhoRef}>
+          <div ref={cabecalhoRef} data-cabecalho-cliente>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
