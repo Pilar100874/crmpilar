@@ -128,3 +128,8 @@
 ## Retorno da tarefa somente leitura
 - [x] Abrir o retorno da tarefa sem botões Cancelar/Atualizar e com todos os campos bloqueados.
 - [x] Manter a edição disponível pelo menu de opções do painel e conferir as duas aberturas no navegador.
+
+## Troca de painéis sem calendário piscando
+- [x] Remover a animação de revelação dos painéis centrais que mostrava o calendário por baixo.
+- [x] Menu Tarefa abre o painel na hora (tarefa já carregada) e o corpo do calendário só aparece quando não há painel da tarefa.
+- [x] Conferir no navegador, quadro a quadro: Tarefa, Histórico e Agenda do contato.

@@ -194,24 +194,7 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const cabecalhoRef = useRef<HTMLDivElement | null>(null);
-  // Efeito de "wipe" ao abrir/trocar o quadro central
   const quadroCentralRef = useRef<HTMLDivElement | null>(null);
-  const dispararWipe = () => {
-    const el = quadroCentralRef.current;
-    if (!el) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
-    // Anima só o conteúdo central, nunca o cabeçalho/barras superiores
-    const paineis = Array.from(el.querySelectorAll(":scope > [data-painel-centro]"));
-    const alvos = paineis.length ? paineis : Array.from(el.children);
-    alvos.forEach((filho) => {
-      if (filho === cabecalhoRef.current) return;
-      // O recorte da animação esconderia a barra fixa de título/datas da agenda que está dentro dele
-      if (filho.querySelector("[data-barra-agenda-fixa]")) return;
-      filho.classList.remove("animate-wipe-in");
-      void (filho as HTMLElement).offsetWidth;
-      filho.classList.add("animate-wipe-in");
-    });
-  };
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const el = cabecalhoRef.current;
@@ -2766,8 +2749,29 @@ export default function Atendimento() {
   // Abre a última tarefa do contato (menu "Tarefa" do cabeçalho do cliente).
   const abrirUltimaTarefaDoContato = async (contatoId: string | null | undefined, nome: string) => {
     if (!contatoId) return;
+    const abrir = (tarefaId: string) => {
+      setHistoricoCliente(null);
+      setAgendaContato(null);
+      setOrcamentosCliente(null);
+      setActiveTab("agenda");
+      setSelectedAgendaContato(null);
+      setSelectedTaskId(tarefaId);
+      setTarefaCentralNonce(Date.now());
+      openDetailsPanel(setShowClientDetailsAgenda);
+      if (isMobile) setMobileView("main");
+    };
     try {
-      // Preferir a pendente mais urgente (atrasada/mais próxima); se não houver, a última criada
+      // 1) Tarefa já carregada na fila/agenda do dia: abre na hora, sem o calendário piscar antes
+      const naAgenda = (todayTasks || []).filter((t: any) => (t.contact_id || t.contactId) === contatoId);
+      const pendenteCache = naAgenda
+        .filter((t: any) => t.status === "pending")
+        .sort((a: any, b: any) => String(a.date ?? "").localeCompare(String(b.date ?? "")))[0];
+      if (pendenteCache?.id) {
+        abrir(pendenteCache.id);
+        void loadSelectedTask(pendenteCache.id);
+        return;
+      }
+      // 2) Sem tarefa na memória: buscar no banco (pendente mais urgente; senão a última criada)
       const { data: pendente, error: erroPendente } = await supabase
         .from("calendario_tarefas")
         .select("id")
@@ -2796,15 +2800,7 @@ export default function Atendimento() {
       }
       // Carrega a tarefa antes de trocar a aba, para o cabeçalho do cliente não piscar/recarregar
       await loadSelectedTask(data.id);
-      setHistoricoCliente(null);
-      setAgendaContato(null);
-      setOrcamentosCliente(null);
-      setActiveTab("agenda");
-      setSelectedAgendaContato(null);
-      setSelectedTaskId(data.id);
-      setTarefaCentralNonce(Date.now());
-      openDetailsPanel(setShowClientDetailsAgenda);
-      if (isMobile) setMobileView("main");
+      abrir(data.id);
     } catch (erro: any) {
       console.error("Erro ao buscar última tarefa do contato:", erro);
       toast.error("Não foi possível abrir a última tarefa");
@@ -4882,11 +4878,6 @@ ${recentMessages}
     setOrcamentosClienteState((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
   }, [(clienteCabecalho as any)?.id]);
 
-  // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
-  useEffect(() => {
-    dispararWipe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
   const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
   const [chamadaRecebida, setChamadaRecebida] = useState<{ numero: string; discadorParado: boolean } | null>(null);
@@ -7075,7 +7066,7 @@ ${recentMessages}
             defaultTab="contatos"
           />
         ) : showDisparoMassa && !isMobile ? (
-          <div className="flex-1 flex flex-col h-full min-h-0 bg-card animate-wipe-in">
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <DisparoMassaPanel
               fontes={fontesDisparo}
               abaInicial={filtroFila}
