@@ -15,6 +15,13 @@
       "when": 1791906310816,
       "tag": "0001_voz_agentes_senha_ramal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793031695549,
+      "tag": "0002_recebidos_sinalizados",
+      "breakpoints": true
     }
   ]
 }
