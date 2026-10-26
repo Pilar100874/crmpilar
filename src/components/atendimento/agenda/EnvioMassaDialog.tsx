@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +66,7 @@ export function EnvioMassaDialog({
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState("");
   const [tipoContato, setTipoContato] = useState<string>("whatsapp");
-  const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
+  const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("massa_whatsapp"));
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
 
@@ -261,7 +262,7 @@ export function EnvioMassaDialog({
                     key={tipo.id}
                     variant={tipoContato === tipo.id ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setTipoContato(tipo.id)}
+                    onClick={() => { setTipoContato(tipo.id); setProximaData(dataPadraoProximoContato(origemDoCanalMassa(tipo.id))); }}
                     className="gap-2"
                   >
                     <tipo.icon className="h-4 w-4" />

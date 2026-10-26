@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
 import { Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
@@ -164,6 +165,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [simultaneo] = useModoSimultaneo();
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
   const [somenteNaoFinalizados, setSomenteNaoFinalizados] = useState(false);
+  const [prazosAberto, setPrazosAberto] = useState(false);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -224,6 +226,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
 
   return (
     <div className="flex min-w-0 flex-col flex-1 min-h-0 overflow-x-hidden bg-background">
+      <PrazosProximoContatoDialog open={prazosAberto} onOpenChange={setPrazosAberto} />
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
@@ -268,6 +271,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPrazosAberto(true)}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}

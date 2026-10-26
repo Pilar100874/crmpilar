@@ -1,4 +1,5 @@
 import { EVENTO_RESULTADO, lerResultadoPendente, marcarPendencia, lerPendencias } from "@/lib/atendimento/finalizarAtendimento";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +112,7 @@ export function FluxoAtendimentoPanel({
   const [observacao, setObservacao] = useState("");
   const tipoContato: string = tipoContatoFixo;
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
-  const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
+  const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("finalizar_atendimento"));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   

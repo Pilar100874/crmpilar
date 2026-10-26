@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { addDays, format } from "date-fns";
 import { CalendarCheck, Loader2, Undo2, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ interface Props {
 
 /** Barra fixa na parte de baixo do quadro central: define o próximo contato e finaliza. */
 export function BarraProximoContato({ contato, focoToken, simultaneo, onSimultaneo, canal, usuarioId, estabelecimentoId, onFinalizado, emFluxo }: Props) {
-  const [data, setData] = useState(format(addDays(new Date(), 3), "yyyy-MM-dd"));
+  const [data, setData] = useState(format(dataPadraoProximoContato("finalizar_atendimento"), "yyyy-MM-dd"));
   const [obs, setObs] = useState("");
   const [motivo, setMotivo] = useState("");
   const [modoInativar, setModoInativar] = useState(false);

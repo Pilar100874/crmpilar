@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -45,7 +46,7 @@ const getInitialState = (): EnvioMassaState => ({
   filters: {},
   selectedContacts: [],
   contentItems: [],
-  proximaDataContato: addDays(new Date(), 3)
+  proximaDataContato: dataPadraoProximoContato("massa_whatsapp")
 });
 
 export function EnvioMassaWizardContent({ 
@@ -56,7 +57,7 @@ export function EnvioMassaWizardContent({
 }: EnvioMassaWizardContentProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
-  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), canal: canalInicial ?? null }));
+  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
@@ -133,6 +134,7 @@ export function EnvioMassaWizardContent({
     setState(prev => ({ 
       ...prev, 
       canal,
+      proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canal)),
       selectedContacts: []
     }));
   };

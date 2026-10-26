@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Loader2, UserX, Undo2 } from "lucide-react";
@@ -77,7 +78,7 @@ export function FinalizarAtendimentoDialog({
   obrigatorio,
   onFinalizado,
 }: Props) {
-  const [data, setData] = useState<Date>(addDays(new Date(), 3));
+  const [data, setData] = useState<Date>(dataPadraoProximoContato("finalizar_atendimento"));
   const [resumo, setResumo] = useState("");
   const [modoInativar, setModoInativar] = useState(false);
   const [motivo, setMotivo] = useState("");
