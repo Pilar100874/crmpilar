@@ -497,6 +497,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
   };
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  // Abertura externa (menu "Tarefa" do Atendimento): abre a tarefa assim que ela estiver carregada
+  const tarefaInicialAplicada = useRef<number>(0);
+  useEffect(() => {
+    if (!tarefaInicialId || !tarefaInicialNonce) return;
+    if (tarefaInicialAplicada.current === tarefaInicialNonce) return;
+    if (!tasks.some(t => t.id === tarefaInicialId)) return;
+    tarefaInicialAplicada.current = tarefaInicialNonce;
+    setSelectedTaskId(tarefaInicialId);
+  }, [tarefaInicialId, tarefaInicialNonce, tasks]);
   // Clique numa tarefa: avisa o Atendimento para abrir a aba "Tudo" com o contato selecionado
   useEffect(() => {
     if (!selectedTaskId) return;
