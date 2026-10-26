@@ -2753,14 +2753,29 @@ export default function Atendimento() {
   const abrirUltimaTarefaDoContato = async (contatoId: string | null | undefined, nome: string) => {
     if (!contatoId) return;
     try {
-      const { data, error } = await supabase
+      // Preferir a pendente mais urgente (atrasada/mais próxima); se não houver, a última criada
+      const { data: pendente, error: erroPendente } = await supabase
         .from("calendario_tarefas")
         .select("id")
         .eq("contact_id", contatoId)
-        .order("created_at", { ascending: false })
+        .eq("status", "pending")
+        .order("date", { ascending: true })
+        .order("time", { ascending: true, nullsFirst: true })
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
+      if (erroPendente) throw erroPendente;
+      let data = pendente;
+      if (!data) {
+        const { data: ultima, error } = await supabase
+          .from("calendario_tarefas")
+          .select("id")
+          .eq("contact_id", contatoId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        data = ultima;
+      }
       if (!data) {
         toast.info("Este contato não tem tarefas", { description: "Crie uma tarefa pela agenda do contato." });
         return;
