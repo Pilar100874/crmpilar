@@ -90,35 +90,28 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
 
   return (
     <aside className="flex h-full w-full flex-1 flex-col overflow-hidden bg-card">
-      <div className="flex items-center gap-3 border-b border-border/60 bg-gradient-to-r from-orange-50 to-transparent px-4 py-3 dark:from-orange-950/20">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
-          <CalendarDays className="h-4.5 w-4.5 text-orange-600 dark:text-orange-400" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-foreground">{creating ? "Nova Tarefa" : "Editar Tarefa"}</p>
-          <p className="text-xs text-muted-foreground">
-            {format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          {!creating && (
+      {creating && <div className="flex items-center gap-3 border-b border-border/60 px-4 py-2">
+        <p className="truncate text-sm font-bold text-foreground">Nova Tarefa</p>
+        <Button size="icon" variant="ghost" className="ml-auto h-7 w-7" onClick={onClose} aria-label="Fechar painel da tarefa"><X className="h-4 w-4" /></Button>
+      </div>}
+
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+        {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
+          <div className="flex items-start gap-2">
+            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+            <h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>
+            {late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Opções da tarefa selecionada"><MoreVertical className="h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}><Edit className="mr-2 h-4 w-4" />Editar tarefa</DropdownMenuItem>
                 <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir tarefa</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose} aria-label="Fechar painel da tarefa"><X className="h-4 w-4" /></Button>
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
-        {!creating && <div className="space-y-2 rounded-md bg-info/5 p-3">
-          <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-info" /><h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-info">{task.title}</h3>{late && <Badge className="shrink-0 border-destructive/20 bg-destructive/10 text-destructive">Atrasado</Badge>}</div>
+            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={onClose} aria-label="Fechar painel da tarefa"><X className="h-4 w-4" /></Button>
+          </div>
           <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
         </div>}
         {editor}
