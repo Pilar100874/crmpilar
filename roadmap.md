@@ -1,8 +1,8 @@
 # Roteiro
 
 ## Finalização por cartão
-- [ ] Mostrar finalização somente do contato clicado, sem lista agregada; preservar avisos e permitir trocar de contato.
-- [ ] Conferir troca, reabertura e remoção de pendência sem promover outro contato.
+- [x] Mostrar finalização somente do contato clicado, sem lista agregada; preservar avisos e permitir trocar de contato.
+- [x] Conferir troca e reabertura com resultado real na tela; validar múltiplas pendências locais e remoção sem promover outro contato, com seis testes aprovados.
 
 ## Regras do CRM
 - [x] Manter somente Fluxo visual, separado por tela e com grupo de disparos automáticos por data; conferir navegação e testes.
