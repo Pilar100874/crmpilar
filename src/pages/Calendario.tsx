@@ -506,6 +506,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     tarefaInicialAplicada.current = tarefaInicialNonce;
     setSelectedTaskId(tarefaInicialId);
   }, [tarefaInicialId, tarefaInicialNonce, tasks]);
+  // Painéis centrais do atendimento (histórico, agenda do contato etc.) fecham o painel da tarefa.
+  useEffect(() => {
+    const fecharPainelTarefa = () => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); };
+    window.addEventListener("calendario:fechar-tarefa-central", fecharPainelTarefa);
+    return () => window.removeEventListener("calendario:fechar-tarefa-central", fecharPainelTarefa);
+  }, []);
   // Clique numa tarefa: avisa o Atendimento para abrir a aba "Tudo" com o contato selecionado
   useEffect(() => {
     if (!selectedTaskId) return;
@@ -4244,6 +4250,11 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         const selectedTask = tasks.find(task => task.id === selectedTaskId);
         const creating = showTaskDialog && !selectedTask && !editingTask;
         if (!selectedTask && !creating) return null;
+        // Instância oculta (outras abas): leva o painel para o espaço central do atendimento,
+        // posicionado abaixo da barra de menus do cliente como os demais painéis centrais.
+        const quadro = typeof document !== "undefined" ? document.querySelector<HTMLElement>("[data-quadro-central]") : null;
+        const hospedeOculto = !!quadro && !!agendaAreaRef.current && agendaAreaRef.current.getBoundingClientRect().width < 50;
+        const topoPainelCentral = hospedeOculto && quadro ? (quadro.querySelector<HTMLElement>("[data-cabecalho-cliente]")?.offsetHeight ?? 0) : 0;
         const task = selectedTask || {
           id: "nova-tarefa", title: "Nova tarefa", date: selectedDate || new Date(),
           status: "pending" as const, contactId: (contatoReprogramar || contatoSugerido)?.id, contactName: (contatoReprogramar || contatoSugerido)?.nome,
@@ -4251,7 +4262,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         };
         const painelTarefa = (
           <div
+            data-painel-centro
             className="absolute inset-x-0 top-0 bottom-[var(--barra-proximo,0px)] z-[650] flex flex-col bg-card"
+            style={hospedeOculto && topoPainelCentral ? { top: topoPainelCentral } : undefined}
             role="dialog"
             aria-label={creating ? "Nova tarefa" : "Detalhes da tarefa"}
           >
@@ -4282,9 +4295,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               }} />
           </div>
         );
-        // Instância oculta (outras abas): leva o painel para o espaço central do atendimento.
-        const quadro = typeof document !== "undefined" ? document.querySelector<HTMLElement>("[data-quadro-central]") : null;
-        const hospedeOculto = !!quadro && !!agendaAreaRef.current && agendaAreaRef.current.getBoundingClientRect().width < 50;
         return hospedeOculto && quadro ? createPortal(painelTarefa, quadro) : painelTarefa;
       })()}
       </div>
