@@ -281,6 +281,8 @@ export default function Atendimento() {
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  // Muda a cada abertura de tarefa pelo menu "Tarefa", para o calendário central abrir o painel da tarefa
+  const [tarefaCentralNonce, setTarefaCentralNonce] = useState(0);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedTaskData, setSelectedTaskData] = useState<any>(null);
   const [selectedEmailData, setSelectedEmailData] = useState<any>(null);
@@ -2751,15 +2753,29 @@ export default function Atendimento() {
   const abrirUltimaTarefaDoContato = async (contatoId: string | null | undefined, nome: string) => {
     if (!contatoId) return;
     try {
-      const { data, error } = await supabase
+      // Preferir a pendente mais urgente (atrasada/mais próxima); se não houver, a última criada
+      const { data: pendente, error: erroPendente } = await supabase
         .from("calendario_tarefas")
         .select("id")
         .eq("contact_id", contatoId)
-        .order("date", { ascending: false })
-        .order("time", { ascending: false, nullsFirst: false })
+        .eq("status", "pending")
+        .order("date", { ascending: true })
+        .order("time", { ascending: true, nullsFirst: true })
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
+      if (erroPendente) throw erroPendente;
+      let data = pendente;
+      if (!data) {
+        const { data: ultima, error } = await supabase
+          .from("calendario_tarefas")
+          .select("id")
+          .eq("contact_id", contatoId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        data = ultima;
+      }
       if (!data) {
         toast.info("Este contato não tem tarefas", { description: "Crie uma tarefa pela agenda do contato." });
         return;
@@ -2770,6 +2786,7 @@ export default function Atendimento() {
       setActiveTab("agenda");
       setSelectedAgendaContato(null);
       setSelectedTaskId(data.id);
+      setTarefaCentralNonce(Date.now());
       await loadSelectedTask(data.id);
       openDetailsPanel(setShowClientDetailsAgenda);
       if (isMobile) setMobileView("main");
@@ -7585,7 +7602,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
+                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} tarefaInicialId={selectedTaskId} tarefaInicialNonce={tarefaCentralNonce} />
                   </Suspense>
                 </div>
               )}

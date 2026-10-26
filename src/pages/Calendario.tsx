@@ -452,7 +452,7 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean }) {
+export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial, tarefaInicialId, tarefaInicialNonce }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean; tarefaInicialId?: string | null; tarefaInicialNonce?: number }) {
   const agendaAreaRef = useRef<HTMLDivElement>(null);
   const [agendaWidth, setAgendaWidth] = useState(0);
   useEffect(() => {
@@ -497,6 +497,15 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
   };
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  // Abertura externa (menu "Tarefa" do Atendimento): abre a tarefa assim que ela estiver carregada
+  const tarefaInicialAplicada = useRef<number>(0);
+  useEffect(() => {
+    if (!tarefaInicialId || !tarefaInicialNonce) return;
+    if (tarefaInicialAplicada.current === tarefaInicialNonce) return;
+    if (!tasks.some(t => t.id === tarefaInicialId)) return;
+    tarefaInicialAplicada.current = tarefaInicialNonce;
+    setSelectedTaskId(tarefaInicialId);
+  }, [tarefaInicialId, tarefaInicialNonce, tasks]);
   // Clique numa tarefa: avisa o Atendimento para abrir a aba "Tudo" com o contato selecionado
   useEffect(() => {
     if (!selectedTaskId) return;
