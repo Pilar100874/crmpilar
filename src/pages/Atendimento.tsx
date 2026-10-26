@@ -5891,6 +5891,8 @@ ${recentMessages}
                   }}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
+                  onTarefa={() => { setHistoricoCliente(null); setAgendaContato(null); void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
+                  tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
                 />
@@ -6801,7 +6803,14 @@ ${recentMessages}
               trocarAba(aba);
             }}
             historicoAtivo={!!historicoCliente}
+            tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
             agendaAtiva={!!agendaContato}
+            onTarefa={() => {
+              setHistoricoCliente(null);
+              setAgendaContato(null);
+              setOrcamentosCliente(null);
+              void abrirUltimaTarefaDoContato((clienteCabecalho as any)?.id, clienteCabecalho?.nome || "Cliente");
+            }}
             onAgenda={() => {
               setHistoricoCliente(null);
               setOrcamentosCliente(null);
