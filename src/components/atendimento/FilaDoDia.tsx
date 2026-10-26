@@ -478,7 +478,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   item.atrasado ? "before:bg-destructive" : item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary",
                   item.assumido && !item.selecionado && "bg-info/[0.05]",
                   item.selecionado
-                    ? "bg-primary/5 ring-1 ring-primary/30"
+                    ? "bg-primary/10 ring-2 ring-primary/60 shadow-sm"
                     : "hover:bg-muted/40",
                   !simultaneo && (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
