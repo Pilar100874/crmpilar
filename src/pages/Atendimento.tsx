@@ -292,12 +292,15 @@ export default function Atendimento() {
   const [agendaCentralKey, setAgendaCentralKey] = useState(0);
   const [atrasadosAgendaCentral, setAtrasadosAgendaCentral] = useState(false);
   const contatoSelecionarPendenteRef = useRef<string | null>(null);
+  // Marca aberturas centrais vindas da seleção de contato pelo painel da tarefa (não fecham o painel)
+  const selecaoViaPainelTarefaRef = useRef(false);
   const [selecaoContatoTick, setSelecaoContatoTick] = useState(0);
   // Clique numa tarefa do calendário: muda para a aba "Tudo" e seleciona o contato
   useEffect(() => {
     const selecionar = (event: Event) => {
       const id = (event as CustomEvent).detail?.contactId;
       if (!id) return;
+      selecaoViaPainelTarefaRef.current = true;
       contatoSelecionarPendenteRef.current = id;
       setFiltroFila("tudo");
       setSelecaoContatoTick((t) => t + 1);
@@ -572,8 +575,13 @@ export default function Atendimento() {
     setShowComposeEmail(false);
     setComposeEmailInline(false);
     if (!discadorRodandoRef.current) setAgendaViewMode('default');
-    // O painel da tarefa (agenda) é um painel central: fecha quando outro conteúdo central abre.
-    window.dispatchEvent(new CustomEvent("calendario:fechar-tarefa-central"));
+    // O painel da tarefa (agenda) é um painel central: fecha quando outro conteúdo central abre,
+    // exceto quando a abertura veio da própria seleção de contato feita pelo painel da tarefa.
+    if (selecaoViaPainelTarefaRef.current) {
+      selecaoViaPainelTarefaRef.current = false;
+    } else {
+      window.dispatchEvent(new CustomEvent("calendario:fechar-tarefa-central"));
+    }
   }
   function setActiveTab(aba: string) {
     fecharConteudoCentral();
