@@ -452,7 +452,7 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string } }) {
+export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean }) {
   const agendaAreaRef = useRef<HTMLDivElement>(null);
   const [agendaWidth, setAgendaWidth] = useState(0);
   useEffect(() => {
@@ -472,7 +472,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
-  useEffect(() => { if (viewMode !== "table") setFiltroAtrasados(false); }, [viewMode]);
+  // Filtro de dia da Tabela (clique nas datas da barra superior)
+  const [filtroDiaTabela, setFiltroDiaTabela] = useState<Date | null>(viewModeInicial === "table" && dataInicial && !filtroAtrasadosInicial ? dataInicial : null);
+  useEffect(() => { if (filtroAtrasadosInicial) setFiltroAtrasados(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (viewMode !== "table") { setFiltroAtrasados(false); setFiltroDiaTabela(null); } }, [viewMode]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tarefasParaMover, setTarefasParaMover] = useState<Set<string>>(new Set());
   const [dataMovimento, setDataMovimento] = useState<Date | undefined>();
@@ -3078,6 +3081,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   // Filtrar e ordenar tarefas para a tabela
   const filteredTasks = tasks.filter(task => {
     if (filtroAtrasados && !tarefaAtrasada(task)) return false;
+    if (!filtroAtrasados && filtroDiaTabela && !isSameDay(task.date, filtroDiaTabela)) return false;
     // Filtro de busca
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -3188,6 +3192,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             </div>
             
             <div className="ml-auto shrink-0 text-xs text-muted-foreground">
+              {!filtroAtrasados && filtroDiaTabela && <Badge variant="secondary" className="mr-2 cursor-pointer" onClick={() => setFiltroDiaTabela(null)} title="Mostrar todas">{format(filtroDiaTabela, "dd/MM/yyyy")} ✕</Badge>}
               {filtroAtrasados && <Badge variant="destructive" className="mr-2 cursor-pointer" onClick={() => setFiltroAtrasados(false)} title="Mostrar todas">Só atrasados ✕</Badge>}
               {sortedTasks.length} tarefa{sortedTasks.length !== 1 ? 's' : ''}
             </div>
@@ -3715,7 +3720,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               <div className="grid min-w-0 grid-cols-3 sm:grid-cols-[minmax(72px,120px)_repeat(5,minmax(0,1fr))]">
                 <Button
                   variant="ghost"
-                  onClick={() => { setFiltroAtrasados(true); setViewMode("table"); }}
+                  onClick={() => { setFiltroDiaTabela(null); setFiltroAtrasados(true); setViewMode("table"); window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: new Date().toISOString(), modo: "table", atrasados: true } })); }}
                   className="flex h-auto min-w-0 min-h-[42px] items-center justify-start rounded-none border-r border-border/60 px-1.5 text-left hover:bg-muted/50 sm:min-h-[82px] sm:px-4"
                 >
                   <span>
@@ -3733,8 +3738,10 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                       aria-pressed={selecionado}
                       onClick={() => {
                         setCurrentDate(resumo.date);
-                        setViewMode("day");
-                        window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "day" } }));
+                        setFiltroAtrasados(false);
+                        setFiltroDiaTabela(resumo.date);
+                        setViewMode("table");
+                        window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: resumo.date.toISOString(), modo: "table" } }));
                       }}
                       className={cn(
                         "flex h-auto min-w-0 min-h-[42px] items-center justify-between gap-1 rounded-none border-r border-border/60 px-1.5 text-left last:border-r-0 hover:bg-muted/50 sm:min-h-[82px] sm:gap-2 sm:px-4",

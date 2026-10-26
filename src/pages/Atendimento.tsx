@@ -288,6 +288,21 @@ export default function Atendimento() {
   const [dataAgendaCentral, setDataAgendaCentral] = useState<Date | null>(null);
   const [modoAgendaCentral, setModoAgendaCentral] = useState<string | null>(null);
   const [agendaCentralKey, setAgendaCentralKey] = useState(0);
+  const [atrasadosAgendaCentral, setAtrasadosAgendaCentral] = useState(false);
+  const contatoSelecionarPendenteRef = useRef<string | null>(null);
+  const [selecaoContatoTick, setSelecaoContatoTick] = useState(0);
+  // Clique numa tarefa do calendário: muda para a aba "Tudo" e seleciona o contato
+  useEffect(() => {
+    const selecionar = (event: Event) => {
+      const id = (event as CustomEvent).detail?.contactId;
+      if (!id) return;
+      contatoSelecionarPendenteRef.current = id;
+      setFiltroFilaRef.current?.("tudo");
+      setSelecaoContatoTick((t) => t + 1);
+    };
+    window.addEventListener("calendario:selecionar-contato", selecionar);
+    return () => window.removeEventListener("calendario:selecionar-contato", selecionar);
+  }, []);
   const clientePendenteTrocaAbaRef = useRef<string | null>(null);
 
   // Clique numa data da barra superior abre o calendário central nessa data
@@ -304,7 +319,8 @@ export default function Atendimento() {
       const novaData = new Date(detail.data);
       setAgendaDate(novaData);
       setDataAgendaCentral(novaData);
-      setModoAgendaCentral(["list", "day", "week", "month"].includes(detail.modo) ? detail.modo : "day");
+      setModoAgendaCentral(["list", "day", "week", "month", "table"].includes(detail.modo) ? detail.modo : "day");
+      setAtrasadosAgendaCentral(!!detail.atrasados);
       setAgendaCentralKey((k) => k + 1);
     };
     window.addEventListener("calendario:abrir-data", abrirData);
@@ -4611,6 +4627,18 @@ ${recentMessages}
     return lista;
   }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
+  useEffect(() => {
+    const id = contatoSelecionarPendenteRef.current;
+    if (!id || filtroFila !== "tudo") return;
+    const item = filaItems.find((i) => i.contactId === id);
+    if (!item) return;
+    contatoSelecionarPendenteRef.current = null;
+    setTimeout(() => {
+      item.onClick?.();
+      document.querySelector(`[data-fila-contato="${id}"]`)?.scrollIntoView({ block: "nearest" });
+    }, 0);
+  }, [filaItems, filtroFila, selecaoContatoTick]);
+
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
@@ -6174,7 +6202,7 @@ ${recentMessages}
                 />
               ) : activeTab === "agenda" && !selectedTaskId && !selectedAgendaContato && agendaViewMode !== "massa" ? (
                 <div className="h-full min-h-0 overflow-y-auto bg-card">
-                  <ModuloCalendario key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} />
+                  <ModuloCalendario key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} filtroAtrasadosInicial={atrasadosAgendaCentral} />
                 </div>
               ) : <MobileMainContent
                 activeTab={activeTab}
@@ -7516,7 +7544,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
+                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
                   </Suspense>
                 </div>
               )}
