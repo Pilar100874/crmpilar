@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +70,7 @@ export function FluxoAtendimentoDialog({
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
   const [tipoContato, setTipoContato] = useState<string>("telefone");
-  const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
+  const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("finalizar_atendimento"));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);

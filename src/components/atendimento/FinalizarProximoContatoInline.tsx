@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { addDays, format } from "date-fns";
 import { CalendarDays, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ interface Props {
 /** Quadro fixo abaixo do atendimento: finaliza e já agenda o próximo contato. */
 export function FinalizarProximoContatoInline({ contato, canalInicial, usuarioId, estabelecimentoId, tarefaAtualId, onFinalizado }: Props) {
   const [resultado, setResultado] = useState(RESULTADOS[0]);
-  const [quando, setQuando] = useState(format(addDays(new Date(), 3), "yyyy-MM-dd'T'10:00"));
+  const [quando, setQuando] = useState(format(dataPadraoProximoContato("finalizar_atendimento"), "yyyy-MM-dd'T'10:00"));
   const [canal, setCanal] = useState<CanalAtendimento>(canalInicial === "orcamento" ? "telefone" : canalInicial);
   const [resumo, setResumo] = useState("");
   const [salvando, setSalvando] = useState(false);
