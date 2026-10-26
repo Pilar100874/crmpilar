@@ -75,6 +75,7 @@ import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendime
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
+import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
 import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
@@ -3817,16 +3818,6 @@ ${recentMessages}
   // Pedido de finalização vindo do botão "Finalizar" do cartão
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
-  useEffect(() => {
-    const h = (e: Event) => {
-      const d = (e as CustomEvent).detail as { customerId: string; nome?: string };
-      if (!d?.customerId) return;
-      setContatoFinalizarId(d.customerId);
-      setFocoBarra((n) => n + 1);
-    };
-    window.addEventListener(EVENTO_FINALIZAR, h);
-    return () => window.removeEventListener(EVENTO_FINALIZAR, h);
-  }, []);
 
 
   // Carrega equipe visível (papel do usuário) ao definir o estabelecimento
@@ -4278,18 +4269,14 @@ ${recentMessages}
     };
   }, [clienteCabecalhoBase, contatosBase]);
 
-  // Barra de próximo contato: aparece quando há interação sem próxima data
+  // Sem lista agregada nem fallback: a barra pertence ao cartão aberto.
   const contatoPendenteBarra = useMemo(() => {
-    const id = (contatoFinalizarId && pendenciasAtendimento.includes(contatoFinalizarId)) ? contatoFinalizarId : pendenciasAtendimento[0];
+    const id = contatoDaBarraFinalizacao(contatoFinalizarId, clienteCabecalho?.id, pendenciasAtendimento);
     if (!id) return null;
     const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
     const nome = cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente";
     return { id, nome };
   }, [pendenciasAtendimento, contatosBase, clienteCabecalho, contatoFinalizarId]);
-  const contatosPendentesBarra = useMemo(() => pendenciasAtendimento.map((id) => {
-    const cad: any = (contatosBase as any[]).find((c: any) => c.id === id);
-    return { id, nome: cad?.nome || cad?.name || ((clienteCabecalho as any)?.id === id ? (clienteCabecalho as any)?.nome : null) || "Cliente" };
-  }), [pendenciasAtendimento, contatosBase, clienteCabecalho]);
 
 
 
@@ -4468,7 +4455,6 @@ ${recentMessages}
             : (contato.horario || "").slice(0, 5),
           data: contato.dataAtraso || undefined,
           atrasado: (contato.diasAtraso || 0) > 0,
-          bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !pendenciasAtendimento.includes(contato.id),
           canais: [
             ...(contato.telefone ? ["whatsapp" as FilaCanal] : []),
             ...(contato.tel ? ["telefone" as FilaCanal] : []),
@@ -4476,30 +4462,25 @@ ${recentMessages}
             "visita" as FilaCanal,
           ],
           onCanal: (c: FilaCanal) => {
-            if (bloquearTrocaClientePendente(contato.id)) return;
             abrirCanalDoContato(contato.id, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
           },
           onHistorico: () => {
-            if (bloquearTrocaClientePendente(contato.id)) return;
             setAgendaContato(null);
             setOrcamentosCliente(null);
             setSelectedAgendaContato(contato);
             setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
           },
           onAgendaCentro: (contatoId: string, contatoNome: string) => {
-            if (bloquearTrocaClientePendente(contatoId)) return;
             setHistoricoCliente(null);
             setOrcamentosCliente(null);
             setAgendaContato({ id: contatoId, nome: contatoNome });
           },
           onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
-            if (bloquearTrocaClientePendente(contatoId)) return;
             setHistoricoCliente(null);
             setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
           },
           onOrcamento: (orcId: string) => {
-            if (bloquearTrocaClientePendente(contato.id)) return;
             const orc: any = orcamentos.find((o: any) => o.id === orcId);
             setHistoricoCliente(null);
             setActiveTab("orcamento");
@@ -4509,7 +4490,6 @@ ${recentMessages}
             if (isMobile) setMobileView("main");
           },
           onClick: () => {
-            if (bloquearTrocaClientePendente(contato.id)) return;
             setActiveTab("agenda");
             setSelectedTaskId(null);
             setSelectedTaskData(null);
@@ -4552,7 +4532,6 @@ ${recentMessages}
         data: task.data_original ? format(new Date(task.data_original), "dd/MM") : (task.date ? format(new Date(task.date), "dd/MM") : undefined),
         atrasado,
         selecionado: selectedTaskId === task.id,
-        bloqueado: !modoSimultaneo && pendenciasAtendimento.length > 0 && !!task.contact_id && !pendenciasAtendimento.includes(task.contact_id),
         assumido: !!usuarioId && !!task.user_id && task.user_id !== usuarioId,
         canais: [
           ...(task.customers?.telefone ? ["whatsapp" as FilaCanal] : []),
@@ -4561,13 +4540,11 @@ ${recentMessages}
           "visita" as FilaCanal,
         ],
         onCanal: (c: FilaCanal) => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           setSelectedTaskId(task.id);
           setSelectedTaskData(task);
           abrirCanalDoContato(task.contact_id, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
         },
         onHistorico: () => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           setAgendaContato(null);
           setOrcamentosCliente(null);
           setSelectedTaskId(task.id);
@@ -4575,19 +4552,16 @@ ${recentMessages}
           setHistoricoCliente({ customerId: task.contact_id, nome });
         },
         onAgendaCentro: (contatoId: string, contatoNome: string) => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           setHistoricoCliente(null);
           setOrcamentosCliente(null);
           setAgendaContato({ id: contatoId, nome: contatoNome });
         },
         onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           setHistoricoCliente(null);
           setAgendaContato(null);
             setOrcamentosCliente({ id: contatoId, nome: contatoNome });
         },
         onOrcamento: (orcId: string) => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           const orc: any = orcamentos.find((o: any) => o.id === orcId);
           setHistoricoCliente(null);
           setActiveTab("orcamento");
@@ -4597,7 +4571,6 @@ ${recentMessages}
           if (isMobile) setMobileView("main");
         },
         onClick: () => {
-          if (bloquearTrocaClientePendente(task.contact_id)) return;
           setActiveTab("agenda");
           setSelectedTaskId(task.id);
           setSelectedTaskData(task);
@@ -4630,7 +4603,6 @@ ${recentMessages}
           onSinalizar: () => void alternarSinalizacao("whatsapp", conv.id, !convSinalizada(conv)),
           selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
-            if (bloquearTrocaClientePendente(conv.customer_id)) return;
             limparPaineisRecebido();
             setActiveTab("chat");
             setSelectedConversation(conv.id);
@@ -4678,7 +4650,10 @@ ${recentMessages}
 
     // Qualquer ação num cartão deixa aquele contato como o selecionado da fila.
     const comSelecao = lista.map((item) => {
-      const marcar = () => setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
+      const marcar = () => {
+        setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
+        setContatoFinalizarId(item.contactId ?? null);
+      };
       const envolve = (fn?: (...args: any[]) => any) =>
         fn ? ((...args: any[]) => { marcar(); return fn(...args); }) : undefined;
       const selecionado = !!item.selecionado
@@ -4707,6 +4682,20 @@ ${recentMessages}
     return comSelecao;
 
   }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila]);
+
+  // Pedidos de finalização também precisam abrir o cartão correspondente.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent).detail as { customerId?: string };
+      if (!d?.customerId) return;
+      const item = filaItems.find((i) => i.contactId === d.customerId);
+      if (!item) return;
+      item.onClick();
+      setFocoBarra((n) => n + 1);
+    };
+    window.addEventListener(EVENTO_FINALIZAR, h);
+    return () => window.removeEventListener(EVENTO_FINALIZAR, h);
+  }, [filaItems]);
 
   useEffect(() => {
     const id = contatoSelecionarPendenteRef.current;
@@ -4967,20 +4956,6 @@ ${recentMessages}
     setActiveTab(novaAba);
   };
 
-  // Bloqueia a seleção de outro cliente enquanto houver atendimento pendente de finalização.
-  // Trocar de aba é permitido; clicar em outro cliente abre a janela de finalizar.
-  // Declarada como `function` (içada) porque os useMemo da fila ficam antes do
-  // retorno antecipado de carregamento — com `const`, os closures memoizados
-  // ficavam com a referência não inicializada e o clique no cartão quebrava.
-  function bloquearTrocaClientePendente(novoClienteId: string | null | undefined): boolean {
-    if (modoSimultaneo) return false;
-    const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
-    if (!pendenteId) return false;
-    setContatoFinalizarId(pendenteId);
-    setFocoBarra((n) => n + 1);
-    toast.info("Finalize o atendimento atual ou ative \"Atender simultâneo\" na barra de baixo");
-    return true;
-  }
 
   const validarTelefonia = async (): Promise<boolean> => {
     try {
@@ -6558,8 +6533,6 @@ ${recentMessages}
             <BarraProximoContato
               emFluxo
               contato={contatoPendenteBarra}
-              pendentes={contatosPendentesBarra}
-              onTrocarContato={setContatoFinalizarId}
               focoToken={focoBarra}
               simultaneo={modoSimultaneo}
               onSimultaneo={setModoSimultaneo}
@@ -6822,8 +6795,6 @@ ${recentMessages}
         {contatoPendenteBarra && usuarioId && estabelecimentoId && (
           <BarraProximoContato
             contato={contatoPendenteBarra}
-            pendentes={contatosPendentesBarra}
-            onTrocarContato={setContatoFinalizarId}
             focoToken={focoBarra}
             simultaneo={modoSimultaneo}
             onSimultaneo={setModoSimultaneo}

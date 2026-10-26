@@ -480,7 +480,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   item.selecionado
                     ? "bg-primary/10 ring-2 ring-primary/60 shadow-sm"
                     : "hover:bg-muted/40",
-                  !simultaneo && (item.bloqueado || (pendencias.length > 0 && !(item.contactId && pendencias.includes(item.contactId)))) && "opacity-50 grayscale",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
                 )}
               >
@@ -528,7 +527,12 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                     )}
                     {item.contactId && pendencias.includes(item.contactId) && (
                       <button type="button" title="Finalizar atendimento (próximo contato)"
-                        onClick={(e) => { e.stopPropagation(); pedirFinalizacao({ customerId: item.contactId!, nome: item.nome }); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!item.contactId) return;
+                          item.onClick();
+                          pedirFinalizacao({ customerId: item.contactId, nome: item.nome });
+                        }}
                         className="mt-1 inline-flex h-6 items-center gap-1 rounded-md border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive hover:bg-destructive/20">
                         <CalendarCheck className="h-3 w-3" /> Finalizar atendimento
                       </button>
