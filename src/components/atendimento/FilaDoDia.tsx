@@ -134,7 +134,7 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
   return (item.canais || []).some((c) => canais.has(c));
 }
 
-export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [acoesExpandidas, setAcoesExpandidas] = useState<Set<string>>(new Set());
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
