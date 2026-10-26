@@ -4677,16 +4677,37 @@ ${recentMessages}
         });
       });
 
+    // Qualquer ação num cartão deixa aquele contato como o selecionado da fila.
+    const comSelecao = lista.map((item) => {
+      const marcar = () => setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
+      const envolve = (fn?: (...args: any[]) => any) =>
+        fn ? ((...args: any[]) => { marcar(); return fn(...args); }) : undefined;
+      const selecionado = !!item.selecionado
+        || selecaoFila?.itemId === item.id
+        || (!!item.contactId && selecaoFila?.contactId === item.contactId);
+      return {
+        ...item,
+        selecionado,
+        onClick: () => { marcar(); item.onClick(); },
+        onCanal: envolve(item.onCanal),
+        onHistorico: envolve(item.onHistorico),
+        onAgendaCentro: envolve(item.onAgendaCentro),
+        onOrcamentosCentro: envolve(item.onOrcamentosCentro),
+        onOrcamento: envolve(item.onOrcamento),
+      };
+    });
+
     // Discador ativo: destaca o card do contato que está sendo ligado
     const contatoLigando = discadorModo && agendaViewMode === 'fluxo' ? (fluxoCurrentTask as any)?.contact_id : null;
     if (contatoLigando) {
-      const marcada = lista.map((item) => (item.contactId === contatoLigando ? { ...item, selecionado: true } : { ...item, selecionado: false }));
+      const marcada = comSelecao.map((item) => (item.contactId === contatoLigando ? { ...item, selecionado: true } : item));
       // Traz o cartão da ligação atual para o primeiro lugar da fila.
       marcada.sort((a, b) => (a.contactId === contatoLigando ? -1 : b.contactId === contatoLigando ? 1 : 0));
       return marcada;
     }
-    return lista;
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+    return comSelecao;
+
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila]);
 
   useEffect(() => {
     const id = contatoSelecionarPendenteRef.current;
