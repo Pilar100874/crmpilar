@@ -57,7 +57,7 @@ export function EnvioMassaWizardContent({
 }: EnvioMassaWizardContentProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
-  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
+  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), step: canalInicial ? (contatosIniciais.length > 0 ? 'compose' : 'filter') : 'channel', canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
@@ -221,7 +221,9 @@ export function EnvioMassaWizardContent({
     }
   };
 
-  const currentStepIndex = STEPS.findIndex(s => s.key === state.step);
+  // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
+  const passosVisiveis = canalInicial ? STEPS.filter(s => s.key !== 'channel') : STEPS;
+  const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -237,7 +239,7 @@ export function EnvioMassaWizardContent({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            {currentStepIndex + 1}/{STEPS.length}
+            {currentStepIndex + 1}/{passosVisiveis.length}
           </Badge>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -247,7 +249,7 @@ export function EnvioMassaWizardContent({
 
       {/* Progress Steps - Compact */}
       <div className="flex items-center justify-center py-2 px-2 gap-1 border-b bg-muted/30 shrink-0 overflow-x-auto">
-        {STEPS.map((step, index) => (
+        {passosVisiveis.map((step, index) => (
           <div key={step.key} className="flex items-center">
             <div 
               className={`
@@ -257,7 +259,7 @@ export function EnvioMassaWizardContent({
                   : 'bg-muted text-muted-foreground'}
               `}
             >
-              {step.number}
+              {index + 1}
             </div>
             <span 
               className={`
@@ -267,7 +269,7 @@ export function EnvioMassaWizardContent({
             >
               {step.label}
             </span>
-            {index < STEPS.length - 1 && (
+            {index < passosVisiveis.length - 1 && (
               <div 
                 className={`
                   w-3 h-0.5 mx-1 shrink-0
@@ -299,7 +301,7 @@ export function EnvioMassaWizardContent({
             filters={state.filters}
             onFilterChange={handleFilterChange}
             onSelectContacts={handleSelectContacts}
-            onBack={() => goToStep('channel')}
+            onBack={canalInicial ? undefined : () => goToStep('channel')}
             onNext={() => goToStep('compose')}
             canal={state.canal}
           />
