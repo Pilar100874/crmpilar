@@ -295,6 +295,9 @@ export default function Atendimento() {
   // Marca aberturas centrais vindas da seleção de contato pelo painel da tarefa (não fecham o painel)
   const selecaoViaPainelTarefaRef = useRef(false);
   const [selecaoContatoTick, setSelecaoContatoTick] = useState(0);
+  // Contato do cartão clicado na fila: mantém o cartão destacado enquanto for o cliente ativo
+  const [selecaoFila, setSelecaoFila] = useState<{ itemId: string; contactId: string | null } | null>(null);
+
   // Clique numa tarefa do calendário: muda para a aba "Tudo" e seleciona o contato
   useEffect(() => {
     const selecionar = (event: Event) => {

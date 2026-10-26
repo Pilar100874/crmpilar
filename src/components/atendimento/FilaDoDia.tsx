@@ -466,7 +466,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         ) : (
           visiveis.map((item) => {
             return (
-              <div key={item.id}>
+              <div key={item.id} data-fila-contato={item.contactId ?? undefined}>
               <div
                 onClick={() => {
                   item.onClick();
