@@ -123,7 +123,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
         )}
         {canais.map((c) => {
           const Icon = c.icon;
-          const ativo = !historicoAtivo && !agendaAtiva && abaAtiva === c.aba;
+          const ativo = !historicoAtivo && !tarefaAtiva && !agendaAtiva && abaAtiva === c.aba;
           return (
             <button
               key={c.aba}
