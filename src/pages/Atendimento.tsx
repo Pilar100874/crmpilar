@@ -576,10 +576,9 @@ export default function Atendimento() {
     setComposeEmailInline(false);
     if (!discadorRodandoRef.current) setAgendaViewMode('default');
     // O painel da tarefa (agenda) é um painel central: fecha quando outro conteúdo central abre,
-    // exceto quando a abertura veio da própria seleção de contato feita pelo painel da tarefa.
-    if (selecaoViaPainelTarefaRef.current) {
-      selecaoViaPainelTarefaRef.current = false;
-    } else {
+    // exceto durante a seleção de contato disparada pelo próprio painel da tarefa
+    // (a flag é limpa ao fim dessa cascata, no efeito que clica o item da fila).
+    if (!selecaoViaPainelTarefaRef.current) {
       window.dispatchEvent(new CustomEvent("calendario:fechar-tarefa-central"));
     }
   }
@@ -4690,11 +4689,13 @@ ${recentMessages}
     const id = contatoSelecionarPendenteRef.current;
     if (!id || filtroFila !== "tudo") return;
     const item = filaItems.find((i) => i.contactId === id);
-    if (!item) return;
+    if (!item) { selecaoViaPainelTarefaRef.current = false; return; }
     contatoSelecionarPendenteRef.current = null;
     setTimeout(() => {
       item.onClick?.();
       document.querySelector(`[data-fila-contato="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      // A cascata do clique do item termina de forma síncrona; libera o fechamento do painel da tarefa depois dela.
+      setTimeout(() => { selecaoViaPainelTarefaRef.current = false; }, 0);
     }, 0);
   }, [filaItems, filtroFila, selecaoContatoTick]);
 
