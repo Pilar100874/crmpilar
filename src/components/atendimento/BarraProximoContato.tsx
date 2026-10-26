@@ -22,8 +22,6 @@ export const ALTURA_BARRA_PROXIMO = 56;
 
 interface Props {
   contato: { id: string; nome: string };
-  pendentes?: { id: string; nome: string }[];
-  onTrocarContato?: (id: string) => void;
   focoToken?: number;
   simultaneo?: boolean;
   onSimultaneo?: (v: boolean) => void;
@@ -36,7 +34,7 @@ interface Props {
 }
 
 /** Barra fixa na parte de baixo do quadro central: define o próximo contato e finaliza. */
-export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, focoToken, simultaneo, onSimultaneo, canal, usuarioId, estabelecimentoId, onFinalizado, emFluxo }: Props) {
+export function BarraProximoContato({ contato, focoToken, simultaneo, onSimultaneo, canal, usuarioId, estabelecimentoId, onFinalizado, emFluxo }: Props) {
   const [data, setData] = useState(format(addDays(new Date(), 3), "yyyy-MM-dd"));
   const [obs, setObs] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -129,18 +127,6 @@ export function BarraProximoContato({ contato, pendentes = [], onTrocarContato, 
         emFluxo ? "relative w-full flex-shrink-0 pr-3" : "absolute inset-x-0 bottom-0 z-[130] pr-16"
       )}
     >
-      {pendentes.length > 1 && (
-        <div className="flex items-center gap-1 overflow-x-auto">
-          <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">{pendentes.length} a finalizar:</span>
-          {pendentes.map((p) => (
-            <button key={p.id} type="button" onClick={() => onTrocarContato?.(p.id)}
-              className={cn("shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
-                p.id === contato.id ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}>
-              {p.nome}
-            </button>
-          ))}
-        </div>
-      )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <span className={cn("order-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
           modoInativar ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
