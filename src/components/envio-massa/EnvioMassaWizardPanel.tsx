@@ -378,7 +378,9 @@ export function EnvioMassaWizardPanel({
     }
   };
 
-  const currentStepIndex = STEPS.findIndex(s => s.key === state.step);
+  // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
+  const passosVisiveis = canalInicial ? STEPS.filter(s => s.key !== 'channel') : STEPS;
+  const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
