@@ -2792,6 +2792,8 @@ export default function Atendimento() {
         toast.info("Este contato não tem tarefas", { description: "Crie uma tarefa pela agenda do contato." });
         return;
       }
+      // Carrega a tarefa antes de trocar a aba, para o cabeçalho do cliente não piscar/recarregar
+      await loadSelectedTask(data.id);
       setHistoricoCliente(null);
       setAgendaContato(null);
       setOrcamentosCliente(null);
@@ -2799,7 +2801,6 @@ export default function Atendimento() {
       setSelectedAgendaContato(null);
       setSelectedTaskId(data.id);
       setTarefaCentralNonce(Date.now());
-      await loadSelectedTask(data.id);
       openDetailsPanel(setShowClientDetailsAgenda);
       if (isMobile) setMobileView("main");
     } catch (erro: any) {
