@@ -7,3 +7,11 @@ export function contatoDaBarraFinalizacao(
   if (!contatoClicadoId || contatoClicadoId !== contatoAbertoId) return null;
   return pendencias.includes(contatoClicadoId) ? contatoClicadoId : null;
 }
+
+/** O contato tem atendimento iniciado e ainda não finalizado (próxima data pendente). */
+export function itemNaoFinalizado(
+  contactId: string | null | undefined,
+  pendencias: readonly string[],
+): boolean {
+  return !!contactId && pendencias.includes(contactId);
+}

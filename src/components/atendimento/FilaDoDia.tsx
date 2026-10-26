@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
+import { itemNaoFinalizado } from "@/lib/atendimento/barraFinalizacao";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Phone,
@@ -162,6 +163,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const pendencias = usePendenciasAtendimento();
   const [simultaneo] = useModoSimultaneo();
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
+  const [somenteNaoFinalizados, setSomenteNaoFinalizados] = useState(false);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -182,11 +184,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     return items;
   }, [items, filtro]);
 
+  /** Contatos da aba atual com atendimento ainda não finalizado. */
+  const totalNaoFinalizados = useMemo(
+    () => baseAba.filter((item) => itemNaoFinalizado(item.contactId, pendencias)).length,
+    [baseAba, pendencias]
+  );
+
   const visiveis = useMemo(() => {
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
     if (canaisAtivos.size > 0) lista = lista.filter((item) => temCanalItem(item, canaisAtivos));
+    if (somenteNaoFinalizados) lista = lista.filter((item) => itemNaoFinalizado(item.contactId, pendencias));
 
 
     const ordenada = [...lista];
@@ -205,7 +214,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
       });
     }
     return ordenada;
-  }, [items, filtro, ordenacao, canaisAtivos]);
+  }, [items, filtro, ordenacao, canaisAtivos, somenteNaoFinalizados, pendencias]);
 
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
