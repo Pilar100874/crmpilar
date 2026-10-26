@@ -297,7 +297,7 @@ export default function Atendimento() {
       const id = (event as CustomEvent).detail?.contactId;
       if (!id) return;
       contatoSelecionarPendenteRef.current = id;
-      setFiltroFilaRef.current?.("tudo");
+      setFiltroFila("tudo");
       setSelecaoContatoTick((t) => t + 1);
     };
     window.addEventListener("calendario:selecionar-contato", selecionar);

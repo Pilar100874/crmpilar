@@ -472,6 +472,12 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     window.dispatchEvent(new CustomEvent("calendario:data-mudou", { detail: { data: currentDate.toISOString() } }));
   }, [currentDate]);
   const [viewMode, setViewMode] = useState<ViewMode>(viewModeInicial ?? "month");
+  // Clique numa tarefa: avisa o Atendimento para abrir a aba "Tudo" com o contato selecionado
+  useEffect(() => {
+    if (!selectedTaskId) return;
+    const t = tasks.find((x) => x.id === selectedTaskId);
+    if (t?.contactId) window.dispatchEvent(new CustomEvent("calendario:selecionar-contato", { detail: { contactId: t.contactId } }));
+  }, [selectedTaskId]); // eslint-disable-line react-hooks/exhaustive-deps
   // Filtro de dia da Tabela (clique nas datas da barra superior)
   const [filtroDiaTabela, setFiltroDiaTabela] = useState<Date | null>(viewModeInicial === "table" && dataInicial && !filtroAtrasadosInicial ? dataInicial : null);
   useEffect(() => { if (filtroAtrasadosInicial) setFiltroAtrasados(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
