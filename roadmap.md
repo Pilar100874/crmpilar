@@ -124,3 +124,7 @@
 ## Seleção do cartão na fila
 - [x] Cartão clicado fica destacado enquanto for o cliente ativo, em qualquer aba da fila.
 - [x] Conferir no navegador: destaque no clique, persistência ao abrir Histórico e ao voltar de outra aba, troca ao clicar outro cartão.
+
+## Retorno da tarefa somente leitura
+- [x] Abrir o retorno da tarefa sem botões Cancelar/Atualizar e com todos os campos bloqueados.
+- [x] Manter a edição disponível pelo menu de opções do painel e conferir as duas aberturas no navegador.
