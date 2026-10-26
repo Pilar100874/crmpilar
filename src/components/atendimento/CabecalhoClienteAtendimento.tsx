@@ -1,4 +1,4 @@
-import { CalendarDays, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, UserRound } from "lucide-react";
+import { CalendarDays, ClipboardList, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,8 @@ interface Props {
   compacto?: boolean;
   onHistorico?: () => void;
   historicoAtivo?: boolean;
+  onTarefa?: () => void;
+  tarefaAtiva?: boolean;
   onAgenda?: () => void;
   agendaAtiva?: boolean;
   painelAberto?: boolean;
@@ -32,7 +34,7 @@ const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
@@ -96,6 +98,20 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             )}
           >
             <History className="h-4 w-4 text-orange-600" />
+          </button>
+        )}
+        {onTarefa && (
+          <button
+            type="button"
+            onClick={onTarefa}
+            title="Tarefa"
+            aria-label="Tarefa"
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
+              tarefaAtiva ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40",
+            )}
+          >
+            <ClipboardList className="h-4 w-4 text-emerald-600" />
           </button>
         )}
         {onAgenda && (
