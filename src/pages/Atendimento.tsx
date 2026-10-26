@@ -281,6 +281,8 @@ export default function Atendimento() {
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  // Muda a cada abertura de tarefa pelo menu "Tarefa", para o calendário central abrir o painel da tarefa
+  const [tarefaCentralNonce, setTarefaCentralNonce] = useState(0);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedTaskData, setSelectedTaskData] = useState<any>(null);
   const [selectedEmailData, setSelectedEmailData] = useState<any>(null);
@@ -2770,6 +2772,7 @@ export default function Atendimento() {
       setActiveTab("agenda");
       setSelectedAgendaContato(null);
       setSelectedTaskId(data.id);
+      setTarefaCentralNonce(Date.now());
       await loadSelectedTask(data.id);
       openDetailsPanel(setShowClientDetailsAgenda);
       if (isMobile) setMobileView("main");
