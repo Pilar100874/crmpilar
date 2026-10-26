@@ -205,6 +205,8 @@ export default function Atendimento() {
     const alvos = paineis.length ? paineis : Array.from(el.children);
     alvos.forEach((filho) => {
       if (filho === cabecalhoRef.current) return;
+      // O recorte da animação esconderia a barra fixa de título/datas da agenda que está dentro dele
+      if (filho.querySelector("[data-barra-agenda-fixa]")) return;
       filho.classList.remove("animate-wipe-in");
       void (filho as HTMLElement).offsetWidth;
       filho.classList.add("animate-wipe-in");
@@ -5945,7 +5947,7 @@ ${recentMessages}
                   }}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
-                  onTarefa={() => { setHistoricoCliente(null); setAgendaContato(null); void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
+                  onTarefa={() => { void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
                   tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
@@ -6860,9 +6862,7 @@ ${recentMessages}
             tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
             agendaAtiva={!!agendaContato}
             onTarefa={() => {
-              setHistoricoCliente(null);
-              setAgendaContato(null);
-              setOrcamentosCliente(null);
+              // A troca de painéis acontece só depois da tarefa carregar, para o topo da agenda não piscar
               void abrirUltimaTarefaDoContato((clienteCabecalho as any)?.id, clienteCabecalho?.nome || "Cliente");
             }}
             onAgenda={() => {

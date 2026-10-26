@@ -3673,6 +3673,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       <div className="calendario-raiz flex flex-col h-full bg-background font-cardBody" style={{ paddingTop: barraAltura || undefined }}>
       <div
         ref={barraSuperiorRef}
+        data-barra-agenda-fixa
         className="fixed top-0 left-0 right-0 z-[600] border-b border-border/60 bg-background/95 backdrop-blur-sm"
       >
         <div
