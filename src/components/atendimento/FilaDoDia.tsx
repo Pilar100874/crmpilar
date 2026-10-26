@@ -226,7 +226,13 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
 
   return (
     <div className="flex min-w-0 flex-col flex-1 min-h-0 overflow-x-hidden bg-background">
-      <PrazosProximoContatoDialog open={prazosAberto} onOpenChange={setPrazosAberto} />
+      <PrazosProximoContatoDialog
+        open={prazosAberto}
+        onOpenChange={(v) => {
+          setPrazosAberto(v);
+          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
+        }}
+      />
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
@@ -271,7 +277,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPrazosAberto(true)}>Datas dos próximos contatos</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}
