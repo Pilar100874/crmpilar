@@ -64,6 +64,8 @@ interface NewTaskDialogProps {
   pularDuplicata?: boolean;
   // Datas (yyyy-MM-dd) que já possuem tarefa de dia todo — destacadas no seletor de data
   datasDiaTodo?: string[];
+  // Quando true, o formulário vira somente leitura: sem Cancelar/Atualizar e com todos os campos travados
+  somenteLeitura?: boolean;
   editingTask?: {
     id: string;
     contactId?: string;
@@ -79,7 +81,7 @@ interface NewTaskDialogProps {
   };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata, datasDiaTodo }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask, suggestedContact, pularDuplicata, datasDiaTodo, somenteLeitura }: NewTaskDialogProps) {
   const datasDiaTodoSet = new Set(datasDiaTodo || []);
   // Função centralizada para obter cor de origem
   const getOrigemColor = (origem: string) => {
