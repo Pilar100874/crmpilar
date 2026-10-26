@@ -572,6 +572,8 @@ export default function Atendimento() {
     setShowComposeEmail(false);
     setComposeEmailInline(false);
     if (!discadorRodandoRef.current) setAgendaViewMode('default');
+    // O painel da tarefa (agenda) é um painel central: fecha quando outro conteúdo central abre.
+    window.dispatchEvent(new CustomEvent("calendario:fechar-tarefa-central"));
   }
   function setActiveTab(aba: string) {
     fecharConteudoCentral();
@@ -6804,7 +6806,7 @@ ${recentMessages}
           />
         )}
         {clienteCabecalho && !isMobile && (
-          <div ref={cabecalhoRef}>
+          <div ref={cabecalhoRef} data-cabecalho-cliente>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
