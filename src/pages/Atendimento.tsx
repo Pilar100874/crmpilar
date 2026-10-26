@@ -7585,7 +7585,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} />
+                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} tarefaInicialId={selectedTaskId} tarefaInicialNonce={tarefaCentralNonce} />
                   </Suspense>
                 </div>
               )}
