@@ -2749,8 +2749,29 @@ export default function Atendimento() {
   // Abre a última tarefa do contato (menu "Tarefa" do cabeçalho do cliente).
   const abrirUltimaTarefaDoContato = async (contatoId: string | null | undefined, nome: string) => {
     if (!contatoId) return;
+    const abrir = (tarefaId: string) => {
+      setHistoricoCliente(null);
+      setAgendaContato(null);
+      setOrcamentosCliente(null);
+      setActiveTab("agenda");
+      setSelectedAgendaContato(null);
+      setSelectedTaskId(tarefaId);
+      setTarefaCentralNonce(Date.now());
+      openDetailsPanel(setShowClientDetailsAgenda);
+      if (isMobile) setMobileView("main");
+    };
     try {
-      // Preferir a pendente mais urgente (atrasada/mais próxima); se não houver, a última criada
+      // 1) Tarefa já carregada na fila/agenda do dia: abre na hora, sem o calendário piscar antes
+      const naAgenda = (todayTasks || []).filter((t: any) => (t.contact_id || t.contactId) === contatoId);
+      const pendenteCache = naAgenda
+        .filter((t: any) => t.status === "pending")
+        .sort((a: any, b: any) => String(a.date ?? "").localeCompare(String(b.date ?? "")))[0];
+      if (pendenteCache?.id) {
+        abrir(pendenteCache.id);
+        void loadSelectedTask(pendenteCache.id);
+        return;
+      }
+      // 2) Sem tarefa na memória: buscar no banco (pendente mais urgente; senão a última criada)
       const { data: pendente, error: erroPendente } = await supabase
         .from("calendario_tarefas")
         .select("id")
@@ -2779,15 +2800,7 @@ export default function Atendimento() {
       }
       // Carrega a tarefa antes de trocar a aba, para o cabeçalho do cliente não piscar/recarregar
       await loadSelectedTask(data.id);
-      setHistoricoCliente(null);
-      setAgendaContato(null);
-      setOrcamentosCliente(null);
-      setActiveTab("agenda");
-      setSelectedAgendaContato(null);
-      setSelectedTaskId(data.id);
-      setTarefaCentralNonce(Date.now());
-      openDetailsPanel(setShowClientDetailsAgenda);
-      if (isMobile) setMobileView("main");
+      abrir(data.id);
     } catch (erro: any) {
       console.error("Erro ao buscar última tarefa do contato:", erro);
       toast.error("Não foi possível abrir a última tarefa");
