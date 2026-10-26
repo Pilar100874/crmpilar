@@ -4864,11 +4864,6 @@ ${recentMessages}
     setOrcamentosClienteState((atual) => (atual && atual.id !== (clienteCabecalho as any)?.id ? null : atual));
   }, [(clienteCabecalho as any)?.id]);
 
-  // Wipe ao trocar de canal, abrir histórico ou trocar de cliente
-  useEffect(() => {
-    dispararWipe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, historicoCliente?.customerId, !!historicoCliente, selectedConversation, selectedTaskId, selectedEmailId, agendaViewMode, agendaContato?.id]);
 
   const [tasksSelecionadas, setTasksSelecionadas] = useState<any[] | null>(null);
   const [chamadaRecebida, setChamadaRecebida] = useState<{ numero: string; discadorParado: boolean } | null>(null);
