@@ -497,6 +497,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   });
   };
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const tarefaInicialAplicada = useRef<number>(0);
   // Abertura externa: mantém o corpo do calendário invisível até o painel da tarefa abrir,
   // para o calendário não aparecer antes do conteúdo (menu "Tarefa" do Atendimento)
   const [aguardandoTarefaInicial, setAguardandoTarefaInicial] = useState(() => !!tarefaInicialId);
