@@ -46,10 +46,7 @@ export function BarraProximoContato({ contato, focoToken, simultaneo, onSimultan
 
   useEffect(() => {
     setObs(""); setMotivo(""); setModoInativar(false);
-    const tipo = canal === "orcamento" ? "telefone" : canal;
-    void supabase.from("atendimento_config_proxima_data").select("dias_padrao")
-      .eq("estabelecimento_id", estabelecimentoId).eq("tipo_contato", tipo).maybeSingle()
-      .then(({ data: cfg }) => setData(format(addDays(new Date(), cfg?.dias_padrao ?? 3), "yyyy-MM-dd")));
+    setData(format(dataPadraoProximoContato("finalizar_atendimento"), "yyyy-MM-dd"));
   }, [contato.id, canal, estabelecimentoId]);
 
   // Botão "Finalizar atendimento" do cartão: leva o foco para a data
