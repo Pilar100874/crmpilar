@@ -55,7 +55,7 @@ export function EnvioMassaWizardPanel({
 }: EnvioMassaWizardPanelProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
-  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), canal: canalInicial ?? null }));
+  const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), step: canalInicial ? (contatosIniciais.length > 0 ? 'compose' : 'filter') : 'channel', canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
@@ -397,7 +397,7 @@ export function EnvioMassaWizardPanel({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            Etapa {currentStepIndex + 1} de {STEPS.length}
+            Etapa {currentStepIndex + 1} de {passosVisiveis.length}
           </Badge>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -407,7 +407,7 @@ export function EnvioMassaWizardPanel({
 
       {/* Progress Steps */}
       <div className="flex items-center justify-center py-4 px-2 overflow-x-auto border-b bg-muted/30 shrink-0">
-        {STEPS.map((step, index) => (
+        {passosVisiveis.map((step, index) => (
           <div key={step.key} className="flex items-center">
             <div 
               className={`
@@ -417,7 +417,7 @@ export function EnvioMassaWizardPanel({
                   : 'bg-muted text-muted-foreground'}
               `}
             >
-              {step.number}
+              {index + 1}
             </div>
             <span 
               className={`
@@ -427,7 +427,7 @@ export function EnvioMassaWizardPanel({
             >
               {step.label}
             </span>
-            {index < STEPS.length - 1 && (
+            {index < passosVisiveis.length - 1 && (
               <div 
                 className={`
                   w-4 sm:w-6 md:w-8 h-0.5 mx-1 sm:mx-2 shrink-0
@@ -460,7 +460,7 @@ export function EnvioMassaWizardPanel({
               filters={state.filters}
               onFilterChange={handleFilterChange}
               onSelectContacts={handleSelectContacts}
-              onBack={() => goToStep('channel')}
+              onBack={canalInicial ? undefined : () => goToStep('channel')}
               onNext={() => goToStep('compose')}
               canal={state.canal}
             />

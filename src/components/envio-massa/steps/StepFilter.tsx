@@ -22,7 +22,7 @@ interface StepFilterProps {
   filters: EnvioMassaFilters;
   onFilterChange: (filters: EnvioMassaFilters) => void;
   onSelectContacts: (contacts: ContactForBulkSend[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
   onNext: () => void;
   canal: CanalEnvio | null;
   fonte?: 'agenda' | 'todos';
@@ -357,9 +357,11 @@ export function StepFilter({
       {/* Footer - Always at bottom */}
       <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={onBack}>
-            Voltar
-          </Button>
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              Voltar
+            </Button>
+          )}
           <div className="text-sm text-muted-foreground">
             <Badge variant="outline" className="mr-2">{selectedContacts.length}</Badge>
             selecionados
