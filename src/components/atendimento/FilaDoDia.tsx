@@ -421,14 +421,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               type="button"
               onClick={() => setSomenteNaoFinalizados((v) => !v)}
               aria-pressed={somenteNaoFinalizados}
-              title="Ver somente contatos com atendimento não finalizado"
+              aria-label="Ver somente contatos com atendimento não finalizado"
+              title={`Não finalizados (${totalNaoFinalizados})`}
+
               className={cn(
                 "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
                 somenteNaoFinalizados ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
-              <CalendarCheck className="h-4 w-4" />
-              <span>Não finalizados</span>
+              <CalendarCheck className={cn("h-4 w-4", somenteNaoFinalizados && "text-destructive")} />
+
               <span className="tabular-nums">{totalNaoFinalizados}</span>
             </button>
             {filtro === "recebidos" && onToggleSinalizados && (
