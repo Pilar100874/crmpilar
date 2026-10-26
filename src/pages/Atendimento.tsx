@@ -194,6 +194,7 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const cabecalhoRef = useRef<HTMLDivElement | null>(null);
+  const quadroCentralRef = useRef<HTMLDivElement | null>(null);
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const el = cabecalhoRef.current;
