@@ -499,11 +499,14 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   // Abertura externa (menu "Tarefa" do Atendimento): abre a tarefa assim que ela estiver carregada
   const tarefaInicialAplicada = useRef<number>(0);
+  // Abertura programática não deve disparar a seleção do contato na fila do Atendimento
+  const tarefaAbertaProgramaticaRef = useRef(false);
   useEffect(() => {
     if (!tarefaInicialId || !tarefaInicialNonce) return;
     if (tarefaInicialAplicada.current === tarefaInicialNonce) return;
     if (!tasks.some(t => t.id === tarefaInicialId)) return;
     tarefaInicialAplicada.current = tarefaInicialNonce;
+    tarefaAbertaProgramaticaRef.current = true;
     setSelectedTaskId(tarefaInicialId);
   }, [tarefaInicialId, tarefaInicialNonce, tasks]);
   // Painéis centrais do atendimento (histórico, agenda do contato etc.) fecham o painel da tarefa.
@@ -515,6 +518,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   // Clique numa tarefa: avisa o Atendimento para abrir a aba "Tudo" com o contato selecionado
   useEffect(() => {
     if (!selectedTaskId) return;
+    if (tarefaAbertaProgramaticaRef.current) { tarefaAbertaProgramaticaRef.current = false; return; }
     const t = tasks.find((x) => x.id === selectedTaskId);
     if (t?.contactId) window.dispatchEvent(new CustomEvent("calendario:selecionar-contato", { detail: { contactId: t.contactId } }));
   }, [selectedTaskId]); // eslint-disable-line react-hooks/exhaustive-deps
