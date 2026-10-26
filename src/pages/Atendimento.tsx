@@ -4012,17 +4012,32 @@ ${recentMessages}
   }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails, contatoEmailSelecionado]);
 
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
+  // WhatsApp não respondido: a última mensagem da conversa foi enviada pelo cliente.
   const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
     conv.chat_status !== "encerrado" &&
-    // Entra toda conversa em que o cliente mandou alguma mensagem (WhatsApp, Instagram etc.),
-    // mesmo que o atendente tenha respondido depois. Conversas só com mensagem enviada
-    // (disparo) ou vazias não aparecem em Recebidos.
-    !!conv.lastCustomerMessage
+    !!conv.lastCustomerMessage &&
+    (!conv.lastMessage || conv.lastMessage.sender === "customer" ||
+      new Date(conv.lastCustomerMessage.created_at).getTime() >= new Date(conv.lastMessage.created_at).getTime())
   ), [conversations]);
 
-  const emailsRecebidosNaoRespondidos = useMemo(() => userEmails.filter((email) =>
-    !email.read && (email.folder === "inbox" || !email.folder)
-  ), [userEmails]);
+  // E-mail não respondido: recebido na caixa de entrada sem e-mail enviado ao remetente depois dele
+  // (lido ou não).
+  const emailsRecebidosNaoRespondidos = useMemo(() => {
+    const ultimoEnvio = new Map<string, number>();
+    userEmails.forEach((e: any) => {
+      if (e.folder !== "sent") return;
+      const t = new Date(e.date || e.created_at || 0).getTime();
+      String(e.to_email || "").toLowerCase().split(/[,;]/).map((s) => (s.match(/<([^>]+)>/)?.[1] || s).trim()).filter(Boolean)
+        .forEach((addr) => { if (t > (ultimoEnvio.get(addr) || 0)) ultimoEnvio.set(addr, t); });
+    });
+    return userEmails.filter((email: any) => {
+      if (!(email.folder === "inbox" || !email.folder)) return false;
+      const raw = String(email.from_email || "").toLowerCase();
+      const addr = (raw.match(/<([^>]+)>/)?.[1] || raw).trim();
+      const recebido = new Date(email.date || email.created_at || 0).getTime();
+      return !((ultimoEnvio.get(addr) || 0) > recebido);
+    });
+  }, [userEmails]);
 
   // Aba "Recebidos": agrupa por contato para não repetir o mesmo contato na fila.
   const emailsRecebidosAgrupados = useMemo(() => {
