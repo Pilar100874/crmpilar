@@ -4273,7 +4273,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
             role="dialog"
             aria-label={creating ? "Nova tarefa" : "Detalhes da tarefa"}
           >
-            <TaskDetailsSidebar key={task.id} task={task} creating={creating} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
+            <TaskDetailsSidebar key={task.id} task={task} creating={creating} readOnly={!creating && !editingTask} origem={getOrigemLabel(task.origem)} usuarios={usuarios}
               onClose={() => { setSelectedTaskId(null); setShowTaskDialog(false); setEditingTask(null); }}
               onEdit={() => { if (selectedTask) handleEditTask(selectedTask); }}
               onDelete={() => { if (selectedTask) handleDeleteTask(selectedTask.id); }}
@@ -4286,6 +4286,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
                 pularDuplicata={creating && !!contatoReprogramar}
                 datasDiaTodo={[...datasDiaTodo]}
                 editingTask={selectedTask || undefined}
+                somenteLeitura={!creating && !editingTask}
               />}
               onUpdate={async (updates) => {
                 if (!selectedTask) return false;
