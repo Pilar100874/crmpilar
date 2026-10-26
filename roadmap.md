@@ -120,3 +120,7 @@
 ## Tarefa atrasada não pode ser movida
 - [x] Desativar o quadro de seleção das tarefas atrasadas, com o motivo escrito na frente dele.
 - [x] Conferir no navegador: quadro desativado, clique sem efeito, aviso em Dia, Semana e Mês.
+
+## Seleção do cartão na fila
+- [x] Cartão clicado fica destacado enquanto for o cliente ativo, em qualquer aba da fila.
+- [x] Conferir no navegador: destaque no clique, persistência ao abrir Histórico e ao voltar de outra aba, troca ao clicar outro cartão.
