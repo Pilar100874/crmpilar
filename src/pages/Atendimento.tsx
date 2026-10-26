@@ -4717,7 +4717,8 @@ ${recentMessages}
     if (!item) { selecaoViaPainelTarefaRef.current = false; return; }
     contatoSelecionarPendenteRef.current = null;
     setTimeout(() => {
-      item.onClick?.();
+      // Só destaca o cartão: não troca a tela central, para o calendário (e a barra de datas) não recarregar
+      setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
       document.querySelector(`[data-fila-contato="${id}"]`)?.scrollIntoView({ block: "nearest" });
       // A cascata do clique do item termina de forma síncrona; libera o fechamento do painel da tarefa depois dela.
       setTimeout(() => { selecaoViaPainelTarefaRef.current = false; }, 0);
