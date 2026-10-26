@@ -24778,6 +24778,30 @@ export type Database = {
           },
         ]
       }
+      recebidos_sinalizados: {
+        Row: {
+          id: string
+          marcado_em: string
+          ref_id: string
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          id?: string
+          marcado_em?: string
+          ref_id: string
+          tipo: string
+          usuario_id?: string
+        }
+        Update: {
+          id?: string
+          marcado_em?: string
+          ref_id?: string
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       redes_sociais: {
         Row: {
           created_at: string | null

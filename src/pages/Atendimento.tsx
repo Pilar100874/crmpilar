@@ -21,7 +21,7 @@ import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog"
 import { DisparoMassaPanel } from "@/components/atendimento/DisparoMassaPanel";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
-import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -4013,7 +4013,7 @@ ${recentMessages}
 
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
   // WhatsApp não respondido: a última mensagem da conversa foi enviada pelo cliente.
-  const conversasRecebidasNaoRespondidas = useMemo(() => conversations.filter((conv) =>
+  const conversasRecebidasBase = useMemo(() => conversations.filter((conv) =>
     conv.chat_status !== "encerrado" &&
     !!conv.lastCustomerMessage &&
     (!conv.lastMessage || conv.lastMessage.sender === "customer" ||
@@ -4022,7 +4022,7 @@ ${recentMessages}
 
   // E-mail não respondido: recebido na caixa de entrada sem e-mail enviado ao remetente depois dele
   // (lido ou não).
-  const emailsRecebidosNaoRespondidos = useMemo(() => {
+  const emailsRecebidosBase = useMemo(() => {
     const ultimoEnvio = new Map<string, number>();
     userEmails.forEach((e: any) => {
       if (e.folder !== "sent") return;
@@ -4038,6 +4038,42 @@ ${recentMessages}
       return !((ultimoEnvio.get(addr) || 0) > recebido);
     });
   }, [userEmails]);
+
+  // Sinalizações "tratado sem responder" (por usuário). Itens sinalizados saem de Recebidos;
+  // no WhatsApp, uma nova mensagem do cliente depois da sinalização faz a conversa voltar.
+  const [sinalizacoes, setSinalizacoes] = useState<Map<string, string>>(new Map());
+  const [verSinalizados, setVerSinalizados] = useState(false);
+  useEffect(() => {
+    void (supabase as any).from("recebidos_sinalizados").select("tipo, ref_id, marcado_em").then(({ data }: any) => {
+      setSinalizacoes(new Map((data || []).map((s: any) => [`${s.tipo}:${s.ref_id}`, s.marcado_em])));
+    });
+  }, []);
+  const convSinalizada = useCallback((conv: any) => {
+    const m = sinalizacoes.get(`whatsapp:${conv.id}`);
+    return !!m && new Date(m).getTime() >= new Date(conv.lastCustomerMessage?.created_at || 0).getTime();
+  }, [sinalizacoes]);
+  const emailSinalizado = useCallback((email: any) => sinalizacoes.has(`email:${email.id}`), [sinalizacoes]);
+  const alternarSinalizacao = useCallback(async (tipo: "email" | "whatsapp", refId: string, marcar: boolean) => {
+    const chave = `${tipo}:${refId}`;
+    const anterior = new Map(sinalizacoes);
+    const nova = new Map(sinalizacoes);
+    if (marcar) nova.set(chave, new Date().toISOString()); else nova.delete(chave);
+    setSinalizacoes(nova);
+    const tabela = (supabase as any).from("recebidos_sinalizados");
+    const { error } = marcar
+      ? await tabela.upsert({ tipo, ref_id: refId, marcado_em: nova.get(chave) }, { onConflict: "usuario_id,tipo,ref_id" })
+      : await tabela.delete().eq("tipo", tipo).eq("ref_id", refId);
+    if (error) { setSinalizacoes(anterior); toast.error("Não foi possível salvar a sinalização"); }
+    else toast.success(marcar ? "Sinalizado — removido dos Recebidos" : "Sinalização removida");
+  }, [sinalizacoes]);
+
+  const conversasRecebidasNaoRespondidas = useMemo(() =>
+    conversasRecebidasBase.filter((c) => convSinalizada(c) === verSinalizados), [conversasRecebidasBase, convSinalizada, verSinalizados]);
+  const emailsRecebidosNaoRespondidos = useMemo(() =>
+    emailsRecebidosBase.filter((e) => emailSinalizado(e) === verSinalizados), [emailsRecebidosBase, emailSinalizado, verSinalizados]);
+  const totalSinalizados = useMemo(() =>
+    conversasRecebidasBase.filter(convSinalizada).length + emailsRecebidosBase.filter(emailSinalizado).length,
+    [conversasRecebidasBase, emailsRecebidosBase, convSinalizada, emailSinalizado]);
 
   // Aba "Recebidos": agrupa por contato para não repetir o mesmo contato na fila.
   const emailsRecebidosAgrupados = useMemo(() => {
@@ -4514,6 +4550,8 @@ ${recentMessages}
           origem: rotuloOrigemConversa(conv.canal),
           horario: (conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at) ? format(new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
+          sinalizado: convSinalizada(conv),
+          onSinalizar: () => void alternarSinalizacao("whatsapp", conv.id, !convSinalizada(conv)),
           selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
             if (bloquearTrocaClientePendente(conv.customer_id)) return;
@@ -4545,6 +4583,8 @@ ${recentMessages}
           motivo: "E-mail recebido",
           canal: "email",
           origem: "E-mail",
+          sinalizado: emailSinalizado(email),
+          onSinalizar: () => void alternarSinalizacao("email", email.id, !emailSinalizado(email)),
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
           selecionado: selectedEmailId === email.id,
           onClick: () => {
@@ -4569,7 +4609,7 @@ ${recentMessages}
       return marcada;
     }
     return lista;
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados]);
 
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
@@ -6034,6 +6074,9 @@ ${recentMessages}
                   onFiltroChange={aoTrocarFiltroFila}
                   assumirContatos={assumirContatosConfig}
                   totais={totaisFila}
+          verSinalizados={verSinalizados}
+          onToggleSinalizados={() => setVerSinalizados((v) => !v)}
+          totalSinalizados={totalSinalizados}
                 />
               </div>
               <div className="flex flex-shrink-0 items-center gap-1 border-t border-border/50 bg-card px-2 py-1">
@@ -6645,6 +6688,9 @@ ${recentMessages}
           onFiltroChange={aoTrocarFiltroFila}
           assumirContatos={assumirContatosConfig}
           totais={totaisFila}
+          verSinalizados={verSinalizados}
+          onToggleSinalizados={() => setVerSinalizados((v) => !v)}
+          totalSinalizados={totalSinalizados}
         />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
