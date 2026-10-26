@@ -137,3 +137,7 @@
 - [x] Remover a animação de revelação dos painéis centrais que mostrava o calendário por baixo.
 - [x] Menu Tarefa abre o painel na hora (tarefa já carregada) e o corpo do calendário só aparece quando não há painel da tarefa.
 - [x] Conferir no navegador, quadro a quadro: Tarefa, Histórico e Agenda do contato.
+
+## Filtro de não finalizados
+- [x] Botão "Não finalizados" na fila mostra somente contatos com atendimento ainda não finalizado, com contagem e aviso quando não houver.
+- [x] Conferir no navegador: contagem, cartão mantido, cartão escondido e ausência de rolagem horizontal.
