@@ -2792,6 +2792,8 @@ export default function Atendimento() {
         toast.info("Este contato não tem tarefas", { description: "Crie uma tarefa pela agenda do contato." });
         return;
       }
+      // Carrega a tarefa antes de trocar a aba, para o cabeçalho do cliente não piscar/recarregar
+      await loadSelectedTask(data.id);
       setHistoricoCliente(null);
       setAgendaContato(null);
       setOrcamentosCliente(null);
@@ -2799,7 +2801,6 @@ export default function Atendimento() {
       setSelectedAgendaContato(null);
       setSelectedTaskId(data.id);
       setTarefaCentralNonce(Date.now());
-      await loadSelectedTask(data.id);
       openDetailsPanel(setShowClientDetailsAgenda);
       if (isMobile) setMobileView("main");
     } catch (erro: any) {
@@ -5944,7 +5945,7 @@ ${recentMessages}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
                   onTarefa={() => { setHistoricoCliente(null); setAgendaContato(null); void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
-                  tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
+                  tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
                 />
@@ -6855,7 +6856,7 @@ ${recentMessages}
               trocarAba(aba);
             }}
             historicoAtivo={!!historicoCliente}
-            tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
+            tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
             agendaAtiva={!!agendaContato}
             onTarefa={() => {
               setHistoricoCliente(null);
