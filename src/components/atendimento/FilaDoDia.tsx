@@ -265,7 +265,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 <SelectItem value="nome">Nome</SelectItem>
               </SelectContent>
             </Select>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
