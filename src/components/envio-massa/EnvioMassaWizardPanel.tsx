@@ -5,6 +5,7 @@ import { X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 import { StepChannel } from "./steps/StepChannel";
