@@ -2747,6 +2747,38 @@ export default function Atendimento() {
     }
   };
 
+  // Abre a última tarefa do contato (menu "Tarefa" do cabeçalho do cliente).
+  const abrirUltimaTarefaDoContato = async (contatoId: string | null | undefined, nome: string) => {
+    if (!contatoId) return;
+    try {
+      const { data, error } = await supabase
+        .from("calendario_tarefas")
+        .select("id")
+        .eq("contact_id", contatoId)
+        .order("date", { ascending: false })
+        .order("time", { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        toast.info("Este contato não tem tarefas", { description: "Crie uma tarefa pela agenda do contato." });
+        return;
+      }
+      setHistoricoCliente(null);
+      setAgendaContato(null);
+      setOrcamentosCliente(null);
+      setActiveTab("agenda");
+      setSelectedAgendaContato(null);
+      setSelectedTaskId(data.id);
+      await loadSelectedTask(data.id);
+      openDetailsPanel(setShowClientDetailsAgenda);
+      if (isMobile) setMobileView("main");
+    } catch (erro: any) {
+      console.error("Erro ao buscar última tarefa do contato:", erro);
+      toast.error("Não foi possível abrir a última tarefa");
+    }
+  };
+
   // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string, forceRefresh: boolean = false) => {
     try {
@@ -5859,6 +5891,8 @@ ${recentMessages}
                   }}
                   onHistorico={() => { setAgendaContato(null); setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome }); }}
                   historicoAtivo={!!historicoCliente}
+                  onTarefa={() => { setHistoricoCliente(null); setAgendaContato(null); void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); }}
+                  tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
                 />
@@ -6769,7 +6803,14 @@ ${recentMessages}
               trocarAba(aba);
             }}
             historicoAtivo={!!historicoCliente}
+            tarefaAtiva={activeTab === "agenda" && !!selectedTaskId}
             agendaAtiva={!!agendaContato}
+            onTarefa={() => {
+              setHistoricoCliente(null);
+              setAgendaContato(null);
+              setOrcamentosCliente(null);
+              void abrirUltimaTarefaDoContato((clienteCabecalho as any)?.id, clienteCabecalho?.nome || "Cliente");
+            }}
             onAgenda={() => {
               setHistoricoCliente(null);
               setOrcamentosCliente(null);
