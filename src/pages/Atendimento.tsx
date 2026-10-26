@@ -194,24 +194,6 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(false);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(false);
   const cabecalhoRef = useRef<HTMLDivElement | null>(null);
-  // Efeito de "wipe" ao abrir/trocar o quadro central
-  const quadroCentralRef = useRef<HTMLDivElement | null>(null);
-  const dispararWipe = () => {
-    const el = quadroCentralRef.current;
-    if (!el) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
-    // Anima só o conteúdo central, nunca o cabeçalho/barras superiores
-    const paineis = Array.from(el.querySelectorAll(":scope > [data-painel-centro]"));
-    const alvos = paineis.length ? paineis : Array.from(el.children);
-    alvos.forEach((filho) => {
-      if (filho === cabecalhoRef.current) return;
-      // O recorte da animação esconderia a barra fixa de título/datas da agenda que está dentro dele
-      if (filho.querySelector("[data-barra-agenda-fixa]")) return;
-      filho.classList.remove("animate-wipe-in");
-      void (filho as HTMLElement).offsetWidth;
-      filho.classList.add("animate-wipe-in");
-    });
-  };
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const el = cabecalhoRef.current;
@@ -7075,7 +7057,7 @@ ${recentMessages}
             defaultTab="contatos"
           />
         ) : showDisparoMassa && !isMobile ? (
-          <div className="flex-1 flex flex-col h-full min-h-0 bg-card animate-wipe-in">
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <DisparoMassaPanel
               fontes={fontesDisparo}
               abaInicial={filtroFila}
