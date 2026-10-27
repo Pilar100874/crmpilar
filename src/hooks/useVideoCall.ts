@@ -169,7 +169,7 @@ export const useVideoCall = () => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não identificado');
       const { data: ucmData } = await supabase
         .from('ucm_config')
-        .select('ucm_host, remote_ip, conference_room_number')
+        .select('ucm_host, remote_ip, ucm_host_interno, conference_room_number')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
@@ -185,7 +185,7 @@ export const useVideoCall = () => {
       // Tentar local primeiro
       try {
         const result = await tryConnect(
-          ucmData.ucm_host,
+          ucmData.ucm_host_interno || ucmData.ucm_host,
           userData.ramal,
           userData.senha_sip,
           userData.ramal,
@@ -197,9 +197,10 @@ export const useVideoCall = () => {
       } catch (localError) {
         console.warn('⚠️ Falha no servidor local:', localError);
         
-        if (ucmData.remote_ip) {
+        const externo = ucmData.ucm_host_interno ? ucmData.ucm_host : ucmData.remote_ip;
+        if (externo) {
           const result = await tryConnect(
-            ucmData.remote_ip,
+            externo,
             userData.ramal,
             userData.senha_sip,
             userData.ramal,
