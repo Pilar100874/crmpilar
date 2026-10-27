@@ -182,10 +182,20 @@ export const useVideoCall = () => {
       let ua: UserAgent | null = null;
       let connectedServer = '';
 
+      const comPorta = (host: string, porta?: number | string | null) => {
+        const h = (host || '').trim();
+        if (!h || h.includes(':')) return h;
+        return `${h}:${Number(porta) || 8089}`;
+      };
+      const interna = ucmData.ucm_host_interno?.trim();
+      const servidorInterno = interna
+        ? comPorta(interna, ucmData.sip_porta_interna || ucmData.sip_porta)
+        : comPorta(ucmData.ucm_host, ucmData.sip_porta);
+
       // Tentar local primeiro
       try {
         const result = await tryConnect(
-          ucmData.ucm_host_interno || ucmData.ucm_host,
+          servidorInterno,
           userData.ramal,
           userData.senha_sip,
           userData.ramal,
@@ -200,7 +210,7 @@ export const useVideoCall = () => {
         const externo = ucmData.ucm_host_interno ? ucmData.ucm_host : ucmData.remote_ip;
         if (externo) {
           const result = await tryConnect(
-            externo,
+            comPorta(externo, ucmData.sip_porta),
             userData.ramal,
             userData.senha_sip,
             userData.ramal,
