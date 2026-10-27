@@ -14,6 +14,11 @@ export function useExecucaoEnvio() {
     cancelarRef.current = true;
     setCancelamento(true);
   };
+  const limparExecucao = () => {
+    if (ativo.current) return;
+    setItens([]);
+    setCancelamento(false);
+  };
 
   const executarEnvio = async (
     contatos: ContactForBulkSend[], canal: CanalEnvio | null,
@@ -35,6 +40,6 @@ export function useExecucaoEnvio() {
     }
   };
   const finalizados = itensEnvio.filter(i => !['aguardando', 'processando'].includes(i.status)).length;
-  return { itensEnvio, isSending, cancelamentoSolicitado, cancelarEnvio, executarEnvio,
+  return { itensEnvio, isSending, cancelamentoSolicitado, cancelarEnvio, executarEnvio, limparExecucao,
     sendProgress: itensEnvio.length ? finalizados / itensEnvio.length * 100 : 0 };
 }

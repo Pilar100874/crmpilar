@@ -54,13 +54,14 @@ export function EnvioMassaWizardDialog({
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
-  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado } = useExecucaoEnvio();
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado, limparExecucao } = useExecucaoEnvio();
 
   // Load estabelecimento and usuario
   useEffect(() => {
     if (open) {
       loadUserData();
       // Reset state when opening
+      limparExecucao();
       setState(getInitialState());
     }
   }, [open]);

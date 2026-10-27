@@ -53,7 +53,7 @@ export function EnvioMassaMarketing() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
-  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado } = useExecucaoEnvio();
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado, limparExecucao } = useExecucaoEnvio();
   const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
 
   // Load estabelecimento and usuario
@@ -429,7 +429,7 @@ export function EnvioMassaMarketing() {
             itensEnvio={itensEnvio}
             cancelamentoSolicitado={cancelamentoSolicitado}
             onCancel={cancelarEnvio}
-            onClose={() => { setState(getInitialState()); }}
+            onClose={() => { limparExecucao(); setState(getInitialState()); }}
             onBack={() => goToStep('schedule')}
             onConfirm={handleConfirm}
             canal={state.canal}
