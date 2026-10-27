@@ -20,9 +20,10 @@ const QUICK_DATES = [
   { label: '1 semana', days: 7 },
   { label: '15 dias', days: 15 },
   { label: '1 mês', days: 30 },
-  { label: '2 meses', days: 60 },
-  { label: '3 meses', days: 90 },
 ];
+
+/** Prazo máximo permitido para o próximo contato: 2 meses. */
+const MAX_DIAS = 60;
 
 export function StepSchedule({
   proximaDataContato,
@@ -31,6 +32,10 @@ export function StepSchedule({
   onNext
 }: StepScheduleProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const selecionadaStr = format(proximaDataContato, 'yyyy-MM-dd');
+  const ehAtalho = QUICK_DATES.some(qd => format(addDays(new Date(), qd.days), 'yyyy-MM-dd') === selecionadaStr);
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const limite = addDays(hoje, MAX_DIAS);
 
   const handleQuickDate = (days: number) => {
     onDateChange(addDays(new Date(), days));
@@ -62,11 +67,18 @@ export function StepSchedule({
                   {qd.label}
                 </Button>
               ))}
+              <Button
+                variant={!ehAtalho ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsCalendarOpen(true)}
+              >
+                Personalizado
+              </Button>
             </div>
           </div>
 
           <div className="mt-6 space-y-2">
-            <Label>Ou escolha uma data específica</Label>
+            <Label>Data personalizada (até 2 meses)</Label>
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start gap-2">
@@ -84,7 +96,7 @@ export function StepSchedule({
                       setIsCalendarOpen(false);
                     }
                   }}
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) => date < hoje || date > limite}
                   locale={ptBR}
                 />
               </PopoverContent>
