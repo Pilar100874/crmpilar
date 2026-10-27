@@ -24,7 +24,7 @@ export function EmailCompose({ contentItems, templates, media, onContentChange, 
   const [excluir, setExcluir] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
   const alvo = useRef<string>('assunto');
-  const emitir = (itens: ContentItem[], novoAssunto = assunto) => onContentChange(itens.map((i, n) => ({ ...i, emailTemplate: true, emailSubject: n === 0 ? novoAssunto : undefined })));
+  const emitir = (itens: ContentItem[], novoAssunto = assunto) => onContentChange((itens.length ? itens : [{ id: crypto.randomUUID(), type: 'text' as const, content: '' }]).map((i, n) => ({ ...i, emailTemplate: true, emailSubject: n === 0 ? novoAssunto : undefined })));
   const mudarAssunto = (valor: string) => emitir(contentItems.length ? contentItems : [{ id: crypto.randomUUID(), type: 'text', content: '' }], valor);
   const adicionar = (item: ContentItem) => emitir([...contentItems, item]);
   const modelos = templates.filter(t => t.content_items?.[0]?.emailTemplate);

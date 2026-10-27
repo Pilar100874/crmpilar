@@ -76,7 +76,7 @@ export function StepPreview({
                   <User className="h-8 w-8 p-1 rounded-full bg-primary/20 text-primary" />
                   <div>
                     <p className="font-medium text-sm">{previewContact.nome}</p>
-                    <p className="text-xs text-muted-foreground">{previewContact.telefone || previewContact.email}</p>
+                    <p className="text-xs text-muted-foreground break-all">{canal === 'email' ? previewContact.email : previewContact.telefone || previewContact.email}</p>
                   </div>
                 </div>
 

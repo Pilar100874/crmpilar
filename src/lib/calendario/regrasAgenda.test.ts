@@ -4,6 +4,13 @@ import { completarCatalogo, explicarRegra, fluxoMovimentacao, origemFluxo, ORIGE
 const regra = (chave: string, ativa = true): RegraCatalogo => ({ id: chave, chave, nome: chave, ativa, gatilho: "tarefa_arrastada", acao: "perguntar_conflito", descricao: null, tela: "Calendário", execucoes: 0, condicoes: {}, acao_config: {}, relacoes: {}, sistema: true, executor: "tela", prioridade: 10 });
 const ids = (etapa: EtapaFluxo): string[] => [etapa.id, ...(etapa.filhos || []).flatMap(ids)];
 describe("catálogo explicativo das regras do CRM", () => {
+  it('documenta retorno de e-mail na tela que dispara sem criar configuração salva', () => {
+    const item = completarCatalogo([]).find(r => r.chave === 'retorno_envio_massa_email');
+    expect(item?.tela).toBe('Disparo em massa — E-mail');
+    expect(item?.acao).toBe('criar_tarefa');
+    if (!item) throw new Error('Regra ausente');
+    expect(explicarRegra(item).modo).toBe('automatico');
+  });
   it("separa mudança de dia e horário vencido dos disparos manuais do calendário", () => {
     expect(origemFluxo({ ...regra("atrasados_hoje"), gatilho: "agenda_aberta" })).toBe(ORIGEM_DATA);
     expect(origemFluxo({ ...regra("horario_vencido"), gatilho: "horario_vencido" })).toBe(ORIGEM_DATA);
