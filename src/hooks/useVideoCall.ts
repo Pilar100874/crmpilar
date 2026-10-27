@@ -92,12 +92,14 @@ export const useVideoCall = () => {
   ) => {
     console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
     
+    // O servidor pode já vir com porta ("192.168.0.10:8089"); só acrescenta quando não tem.
+    const alvo = server.includes(':') ? server : `${server}:8089`;
     const wsServers = [
-      `wss://${server}:8089/ws`,
-      `ws://${server}:8089/ws`
+      `wss://${alvo}/ws`,
+      `ws://${alvo}/ws`
     ];
 
-    const sipUri = `sip:${extension}@${server}`;
+    const sipUri = `sip:${extension}@${server.includes(':') ? server.split(':')[0] : server}`;
     
     // Obter stream local antes de criar UA
     const stream = await getLocalMedia();
