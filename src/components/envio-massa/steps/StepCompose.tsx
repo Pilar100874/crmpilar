@@ -500,14 +500,26 @@ export function StepCompose({
     }
   };
 
-  if (canal === 'email') return <EmailCompose contentItems={contentItems} templates={templates} media={media} onContentChange={onContentChange} onUploadMedia={onUploadMedia} onBack={onBack} onNext={onNext} onTemplatesChanged={onTemplatesChanged} />;
+  const templatesDoCanal = templates.filter(t => ehEmail ? !!t.content_items?.[0]?.emailTemplate : !t.content_items?.[0]?.emailTemplate);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0">
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
+      {ehEmail && (
+        <div className="space-y-2 mb-4 min-w-0">
+          <Label htmlFor="assunto-email-massa">Assunto do e-mail</Label>
+          <Input id="assunto-email-massa" value={assunto} onChange={e => mudarAssunto(e.target.value)} placeholder="Ex.: Novidades para {{empresa}}" />
+          <div className="flex flex-wrap gap-2">
+            {VARIABLES.map(v => (
+              <Badge key={v.key} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => mudarAssunto(assunto + v.key)}>{v.label}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Tabs de seleção - Full width, stack on mobile */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+        {!ocultarModelos && null}
         <TabsList className="w-full grid grid-cols-5 h-auto">
           <TabsTrigger value="templates" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
             <FileText className="h-4 w-4" />
@@ -967,12 +979,23 @@ export function StepCompose({
       {/* Footer - Always at bottom */}
       <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <Button variant="outline" onClick={onBack}>
-          Voltar
+          {rotuloVoltar}
         </Button>
-        <Button onClick={onNext} disabled={contentItems.length === 0}>
-          Continuar
+        <Button onClick={onNext} disabled={contentItems.length === 0 || (ehEmail && !assunto.trim())}>
+          {rotuloAvancar}
         </Button>
       </div>
+      {ehEmail && (
+        <Dialog open={modelosEmailAberto} onOpenChange={setModelosEmailAberto}>
+          <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Modelos de E-mail</DialogTitle>
+              <DialogDescription>Crie e edite modelos para usar na etapa "Montar Mensagem".</DialogDescription>
+            </DialogHeader>
+            <ModelosEmailCRUD media={media} onUploadMedia={onUploadMedia} onTemplatesChanged={onTemplatesChanged} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
