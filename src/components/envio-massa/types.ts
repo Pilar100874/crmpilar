@@ -21,6 +21,8 @@ export interface ContentItem {
   catalogId?: string;
   catalogName?: string;
   fileType?: 'pdf' | 'excel' | 'word' | 'link' | 'other';
+  emailSubject?: string;
+  emailTemplate?: boolean;
 }
 
 export interface ContactForBulkSend {
