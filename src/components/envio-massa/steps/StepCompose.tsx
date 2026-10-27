@@ -38,7 +38,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { EmailCompose } from './EmailCompose';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ModelosEmailCRUD } from './ModelosEmailCRUD';
 
 // Interfaces for Catalog
 interface SavedCatalog {
@@ -76,6 +77,10 @@ interface StepComposeProps {
   canal?: CanalEnvio | null;
   onOpenTemplates?: () => void;
   onTemplatesChanged?: () => void;
+  /** Usado na tela de modelos: esconde "Gerenciar templates" e troca os rótulos do rodapé. */
+  modoModelo?: boolean;
+  rotuloVoltar?: string;
+  rotuloAvancar?: string;
 }
 
 const VARIABLES = [
@@ -247,9 +252,24 @@ export function StepCompose({
   onNext,
   canal,
   onOpenTemplates,
-  onTemplatesChanged
+  onTemplatesChanged,
+  modoModelo = false,
+  rotuloVoltar = 'Voltar',
+  rotuloAvancar = 'Continuar'
 }: StepComposeProps) {
-  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>(modoModelo ? 'text' : 'templates');
+  const ehEmail = canal === 'email';
+  const [modelosEmailAberto, setModelosEmailAberto] = useState(false);
+  const [assunto, setAssunto] = useState(contentItems[0]?.emailSubject || '');
+  useEffect(() => {
+    const externo = contentItems[0]?.emailSubject;
+    if (externo !== undefined && externo !== assunto) setAssunto(externo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentItems]);
+  // E-mail: o assunto vive no primeiro item e todos os itens levam a marca de e-mail.
+  const emitirEmail = (itens: ContentItem[], novoAssunto: string) => onContentChange(itens.map((i, n) => ({ ...i, emailTemplate: true, emailSubject: n === 0 ? novoAssunto : undefined })));
+  const mudar = (itens: ContentItem[]) => ehEmail ? emitirEmail(itens, assunto) : onContentChange(itens);
+  const mudarAssunto = (valor: string) => { setAssunto(valor); if (contentItems.length) emitirEmail(contentItems, valor); };
   const [textInput, setTextInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -361,7 +381,7 @@ export function StepCompose({
       type: 'text',
       content: textInput
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     setTextInput('');
   };
 
@@ -373,7 +393,9 @@ export function StepCompose({
         ...item,
         id: `template-${template.id}-${Date.now()}-${index}`
       }));
-      onContentChange([...contentItems, ...newItems]);
+      const assuntoModelo = ehEmail ? template.content_items[0]?.emailSubject : undefined;
+      if (assuntoModelo && !assunto.trim()) { setAssunto(assuntoModelo); emitirEmail([...contentItems, ...newItems], assuntoModelo); }
+      else mudar([...contentItems, ...newItems]);
     } else {
       // Fallback for old templates without content_items
       const newItem: ContentItem = {
@@ -382,7 +404,7 @@ export function StepCompose({
         content: template.conteudo,
         quickReplyTitle: template.nome
       };
-      onContentChange([...contentItems, newItem]);
+      mudar([...contentItems, newItem]);
     }
     toast.success(`Template "${template.nome}" adicionado`);
   };
@@ -396,7 +418,7 @@ export function StepCompose({
       mediaThumbnail: item.thumbnail_url,
       mediaDuration: item.duracao_segundos
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
   };
 
   const addCatalog = (catalog: SavedCatalog) => {
@@ -410,7 +432,7 @@ export function StepCompose({
       catalogName: catalog.nome,
       quickReplyTitle: 'Catálogo'
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     toast.success(`Catálogo "${catalog.nome}" adicionado`);
   };
 
@@ -442,12 +464,12 @@ export function StepCompose({
       quickReplyTitle: attachment.type === 'link' ? 'Link' : 'Anexo',
       fileType: fileType
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     toast.success(`"${attachment.title}" adicionado`);
   };
 
   const removeItem = (id: string) => {
-    onContentChange(contentItems.filter(item => item.id !== id));
+    mudar(contentItems.filter(item => item.id !== id));
   };
 
   const sensors = useSensors(
@@ -463,7 +485,7 @@ export function StepCompose({
     if (over && active.id !== over.id) {
       const oldIndex = contentItems.findIndex((item) => item.id === active.id);
       const newIndex = contentItems.findIndex((item) => item.id === over.id);
-      onContentChange(arrayMove(contentItems, oldIndex, newIndex));
+      mudar(arrayMove(contentItems, oldIndex, newIndex));
     }
   };
 
@@ -500,12 +522,23 @@ export function StepCompose({
     }
   };
 
-  if (canal === 'email') return <EmailCompose contentItems={contentItems} templates={templates} media={media} onContentChange={onContentChange} onUploadMedia={onUploadMedia} onBack={onBack} onNext={onNext} onTemplatesChanged={onTemplatesChanged} />;
+  const templatesDoCanal = templates.filter(t => ehEmail ? !!t.content_items?.[0]?.emailTemplate : !t.content_items?.[0]?.emailTemplate);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0">
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
+      {ehEmail && (
+        <div className="space-y-2 mb-4 min-w-0">
+          <Label htmlFor="assunto-email-massa">Assunto do e-mail</Label>
+          <Input id="assunto-email-massa" value={assunto} onChange={e => mudarAssunto(e.target.value)} placeholder="Ex.: Novidades para {{empresa}}" />
+          <div className="flex flex-wrap gap-2">
+            {VARIABLES.map(v => (
+              <Badge key={v.key} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => mudarAssunto(assunto + v.key)}>{v.label}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Tabs de seleção - Full width, stack on mobile */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
         <TabsList className="w-full grid grid-cols-5 h-auto">
@@ -538,29 +571,29 @@ export function StepCompose({
             <TabsContent value="templates" className="m-0 p-0">
               <ScrollArea className="h-[380px]">
                 <div className="p-4 space-y-2">
-                  {canal === 'whatsapp' && onOpenTemplates && (
+                  {!modoModelo && ((canal === 'whatsapp' && onOpenTemplates) || ehEmail) && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={onOpenTemplates}
+                      onClick={ehEmail ? () => setModelosEmailAberto(true) : onOpenTemplates}
                       className="w-full gap-2 mb-2"
                     >
                       <Settings className="h-4 w-4" />
                       Gerenciar templates
                     </Button>
                   )}
-                  {templates.length === 0 ? (
+                  {templatesDoCanal.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhum template cadastrado</p>
                       <p className="text-sm mt-1">
-                        {canal === 'whatsapp'
+                        {!modoModelo && (canal === 'whatsapp' || ehEmail)
                           ? 'Clique em "Gerenciar templates" acima para criar um template.'
                           : 'Nenhum template disponível.'}
                       </p>
                     </div>
                   ) : (
-                    templates.filter(template => !template.content_items?.[0]?.emailTemplate).map(template => {
+                    templatesDoCanal.map(template => {
                       const hasContentItems = template.content_items && template.content_items.length > 0;
                       const itemCount = hasContentItems ? template.content_items.length : 1;
                       const textCount = hasContentItems ? template.content_items.filter(i => i.type === 'text').length : 1;
@@ -967,12 +1000,23 @@ export function StepCompose({
       {/* Footer - Always at bottom */}
       <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <Button variant="outline" onClick={onBack}>
-          Voltar
+          {rotuloVoltar}
         </Button>
-        <Button onClick={onNext} disabled={contentItems.length === 0}>
-          Continuar
+        <Button onClick={onNext} disabled={contentItems.length === 0 || (ehEmail && !assunto.trim())}>
+          {rotuloAvancar}
         </Button>
       </div>
+      {ehEmail && (
+        <Dialog open={modelosEmailAberto} onOpenChange={setModelosEmailAberto}>
+          <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Modelos de E-mail</DialogTitle>
+              <DialogDescription>Crie e edite modelos para usar na etapa "Montar Mensagem".</DialogDescription>
+            </DialogHeader>
+            <ModelosEmailCRUD media={media} onUploadMedia={onUploadMedia} onTemplatesChanged={onTemplatesChanged} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
