@@ -1,3 +1,4 @@
+import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -53,14 +54,14 @@ export function EnvioMassaWizardDialog({
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
-  const [isSending, setIsSending] = useState(false);
-  const [sendProgress, setSendProgress] = useState(0);
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado, limparExecucao } = useExecucaoEnvio();
 
   // Load estabelecimento and usuario
   useEffect(() => {
     if (open) {
       loadUserData();
       // Reset state when opening
+      limparExecucao();
       setState(getInitialState());
     }
   }, [open]);
@@ -160,14 +161,7 @@ export function EnvioMassaWizardDialog({
       return;
     }
 
-    setIsSending(true);
-    setSendProgress(0);
-
-    try {
-      const total = state.selectedContacts.length;
-      let completed = 0;
-
-      for (const contact of state.selectedContacts) {
+    await executarEnvio(state.selectedContacts, state.canal, async (contact) => {
         // Build description from content items
         const description = state.contentItems
           .map((item, idx) => {
@@ -194,29 +188,16 @@ export function EnvioMassaWizardDialog({
             status: 'pendente'
           });
 
-        if (error) {
-          console.error('Error creating task:', error);
-        }
+        if (error) throw new Error('Não foi possível registrar o retorno deste contato');
 
-        completed++;
-        setSendProgress((completed / total) * 100);
-      }
-
-      toast.success(`${completed} tarefas criadas com sucesso!`);
-      onComplete?.();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error in bulk send:', error);
-      toast.error('Erro ao processar envio em massa');
-    } finally {
-      setIsSending(false);
-    }
+      return { status: 'registrado', detalhe: 'Tarefa de retorno criada; este caminho não confirma envio de mensagem' };
+    });
   };
 
   const currentStepIndex = STEPS.findIndex(s => s.key === state.step);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(valor) => { if (isSending) { cancelarEnvio(); return; } onOpenChange(valor); }}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -235,7 +216,7 @@ export function EnvioMassaWizardDialog({
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-6 overflow-x-auto">
+        <div className="flex items-center justify-center mb-6 overflow-x-hidden">
           {STEPS.map((step, index) => (
             <div key={step.key} className="flex items-center">
               <div 
@@ -332,6 +313,10 @@ export function EnvioMassaWizardDialog({
             proximaDataContato={state.proximaDataContato}
             isSending={isSending}
             progress={sendProgress}
+            itensEnvio={itensEnvio}
+            cancelamentoSolicitado={cancelamentoSolicitado}
+            onCancel={cancelarEnvio}
+            onClose={() => { onComplete?.(); onOpenChange(false); }}
             onBack={() => goToStep('schedule')}
             onConfirm={handleConfirm}
             canal={state.canal}

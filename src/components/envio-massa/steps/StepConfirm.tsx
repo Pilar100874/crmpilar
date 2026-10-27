@@ -13,6 +13,8 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
+import { ItemEnvio } from '../hooks/execucaoSequencial';
+import { MonitorEnvio } from './MonitorEnvio';
 
 interface StepConfirmProps {
   contentItems: ContentItem[];
@@ -23,6 +25,10 @@ interface StepConfirmProps {
   onBack: () => void;
   onConfirm: () => void;
   canal: CanalEnvio | null;
+  itensEnvio?: ItemEnvio[];
+  cancelamentoSolicitado?: boolean;
+  onCancel?: () => void;
+  onClose?: () => void;
 }
 
 export function StepConfirm({
@@ -33,7 +39,11 @@ export function StepConfirm({
   progress,
   onBack,
   onConfirm,
-  canal
+  canal,
+  itensEnvio = [],
+  cancelamentoSolicitado = false,
+  onCancel,
+  onClose,
 }: StepConfirmProps) {
   const previewContact = selectedContacts[0] || {
     nome: 'João Silva',
@@ -59,6 +69,10 @@ export function StepConfirm({
       default: return <Paperclip className="h-6 w-6 text-muted-foreground" />;
     }
   };
+
+  if (itensEnvio.length > 0 && onCancel && onClose) {
+    return <MonitorEnvio itens={itensEnvio} isSending={isSending} progress={progress} cancelamentoSolicitado={cancelamentoSolicitado} onCancel={onCancel} onClose={onClose} />;
+  }
 
   if (isSending) {
     return (

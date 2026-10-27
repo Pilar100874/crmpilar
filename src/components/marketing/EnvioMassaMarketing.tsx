@@ -1,3 +1,4 @@
+import { useExecucaoEnvio } from "@/components/envio-massa/hooks/useExecucaoEnvio";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,8 +53,7 @@ export function EnvioMassaMarketing() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
-  const [isSending, setIsSending] = useState(false);
-  const [sendProgress, setSendProgress] = useState(0);
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado, limparExecucao } = useExecucaoEnvio();
   const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
 
   // Load estabelecimento and usuario
@@ -199,17 +199,10 @@ export function EnvioMassaMarketing() {
       return;
     }
 
-    setIsSending(true);
-    setSendProgress(0);
-
-    try {
-      const webhook = await getWebhookConfig();
-      
+    const configuracao = getWebhookConfig();
+    await executarEnvio(state.selectedContacts, state.canal, async (contact, indice) => {
+      const webhook = await configuracao;
       const total = state.selectedContacts.length;
-      let completed = 0;
-      let webhookSuccess = 0;
-
-      for (const contact of state.selectedContacts) {
         const description = state.contentItems
           .map((item, idx) => {
             const content = item.type === 'image' || item.type === 'video' 
@@ -234,9 +227,7 @@ export function EnvioMassaMarketing() {
             status: 'pendente'
           });
 
-        if (error) {
-          console.error('Error creating task:', error);
-        }
+        if (error) throw new Error('Não foi possível registrar o retorno deste contato');
 
         // Call webhook with full data payload for n8n
         if (webhook?.url) {
@@ -273,7 +264,7 @@ export function EnvioMassaMarketing() {
             email: contact.email,
             empresa: contact.empresa || null,
             mensagemPrincipal: state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')
-              ? replaceVariables(state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')!.content, contact)
+              ? replaceVariables((state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')?.content || ''), contact)
               : null,
             midia: state.contentItems
               .filter(i => i.type === 'image' || i.type === 'video')
@@ -302,32 +293,17 @@ export function EnvioMassaMarketing() {
             proximaDataContatoISO: state.proximaDataContato.toISOString(),
             timestamp: new Date().toISOString(),
             totalContatos: total,
-            contatoAtual: completed + 1,
+            contatoAtual: indice + 1,
             filtrosAplicados: state.filters
           };
 
           const success = await callWebhook(webhook.url, webhook.method, webhookPayload);
-          if (success) webhookSuccess++;
+          if (!success) return { status: 'erro', detalhe: 'Retorno registrado, mas o encaminhamento para envio falhou' };
+          return { status: 'encaminhado', detalhe: 'Aceito pela integração; entrega não confirmada' };
         }
 
-        completed++;
-        setSendProgress((completed / total) * 100);
-      }
-
-      if (webhook?.url) {
-        toast.success(`${completed} tarefas criadas e ${webhookSuccess} webhooks disparados!`);
-      } else {
-        toast.success(`${completed} tarefas criadas com sucesso!`);
-      }
-      
-      // Reset wizard
-      setState(getInitialState());
-    } catch (error: any) {
-      console.error('Error in bulk send:', error);
-      toast.error('Erro ao processar envio em massa');
-    } finally {
-      setIsSending(false);
-    }
+      return { status: 'registrado', detalhe: 'Tarefa de retorno criada; este caminho não confirma envio de mensagem' };
+    });
   };
 
   const currentStepIndex = STEPS.findIndex(s => s.key === state.step);
@@ -352,7 +328,7 @@ export function EnvioMassaMarketing() {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-center py-3 px-2 overflow-x-auto border-b bg-muted/30 rounded-lg mb-4">
+      <div className="flex items-center justify-center py-3 px-2 overflow-x-hidden border-b bg-muted/30 rounded-lg mb-4">
         {STEPS.map((step, index) => (
           <div key={step.key} className="flex items-center">
             <div 
@@ -367,7 +343,7 @@ export function EnvioMassaMarketing() {
             </div>
             <span 
               className={`
-                hidden sm:block ml-2 text-sm whitespace-nowrap
+                hidden xl:block ml-2 text-sm whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
@@ -450,6 +426,10 @@ export function EnvioMassaMarketing() {
             proximaDataContato={state.proximaDataContato}
             isSending={isSending}
             progress={sendProgress}
+            itensEnvio={itensEnvio}
+            cancelamentoSolicitado={cancelamentoSolicitado}
+            onCancel={cancelarEnvio}
+            onClose={() => { limparExecucao(); setState(getInitialState()); }}
             onBack={() => goToStep('schedule')}
             onConfirm={handleConfirm}
             canal={state.canal}

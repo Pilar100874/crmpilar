@@ -1,5 +1,9 @@
 # Roteiro
 
+## Acompanhamento na etapa 5
+- [x] Exibir andamento por contato e cancelar os próximos sem desfazer processados, preservando o resultado na tela.
+- [x] Validar execução sequencial e cancelamento com três testes; conferir acompanhamento e cancelamento no navegador com registro interceptado, sem mensagens reais. O caminho central existente registra retornos, não confirma entrega de mensagens.
+
 ## Finalização por cartão
 - [x] Mostrar finalização somente do contato clicado, sem lista agregada; preservar avisos e permitir trocar de contato.
 - [x] Conferir troca e reabertura com resultado real na tela; validar múltiplas pendências locais e remoção sem promover outro contato, com seis testes aprovados.
