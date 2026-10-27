@@ -141,3 +141,7 @@
 ## Filtro de não finalizados
 - [x] Botão "Não finalizados" na fila mostra somente contatos com atendimento ainda não finalizado, com contagem e aviso quando não houver.
 - [x] Conferir no navegador: contagem, cartão mantido, cartão escondido e ausência de rolagem horizontal.
+
+## Lados da prévia do disparo
+- [x] No passo de prévia, Resumo do Envio e lista de Contatos à esquerda e Preview da Mensagem à direita.
+- [x] Conferir no navegador: ordem invertida, painéis alinhados e sem rolagem horizontal.
