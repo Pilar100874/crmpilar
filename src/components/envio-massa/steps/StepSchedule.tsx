@@ -16,6 +16,8 @@ interface StepScheduleProps {
 }
 
 const QUICK_DATES = [
+  { label: '1 dia', days: 1 },
+  { label: '2 dias', days: 2 },
   { label: '3 dias', days: 3 },
   { label: '1 semana', days: 7 },
   { label: '15 dias', days: 15 },
@@ -32,8 +34,6 @@ export function StepSchedule({
   onNext
 }: StepScheduleProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const selecionadaStr = format(proximaDataContato, 'yyyy-MM-dd');
-  const ehAtalho = QUICK_DATES.some(qd => format(addDays(new Date(), qd.days), 'yyyy-MM-dd') === selecionadaStr);
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const limite = addDays(hoje, MAX_DIAS);
 
@@ -67,13 +67,6 @@ export function StepSchedule({
                   {qd.label}
                 </Button>
               ))}
-              <Button
-                variant={!ehAtalho ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setIsCalendarOpen(true)}
-              >
-                Personalizado
-              </Button>
             </div>
           </div>
 
