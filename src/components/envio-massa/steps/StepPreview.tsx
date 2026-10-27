@@ -173,7 +173,7 @@ export function StepPreview({
           </div>
 
           {/* Resumo e Lista de Contatos */}
-          <div className="space-y-4 min-h-0 flex flex-col">
+          <div className="space-y-4 min-h-0 flex flex-col lg:order-1">
             {/* Resumo */}
             <Card className="p-4 shrink-0">
               <h4 className="font-medium mb-3 text-sm">Resumo do Envio</h4>
