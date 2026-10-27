@@ -393,7 +393,9 @@ export function StepCompose({
         ...item,
         id: `template-${template.id}-${Date.now()}-${index}`
       }));
-      mudar([...contentItems, ...newItems]);
+      const assuntoModelo = ehEmail ? template.content_items[0]?.emailSubject : undefined;
+      if (assuntoModelo && !assunto.trim()) { setAssunto(assuntoModelo); emitirEmail([...contentItems, ...newItems], assuntoModelo); }
+      else mudar([...contentItems, ...newItems]);
     } else {
       // Fallback for old templates without content_items
       const newItem: ContentItem = {
