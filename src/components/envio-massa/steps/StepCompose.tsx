@@ -519,7 +519,6 @@ export function StepCompose({
       )}
       {/* Tabs de seleção - Full width, stack on mobile */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-        {!ocultarModelos && null}
         <TabsList className="w-full grid grid-cols-5 h-auto">
           <TabsTrigger value="templates" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
             <FileText className="h-4 w-4" />
@@ -550,29 +549,29 @@ export function StepCompose({
             <TabsContent value="templates" className="m-0 p-0">
               <ScrollArea className="h-[380px]">
                 <div className="p-4 space-y-2">
-                  {canal === 'whatsapp' && onOpenTemplates && (
+                  {!modoModelo && ((canal === 'whatsapp' && onOpenTemplates) || ehEmail) && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={onOpenTemplates}
+                      onClick={ehEmail ? () => setModelosEmailAberto(true) : onOpenTemplates}
                       className="w-full gap-2 mb-2"
                     >
                       <Settings className="h-4 w-4" />
                       Gerenciar templates
                     </Button>
                   )}
-                  {templates.length === 0 ? (
+                  {templatesDoCanal.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhum template cadastrado</p>
                       <p className="text-sm mt-1">
-                        {canal === 'whatsapp'
+                        {!modoModelo && (canal === 'whatsapp' || ehEmail)
                           ? 'Clique em "Gerenciar templates" acima para criar um template.'
                           : 'Nenhum template disponível.'}
                       </p>
                     </div>
                   ) : (
-                    templates.filter(template => !template.content_items?.[0]?.emailTemplate).map(template => {
+                    templatesDoCanal.map(template => {
                       const hasContentItems = template.content_items && template.content_items.length > 0;
                       const itemCount = hasContentItems ? template.content_items.length : 1;
                       const textCount = hasContentItems ? template.content_items.filter(i => i.type === 'text').length : 1;
