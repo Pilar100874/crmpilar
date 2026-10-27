@@ -59,7 +59,7 @@ export function StepPreview({
       <div className="flex-1 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
           {/* Preview da Mensagem */}
-          <div className="border rounded-lg flex flex-col min-h-0">
+          <div className="border rounded-lg flex flex-col min-h-0 lg:order-2">
             <div className="px-4 py-3 border-b bg-muted/30 shrink-0">
               <h3 className="font-medium text-sm">Preview da Mensagem</h3>
               <p className="text-xs text-muted-foreground">
