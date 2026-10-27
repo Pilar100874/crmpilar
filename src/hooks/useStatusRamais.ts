@@ -60,7 +60,14 @@ export function useStatusRamais(intervaloMs = 30000) {
       const desde = new Date(Date.now() - JANELA_PRESENCA_MS).toISOString();
       // Sem sessão válida não adianta chamar a função: ela responderia 401
       // ("Não autenticado") a cada ciclo de polling.
-      const { data: sessao } = await supabase.auth.getSession();
+      let { data: sessao } = await supabase.auth.getSession();
+      // Token vencido (ou prestes a vencer) faz a função responder 401:
+      // renovamos a sessão antes de chamar.
+      const expiraEm = (sessao?.session?.expires_at ?? 0) * 1000;
+      if (sessao?.session && expiraEm - Date.now() < 60_000) {
+        const { data: renovada } = await supabase.auth.refreshSession();
+        sessao = { session: renovada?.session ?? null } as typeof sessao;
+      }
       const logado = Boolean(sessao?.session?.access_token) && !bloqueadoPor401.current;
       const [presencaResp, ucmResp] = await Promise.all([
         supabase
