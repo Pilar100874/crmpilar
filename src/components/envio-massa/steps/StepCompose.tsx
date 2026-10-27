@@ -584,11 +584,11 @@ export function StepCompose({
             <TabsContent value="templates" className="m-0 p-0">
               <ScrollArea className="h-[380px]">
                 <div className="p-4 space-y-2">
-                  {!modoModelo && ((canal === 'whatsapp' && onOpenTemplates) || ehEmail) && (
+                  {!modoModelo && (canal === 'whatsapp' || ehEmail) && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={ehEmail ? () => setModelosEmailAberto(true) : onOpenTemplates}
+                      onClick={() => setModelosEmailAberto(true)}
                       className="w-full gap-2 mb-2"
                     >
                       <Settings className="h-4 w-4" />
@@ -1019,14 +1019,14 @@ export function StepCompose({
           {rotuloAvancar}
         </Button>
       </div>
-      {ehEmail && (
+      {(ehEmail || canal === 'whatsapp') && (
         <Dialog open={modelosEmailAberto} onOpenChange={setModelosEmailAberto}>
           <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Modelos de E-mail</DialogTitle>
+              <DialogTitle>{ehEmail ? 'Modelos de E-mail' : 'Modelos de WhatsApp'}</DialogTitle>
               <DialogDescription>Crie e edite modelos para usar na etapa "Montar Mensagem".</DialogDescription>
             </DialogHeader>
-            <ModelosEmailCRUD media={media} onUploadMedia={onUploadMedia} onTemplatesChanged={onTemplatesChanged} />
+            <ModelosEmailCRUD canal={ehEmail ? 'email' : 'whatsapp'} media={media} onUploadMedia={onUploadMedia} onTemplatesChanged={onTemplatesChanged} />
           </DialogContent>
         </Dialog>
       )}
