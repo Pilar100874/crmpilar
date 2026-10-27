@@ -1,3 +1,4 @@
+import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect, useRef } from "react";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +60,7 @@ export function EnvioMassaWizardContent({
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), step: canalInicial ? (contatosIniciais.length > 0 ? 'compose' : 'filter') : 'channel', canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
-  const [isSending, setIsSending] = useState(false);
-  const [sendProgress, setSendProgress] = useState(0);
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado } = useExecucaoEnvio();
 
   // Load estabelecimento and usuario
   useEffect(() => {
@@ -170,14 +170,7 @@ export function EnvioMassaWizardContent({
       return;
     }
 
-    setIsSending(true);
-    setSendProgress(0);
-
-    try {
-      const total = state.selectedContacts.length;
-      let completed = 0;
-
-      for (const contact of state.selectedContacts) {
+    await executarEnvio(state.selectedContacts, state.canal, async (contact) => {
         const description = state.contentItems
           .map((item, idx) => {
             const content = item.type === 'image' || item.type === 'video' 
@@ -202,23 +195,10 @@ export function EnvioMassaWizardContent({
             status: 'pendente'
           });
 
-        if (error) {
-          console.error('Error creating task:', error);
-        }
+        if (error) throw new Error('Não foi possível registrar o retorno deste contato');
 
-        completed++;
-        setSendProgress((completed / total) * 100);
-      }
-
-      toast.success(`${completed} tarefas criadas com sucesso!`);
-      onComplete?.();
-      onClose();
-    } catch (error: any) {
-      console.error('Error in bulk send:', error);
-      toast.error('Erro ao processar envio em massa');
-    } finally {
-      setIsSending(false);
-    }
+      return { status: 'registrado', detalhe: 'Tarefa de retorno criada; este caminho não confirma envio de mensagem' };
+    });
   };
 
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
@@ -241,14 +221,14 @@ export function EnvioMassaWizardContent({
           <Badge variant="outline" className="text-xs">
             {currentStepIndex + 1}/{passosVisiveis.length}
           </Badge>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { if (isSending) { cancelarEnvio(); return; } onClose(); }}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Progress Steps - Compact */}
-      <div className="flex items-center justify-center py-2 px-2 gap-1 border-b bg-muted/30 shrink-0 overflow-x-auto">
+      <div className="flex items-center justify-center py-2 px-2 gap-1 border-b bg-muted/30 shrink-0 overflow-x-hidden">
         {passosVisiveis.map((step, index) => (
           <div key={step.key} className="flex items-center">
             <div 
@@ -346,6 +326,10 @@ export function EnvioMassaWizardContent({
             proximaDataContato={state.proximaDataContato}
             isSending={isSending}
             progress={sendProgress}
+            itensEnvio={itensEnvio}
+            cancelamentoSolicitado={cancelamentoSolicitado}
+            onCancel={cancelarEnvio}
+            onClose={() => { onComplete?.(); onClose(); }}
             onBack={() => goToStep('schedule')}
             onConfirm={handleConfirm}
             canal={state.canal}

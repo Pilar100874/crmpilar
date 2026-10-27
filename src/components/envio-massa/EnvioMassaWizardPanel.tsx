@@ -1,3 +1,4 @@
+import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,8 +59,7 @@ export function EnvioMassaWizardPanel({
   const [usuarioId, setUsuarioId] = useState<string>('');
   const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), step: canalInicial ? (contatosIniciais.length > 0 ? 'compose' : 'filter') : 'channel', canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
-  const [isSending, setIsSending] = useState(false);
-  const [sendProgress, setSendProgress] = useState(0);
+  const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado } = useExecucaoEnvio();
 
   // Load estabelecimento and usuario
   useEffect(() => {
@@ -222,18 +222,10 @@ export function EnvioMassaWizardPanel({
       return;
     }
 
-    setIsSending(true);
-    setSendProgress(0);
-
-    try {
-      // Get webhook configuration
-      const webhook = await getWebhookConfig();
-      
+    const configuracao = getWebhookConfig();
+    await executarEnvio(state.selectedContacts, state.canal, async (contact, indice) => {
+      const webhook = await configuracao;
       const total = state.selectedContacts.length;
-      let completed = 0;
-      let webhookSuccess = 0;
-
-      for (const contact of state.selectedContacts) {
         // Build description from content items
         const description = state.contentItems
           .map((item, idx) => {
@@ -260,9 +252,7 @@ export function EnvioMassaWizardPanel({
             status: 'pendente'
           });
 
-        if (error) {
-          console.error('Error creating task:', error);
-        }
+        if (error) throw new Error('Não foi possível registrar o retorno deste contato');
 
         // Call webhook with full data payload for n8n
         if (webhook?.url) {
@@ -310,7 +300,7 @@ export function EnvioMassaWizardPanel({
             
             // First text message for simple integrations
             mensagemPrincipal: state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')
-              ? replaceVariables(state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')!.content, contact)
+              ? replaceVariables((state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')?.content || ''), contact)
               : null,
             
             // Media info
@@ -349,34 +339,19 @@ export function EnvioMassaWizardPanel({
             // Metadata
             timestamp: new Date().toISOString(),
             totalContatos: total,
-            contatoAtual: completed + 1,
+            contatoAtual: indice + 1,
             
             // Filters applied (for reference)
             filtrosAplicados: state.filters
           };
 
           const success = await callWebhook(webhook.url, webhook.method, webhookPayload);
-          if (success) webhookSuccess++;
+          if (!success) return { status: 'erro', detalhe: 'Retorno registrado, mas o encaminhamento para envio falhou' };
+          return { status: 'encaminhado', detalhe: 'Aceito pela integração; entrega não confirmada' };
         }
 
-        completed++;
-        setSendProgress((completed / total) * 100);
-      }
-
-      if (webhook?.url) {
-        toast.success(`${completed} tarefas criadas e ${webhookSuccess} webhooks disparados!`);
-      } else {
-        toast.success(`${completed} tarefas criadas com sucesso!`);
-      }
-      
-      onComplete?.();
-      onClose();
-    } catch (error: any) {
-      console.error('Error in bulk send:', error);
-      toast.error('Erro ao processar envio em massa');
-    } finally {
-      setIsSending(false);
-    }
+      return { status: 'registrado', detalhe: 'Tarefa de retorno criada; este caminho não confirma envio de mensagem' };
+    });
   };
 
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
@@ -388,7 +363,7 @@ export function EnvioMassaWizardPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-card shrink-0">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={() => { if (isSending) { cancelarEnvio(); return; } onClose(); }}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Envio em Massa</h1>
@@ -402,14 +377,14 @@ export function EnvioMassaWizardPanel({
           <Badge variant="outline">
             Etapa {currentStepIndex + 1} de {passosVisiveis.length}
           </Badge>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={() => { if (isSending) { cancelarEnvio(); return; } onClose(); }}>
             <X className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-center py-4 px-2 overflow-x-auto border-b bg-muted/30 shrink-0">
+      <div className="flex items-center justify-center py-4 px-2 overflow-x-hidden border-b bg-muted/30 shrink-0">
         {passosVisiveis.map((step, index) => (
           <div key={step.key} className="flex items-center">
             <div 
@@ -424,7 +399,7 @@ export function EnvioMassaWizardPanel({
             </div>
             <span 
               className={`
-                hidden sm:block ml-2 text-sm whitespace-nowrap
+                hidden xl:block ml-2 text-sm whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
@@ -508,6 +483,10 @@ export function EnvioMassaWizardPanel({
               proximaDataContato={state.proximaDataContato}
               isSending={isSending}
               progress={sendProgress}
+            itensEnvio={itensEnvio}
+            cancelamentoSolicitado={cancelamentoSolicitado}
+            onCancel={cancelarEnvio}
+            onClose={() => { onComplete?.(); onClose(); }}
               onBack={() => goToStep('schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
