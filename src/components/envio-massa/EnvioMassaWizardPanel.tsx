@@ -30,6 +30,8 @@ interface EnvioMassaWizardPanelProps {
   onComplete?: () => void;
   contatosIniciais?: string[];
   canalInicial?: CanalEnvio;
+  /** Quando a seleção veio da tela de Disparo em massa, voltar ao filtro reabre essa mesma tela. */
+  onVoltarSelecao?: () => void;
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
@@ -54,7 +56,8 @@ export function EnvioMassaWizardPanel({
   onClose,
   onComplete,
   contatosIniciais = [],
-  canalInicial
+  canalInicial,
+  onVoltarSelecao
 }: EnvioMassaWizardPanelProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
@@ -134,6 +137,7 @@ export function EnvioMassaWizardPanel({
 
   // Navigation
   const goToStep = (step: WizardStep) => {
+    if (step === 'filter' && onVoltarSelecao) { onVoltarSelecao(); return; }
     setState(prev => ({ ...prev, step }));
   };
 

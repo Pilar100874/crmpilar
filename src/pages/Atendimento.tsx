@@ -5077,6 +5077,11 @@ ${recentMessages}
     setShowEnvioMassaWizard(true);
   };
 
+  const voltarSelecaoDisparo = () => {
+    setShowEnvioMassaWizard(false);
+    setShowDisparoMassa(true);
+  };
+
   const pararDiscador = () => {
     setDiscadorModo(null);
     setAgendaViewMode('default');
@@ -7044,6 +7049,8 @@ ${recentMessages}
               onClose={fecharDisparoMassa}
               onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
               onIniciarEnvio={iniciarEnvioDoDisparo}
+              canalInicial={canalEnvioMassa ?? null}
+              selecionadosIniciais={idsEnvioMassa}
             />
           </div>
         ) : showEnvioMassaWizard && !isMobile ? (
@@ -7053,6 +7060,7 @@ ${recentMessages}
               onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
               canalInicial={canalEnvioMassa}
+              onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -7516,6 +7524,7 @@ ${recentMessages}
               onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
               canalInicial={canalEnvioMassa}
+              onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
               onComplete={loadTodayTasks}
             />
           </div>
@@ -7612,6 +7621,7 @@ ${recentMessages}
                     onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
               canalInicial={canalEnvioMassa}
+              onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
                     onComplete={loadTodayTasks}
                   />
                 </div>
@@ -8189,6 +8199,8 @@ ${recentMessages}
           onClose={fecharDisparoMassa}
           onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
           onIniciarEnvio={iniciarEnvioDoDisparo}
+          canalInicial={canalEnvioMassa ?? null}
+          selecionadosIniciais={idsEnvioMassa}
         />
       </div>
     )}
@@ -8199,6 +8211,7 @@ ${recentMessages}
           onClose={() => { setShowEnvioMassaWizard(false); setIdsEnvioMassa([]); setCanalEnvioMassa(undefined); }}
               contatosIniciais={idsEnvioMassa}
               canalInicial={canalEnvioMassa}
+              onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
           onComplete={loadTodayTasks}
         />
       </div>

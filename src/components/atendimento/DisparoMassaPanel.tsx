@@ -38,6 +38,8 @@ interface Props {
   onIniciarLigacao: (ids: string[], modo: "sequencial" | "previa") => void;
   onIniciarEnvio: (ids: string[], canal: "whatsapp" | "email") => void;
   abaInicial?: Aba;
+  canalInicial?: CanalDisparo | null;
+  selecionadosIniciais?: string[];
 }
 
 interface Contato {
@@ -120,8 +122,8 @@ function FiltroMulti({ rotulo, opcoes, valor, onChange }: {
   );
 }
 
-export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciarEnvio, abaInicial = "tudo" }: Props) {
-  const [canal, setCanal] = useState<CanalDisparo | null>(null);
+export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciarEnvio, abaInicial = "tudo", canalInicial = null, selecionadosIniciais = [] }: Props) {
+  const [canal, setCanal] = useState<CanalDisparo | null>(canalInicial);
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [nomesUsuarios, setNomesUsuarios] = useState<Record<string, string>>({});
@@ -135,7 +137,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
   const [fLocal, setFLocal] = useState<string[]>([]);
   const [fProduto, setFProduto] = useState<string[]>([]);
   const [fGrupo, setFGrupo] = useState<string[]>([]);
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [selecionados, setSelecionados] = useState<Set<string>>(() => new Set(selecionadosIniciais));
   const [modo, setModo] = useState<"sequencial" | "previa">("sequencial");
   const [pararAoReceber, setPararAoReceber] = useState(lerPararAoReceber());
 
