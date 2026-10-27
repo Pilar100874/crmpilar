@@ -45,7 +45,7 @@ const getInitialState = (): EnvioMassaState => ({
   filters: {},
   selectedContacts: [],
   contentItems: [],
-  proximaDataContato: addDays(new Date(), 3)
+  proximaDataContato: addDays(new Date(), 1)
 });
 
 export function EnvioMassaWizardPanel({ 

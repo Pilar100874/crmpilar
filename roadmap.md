@@ -149,3 +149,4 @@
 ## Atalhos de prazo na etapa de agendamento
 - [x] Tirar o botão "Personalizado" (o seletor de data logo abaixo já faz isso) e incluir "1 dia" e "2 dias" entre os atalhos, com "1 dia" como padrão.
 - [x] Conferir no navegador: atalhos na ordem 1 dia, 2 dias, 3 dias, 1 semana, 15 dias, 1 mês, sem o botão Personalizado e com a data de amanhã destacada.
+- [x] Deixar 1 dia como data padrão em todas as entradas do disparo (atendimento, janela e marketing), com teste do prazo padrão.
