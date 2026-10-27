@@ -10,19 +10,22 @@ import {
 } from "lucide-react";
 import { ContentItem, ContactForBulkSend } from "../types";
 import { cn } from "@/lib/utils";
+import { EmailPreview } from './EmailPreview';
 
 interface StepPreviewProps {
   contentItems: ContentItem[];
   selectedContacts: ContactForBulkSend[];
   onBack: () => void;
   onNext: () => void;
+  canal?: 'email' | 'whatsapp' | null;
 }
 
 export function StepPreview({
   contentItems,
   selectedContacts,
   onBack,
-  onNext
+  onNext,
+  canal
 }: StepPreviewProps) {
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0);
 
@@ -77,7 +80,7 @@ export function StepPreview({
                   </div>
                 </div>
 
-                {contentItems.map((item) => (
+                {canal === 'email' ? <EmailPreview itens={contentItems} contato={previewContact} /> : contentItems.map((item) => (
                   <div key={item.id} className="flex justify-end">
                     <Card className="max-w-[85%] p-3 bg-primary/10 border-primary/20">
                       {item.type === 'text' && (
