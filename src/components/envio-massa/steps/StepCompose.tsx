@@ -529,15 +529,28 @@ export function StepCompose({
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
       {ehEmail && (
-        <div className="space-y-2 mb-4 min-w-0">
-          <Label htmlFor="assunto-email-massa">Assunto do e-mail</Label>
-          <Input id="assunto-email-massa" value={assunto} onChange={e => mudarAssunto(e.target.value)} placeholder="Ex.: Novidades para {{empresa}}" />
-          <div className="flex flex-wrap gap-2">
-            {VARIABLES.map(v => (
-              <Badge key={v.key} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => mudarAssunto(assunto + v.key)}>{v.label}</Badge>
-            ))}
+          <div className="space-y-2 mb-4 min-w-0">
+            <Label htmlFor="assunto-email-massa" className="gap-1">
+              Assunto do e-mail <span className="text-destructive">*</span>
+              <span className="text-xs font-normal text-muted-foreground">(obrigatório)</span>
+            </Label>
+            <Input
+              id="assunto-email-massa"
+              value={assunto}
+              onChange={e => mudarAssunto(e.target.value)}
+              placeholder="Ex.: Novidades para {{empresa}}"
+              aria-required="true"
+            />
+            {contentItems.length > 0 && !assunto.trim() && (
+              <p className="text-xs text-destructive">Informe o assunto para avançar.</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {VARIABLES.map(v => (
+                <Badge key={v.key} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => mudarAssunto(assunto + v.key)}>{v.label}</Badge>
+              ))}
+            </div>
           </div>
-        </div>
+
       )}
       {/* Tabs de seleção - Full width, stack on mobile */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
