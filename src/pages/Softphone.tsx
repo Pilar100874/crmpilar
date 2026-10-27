@@ -82,7 +82,7 @@ export default function Softphone({ embedded = false }: SoftphoneProps) {
 
       const { data: ucmData, error: ucmError } = await supabase
         .from('ucm_config')
-        .select('ucm_host, remote_ip, ucm_host_interno')
+        .select('ucm_host, remote_ip, ucm_host_interno, sip_porta, sip_porta_interna')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
