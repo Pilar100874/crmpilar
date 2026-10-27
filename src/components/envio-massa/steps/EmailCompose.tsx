@@ -40,9 +40,7 @@ export function EmailCompose({ contentItems, templates, media, onContentChange, 
       const estabelecimentoId = await getEstabelecimentoId();
       const { data: { user } } = await supabase.auth.getUser();
       if (!estabelecimentoId || !user) throw new Error('Entre novamente para salvar o modelo');
-      const { data: usuario } = await supabase.from('usuarios').select('id').eq('auth_user_id', user.id).maybeSingle();
-      if (!usuario) throw new Error('Usuário não encontrado');
-      const { error } = await supabase.from('envio_massa_templates').insert({ nome: nomeModelo.trim(), conteudo: contentItems.map(i => i.content).join('\n\n'), content_items: JSON.parse(JSON.stringify(contentItems)), estabelecimento_id: estabelecimentoId, user_id: usuario.id, ativo: true, ordem: templates.length });
+      const { error } = await supabase.from('envio_massa_templates').insert({ nome: nomeModelo.trim(), conteudo: contentItems.map(i => i.content).join('\n\n'), content_items: JSON.parse(JSON.stringify(contentItems)), estabelecimento_id: estabelecimentoId, ativo: true, ordem: templates.length });
       if (error) throw error;
       setNomeModelo(''); onTemplatesChanged?.(); toast.success('Modelo de e-mail salvo');
     } catch (erro) { toast.error(erro instanceof Error ? erro.message : 'Não foi possível salvar o modelo'); }
