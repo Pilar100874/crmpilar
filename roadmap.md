@@ -1,6 +1,7 @@
 # Roteiro
 
 ## Modelos e disparo de e-mail
+- [x] Reabrir o Disparo em massa do zero a cada clique no atalho: fecha o assistente aberto no quadro central e limpa canal/contatos do disparo anterior; conferido no navegador em meio ao fluxo do WhatsApp.
 - [x] Montar e salvar modelos de e-mail com assunto, textos, imagens e variáveis; prévia personalizada por contato. Salvamento e reutilização conferidos com um modelo comercial real.
 - [x] Reutilizar envio de e-mail existente com acompanhamento sequencial e cancelamento; testes e fluxo no navegador com envio interceptado, sem mensagens reais. Entrega real e suporte HTML do servidor externo não verificados.
 

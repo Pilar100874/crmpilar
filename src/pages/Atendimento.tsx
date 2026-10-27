@@ -210,6 +210,8 @@ export default function Atendimento() {
   const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
   // Guarda de onde o disparo em massa foi aberto, para voltar lá ao fechar.
   const disparoOrigemRef = useRef<{ mobileView: "list" | "main" | "details"; activeTab: string; showConversationsList: boolean } | null>(null);
+  // Muda a cada clique em "Disparo em massa": remonta o painel do zero, fechando o que estava aberto nele.
+  const [disparoNonce, setDisparoNonce] = useState(0);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
@@ -5053,9 +5055,13 @@ ${recentMessages}
     setHistoricoCliente(null);
     setAgendaContato(null);
     setShowEnvioMassaWizard(false);
+    // Reabre do zero: sem canal nem contatos de um disparo anterior.
+    setIdsEnvioMassa([]);
+    setCanalEnvioMassa(undefined);
     setActiveTab("agenda");
     if (!discadorModo) setAgendaViewMode("default");
     setMobileView("main");
+    setDisparoNonce((n) => n + 1);
     setShowDisparoMassa(true);
   };
 
@@ -7044,6 +7050,7 @@ ${recentMessages}
         ) : showDisparoMassa && !isMobile ? (
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <DisparoMassaPanel
+              key={`disparo-desktop-${disparoNonce}`}
               fontes={fontesDisparo}
               abaInicial={filtroFila}
               onClose={fecharDisparoMassa}
@@ -8194,6 +8201,7 @@ ${recentMessages}
     {showDisparoMassa && isMobile && (
       <div className="fixed inset-0 z-[700] bg-background">
         <DisparoMassaPanel
+          key={`disparo-mobile-${disparoNonce}`}
           fontes={fontesDisparo}
               abaInicial={filtroFila}
           onClose={fecharDisparoMassa}
