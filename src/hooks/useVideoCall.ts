@@ -169,7 +169,7 @@ export const useVideoCall = () => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não identificado');
       const { data: ucmData } = await supabase
         .from('ucm_config')
-        .select('ucm_host, remote_ip, ucm_host_interno, conference_room_number')
+        .select('ucm_host, remote_ip, ucm_host_interno, sip_porta, sip_porta_interna, conference_room_number')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 

@@ -100,6 +100,11 @@ export default function Softphone({ embedded = false }: SoftphoneProps) {
       await connect({
         server: ucmData.ucm_host_interno || ucmData.ucm_host,
         remoteServer: ucmData.ucm_host_interno ? ucmData.ucm_host : (ucmData.remote_ip || undefined),
+        serverPort: String(
+          (ucmData.ucm_host_interno && ucmData.sip_porta_interna)
+            ? ucmData.sip_porta_interna
+            : (ucmData.sip_porta || 8089)
+        ),
         extension: userData.ramal,
         password: userData.senha_sip,
         displayName: userData.ramal,
