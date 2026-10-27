@@ -23,6 +23,7 @@ interface UCMConfig {
   remote_ip?: string;
   sip_porta?: number | string | null;
   sip_porta_alternativa?: number | string | null;
+  sip_porta_interna?: number | string | null;
   ramal_portaria?: string | null;
   ucm_user: string;
   ucm_password: string;
@@ -44,6 +45,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     remote_ip: "",
     sip_porta: 8089,
     sip_porta_alternativa: 8089,
+    sip_porta_interna: "",
     ramal_portaria: "",
     ucm_user: "",
     ucm_password: "",
@@ -104,6 +106,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           ucm_host_interno: config.ucm_host_interno?.trim() || null,
           sip_porta: config.sip_porta ? Number(config.sip_porta) : 8089,
           sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
+          sip_porta_interna: config.sip_porta_interna ? Number(config.sip_porta_interna) : null,
           ramal_portaria: config.ramal_portaria || null,
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
@@ -162,38 +165,57 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="ucm_host">Servidor do UCM (endereço externo)</Label>
-              <Input
-                id="ucm_host"
-                placeholder="ucm.empresa.com ou IP fixo"
-                value={config.ucm_host}
-                onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Endereço público (IP fixo ou domínio) do UCM, sem https://. Usado pelo sistema na nuvem e por quem está fora da empresa.
-              </p>
-              <Label htmlFor="ucm_host_interno" className="pt-2 block">Servidor do UCM (endereço interno)</Label>
-              <Input
-                id="ucm_host_interno"
-                placeholder="ex.: 192.168.0.10 (opcional)"
-                value={config.ucm_host_interno || ""}
-                onChange={(e) => setConfig({ ...config, ucm_host_interno: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                IP do UCM na rede da empresa. Os aparelhos tentam primeiro este endereço e, se não conseguirem, usam o externo.
-              </p>
+          <div className="space-y-3">
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="ucm_host">Servidor do UCM (endereço externo)</Label>
+                <Input
+                  id="ucm_host"
+                  placeholder="ucm.empresa.com ou IP fixo"
+                  value={config.ucm_host}
+                  onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Endereço público (IP fixo ou domínio) do UCM, sem https://. Usado pelo sistema na nuvem e por quem está fora da empresa.
+                </p>
+              </div>
+              <div className="space-y-2 w-24">
+                <Label htmlFor="sip_porta">Porta</Label>
+                <Input
+                  id="sip_porta"
+                  type="number"
+                  placeholder="8089"
+                  value={config.sip_porta ?? ""}
+                  onChange={(e) => setConfig({ ...config, sip_porta: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2 w-24">
-              <Label htmlFor="sip_porta">Porta</Label>
-              <Input
-                id="sip_porta"
-                type="number"
-                placeholder="8089"
-                value={config.sip_porta ?? ""}
-                onChange={(e) => setConfig({ ...config, sip_porta: e.target.value })}
-              />
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="ucm_host_interno" className="block">Servidor do UCM (endereço interno)</Label>
+                <Input
+                  id="ucm_host_interno"
+                  placeholder="ex.: 192.168.0.10 (opcional)"
+                  value={config.ucm_host_interno || ""}
+                  onChange={(e) => setConfig({ ...config, ucm_host_interno: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  IP do UCM na rede da empresa. Os aparelhos tentam primeiro este endereço e, se não conseguirem, usam o externo.
+                </p>
+              </div>
+              <div className="space-y-2 w-24">
+                <Label htmlFor="sip_porta_interna">Porta</Label>
+                <Input
+                  id="sip_porta_interna"
+                  type="number"
+                  placeholder="8089"
+                  value={config.sip_porta_interna ?? ""}
+                  onChange={(e) => setConfig({ ...config, sip_porta_interna: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Se ficar vazia, usa a mesma porta do endereço externo.
+                </p>
+              </div>
             </div>
           </div>
 
