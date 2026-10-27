@@ -210,6 +210,8 @@ export default function Atendimento() {
   const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
   // Guarda de onde o disparo em massa foi aberto, para voltar lá ao fechar.
   const disparoOrigemRef = useRef<{ mobileView: "list" | "main" | "details"; activeTab: string; showConversationsList: boolean } | null>(null);
+  // Muda a cada clique em "Disparo em massa": remonta o painel do zero, fechando o que estava aberto nele.
+  const [disparoNonce, setDisparoNonce] = useState(0);
   const [agendaContato, setAgendaContatoState] = useState<{ id: string; nome: string } | null>(null);
   const [extrasEmpresa, setExtrasEmpresaState] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(false);
