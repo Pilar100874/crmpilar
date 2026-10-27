@@ -361,7 +361,7 @@ export function StepCompose({
       type: 'text',
       content: textInput
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     setTextInput('');
   };
 
@@ -373,7 +373,7 @@ export function StepCompose({
         ...item,
         id: `template-${template.id}-${Date.now()}-${index}`
       }));
-      onContentChange([...contentItems, ...newItems]);
+      mudar([...contentItems, ...newItems]);
     } else {
       // Fallback for old templates without content_items
       const newItem: ContentItem = {
@@ -382,7 +382,7 @@ export function StepCompose({
         content: template.conteudo,
         quickReplyTitle: template.nome
       };
-      onContentChange([...contentItems, newItem]);
+      mudar([...contentItems, newItem]);
     }
     toast.success(`Template "${template.nome}" adicionado`);
   };
@@ -396,7 +396,7 @@ export function StepCompose({
       mediaThumbnail: item.thumbnail_url,
       mediaDuration: item.duracao_segundos
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
   };
 
   const addCatalog = (catalog: SavedCatalog) => {
@@ -410,7 +410,7 @@ export function StepCompose({
       catalogName: catalog.nome,
       quickReplyTitle: 'Catálogo'
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     toast.success(`Catálogo "${catalog.nome}" adicionado`);
   };
 
@@ -442,12 +442,12 @@ export function StepCompose({
       quickReplyTitle: attachment.type === 'link' ? 'Link' : 'Anexo',
       fileType: fileType
     };
-    onContentChange([...contentItems, newItem]);
+    mudar([...contentItems, newItem]);
     toast.success(`"${attachment.title}" adicionado`);
   };
 
   const removeItem = (id: string) => {
-    onContentChange(contentItems.filter(item => item.id !== id));
+    mudar(contentItems.filter(item => item.id !== id));
   };
 
   const sensors = useSensors(
@@ -463,7 +463,7 @@ export function StepCompose({
     if (over && active.id !== over.id) {
       const oldIndex = contentItems.findIndex((item) => item.id === active.id);
       const newIndex = contentItems.findIndex((item) => item.id === over.id);
-      onContentChange(arrayMove(contentItems, oldIndex, newIndex));
+      mudar(arrayMove(contentItems, oldIndex, newIndex));
     }
   };
 
