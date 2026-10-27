@@ -7050,6 +7050,7 @@ ${recentMessages}
         ) : showDisparoMassa && !isMobile ? (
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
             <DisparoMassaPanel
+              key={`disparo-desktop-${disparoNonce}`}
               fontes={fontesDisparo}
               abaInicial={filtroFila}
               onClose={fecharDisparoMassa}
