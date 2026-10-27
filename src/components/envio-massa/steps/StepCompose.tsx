@@ -38,7 +38,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { EmailCompose } from './EmailCompose';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ModelosEmailCRUD } from './ModelosEmailCRUD';
 
 // Interfaces for Catalog
 interface SavedCatalog {
@@ -76,6 +77,10 @@ interface StepComposeProps {
   canal?: CanalEnvio | null;
   onOpenTemplates?: () => void;
   onTemplatesChanged?: () => void;
+  /** Usado na tela de modelos: esconde "Gerenciar templates" e troca os rótulos do rodapé. */
+  modoModelo?: boolean;
+  rotuloVoltar?: string;
+  rotuloAvancar?: string;
 }
 
 const VARIABLES = [
@@ -247,9 +252,24 @@ export function StepCompose({
   onNext,
   canal,
   onOpenTemplates,
-  onTemplatesChanged
+  onTemplatesChanged,
+  modoModelo = false,
+  rotuloVoltar = 'Voltar',
+  rotuloAvancar = 'Continuar'
 }: StepComposeProps) {
-  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>(modoModelo ? 'text' : 'templates');
+  const ehEmail = canal === 'email';
+  const [modelosEmailAberto, setModelosEmailAberto] = useState(false);
+  const [assunto, setAssunto] = useState(contentItems[0]?.emailSubject || '');
+  useEffect(() => {
+    const externo = contentItems[0]?.emailSubject;
+    if (externo !== undefined && externo !== assunto) setAssunto(externo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentItems]);
+  // E-mail: o assunto vive no primeiro item e todos os itens levam a marca de e-mail.
+  const emitirEmail = (itens: ContentItem[], novoAssunto: string) => onContentChange(itens.map((i, n) => ({ ...i, emailTemplate: true, emailSubject: n === 0 ? novoAssunto : undefined })));
+  const mudar = (itens: ContentItem[]) => ehEmail ? emitirEmail(itens, assunto) : onContentChange(itens);
+  const mudarAssunto = (valor: string) => { setAssunto(valor); if (contentItems.length) emitirEmail(contentItems, valor); };
   const [textInput, setTextInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
