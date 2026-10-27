@@ -5055,9 +5055,13 @@ ${recentMessages}
     setHistoricoCliente(null);
     setAgendaContato(null);
     setShowEnvioMassaWizard(false);
+    // Reabre do zero: sem canal nem contatos de um disparo anterior.
+    setIdsEnvioMassa([]);
+    setCanalEnvioMassa(undefined);
     setActiveTab("agenda");
     if (!discadorModo) setAgendaViewMode("default");
     setMobileView("main");
+    setDisparoNonce((n) => n + 1);
     setShowDisparoMassa(true);
   };
 
