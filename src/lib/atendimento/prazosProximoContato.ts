@@ -6,8 +6,8 @@ export type OrigemPrazo = "massa_email" | "massa_whatsapp" | "finalizar_atendime
 export type PrazosProximoContato = Record<OrigemPrazo, number>;
 
 export const PRAZOS_PADRAO: PrazosProximoContato = {
-  massa_email: 2,
-  massa_whatsapp: 3,
+  massa_email: 1,
+  massa_whatsapp: 1,
   finalizar_atendimento: 4,
 };
 
@@ -29,8 +29,8 @@ export function lerPrazos(): PrazosProximoContato {
   try {
     const bruto = JSON.parse(localStorage.getItem(CHAVE) || "{}");
     return {
-      massa_email: normalizar(bruto.massa_email, PRAZOS_PADRAO.massa_email),
-      massa_whatsapp: normalizar(bruto.massa_whatsapp, PRAZOS_PADRAO.massa_whatsapp),
+      massa_email: PRAZOS_PADRAO.massa_email, // disparo em massa: sempre 1 dia (personalizado na etapa de agendamento)
+      massa_whatsapp: PRAZOS_PADRAO.massa_whatsapp,
       finalizar_atendimento: normalizar(bruto.finalizar_atendimento, PRAZOS_PADRAO.finalizar_atendimento),
     };
   } catch {

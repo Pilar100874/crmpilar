@@ -12,7 +12,7 @@ export function PrazosProximoContatoDialog({ open, onOpenChange }: { open: boole
   const [prazos, setPrazos] = useState<PrazosProximoContato>(lerPrazos);
   useEffect(() => { if (open) setPrazos(lerPrazos()); }, [open]);
 
-  const origens = Object.keys(ROTULOS_PRAZO) as OrigemPrazo[];
+  const origens: OrigemPrazo[] = ["finalizar_atendimento"];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
