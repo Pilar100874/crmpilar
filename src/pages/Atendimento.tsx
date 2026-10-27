@@ -8201,6 +8201,7 @@ ${recentMessages}
     {showDisparoMassa && isMobile && (
       <div className="fixed inset-0 z-[700] bg-background">
         <DisparoMassaPanel
+          key={`disparo-mobile-${disparoNonce}`}
           fontes={fontesDisparo}
               abaInicial={filtroFila}
           onClose={fecharDisparoMassa}
