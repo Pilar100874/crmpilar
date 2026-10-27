@@ -28865,6 +28865,7 @@ export type Database = {
           sip_porta: number
           sip_porta_alternativa: number
           ucm_host: string
+          ucm_host_interno: string | null
           ucm_password: string
           ucm_user: string
           updated_at: string
@@ -28886,6 +28887,7 @@ export type Database = {
           sip_porta?: number
           sip_porta_alternativa?: number
           ucm_host: string
+          ucm_host_interno?: string | null
           ucm_password: string
           ucm_user: string
           updated_at?: string
@@ -28907,6 +28909,7 @@ export type Database = {
           sip_porta?: number
           sip_porta_alternativa?: number
           ucm_host?: string
+          ucm_host_interno?: string | null
           ucm_password?: string
           ucm_user?: string
           updated_at?: string

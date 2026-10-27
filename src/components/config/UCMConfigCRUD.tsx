@@ -19,6 +19,7 @@ interface UCMConfigCRUDProps {
 interface UCMConfig {
   id?: string;
   ucm_host: string;
+  ucm_host_interno?: string | null;
   remote_ip?: string;
   sip_porta?: number | string | null;
   sip_porta_alternativa?: number | string | null;
@@ -39,6 +40,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
   const { toast } = useToast();
   const [config, setConfig] = useState<UCMConfig>({
     ucm_host: "",
+    ucm_host_interno: "",
     remote_ip: "",
     sip_porta: 8089,
     sip_porta_alternativa: 8089,
@@ -97,8 +99,9 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         .upsert({
           estabelecimento_id: estabelecimentoId,
           ucm_host: config.ucm_host,
-          // O acesso é sempre externo: o mesmo endereço/porta vale para todos os usos.
+          // Externo: usado pela nuvem e fora da empresa. Interno: tentado primeiro pelos aparelhos da rede local.
           remote_ip: config.ucm_host,
+          ucm_host_interno: config.ucm_host_interno?.trim() || null,
           sip_porta: config.sip_porta ? Number(config.sip_porta) : 8089,
           sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
           ramal_portaria: config.ramal_portaria || null,
@@ -169,7 +172,17 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
                 onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Endereço público (IP fixo ou domínio) do UCM, sem https://. É o único endereço usado pelo sistema.
+                Endereço público (IP fixo ou domínio) do UCM, sem https://. Usado pelo sistema na nuvem e por quem está fora da empresa.
+              </p>
+              <Label htmlFor="ucm_host_interno" className="pt-2 block">Servidor do UCM (endereço interno)</Label>
+              <Input
+                id="ucm_host_interno"
+                placeholder="ex.: 192.168.0.10 (opcional)"
+                value={config.ucm_host_interno || ""}
+                onChange={(e) => setConfig({ ...config, ucm_host_interno: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                IP do UCM na rede da empresa. Os aparelhos tentam primeiro este endereço e, se não conseguirem, usam o externo.
               </p>
             </div>
             <div className="space-y-2 w-24">

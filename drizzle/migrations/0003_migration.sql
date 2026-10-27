@@ -1,0 +1,1 @@
+ALTER TABLE public.ucm_config ADD COLUMN IF NOT EXISTS ucm_host_interno text;
