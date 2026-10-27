@@ -31,7 +31,7 @@ serve(async (req) => {
     // Get user email config
     const { data: usuario, error: userError } = await supabaseClient
       .from("usuarios")
-      .select("email, nome, smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id")
+      .select("id, email, nome, smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id")
       .eq("auth_user_id", user.id)
       .single();
 
@@ -79,7 +79,8 @@ serve(async (req) => {
       ],
       to: to,
       subject: subject,
-      text: body || ""
+      text: body || "",
+      ...(html ? { html } : {})
     };
 
     console.log("Payload (sem senha):", { 
@@ -109,7 +110,7 @@ serve(async (req) => {
     const { error: saveError } = await supabaseClient
       .from("emails")
       .insert({
-        user_id: user.id,
+        user_id: usuario.id,
         from_email: usuario.email,
         to_email: to,
         subject: subject,

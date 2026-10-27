@@ -1,5 +1,9 @@
 # Roteiro
 
+## Modelos e disparo de e-mail
+- [x] Montar e salvar modelos de e-mail com assunto, textos, imagens e variáveis; prévia personalizada por contato. Salvamento e reutilização conferidos com um modelo comercial real.
+- [x] Reutilizar envio de e-mail existente com acompanhamento sequencial e cancelamento; testes e fluxo no navegador com envio interceptado, sem mensagens reais. Entrega real e suporte HTML do servidor externo não verificados.
+
 ## Acompanhamento na etapa 5
 - [x] Exibir andamento por contato e cancelar os próximos sem desfazer processados, preservando o resultado na tela.
 - [x] Validar execução sequencial e cancelamento com três testes; conferir acompanhamento e cancelamento no navegador com registro interceptado, sem mensagens reais. O caminho central existente registra retornos, não confirma entrega de mensagens.

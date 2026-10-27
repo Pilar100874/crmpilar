@@ -38,6 +38,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { EmailCompose } from './EmailCompose';
 
 // Interfaces for Catalog
 interface SavedCatalog {
@@ -74,6 +75,7 @@ interface StepComposeProps {
   onNext: () => void;
   canal?: CanalEnvio | null;
   onOpenTemplates?: () => void;
+  onTemplatesChanged?: () => void;
 }
 
 const VARIABLES = [
@@ -244,7 +246,8 @@ export function StepCompose({
   onBack,
   onNext,
   canal,
-  onOpenTemplates
+  onOpenTemplates,
+  onTemplatesChanged
 }: StepComposeProps) {
   const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
   const [textInput, setTextInput] = useState('');
@@ -497,6 +500,8 @@ export function StepCompose({
     }
   };
 
+  if (canal === 'email') return <EmailCompose contentItems={contentItems} templates={templates} media={media} onContentChange={onContentChange} onUploadMedia={onUploadMedia} onBack={onBack} onNext={onNext} onTemplatesChanged={onTemplatesChanged} />;
+
   return (
     <div className="flex flex-col h-full">
       {/* Content */}
@@ -555,7 +560,7 @@ export function StepCompose({
                       </p>
                     </div>
                   ) : (
-                    templates.map(template => {
+                    templates.filter(template => !template.content_items?.[0]?.emailTemplate).map(template => {
                       const hasContentItems = template.content_items && template.content_items.length > 0;
                       const itemCount = hasContentItems ? template.content_items.length : 1;
                       const textCount = hasContentItems ? template.content_items.filter(i => i.type === 'text').length : 1;

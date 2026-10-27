@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
 import { ItemEnvio } from '../hooks/execucaoSequencial';
 import { MonitorEnvio } from './MonitorEnvio';
+import { EmailPreview } from './EmailPreview';
 
 interface StepConfirmProps {
   contentItems: ContentItem[];
@@ -165,7 +166,7 @@ export function StepConfirm({
                   </div>
                 </div>
 
-                {contentItems.map((item) => (
+                {canal === 'email' ? <EmailPreview itens={contentItems} contato={{ id: 'preview', ...previewContact }} /> : contentItems.map((item) => (
                   <div key={item.id} className="flex justify-end">
                     <Card className="max-w-[90%] p-2 bg-primary/10 border-primary/20">
                       {(item.type === 'text' || item.type === 'quick_reply') && (

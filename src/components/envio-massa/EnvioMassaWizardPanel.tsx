@@ -1,3 +1,4 @@
+import { enviarEmailMassa } from "./enviarEmailMassa";
 import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -120,6 +121,7 @@ export function EnvioMassaWizardPanel({
   } = useQuickReplies(estabelecimentoId);
 
   const { 
+    refetch: recarregarTemplates,
     templates: envioMassaTemplates,
     loading: loadingTemplates
   } = useEnvioMassaTemplates(estabelecimentoId);
@@ -219,6 +221,11 @@ export function EnvioMassaWizardPanel({
   const handleConfirm = async () => {
     if (!usuarioId || !estabelecimentoId) {
       toast.error('Dados do usuário não encontrados');
+      return;
+    }
+
+    if (state.canal === 'email') {
+      await executarEnvio(state.selectedContacts, state.canal, contact => enviarEmailMassa(state.contentItems, contact, estabelecimentoId, usuarioId, format(state.proximaDataContato, 'yyyy-MM-dd')));
       return;
     }
 
@@ -446,6 +453,8 @@ export function EnvioMassaWizardPanel({
 
           {state.step === 'compose' && (
             <StepCompose
+            canal={state.canal}
+            onTemplatesChanged={recarregarTemplates}
               contentItems={state.contentItems}
               quickReplies={quickReplies}
               groupedReplies={getGroupedReplies()}
@@ -460,6 +469,7 @@ export function EnvioMassaWizardPanel({
 
           {state.step === 'preview' && (
             <StepPreview
+            canal={state.canal}
               contentItems={state.contentItems}
               selectedContacts={state.selectedContacts}
               onBack={() => goToStep('compose')}
