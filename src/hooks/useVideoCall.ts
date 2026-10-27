@@ -92,12 +92,14 @@ export const useVideoCall = () => {
   ) => {
     console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
     
+    // O servidor pode já vir com porta ("192.168.0.10:8089"); só acrescenta quando não tem.
+    const alvo = server.includes(':') ? server : `${server}:8089`;
     const wsServers = [
-      `wss://${server}:8089/ws`,
-      `ws://${server}:8089/ws`
+      `wss://${alvo}/ws`,
+      `ws://${alvo}/ws`
     ];
 
-    const sipUri = `sip:${extension}@${server}`;
+    const sipUri = `sip:${extension}@${server.includes(':') ? server.split(':')[0] : server}`;
     
     // Obter stream local antes de criar UA
     const stream = await getLocalMedia();
@@ -169,7 +171,7 @@ export const useVideoCall = () => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não identificado');
       const { data: ucmData } = await supabase
         .from('ucm_config')
-        .select('ucm_host, remote_ip, ucm_host_interno, conference_room_number')
+        .select('ucm_host, remote_ip, ucm_host_interno, sip_porta, sip_porta_interna, conference_room_number')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
@@ -182,10 +184,20 @@ export const useVideoCall = () => {
       let ua: UserAgent | null = null;
       let connectedServer = '';
 
+      const comPorta = (host: string, porta?: number | string | null) => {
+        const h = (host || '').trim();
+        if (!h || h.includes(':')) return h;
+        return `${h}:${Number(porta) || 8089}`;
+      };
+      const interna = ucmData.ucm_host_interno?.trim();
+      const servidorInterno = interna
+        ? comPorta(interna, ucmData.sip_porta_interna || ucmData.sip_porta)
+        : comPorta(ucmData.ucm_host, ucmData.sip_porta);
+
       // Tentar local primeiro
       try {
         const result = await tryConnect(
-          ucmData.ucm_host_interno || ucmData.ucm_host,
+          servidorInterno,
           userData.ramal,
           userData.senha_sip,
           userData.ramal,
@@ -200,7 +212,7 @@ export const useVideoCall = () => {
         const externo = ucmData.ucm_host_interno ? ucmData.ucm_host : ucmData.remote_ip;
         if (externo) {
           const result = await tryConnect(
-            externo,
+            comPorta(externo, ucmData.sip_porta),
             userData.ramal,
             userData.senha_sip,
             userData.ramal,

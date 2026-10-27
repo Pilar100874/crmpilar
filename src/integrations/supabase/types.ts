@@ -28864,6 +28864,7 @@ export type Database = {
           remote_ip: string | null
           sip_porta: number
           sip_porta_alternativa: number
+          sip_porta_interna: number | null
           ucm_host: string
           ucm_host_interno: string | null
           ucm_password: string
@@ -28886,6 +28887,7 @@ export type Database = {
           remote_ip?: string | null
           sip_porta?: number
           sip_porta_alternativa?: number
+          sip_porta_interna?: number | null
           ucm_host: string
           ucm_host_interno?: string | null
           ucm_password: string
@@ -28908,6 +28910,7 @@ export type Database = {
           remote_ip?: string | null
           sip_porta?: number
           sip_porta_alternativa?: number
+          sip_porta_interna?: number | null
           ucm_host?: string
           ucm_host_interno?: string | null
           ucm_password?: string
