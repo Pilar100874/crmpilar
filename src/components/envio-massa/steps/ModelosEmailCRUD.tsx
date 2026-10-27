@@ -17,10 +17,12 @@ interface Props {
   media: MediaGalleryItem[];
   onUploadMedia: (arquivo: File) => Promise<MediaGalleryItem | null>;
   onTemplatesChanged?: () => void;
+  canal?: 'email' | 'whatsapp';
 }
 
 /** Tela separada de modelos de e-mail, no mesmo formato da de templates do WhatsApp. */
-export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: Props) {
+export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged, canal = 'email' }: Props) {
+  const ehEmail = canal === 'email';
   const [modelos, setModelos] = useState<EnvioMassaTemplate[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [editando, setEditando] = useState<EnvioMassaTemplate | 'novo' | null>(null);
@@ -37,7 +39,7 @@ export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: P
       if (!estab) return;
       const { data, error } = await supabase.from('envio_massa_templates').select('*').eq('estabelecimento_id', estab).order('ordem');
       if (error) throw error;
-      setModelos(((data || []) as unknown as EnvioMassaTemplate[]).filter(t => t.content_items?.[0]?.emailTemplate));
+      setModelos(((data || []) as unknown as EnvioMassaTemplate[]).filter(t => ehEmail ? !!t.content_items?.[0]?.emailTemplate : !t.content_items?.[0]?.emailTemplate));
     } catch { toast.error('Não foi possível carregar os modelos'); }
     finally { setCarregando(false); }
   };
@@ -52,7 +54,8 @@ export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: P
 
   const salvar = async () => {
     if (!nome.trim()) { toast.error('Informe o nome do modelo'); return; }
-    if (!itens[0]?.emailSubject?.trim()) { toast.error('Informe o assunto do e-mail'); return; }
+    if (itens.length === 0) { toast.error('Adicione conteúdo ao modelo'); return; }
+    if (ehEmail && !itens[0]?.emailSubject?.trim()) { toast.error('Informe o assunto do e-mail'); return; }
     setSalvando(true);
     try {
       const estab = await getEstabelecimentoId();
@@ -62,7 +65,7 @@ export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: P
         ? await supabase.from('envio_massa_templates').update(dados).eq('id', editando.id)
         : await supabase.from('envio_massa_templates').insert({ ...dados, estabelecimento_id: estab, ativo: true, ordem: modelos.length });
       if (error) throw error;
-      toast.success('Modelo de e-mail salvo');
+      toast.success(ehEmail ? 'Modelo de e-mail salvo' : 'Modelo de WhatsApp salvo');
       setEditando(null); await carregar(); onTemplatesChanged?.();
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível salvar o modelo'); }
     finally { setSalvando(false); }
@@ -84,7 +87,7 @@ export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: P
           <div className="space-y-1"><Label htmlFor="descricao-modelo-email">Descrição (opcional)</Label><Input id="descricao-modelo-email" value={descricao} onChange={e => setDescricao(e.target.value)} /></div>
         </div>
         <StepCompose
-          canal="email" modoModelo rotuloVoltar="Cancelar" rotuloAvancar={salvando ? 'Salvando…' : 'Salvar modelo'}
+          canal={canal} modoModelo rotuloVoltar="Cancelar" rotuloAvancar={salvando ? 'Salvando…' : 'Salvar modelo'}
           contentItems={itens} quickReplies={[]} groupedReplies={{}} templates={modelos} media={media}
           onContentChange={setItens} onUploadMedia={onUploadMedia}
           onBack={() => setEditando(null)} onNext={() => { if (!salvando) salvar(); }}
@@ -95,15 +98,15 @@ export function ModelosEmailCRUD({ media, onUploadMedia, onTemplatesChanged }: P
 
   return (
     <div className="space-y-3 min-w-0">
-      <Button onClick={() => abrir('novo')} className="gap-2"><Plus className="h-4 w-4" />Novo modelo de e-mail</Button>
+      <Button onClick={() => abrir('novo')} className="gap-2"><Plus className="h-4 w-4" />{ehEmail ? 'Novo modelo de e-mail' : 'Novo modelo de WhatsApp'}</Button>
       {carregando ? <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        : modelos.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">Nenhum modelo de e-mail cadastrado.</p>
+        : modelos.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">{ehEmail ? 'Nenhum modelo de e-mail cadastrado.' : 'Nenhum modelo de WhatsApp cadastrado.'}</p>
         : modelos.map(m => (
           <Card key={m.id} className="p-3 flex items-start gap-3 min-w-0">
             <Mail className="h-4 w-4 mt-1 text-primary shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="font-medium text-sm break-words">{m.nome}</p>
-              <p className="text-xs text-muted-foreground break-words">Assunto: {m.content_items?.[0]?.emailSubject || '—'}</p>
+              {ehEmail && <p className="text-xs text-muted-foreground break-words">Assunto: {m.content_items?.[0]?.emailSubject || '—'}</p>}
               <Badge variant="outline" className="text-xs h-5 mt-1">{m.content_items?.length || 0} itens</Badge>
             </div>
             <Button size="icon" variant="ghost" aria-label="Editar modelo" onClick={() => abrir(m)}><Pencil className="h-4 w-4" /></Button>
