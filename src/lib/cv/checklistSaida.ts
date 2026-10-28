@@ -21,6 +21,10 @@ export const RESPONSAVEIS: { valor: Responsavel; rotulo: string }[] = [
   { valor: "mecanico", rotulo: "Mecânico" },
 ];
 
+export const periodicidadeChecklistDias: Record<Responsavel, number> = {
+  motorista: 1, porteiro: 1, mecanico: 7,
+};
+
 const CAMINHOES = ["Caminhão Leve", "Caminhão Médio", "Caminhão Pesado"];
 const PESADOS = ["Caminhão Médio", "Caminhão Pesado"];
 const QUATRO_RODAS = ["Carro", "Van", ...CAMINHOES];
@@ -68,12 +72,12 @@ const SUG: Sug[] = [
   ["mecanico", "Elétrica", "Bateria, terminais e fixação", []],
   ["mecanico", "Elétrica", "Arla 32 abastecido", PESADOS],
   ["mecanico", "Geral", "Vazamentos de óleo, água ou combustível", []],
-  ["mecanico", "Geral", "Liberado para sair (assinatura do mecânico)", []],
+  ["mecanico", "Geral", "Liberação semanal do veículo: preencher e assinar este check list uma vez por semana (validade de 7 dias), anotando placa, data da inspeção e validade; registrar pendências antes de liberar", []],
   // Portaria — conferência do veículo e do motorista, com dados anotados no formulário
   ["porteiro", "Geral", "Conferir e anotar no formulário a placa, o tipo e a cor do veículo que sai", []],
   ["porteiro", "Geral", "Anotar hora de saída e quilometragem do painel do veículo", []],
   ["porteiro", "Documentação", "Conferir e anotar a CNH válida e o nome do motorista autorizado a este veículo", []],
-  ["porteiro", "Documentação", "Conferir a liberação do mecânico, quando exigida, e anotar no formulário", []],
+  ["porteiro", "Documentação", "Conferir a existência do check list semanal do mecânico preenchido e assinado para a mesma placa, dentro da validade de 7 dias; anotar data, validade e nome do mecânico. Se ausente, vencido ou sem liberação, reter a saída e comunicar o responsável", []],
   ["porteiro", "Segurança", "Motorista sem sinais de embriaguez (hálito, fala, equilíbrio); em caso de suspeita, registrar a ocorrência e reter a saída até autorização", []],
   ["porteiro", "Segurança", "Motorista em condição de dirigir (sem sonolência ou sinais de uso de substâncias); registrar qualquer alteração de comportamento", []],
   ["porteiro", "Segurança", "Ocupantes com cinto de segurança afivelado antes da liberação", QUATRO_RODAS],
@@ -126,20 +130,24 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
     primeira = false;
 
     doc.setFont("helvetica", "bold").setFontSize(14);
-    doc.text(`Check list diário de saída de veículo — ${rotulo}`, 10, inicio);
+    doc.text(`Check list ${periodicidadeChecklistDias[valor] === 7 ? "semanal de liberação" : "diário de saída"} de veículo — ${rotulo}`, 10, inicio);
     doc.setFont("helvetica", "normal").setFontSize(9);
     if (empresa) doc.text(empresa, larg - 10, inicio, { align: "right" });
-    const campos = ["Data: ____/____/______", "Placa: __________", "Hora saída: ______",
-      "KM saída: __________", `${rotulo}: ______________________________`];
+    const campos = valor === "mecanico"
+      ? ["Data inspeção: ____/____/______", "Placa: __________", "KM: __________", "Válido até: ____/____/______", "Mecânico: ____________________"]
+      : ["Data: ____/____/______", "Placa: __________", "Hora saída: ______",
+        "KM saída: __________", `${rotulo}: ______________________________`];
     doc.text(campos.join("     "), 10, inicio + 7);
     doc.setFontSize(7.5);
     doc.text("Marque a coluna do veículo. OK = conforme; NC = não conforme (anotar); NA = não se aplica. Colunas cinzas não se aplicam.", 10, inicio + 12);
+    if (valor === "mecanico") doc.text("Inspeção e liberação uma vez por semana (7 dias). Registrar a validade e apresentar o formulário preenchido e assinado à portaria.", 10, inicio + 17);
+    if (valor === "porteiro") doc.text("Check list do mecânico: data ____/____/______   válido até ____/____/______   mecânico ____________________   placa __________", 10, inicio + 17);
 
     // Colunas de tipo com largura igual (mín. 18mm p/ caber OK e NC)
     const colTipo = Math.max(18, Math.min(30, (larg - 20 - 24 - 70) / Math.max(1, tipos.length)));
     const corpo = lista.map(i => [i.categoria, i.item, ...tipos.map(t => (aplicaAoTipo(i, t) ? "" : "—"))]);
     autoTable(doc, {
-      startY: inicio + 15,
+      startY: inicio + (valor === "motorista" ? 15 : 20),
       head: [["Grupo", "Item a verificar", ...tipos]],
       body: corpo,
       theme: "grid",
@@ -178,6 +186,9 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
     doc.text("Assinatura do responsável pela liberação", larg - 100, y + 4);
     if (valor === "porteiro") {
       doc.text("Decisão: [  ] Saída liberada   [  ] Saída retida     Autorizado por: ____________________", 10, y + 10);
+    }
+    if (valor === "mecanico") {
+      doc.text("Decisão do mecânico: [  ] Veículo liberado   [  ] Veículo não liberado     Validade: 7 dias da inspeção", 10, y + 10);
     }
   });
 

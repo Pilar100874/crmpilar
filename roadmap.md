@@ -1,6 +1,7 @@
 # Roteiro
 
 ## Biblioteca e check lists de veículos
+- [ ] Incluir liberação semanal do mecânico e conferência cruzada pela portaria, com dados nos PDFs separados; verificar itens salvos e downloads.
 - [x] Incluir freios no motorista e gerar três PDFs separados; downloads reais e dez testes conferidos. Revisão visual corrigiu página quase vazia do motorista ampliando a coluna de grupos; três formulários sem cortes ou sobreposições.
 - [x] Incluir check list do porteiro com 12 itens salvos; tela e PDF conferidos, seção abaixo do motorista e seis testes aprovados.
 - [x] Unificar itens por grupos, preservando os prazos da manutenção e os check lists existentes.

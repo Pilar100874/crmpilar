@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { itensSugeridos, aplicaAoTipo, RESPONSAVEIS, itensDoResponsavel } from "./checklistSaida";
+import { itensSugeridos, aplicaAoTipo, RESPONSAVEIS, itensDoResponsavel, periodicidadeChecklistDias } from "./checklistSaida";
 import { disponivelNoChecklist, selecionarResponsavel } from "./gruposBiblioteca";
 
 describe("check list de saída", () => {
+  it("define liberação do mecânico uma vez por semana, sem mudar a conferência diária da portaria", () => {
+    expect(periodicidadeChecklistDias.mecanico).toBe(7);
+    expect(periodicidadeChecklistDias.porteiro).toBe(1);
+    expect(periodicidadeChecklistDias.motorista).toBe(1);
+  });
   it("inclui freios de serviço e estacionamento no motorista", () => {
     const freios = itensSugeridos().find(i => i.responsavel === "motorista" && i.categoria === "Freios");
     expect(freios?.item).toContain("freios de serviço e estacionamento");
