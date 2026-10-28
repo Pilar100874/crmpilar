@@ -419,7 +419,7 @@ export function EnvioMassaWizardPanel({
           <h1 className="text-lg font-semibold">Envio em Massa</h1>
           {state.canal && (
             <Badge variant="secondary">
-              {state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+              {ROTULO_CANAL[state.canal]}
             </Badge>
           )}
         </div>
@@ -447,13 +447,13 @@ export function EnvioMassaWizardPanel({
             >
               {index + 1}
             </div>
-            <span 
+            <span
               className={`
                 hidden xl:block ml-2 text-sm whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
-              {step.label}
+              {rotuloPasso(step)}
             </span>
             {index < passosVisiveis.length - 1 && (
               <div 
