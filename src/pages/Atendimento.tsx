@@ -6047,6 +6047,7 @@ ${recentMessages}
                     onTaskCompleted={loadTodayTasks}
                     discadorModo={activeTab === "visita" ? null : discadorModo}
                     tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
+                    dataRetornoInicial={dataRetornoDiscador}
                     onClose={() => {
                       setAgendaViewMode('default');
                       setFluxoCurrentTask(null);
@@ -6996,6 +6997,7 @@ ${recentMessages}
             onTaskCompleted={loadTodayTasks}
             discadorModo={discadorModo}
             tipoContatoFixo="telefone"
+            dataRetornoInicial={dataRetornoDiscador}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
