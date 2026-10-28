@@ -33,6 +33,15 @@ describe("check list de saída", () => {
     expect(oleo).toBeDefined();
     expect(oleo && aplicaAoTipo(oleo, "Caminhão Pesado")).toBe(true);
   });
+  it("verifica vazamento de óleo no motor para motorista e mecânico", () => {
+    const itens = itensSugeridos();
+    const motorista = itens.find(i => i.responsavel === "motorista" && i.categoria === "Motor" && i.item.includes("vazamento de óleo no motor"));
+    const mecanico = itens.find(i => i.responsavel === "mecanico" && i.categoria === "Motor" && i.item.includes("Vazamento de óleo no motor"));
+    expect(motorista).toBeDefined();
+    expect(mecanico).toBeDefined();
+    expect(motorista && aplicaAoTipo(motorista, "Carro")).toBe(true);
+    expect(mecanico && aplicaAoTipo(mecanico, "Caminhão Pesado")).toBe(true);
+  });
   const item = { uso_manutencao: false, ativo: true, sistema: "Motor", checklist_responsaveis: ["motorista", "mecanico"], checklist_selecionados: ["mecanico"], checklist_tipos: ["Carro"] };
   it("filtra simultaneamente grupo, responsável e veículo", () => {
     expect(disponivelNoChecklist(item, "motorista", "Motor", "Carro")).toBe(true);
