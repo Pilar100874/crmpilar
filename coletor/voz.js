@@ -309,8 +309,10 @@ function log(t) {
   MON.eventos.unshift({ em: new Date().toISOString(), texto: t }); MON.eventos.length = Math.min(MON.eventos.length, 40);
 }
 
-async function principal() {
-  while (rodando) {
+let geracao = 0;
+async function principal(minha) {
+  const ativo = () => rodando && minha === geracao;
+  while (ativo()) {
     try {
       const resp = (await api('config')) || {};
       const agente = resp.agente || {};
@@ -324,18 +326,22 @@ async function principal() {
       const ramal = String(agente.ramal_ia || '').trim();
       escutaAgente = agente.codigo_escuta || '';
       if (!host || !ramal) { MON.central = !host ? 'Central não configurada: preencha a tela Configuração PABX Grandstream UCM' : 'Agente sem ramal da IA: preencha em Agentes de Voz'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
-      sip = new Sip({ host, porta, ramal, senha: agente.senha_ramal_ia || '', log, aoReceber: (c) => aoReceber(c) });
-      await sip.abrir();
-      if (!(await sip.registrar())) { MON.central = 'Falha no registro'; await sip.parar(); sip = null; await dormir(15_000); continue; }
+      // Instância local: desligar/religar o botão não pode zerar a conexão desta volta.
+      const s = new Sip({ host, porta, ramal, senha: agente.senha_ramal_ia || '', log, aoReceber: (c) => aoReceber(c) });
+      sip = s;
+      const soltar = async () => { try { await s.parar(); } catch { /* já fechado */ } if (sip === s) sip = null; };
+      await s.abrir();
+      if (!ativo()) { await soltar(); return; }
+      if (!(await s.registrar())) { MON.central = 'Falha no registro'; await soltar(); await dormir(15_000); continue; }
       MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${host}`; log(MON.central);
       let ultimo = Date.now();
-      while (rodando) {
-        if (Date.now() - ultimo > 240_000) { if (!(await sip.registrar())) { MON.central = 'Registro perdido'; break; } ultimo = Date.now(); }
+      while (ativo()) {
+        if (Date.now() - ultimo > 240_000) { if (!(await s.registrar())) { MON.central = 'Registro perdido'; break; } ultimo = Date.now(); }
         const cmd = (await silencioso(api('comandos')))?.comando;
         if (cmd) executarComando(cmd);
         await dormir(3000);
       }
-      await sip.parar(); sip = null;
+      await soltar();
     } catch (e) {
       MON.central = 'Erro: ' + e.message; log('Erro: ' + e.message); await dormir(15_000);
     }
@@ -345,6 +351,7 @@ async function principal() {
 async function aoReceber(c) {
   const cfg = (await silencioso(api('config')))?.agente;
   const modos = cfg?.modos || [];
+  if (!sip) return;
   if (!cfg || !modos.includes('receber') || sip.chamadas.size > 1) { sip.recusar(c); return; }
   log(`Atendendo ${c.numero}`);
   await sip.atender(c);
@@ -356,6 +363,7 @@ async function executarComando(cmd) {
   const escuta = escutaAgente || '*45';
   const destino = tipo === 'ligar' ? cmd.numero : `${escuta}${cmd.ramal}`;
   log(tipo === 'ligar' ? `Ligando para ${destino}` : `Escutando o ramal ${cmd.ramal}`);
+  if (!sip) return;
   const c = await sip.ligar(destino);
   if (!c) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta' })); return; }
   silencioso(api('comando_status', { comando_id: cmd.id, status: 'concluido' }));
@@ -424,7 +432,7 @@ function startVoz() {
   saveConfig({ vozEnabled: true });
   if (rodando) return;
   rodando = true; MON.servico = 'Conectando';
-  principal().finally(() => { if (!rodando) MON.servico = 'Parado'; });
+  principal(++geracao).finally(() => { if (!rodando) MON.servico = 'Parado'; });
 }
 function stopVoz() {
   saveConfig({ vozEnabled: false });
