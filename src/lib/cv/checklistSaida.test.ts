@@ -17,10 +17,20 @@ describe("check list de saída", () => {
   it("ordena portaria logo após motorista e antes do mecânico", () => {
     expect(RESPONSAVEIS.map(r => r.valor)).toEqual(["motorista", "porteiro", "mecanico"]);
   });
-  it("exige conferência do formulário preenchido pelo porteiro", () => {
-    const recebimento = itensSugeridos().find(i => i.responsavel === "porteiro" && i.item === "Recebi o check list do motorista preenchido e assinado");
-    expect(recebimento).toBeDefined();
-    expect(recebimento && aplicaAoTipo(recebimento, "Carro")).toBe(true);
+  it("porteiro verifica embriaguez e anota dados do veículo", () => {
+    const itens = itensSugeridos();
+    const embriaguez = itens.find(i => i.responsavel === "porteiro" && i.item.includes("sinais de embriaguez"));
+    const placa = itens.find(i => i.responsavel === "porteiro" && i.item.includes("placa, o tipo e a cor"));
+    const km = itens.find(i => i.responsavel === "porteiro" && i.item.includes("quilometragem do painel"));
+    expect(embriaguez).toBeDefined();
+    expect(placa).toBeDefined();
+    expect(km).toBeDefined();
+    expect(embriaguez && aplicaAoTipo(embriaguez, "Caminhão Pesado")).toBe(true);
+  });
+  it("porteiro não lista mais itens de carga ou portão", () => {
+    const porteiro = itensSugeridos().filter(i => i.responsavel === "porteiro");
+    expect(porteiro.every(i => !i.item.includes("baú"))).toBe(true);
+    expect(porteiro.every(i => !i.item.includes("Portão"))).toBe(true);
   });
   it("inclui água diariamente nas responsabilidades do motorista", () => {
     const agua = itensSugeridos().find(i => i.responsavel === "motorista" && i.item.includes("diariamente") && i.item.includes("água"));

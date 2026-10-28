@@ -69,19 +69,19 @@ const SUG: Sug[] = [
   ["mecanico", "Elétrica", "Arla 32 abastecido", PESADOS],
   ["mecanico", "Geral", "Vazamentos de óleo, água ou combustível", []],
   ["mecanico", "Geral", "Liberado para sair (assinatura do mecânico)", []],
-  // Portaria — conferência documental e visual, sem substituir inspeção técnica
-  ["porteiro", "Documentação", "Recebi o check list do motorista preenchido e assinado", []],
-  ["porteiro", "Documentação", "Conferi a liberação do mecânico, quando exigida", []],
-  ["porteiro", "Documentação", "Placa e tipo do veículo conferem com o formulário", []],
-  ["porteiro", "Documentação", "Motorista identificado e autorizado para este veículo", []],
-  ["porteiro", "Documentação", "Saída autorizada; destino e motivo registrados", []],
-  ["porteiro", "Geral", "Data, horário de saída e quilometragem registrados", []],
-  ["porteiro", "Segurança", "Ocupantes identificados e uso de cinto / capacete conferido", []],
-  ["porteiro", "Carga", "Portas, baú e carga visualmente seguros; lacre conferido quando aplicável", ["Van", ...CAMINHOES]],
-  ["porteiro", "Segurança", "Sem avarias ou vazamentos novos aparentes; ocorrências registradas", []],
-  ["porteiro", "Segurança", "Não conformidades comunicadas ao responsável; saída retida até autorização quando necessário", []],
-  ["porteiro", "Segurança", "Portão e trajeto de saída livres para passagem segura", []],
-  ["porteiro", "Documentação", "Formulário recolhido e arquivado junto ao registro de saída", []],
+  // Portaria — conferência do veículo e do motorista, com dados anotados no formulário
+  ["porteiro", "Geral", "Conferir e anotar no formulário a placa, o tipo e a cor do veículo que sai", []],
+  ["porteiro", "Geral", "Anotar hora de saída e quilometragem do painel do veículo", []],
+  ["porteiro", "Documentação", "Conferir e anotar a CNH válida e o nome do motorista autorizado a este veículo", []],
+  ["porteiro", "Documentação", "Conferir a liberação do mecânico, quando exigida, e anotar no formulário", []],
+  ["porteiro", "Segurança", "Motorista sem sinais de embriaguez (hálito, fala, equilíbrio); em caso de suspeita, registrar a ocorrência e reter a saída até autorização", []],
+  ["porteiro", "Segurança", "Motorista em condição de dirigir (sem sonolência ou sinais de uso de substâncias); registrar qualquer alteração de comportamento", []],
+  ["porteiro", "Segurança", "Ocupantes com cinto de segurança afivelado antes da liberação", QUATRO_RODAS],
+  ["porteiro", "Segurança", "Veículo sem avarias novas; anotar riscos, amassados ou vidros trincados no formulário", []],
+  ["porteiro", "Segurança", "Sem vazamentos de óleo ou combustível sob o veículo; anotar quando houver", []],
+  ["porteiro", "Segurança", "Pneus em condição visível de rodagem; anotar quando não conforme", []],
+  ["porteiro", "Geral", "Saída liberada somente após as conferências; anotar destino e motivo da saída", []],
+  ["porteiro", "Geral", "Observações do porteiro sobre o estado do veículo e do motorista registradas no formulário", []],
 ];
 
 export const itensSugeridos = (): ChecklistItem[] =>
