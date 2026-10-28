@@ -21,6 +21,7 @@ const existentes = [
   ["desfazer_movimento", "Desfazer última movimentação", "tarefa_movimento_desfeito", "remarcar_tarefa", "O comando Desfazer restaura datas, horários e tarefas unidas pela última movimentação registrada nesta agenda."],
   ["atrasados_hoje", "Tarefas atrasadas na data atual", "agenda_aberta", "remarcar_tarefa", "Ao abrir a agenda, traz pendências vencidas para hoje e preserva a data original prevista para o contato."],
   ["retorno_envio_massa_email", "Retorno após disparo de e-mail", "envio_massa_email", "criar_tarefa", "Após o serviço aceitar cada e-mail, registra o retorno na data escolhida. Falha no envio ou cancelamento antes do contato não cria retorno."],
+  ["retorno_disparo_telefone", "Data de retorno do disparo por telefone", "disparo_telefone", "sugerir_data", "A data escolhida na etapa Agendar do disparo em massa por telefone vira a sugestão de próximo contato na barra de finalização de cada ligação do discador."],
 ] as const;
 
 export function completarCatalogo(regras: RegraCatalogo[]): RegraCatalogo[] {
