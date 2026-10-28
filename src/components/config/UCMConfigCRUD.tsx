@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { UCMAjudaGuia } from "./UCMAjudaGuia";
 import { UCMTesteLigacao } from "./UCMTesteLigacao";
+import { UCMRamaisIA } from "./UCMRamaisIA";
 import { invalidarRegrasDiscagem } from "@/lib/telefonia/regrasDiscagem";
 import { prepararNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 
@@ -255,6 +256,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             <p className="text-xs text-muted-foreground">
               Porta SIP (UDP) da central usada pelo Coletor, app Pilar Voz e servidor de voz. Normalmente 5060.
             </p>
+            <UCMRamaisIA estabelecimentoId={estabelecimentoId} />
           </div>
 
           <div className="space-y-2">
