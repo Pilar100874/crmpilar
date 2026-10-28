@@ -78,9 +78,9 @@ export default function ChecklistSaidaDialog({ open = true, onOpenChange, tipos,
       </Tabs>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={carregarSugestoes} disabled={saving}><Sparkles className="h-4 w-4 mr-1" />Adicionar sugestões</Button>
-        <Button disabled={saving || !itens.some(i => i.checklist_selecionados.length) || !tipos.length} onClick={async () => {
-          try { gerarPdfChecklist(await listarChecklist(), tipos); } catch (e: any) { toast.error(e.message); }
-        }}><FileDown className="h-4 w-4 mr-1" />Gerar PDF para imprimir</Button>
+        <Button disabled={saving || !selecionados.length || !tipos.length} onClick={async () => {
+          try { gerarPdfChecklist(await listarChecklist(), tipos, aba); } catch (e: any) { toast.error(e.message); }
+        }}><FileDown className="h-4 w-4 mr-1" />PDF do {RESPONSAVEIS.find(r => r.valor === aba)?.rotulo.toLowerCase()}</Button>
       </div>
     </div>
     <div className="grid gap-3 sm:grid-cols-3">

@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { itensSugeridos, aplicaAoTipo, RESPONSAVEIS } from "./checklistSaida";
+import { itensSugeridos, aplicaAoTipo, RESPONSAVEIS, itensDoResponsavel } from "./checklistSaida";
 import { disponivelNoChecklist, selecionarResponsavel } from "./gruposBiblioteca";
 
 describe("check list de saída", () => {
+  it("inclui freios de serviço e estacionamento no motorista", () => {
+    const freios = itensSugeridos().find(i => i.responsavel === "motorista" && i.categoria === "Freios");
+    expect(freios?.item).toContain("freios de serviço e estacionamento");
+    expect(freios && aplicaAoTipo(freios, "Carro")).toBe(true);
+  });
+  it.each(["motorista", "porteiro", "mecanico"] as const)("isola os itens do PDF de %s", r => {
+    const lista = itensDoResponsavel(itensSugeridos(), r);
+    expect(lista.length).toBeGreaterThan(0);
+    expect(new Set(lista.map(i => i.responsavel))).toEqual(new Set([r]));
+    expect(itensDoResponsavel(lista.map(i => ({ ...i, ativo: false })), r)).toEqual([]);
+  });
   it("ordena portaria logo após motorista e antes do mecânico", () => {
     expect(RESPONSAVEIS.map(r => r.valor)).toEqual(["motorista", "porteiro", "mecanico"]);
   });

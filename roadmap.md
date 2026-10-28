@@ -1,6 +1,7 @@
 # Roteiro
 
 ## Biblioteca e check lists de veículos
+- [ ] Incluir freios no motorista e gerar três PDFs separados; conferir conteúdo e impressão.
 - [x] Incluir check list do porteiro com 12 itens salvos; tela e PDF conferidos, seção abaixo do motorista e seis testes aprovados.
 - [x] Unificar itens por grupos, preservando os prazos da manutenção e os check lists existentes.
 - [x] Criar check lists de motorista e mecânico, incluindo água e óleo diariamente para motorista.
