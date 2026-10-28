@@ -50,6 +50,13 @@
       "when": 1793190100786,
       "tag": "0006_cv_movimento_checklist_recebido",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793190893596,
+      "tag": "0007_unificar_biblioteca_checklist_veiculos",
+      "breakpoints": true
     }
   ]
 }

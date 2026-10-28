@@ -7185,6 +7185,10 @@ export type Database = {
         Row: {
           acao: string
           ativo: boolean
+          checklist_ordem: number
+          checklist_responsaveis: string[]
+          checklist_selecionados: string[]
+          checklist_tipos: string[]
           codigo: string | null
           componente: string
           created_at: string
@@ -7203,10 +7207,15 @@ export type Database = {
           tol_days: number
           tol_principal: number
           updated_at: string
+          uso_manutencao: boolean
         }
         Insert: {
           acao: string
           ativo?: boolean
+          checklist_ordem?: number
+          checklist_responsaveis?: string[]
+          checklist_selecionados?: string[]
+          checklist_tipos?: string[]
           codigo?: string | null
           componente: string
           created_at?: string
@@ -7225,10 +7234,15 @@ export type Database = {
           tol_days?: number
           tol_principal?: number
           updated_at?: string
+          uso_manutencao?: boolean
         }
         Update: {
           acao?: string
           ativo?: boolean
+          checklist_ordem?: number
+          checklist_responsaveis?: string[]
+          checklist_selecionados?: string[]
+          checklist_tipos?: string[]
           codigo?: string | null
           componente?: string
           created_at?: string
@@ -7247,6 +7261,7 @@ export type Database = {
           tol_days?: number
           tol_principal?: number
           updated_at?: string
+          uso_manutencao?: boolean
         }
         Relationships: [
           {
