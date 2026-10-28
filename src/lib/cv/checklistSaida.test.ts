@@ -42,6 +42,15 @@ describe("check list de saída", () => {
     expect(motorista && aplicaAoTipo(motorista, "Carro")).toBe(true);
     expect(mecanico && aplicaAoTipo(mecanico, "Caminhão Pesado")).toBe(true);
   });
+  it("confere troca de óleo em dia para motorista e mecânico", () => {
+    const itens = itensSugeridos();
+    const motorista = itens.find(i => i.responsavel === "motorista" && i.categoria === "Motor" && i.item.includes("troca de óleo do motor está em dia"));
+    const mecanico = itens.find(i => i.responsavel === "mecanico" && i.categoria === "Motor" && i.item.includes("Troca de óleo em dia"));
+    expect(motorista).toBeDefined();
+    expect(mecanico).toBeDefined();
+    expect(motorista && aplicaAoTipo(motorista, "Van")).toBe(true);
+    expect(mecanico && aplicaAoTipo(mecanico, "Carro")).toBe(true);
+  });
   const item = { uso_manutencao: false, ativo: true, sistema: "Motor", checklist_responsaveis: ["motorista", "mecanico"], checklist_selecionados: ["mecanico"], checklist_tipos: ["Carro"] };
   it("filtra simultaneamente grupo, responsável e veículo", () => {
     expect(disponivelNoChecklist(item, "motorista", "Motor", "Carro")).toBe(true);
