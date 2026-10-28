@@ -301,13 +301,13 @@ export function EnvioMassaWizardContent({
             >
               {index + 1}
             </div>
-            <span 
+            <span
               className={`
                 hidden lg:block ml-1 text-xs whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
-              {step.label}
+              {rotuloPasso(step)}
             </span>
             {index < passosVisiveis.length - 1 && (
               <div 
@@ -347,7 +347,23 @@ export function EnvioMassaWizardContent({
           />
         )}
 
-        {state.step === 'compose' && (
+        {state.step === 'compose' && (chamada && state.canal ? (
+          <StepComposeChamada
+            canal={state.canal}
+            modoDiscador={state.modoDiscador ?? 'sequencial'}
+            pararAoReceber={state.pararAoReceber ?? false}
+            agenteIaId={state.agenteIaId ?? ''}
+            ramalIa={state.ramalIa ?? ''}
+            objetivoIa={state.objetivoIa ?? ''}
+            onModoChange={(modo) => setState(prev => ({ ...prev, modoDiscador: modo }))}
+            onPararAoReceberChange={(v) => setState(prev => ({ ...prev, pararAoReceber: v }))}
+            onAgenteChange={(id, nome) => setState(prev => ({ ...prev, agenteIaId: id, agenteIaNome: nome }))}
+            onRamalChange={(ramal) => setState(prev => ({ ...prev, ramalIa: ramal }))}
+            onObjetivoChange={(objetivo) => setState(prev => ({ ...prev, objetivoIa: objetivo }))}
+            onBack={() => goToStep('filter')}
+            onNext={() => goToStep('schedule')}
+          />
+        ) : (
           <StepCompose
             canal={state.canal}
             onTemplatesChanged={recarregarTemplates}
@@ -361,7 +377,7 @@ export function EnvioMassaWizardContent({
             onBack={() => goToStep('filter')}
             onNext={() => goToStep('preview')}
           />
-        )}
+        ))}
 
         {state.step === 'preview' && (
           <StepPreview
