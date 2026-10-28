@@ -416,7 +416,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       if (energia(q) > LIMIAR_FALA) { falando = true; silencio = 0; trecho.push(...q); continue; }
       if (!falando) continue;
       trecho.push(...q);
-      if (++silencio <= 35) continue;
+      if (++silencio <= 20) continue;
       if (trecho.length > 4000) {
         const r = await turno(wav8k(trecho).toString('base64'), hist, modo, objetivo, null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });
         if (r) {
