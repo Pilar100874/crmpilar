@@ -85,10 +85,12 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
   const larg = doc.internal.pageSize.getWidth();
   const ativos = itens.filter(i => i.ativo);
 
-  RESPONSAVEIS.forEach(({ valor, rotulo }, idx) => {
+  let primeira = true;
+  RESPONSAVEIS.forEach(({ valor, rotulo }) => {
     const lista = ativos.filter(i => i.responsavel === valor);
     if (!lista.length) return;
-    if (idx > 0 && doc.getNumberOfPages() >= 1 && (doc as any).lastAutoTable) doc.addPage();
+    if (!primeira) doc.addPage();
+    primeira = false;
 
     doc.setFont("helvetica", "bold").setFontSize(14);
     doc.text(`Check list diário de saída de veículo — ${rotulo}`, 10, 12);
