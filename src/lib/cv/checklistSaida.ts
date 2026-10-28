@@ -48,6 +48,7 @@ const SUG: Sug[] = [
   ["motorista", "Geral", "Vazamentos visíveis sob o veículo", []],
   ["motorista", "Fluidos", "Verificar diariamente o nível da água / líquido de arrefecimento, com o motor frio (não abrir o reservatório quente)", []],
   ["motorista", "Motor", "Verificar diariamente o nível do óleo do motor, com o veículo nivelado e motor desligado, conforme manual", []],
+  ["motorista", "Freios", "Testar freios de serviço e estacionamento em local seguro, antes da saída; comunicar falhas e não sair sem liberação", []],
   // Mecânico — itens técnicos
   ["mecanico", "Motor", "Nível do óleo do motor", []],
   ["mecanico", "Motor", "Nível do líquido de arrefecimento", QUATRO_RODAS],
@@ -102,21 +103,22 @@ export async function listarChecklist(): Promise<ChecklistItem[]> {
       tipos_veiculo: i.checklist_tipos, ordem: i.checklist_ordem, ativo: i.ativo })));
 }
 
-export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empresa = "") {
+export function itensDoResponsavel(itens: ChecklistItem[], responsavel: Responsavel) {
+  return itens.filter(i => i.ativo && i.responsavel === responsavel);
+}
+
+export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], responsavel: Responsavel, empresa = "") {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const larg = doc.internal.pageSize.getWidth();
-  const ativos = itens.filter(i => i.ativo);
+  const ativos = itensDoResponsavel(itens, responsavel);
 
   let primeira = true;
-  let fimSecao = 0;
-  RESPONSAVEIS.forEach(({ valor, rotulo }) => {
+  RESPONSAVEIS.filter(r => r.valor === responsavel).forEach(({ valor, rotulo }) => {
     const lista = ativos.filter(i => i.responsavel === valor)
       .sort((a, b) => a.categoria.localeCompare(b.categoria, "pt-BR") || a.ordem - b.ordem);
     if (!lista.length) return;
-    // Portaria vem diretamente abaixo do motorista, sem iniciar folha independente.
-    let inicio = valor === "porteiro" && fimSecao ? fimSecao + 10 : 12;
-    if (!primeira && valor !== "porteiro") doc.addPage();
-    if (inicio > 145) { doc.addPage(); inicio = 12; }
+    const inicio = 12;
+    if (!primeira) doc.addPage();
     primeira = false;
 
     doc.setFont("helvetica", "bold").setFontSize(14);
@@ -137,11 +139,11 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
       head: [["Grupo", "Item a verificar", ...tipos]],
       body: corpo,
       theme: "grid",
-      styles: { fontSize: 8, cellPadding: 1.6, valign: "middle" },
+      styles: { fontSize: 7.5, cellPadding: 1.2, valign: "middle" },
       headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: "center" },
       columnStyles: {
-        0: { cellWidth: 24, fontStyle: "bold" },
-        1: { cellWidth: larg - 20 - 24 - colTipo * tipos.length },
+        0: { cellWidth: 34, fontStyle: "bold" },
+        1: { cellWidth: larg - 20 - 34 - colTipo * tipos.length },
         ...Object.fromEntries(tipos.map((_, k) => [k + 2, { halign: "center", cellWidth: colTipo }])),
       },
       didParseCell: (d) => {
@@ -173,8 +175,7 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
     if (valor === "porteiro") {
       doc.text("Decisão: [  ] Saída liberada   [  ] Saída retida     Autorizado por: ____________________", 10, y + 10);
     }
-    fimSecao = y + (valor === "porteiro" ? 10 : 4);
   });
 
-  doc.save("checklist-saida-veiculos.pdf");
+  doc.save(`checklist-saida-${responsavel}.pdf`);
 }
