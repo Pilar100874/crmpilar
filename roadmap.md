@@ -1,5 +1,9 @@
 # Roteiro
 
+## Atualização do Coletor Mac
+- [ ] Corrigir links antigos do Mac, exibir a versão do pacote de cada plataforma e impedir anúncios incorretos no atualizador.
+- [ ] Sincronizar a publicação dos instaladores e validar o pacote Mac Intel disponível e os testes de regressão.
+
 ## Biblioteca e check lists de veículos
 - [x] Incluir liberação semanal do mecânico e conferência cruzada pela portaria; itens salvos, dois PDFs baixados e revisados e 14 testes aprovados.
 - [x] Incluir freios no motorista e gerar três PDFs separados; downloads reais e dez testes conferidos. Revisão visual corrigiu página quase vazia do motorista ampliando a coluna de grupos; três formulários sem cortes ou sobreposições.

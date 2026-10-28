@@ -72,12 +72,16 @@ async function checarAtualizacao() {
   const local = app.getVersion();
   try {
     const remoto = await fetchJson(VERSION_URL + '?t=' + Date.now());
-    let disponivel = cmpVersion(remoto.version, local) > 0;
     const downloadUrl = (process.platform === 'linux'
       ? (remoto.downloadUrlLinux || remoto.downloadUrl)
       : process.platform === 'darwin'
         ? (process.arch === 'arm64' ? remoto.downloadUrlMacAppleSilicon : remoto.downloadUrlMacIntel)
         : remoto.downloadUrl) || null;
+
+    // Cada plataforma pode terminar a publicação em momentos diferentes.
+    // Nunca compare a versão global (Windows) com um pacote Mac antigo.
+    const remoteVersion = downloadUrl?.match(/\/releases\/download\/coletor-v(\d+\.\d+\.\d+)\//)?.[1];
+    let disponivel = Boolean(remoteVersion && cmpVersion(remoteVersion, local) > 0);
 
     // Se o GitHub/release foi removido, não mostra falso aviso de atualização.
     if (disponivel && !(await urlExiste(downloadUrl))) {
@@ -86,7 +90,7 @@ async function checarAtualizacao() {
 
     return {
       localVersion: local,
-      remoteVersion: remoto.version,
+      remoteVersion: remoteVersion || local,
       downloadUrl,
       notas: remoto.notas || '',
       atualizacaoDisponivel: disponivel,
