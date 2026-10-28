@@ -102,6 +102,8 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
     doc.setFontSize(7.5);
     doc.text("Marque apenas a coluna do tipo do veículo que está saindo. OK = conforme · NC = não conforme (descrever em observações). Colunas cinzas não se aplicam.", 10, 24);
 
+    // Colunas de tipo com largura igual (mín. 18mm p/ caber OK e NC)
+    const colTipo = Math.max(18, Math.min(30, (larg - 20 - 24 - 70) / Math.max(1, tipos.length)));
     const corpo = lista.map(i => [i.categoria, i.item, ...tipos.map(t => (aplicaAoTipo(i, t) ? "" : "—"))]);
     autoTable(doc, {
       startY: 27,
@@ -112,8 +114,8 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
       headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: "center" },
       columnStyles: {
         0: { cellWidth: 24, fontStyle: "bold" },
-        1: { cellWidth: tipos.length > 6 ? 70 : 95 },
-        ...Object.fromEntries(tipos.map((_, k) => [k + 2, { halign: "center" }])),
+        1: { cellWidth: larg - 20 - 24 - colTipo * tipos.length },
+        ...Object.fromEntries(tipos.map((_, k) => [k + 2, { halign: "center", cellWidth: colTipo }])),
       },
       didParseCell: (d) => {
         if (d.section === "body" && d.column.index >= 2 && d.cell.raw === "—") {
