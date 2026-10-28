@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       case "turno": {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
-        const objetivo = corpo.objetivo ? `\nObjetivo desta ligação: ${corpo.objetivo}` : "";
+        const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${corpo.objetivo}\n\n` : "";
         let crm = "";
         if ((corpo.modo ?? "receber") === "assistir" || corpo.contexto_crm) {
           let numero = String(corpo.numero ?? "");
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json", "x-runner-key": Deno.env.get("AIP_RUNNER_KEY") ?? "" },
           body: JSON.stringify({
             audio_wav_b64: corpo.audio_wav_b64 ?? null,
-            prompt: (corpo.prompt_extra ? `${corpo.prompt_extra}\n` : "") + (a.prompt ?? "") + objetivo + crm,
+            prompt: (corpo.prompt_extra ? `${corpo.prompt_extra}\n` : "") + objetivo + "Instruções gerais do agente: " + (a.prompt ?? "") + crm,
             historico: Array.isArray(corpo.historico) ? corpo.historico.slice(-20) : [],
             modo: corpo.modo ?? "receber",
             voz: a.voz || "alloy",
