@@ -17,7 +17,7 @@ interface StepPreviewProps {
   selectedContacts: ContactForBulkSend[];
   onBack: () => void;
   onNext: () => void;
-  canal?: 'email' | 'whatsapp' | null;
+  canal?: CanalEnvio | null;
 }
 
 export function StepPreview({

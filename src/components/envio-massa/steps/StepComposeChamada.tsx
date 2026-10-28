@@ -39,7 +39,10 @@ export function StepComposeChamada({
   const [ramalRegistrado, setRamalRegistrado] = useState(obterStatusRamalGlobal().registrado);
 
   // Status ao vivo do Pilar Fone: a ligação só toca no navegador se ele estiver registrado.
-  useEffect(() => ouvirStatusRamalGlobal((s) => setRamalRegistrado(s.registrado)), []);
+  useEffect(() => {
+    const parar = ouvirStatusRamalGlobal((s) => setRamalRegistrado(s.registrado));
+    return () => { parar(); };
+  }, []);
 
   useEffect(() => {
     if (canal !== "ia") return;
