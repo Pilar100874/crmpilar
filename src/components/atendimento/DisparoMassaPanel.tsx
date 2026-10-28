@@ -1,20 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft, Check, ChevronDown, ListOrdered, Loader2, Mail, MessageCircle, Phone,
-  PhoneForwarded, Rocket, Search, X, Bot,
+  ArrowLeft, ChevronDown, Loader2, Mail, MessageCircle, Phone,
+  Rocket, Search, X, Bot,
 } from "lucide-react";
-import { toast } from "sonner";
-import { getEstabelecimentoId } from "@/lib/estabelecimento";
-import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
-import { iniciarCampanhaIa } from "@/lib/voz/campanhaIa";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CHAVE_PARAR_AO_RECEBER, lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { cn } from "@/lib/utils";
 
 export type CanalDisparo = "whatsapp" | "email" | "telefone" | "ia";
@@ -35,8 +28,8 @@ export interface DisparoFontes {
 interface Props {
   fontes: DisparoFontes;
   onClose: () => void;
-  onIniciarLigacao: (ids: string[], modo: "sequencial" | "previa") => void;
-  onIniciarEnvio: (ids: string[], canal: "whatsapp" | "email") => void;
+  /** Todos os canais seguem para o assistente de disparo (mensagem ou chamada). */
+  onIniciarEnvio: (ids: string[], canal: CanalDisparo) => void;
   abaInicial?: Aba;
   canalInicial?: CanalDisparo | null;
   selecionadosIniciais?: string[];
