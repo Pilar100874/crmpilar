@@ -273,6 +273,7 @@ export function StepConfirm({
                 ))}
               </div>
             </ScrollArea>
+            )}
           </Card>
 
           {/* Destinatários */}
