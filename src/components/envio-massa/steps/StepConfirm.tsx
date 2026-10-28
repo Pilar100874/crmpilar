@@ -311,8 +311,9 @@ export function StepConfirm({
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                Serão criadas tarefas no calendário para {format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.
-                Esta ação não pode ser desfeita.
+                {canalEhChamada(canal)
+                  ? `As ligações começam na sequência. A data de retorno sugerida é ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.`
+                  : `Serão criadas tarefas no calendário para ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}. Esta ação não pode ser desfeita.`}
               </p>
             </div>
           </div>
@@ -326,7 +327,7 @@ export function StepConfirm({
         </Button>
         <Button onClick={onConfirm} className="gap-2">
           <Send className="h-4 w-4" />
-          Confirmar Envio
+          {canalEhChamada(canal) ? 'Iniciar ligações' : 'Confirmar Envio'}
         </Button>
       </div>
     </div>
