@@ -5013,45 +5013,6 @@ ${recentMessages}
 
   // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
 
-  const iniciarLigacaoSelecionados = async (ids: string[], modo?: "sequencial" | "previa") => {
-    if (ids.length === 0) {
-      toast.error("Selecione os contatos da lista primeiro");
-      return;
-    }
-    const { data: clientes } = await supabase
-      .from("customers")
-      .select("id, nome, email, telefone, tel")
-      .in("id", ids);
-    const hoje = new Date().toLocaleDateString("en-CA");
-    const lista = ids
-      .map((id) => {
-        const tarefa = filteredTasks.find((t: any) => (t.contact_id ?? t.customers?.id) === id);
-        if (tarefa) return tarefa;
-        const c = (clientes || []).find((x: any) => x.id === id);
-        if (!c) return null;
-        return {
-          id: `contato-${id}`, contact_id: id, contact_name: c.nome, title: "Ligação",
-          date: hoje, origem: "ligacao", status: "pending",
-          customers: { id, nome: c.nome, email: c.email, telefone: c.telefone || c.tel },
-        };
-      })
-      .filter((t: any) => t && (t.customers?.telefone || t.customers?.tel));
-    if (lista.length === 0) {
-      toast.error("Nenhum contato selecionado tem telefone");
-      return;
-    }
-    if (modo) {
-      if (!(await validarTelefonia())) return;
-      setTasksSelecionadas(lista);
-      setDiscadorContatos(ids);
-      aplicarModoDiscador(modo);
-      return;
-    }
-    setTasksSelecionadas(lista);
-    setDiscadorContatos(ids);
-    void abrirDiscador();
-  };
-
   const abrirDisparoMassa = () => {
     // Anota a tela de contatos de onde o disparo foi aberto.
     disparoOrigemRef.current = { mobileView, activeTab, showConversationsList };
