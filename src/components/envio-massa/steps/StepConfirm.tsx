@@ -142,8 +142,8 @@ export function StepConfirm({
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
               <MessageSquare className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-lg font-bold">{contentItems.length}</p>
-                <p className="text-[10px] text-muted-foreground">Itens</p>
+                <p className="text-lg font-bold">{canalEhChamada(canal) ? selectedContacts.length : contentItems.length}</p>
+                <p className="text-[10px] text-muted-foreground">{canalEhChamada(canal) ? 'Ligações' : 'Itens'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
