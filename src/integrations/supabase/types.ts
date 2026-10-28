@@ -6781,6 +6781,42 @@ export type Database = {
           },
         ]
       }
+      cv_checklist_saida_itens: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          item: string
+          ordem: number
+          responsavel: string
+          tipos_veiculo: string[]
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          item: string
+          ordem?: number
+          responsavel?: string
+          tipos_veiculo?: string[]
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          item?: string
+          ordem?: number
+          responsavel?: string
+          tipos_veiculo?: string[]
+        }
+        Relationships: []
+      }
       cv_coletor_config: {
         Row: {
           cameras_habilitado: boolean

@@ -36,6 +36,13 @@
       "when": 1793127269525,
       "tag": "0004_ucm_porta_interna",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793189898778,
+      "tag": "0005_cv_checklist_saida",
+      "breakpoints": true
     }
   ]
 }
