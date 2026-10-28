@@ -74,7 +74,7 @@ class Chamada(val agente: SipAgente, val callId: String, val entrada: Boolean, v
  * atende/faz ligações em PCMU e transfere com REFER.
  */
 class SipAgente(
-    val host: String, private val porta: Int, val ramal: String, private val senha: String,
+    val host: String, val porta: Int, val ramal: String, private val senha: String,
     private val log: (String) -> Unit, private val aoReceber: (Chamada) -> Unit,
 ) {
     private val sock = DatagramSocket()

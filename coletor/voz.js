@@ -365,11 +365,25 @@ async function executarComando(cmd) {
   const destino = tipo === 'ligar' ? cmd.numero : `${escuta}${cmd.ramal}`;
   log(tipo === 'ligar' ? `Ligando para ${destino}` : `Escutando o ramal ${cmd.ramal}`);
   if (!sip) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'erro', erro: 'Ramal da IA não registrado' })); return; }
-  sip.ultimoErro = '';
-  const c = await sip.ligar(destino);
-  if (!c) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta', erro: sip.ultimoErro || null })); return; }
-  silencioso(api('comando_status', { comando_id: cmd.id, status: 'concluido' }));
   const cfg = (await silencioso(api('config', { agente_id: cmd.agente_id || null })))?.agente || {};
+  // A ligação sai pelo ramal do agente escolhido no disparo (ex.: "Fazer ligações"),
+  // não pelo ramal que fica registrado para atender.
+  const ramalAgente = String(cfg.ramal_ia || '').trim();
+  let uso = sip; let temp = null;
+  if (ramalAgente && ramalAgente !== sip.ramal) {
+    temp = new Sip({ host: sip.host, porta: sip.porta, ramal: ramalAgente, senha: cfg.senha_ramal_ia || '', log, aoReceber: (x) => temp && temp.recusar(x) });
+    await temp.abrir();
+    if (!(await temp.registrar())) {
+      try { await temp.parar(); } catch { /* */ }
+      silencioso(api('comando_status', { comando_id: cmd.id, status: 'erro', erro: `Ramal ${ramalAgente} não registrou` })); return;
+    }
+    uso = temp;
+  }
+  uso.ultimoErro = '';
+  const c = await uso.ligar(destino);
+  if (!c) { if (temp) try { await temp.parar(); } catch { /* */ } silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta', erro: uso.ultimoErro || null })); return; }
+  silencioso(api('comando_status', { comando_id: cmd.id, status: 'concluido' }));
+  if (temp) { await conduzir(c, cfg, tipo === 'ligar' ? 'ligar' : 'assistir', cmd.objetivo || null, cmd.numero || null, cmd.ramal || null); try { await temp.parar(); } catch { /* */ } return; }
   conduzir(c, cfg, tipo === 'ligar' ? 'ligar' : 'assistir', cmd.objetivo || null, cmd.numero || null, cmd.ramal || null);
 }
 

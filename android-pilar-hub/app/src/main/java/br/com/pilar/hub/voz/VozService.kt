@@ -86,13 +86,23 @@ class VozService : Service() {
         val destino = if (tipo == "ligar") cmd.optString("numero") else "$escuta${cmd.optString("ramal")}"
         log(if (tipo == "ligar") "Ligando para $destino" else "Escutando o ramal ${cmd.optString("ramal")}")
         Thread {
-            val c = sip.ligar(destino)
-            if (c == null) { Api.statusComando(id, "sem_resposta"); return@Thread }
-            Api.statusComando(id, "concluido")
             val agenteId = cmd.optString("agente_id").takeIf { it.isNotBlank() && it != "null" }
             val cfg = runCatching { Api.config(agenteId) }.getOrElse { JSONObject() }
+            // A ligação sai pelo ramal do agente escolhido no disparo (ex.: "Fazer ligações"),
+            // não pelo ramal que fica registrado para atender.
+            val ramalAgente = cfg.optString("ramal_ia")
+            var temp: SipAgente? = null
+            val uso = if (ramalAgente.isNotBlank() && ramalAgente != sip.ramal) {
+                val t = SipAgente(sip.host, sip.porta, ramalAgente, cfg.optString("senha_ramal_ia"), ::log) { ch -> ch.desligar() }
+                if (!t.registrar()) { t.parar(); log("Ramal $ramalAgente não registrou"); Api.statusComando(id, "erro"); return@Thread }
+                temp = t; t
+            } else sip
+            val c = uso.ligar(destino)
+            if (c == null) { temp?.parar(); Api.statusComando(id, "sem_resposta"); return@Thread }
+            Api.statusComando(id, "concluido")
             conduzir(c, cfg, if (tipo == "ligar") "ligar" else "assistir", cmd.optString("objetivo").ifBlank { null },
                 numero = cmd.optString("numero").ifBlank { null }, ramal = cmd.optString("ramal").ifBlank { null })
+            temp?.let { runCatching { it.registrar(0) }; it.parar() }
         }.start()
     }
 
