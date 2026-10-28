@@ -540,7 +540,7 @@ export function EnvioMassaWizardPanel({
             <StepSchedule
               proximaDataContato={state.proximaDataContato}
               onDateChange={handleDateChange}
-              onBack={() => goToStep('preview')}
+              onBack={() => goToStep(chamada ? 'compose' : 'preview')}
               onNext={() => goToStep('confirm')}
             />
           )}
@@ -559,6 +559,12 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
+              resumoChamada={chamada ? {
+                modo: state.canal === 'telefone' ? (state.modoDiscador === 'previa' ? 'Aprovação uma a uma' : 'Discagem sequencial') : undefined,
+                agente: state.canal === 'ia' ? state.agenteIaNome : undefined,
+                ramal: state.canal === 'ia' ? state.ramalIa : undefined,
+                objetivo: state.canal === 'ia' ? state.objetivoIa : undefined,
+              } : undefined}
             />
           )}
         </div>
