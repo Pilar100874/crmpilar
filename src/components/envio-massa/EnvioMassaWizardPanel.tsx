@@ -13,6 +13,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { StepChannel } from "./steps/StepChannel";
 import { StepFilter } from "./steps/StepFilter";
 import { StepCompose } from "./steps/StepCompose";
+import { StepComposeChamada } from "./steps/StepComposeChamada";
 import { StepPreview } from "./steps/StepPreview";
 import { StepSchedule } from "./steps/StepSchedule";
 import { StepConfirm } from "./steps/StepConfirm";
@@ -20,9 +21,11 @@ import { useContactsFilter } from "./hooks/useContactsFilter";
 import { useQuickReplies } from "./hooks/useQuickReplies";
 import { useMediaGallery } from "./hooks/useMediaGallery";
 import { useEnvioMassaTemplates } from "./hooks/useEnvioMassaTemplates";
-import { 
-  WizardStep, ContentItem, ContactForBulkSend, 
-  EnvioMassaFilters, EnvioMassaState, CanalEnvio 
+import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
+import {
+  WizardStep, ContentItem, ContactForBulkSend,
+  EnvioMassaFilters, EnvioMassaState, CanalEnvio,
+  canalEhChamada, ROTULO_CANAL, ConfigCampanhaIa
 } from "./types";
 
 interface EnvioMassaWizardPanelProps {
@@ -32,6 +35,10 @@ interface EnvioMassaWizardPanelProps {
   canalInicial?: CanalEnvio;
   /** Quando a seleção veio da tela de Disparo em massa, voltar ao filtro reabre essa mesma tela. */
   onVoltarSelecao?: () => void;
+  /** Canal Telefone: inicia o discador no Fluxo de Atendimento. */
+  onIniciarDiscador?: (contatos: ContactForBulkSend[], modo: 'sequencial' | 'previa', dataRetorno: Date) => void;
+  /** Canal Ligação com IA: inicia a campanha sequencial de ligações. */
+  onIniciarCampanhaIa?: (config: ConfigCampanhaIa) => void;
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
@@ -49,15 +56,23 @@ const getInitialState = (): EnvioMassaState => ({
   filters: {},
   selectedContacts: [],
   contentItems: [],
-  proximaDataContato: addDays(new Date(), 1)
+  proximaDataContato: addDays(new Date(), 1),
+  modoDiscador: 'sequencial',
+  pararAoReceber: lerPararAoReceber(),
+  agenteIaId: '',
+  agenteIaNome: '',
+  ramalIa: '',
+  objetivoIa: ''
 });
 
-export function EnvioMassaWizardPanel({ 
+export function EnvioMassaWizardPanel({
   onClose,
   onComplete,
   contatosIniciais = [],
   canalInicial,
-  onVoltarSelecao
+  onVoltarSelecao,
+  onIniciarDiscador,
+  onIniciarCampanhaIa
 }: EnvioMassaWizardPanelProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
