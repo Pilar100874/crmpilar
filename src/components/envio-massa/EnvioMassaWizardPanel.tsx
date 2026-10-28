@@ -401,8 +401,12 @@ export function EnvioMassaWizardPanel({
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
   // Canais de chamada não têm mensagem: a etapa "Preview" sai da lista.
   const chamada = canalEhChamada(state.canal);
+  // Chamadas não têm mensagem (sem Preview); a campanha de IA não cria tarefa de
+  // retorno, então também não tem a etapa Agendar.
   const passosVisiveis = STEPS.filter(s =>
-    (!canalInicial || s.key !== 'channel') && (!chamada || s.key !== 'preview')
+    (!canalInicial || s.key !== 'channel') &&
+    (!chamada || s.key !== 'preview') &&
+    (state.canal !== 'ia' || s.key !== 'schedule')
   );
   const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
   const rotuloPasso = (s: { key: WizardStep; label: string }) =>
@@ -508,7 +512,7 @@ export function EnvioMassaWizardPanel({
               onRamalChange={(ramal) => setState(prev => ({ ...prev, ramalIa: ramal }))}
               onObjetivoChange={(objetivo) => setState(prev => ({ ...prev, objetivoIa: objetivo }))}
               onBack={() => goToStep('filter')}
-              onNext={() => goToStep('schedule')}
+              onNext={() => goToStep(state.canal === 'ia' ? 'confirm' : 'schedule')}
             />
           ) : (
             <StepCompose
@@ -556,7 +560,7 @@ export function EnvioMassaWizardPanel({
             cancelamentoSolicitado={cancelamentoSolicitado}
             onCancel={cancelarEnvio}
             onClose={() => { onComplete?.(); onClose(); }}
-              onBack={() => goToStep('schedule')}
+              onBack={() => goToStep(state.canal === 'ia' ? 'compose' : 'schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
               resumoChamada={chamada ? {
