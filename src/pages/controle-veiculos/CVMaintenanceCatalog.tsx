@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { BookOpen, Search, Plus, Pencil, Trash2, Loader2, ListChecks } from "lucide-react";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
+import ChecklistSaidaDialog from "./ChecklistSaidaDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { listarCatalogo, CRITICIDADES, type CatalogItem } from "@/lib/cv/catalogo";
 import { listarTiposVeiculoLogistica } from "@/lib/logistica/tiposVeiculo";
@@ -41,6 +42,7 @@ export default function CVMaintenanceCatalog() {
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [excluir, setExcluir] = useState<CatalogItem | null>(null);
+  const [checklistAberto, setChecklistAberto] = useState(false);
   const [tiposLogistica, setTiposLogistica] = useState<string[]>([]);
 
   const load = async () => {
@@ -136,14 +138,20 @@ export default function CVMaintenanceCatalog() {
 
   return (
     <div className="space-y-4">
+      <ChecklistSaidaDialog open={checklistAberto} onOpenChange={setChecklistAberto} tipos={tipos} />
       <CVPageHeader
         icon={BookOpen}
         title="Biblioteca de Manutenção Preventiva"
         subtitle="Marque quais itens fazem parte do roteiro padrão de cada tipo de veículo"
         actions={
+          <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setChecklistAberto(true)} variant="outline" className="bg-white/10 text-white border-white/40 hover:bg-white/20">
+            <ListChecks className="h-4 w-4 mr-1" />Check list de saída
+          </Button>
           <Button onClick={abrirNovo} className="bg-white text-primary hover:bg-white/90">
             <Plus className="h-4 w-4 mr-1" />Novo item
           </Button>
+          </div>
         }
       />
 
