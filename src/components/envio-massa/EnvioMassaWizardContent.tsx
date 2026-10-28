@@ -201,6 +201,24 @@ export function EnvioMassaWizardContent({
       return;
     }
 
+    // Canais de chamada: a execução fica com o discador (Fluxo de Atendimento)
+    // ou com a campanha de IA (popup global); o assistente só entrega a configuração.
+    if (state.canal === 'telefone') {
+      onIniciarDiscador?.(state.selectedContacts, state.modoDiscador ?? 'sequencial', state.proximaDataContato);
+      return;
+    }
+    if (state.canal === 'ia') {
+      onIniciarCampanhaIa?.({
+        agenteId: state.agenteIaId || '',
+        agenteNome: state.agenteIaNome || '',
+        ramal: (state.ramalIa || '').trim(),
+        objetivo: (state.objetivoIa || '').trim(),
+        contatos: state.selectedContacts,
+        dataRetorno: state.proximaDataContato,
+      });
+      return;
+    }
+
     if (state.canal === 'email') {
       await executarEnvio(state.selectedContacts, state.canal, contact => enviarEmailMassa(state.contentItems, contact, estabelecimentoId, usuarioId, format(state.proximaDataContato, 'yyyy-MM-dd')));
       return;
