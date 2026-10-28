@@ -25,6 +25,8 @@ interface UCMConfig {
   sip_porta_alternativa?: number | string | null;
   sip_porta_interna?: number | string | null;
   ramal_portaria?: string | null;
+  voz_endereco?: string | null;
+  voz_porta?: number | string | null;
   ucm_user: string;
   ucm_password: string;
   enabled: boolean;
@@ -47,6 +49,8 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     sip_porta_alternativa: 8089,
     sip_porta_interna: "",
     ramal_portaria: "",
+    voz_endereco: "externo",
+    voz_porta: 5060,
     ucm_user: "",
     ucm_password: "",
     enabled: true,
@@ -108,6 +112,8 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
           sip_porta_interna: config.sip_porta_interna ? Number(config.sip_porta_interna) : null,
           ramal_portaria: config.ramal_portaria || null,
+          voz_endereco: config.voz_endereco === "interno" ? "interno" : "externo",
+          voz_porta: Number(config.voz_porta) || 5060,
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
           enabled: config.enabled,
@@ -219,6 +225,37 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </div>
           </div>
 
+
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <Label>Agentes de voz (Pilar Voz)</Label>
+            <div className="flex flex-wrap gap-3">
+              <div className="space-y-2 flex-1 min-w-[12rem]">
+                <Label htmlFor="voz_endereco">Endereço usado pela voz</Label>
+                <select
+                  id="voz_endereco"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  value={config.voz_endereco || "externo"}
+                  onChange={(e) => setConfig({ ...config, voz_endereco: e.target.value })}
+                >
+                  <option value="externo">Endereço externo (padrão)</option>
+                  <option value="interno">Endereço interno</option>
+                </select>
+              </div>
+              <div className="space-y-2 w-28">
+                <Label htmlFor="voz_porta">Porta SIP</Label>
+                <Input
+                  id="voz_porta"
+                  type="number"
+                  placeholder="5060"
+                  value={config.voz_porta ?? ""}
+                  onChange={(e) => setConfig({ ...config, voz_porta: e.target.value })}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Porta SIP (UDP) da central usada pelo Coletor, app Pilar Voz e servidor de voz. Normalmente 5060.
+            </p>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="ramal_portaria">Ramal da TV/portaria</Label>
