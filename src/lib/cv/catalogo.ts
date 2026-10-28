@@ -20,6 +20,11 @@ export interface CatalogItem {
   pecas: string | null;
   no_roteiro: boolean;
   ativo: boolean;
+  uso_manutencao: boolean;
+  checklist_responsaveis: string[];
+  checklist_selecionados: string[];
+  checklist_tipos: string[];
+  checklist_ordem: number;
 }
 
 export const CRITICIDADES = ["Crítica", "Alta", "Média", "Baixa"] as const;
@@ -36,19 +41,21 @@ export function tipoDoItem(i: CatalogItem): PlanoTipo {
   return "km";
 }
 
-export async function listarCatalogo(): Promise<CatalogItem[]> {
-  const { data, error } = await supabase
+export async function listarCatalogo(incluirChecklist = false): Promise<CatalogItem[]> {
+  let consulta = supabase
     .from("cv_maintenance_catalog")
     .select("*")
     .order("tipo_veiculo")
     .order("sistema")
     .order("componente");
+  if (!incluirChecklist) consulta = consulta.eq("uso_manutencao", true);
+  const { data, error } = await consulta;
   if (error) throw error;
   return (data ?? []) as any as CatalogItem[];
 }
 
 export async function listarTiposFrota(): Promise<string[]> {
-  const { data } = await supabase.from("cv_maintenance_catalog").select("tipo_veiculo");
+  const { data } = await supabase.from("cv_maintenance_catalog").select("tipo_veiculo").eq("uso_manutencao", true);
   return Array.from(new Set((data ?? []).map((r: any) => r.tipo_veiculo as string))).sort();
 }
 
@@ -60,8 +67,9 @@ export async function adicionarItensRoteiro(
   vehicle: { id: string; estabelecimento_id: string | null; current_km: number },
   itens: CatalogItem[],
 ): Promise<number> {
-  if (!itens.length) return 0;
-  const registros = itens.map(i => ({
+  const manutencao = itens.filter(i => i.uso_manutencao);
+  if (!manutencao.length) return 0;
+  const registros = manutencao.map(i => ({
     vehicle_id: vehicle.id,
     estabelecimento_id: vehicle.estabelecimento_id,
     catalog_item_id: i.id,
@@ -99,6 +107,7 @@ export async function sincronizarRoteiro(vehicle: {
     .select("*")
     .eq("tipo_veiculo", vehicle.fleet_type)
     .eq("ativo", true)
+    .eq("uso_manutencao", true)
     .eq("no_roteiro", true);
 
   const lista = (itens ?? []) as any as CatalogItem[];
