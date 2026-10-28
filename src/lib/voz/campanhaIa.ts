@@ -30,10 +30,14 @@ const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let rodando = false;
 
 function objetivoCom(ramal: string, objetivo: string) {
-  return `${objetivo || "Apresentar a empresa e entender o interesse do contato."}\n` +
-    `REGRA OBRIGATÓRIA: assim que a pessoa responder ou interagir de qualquer forma (pergunta, interesse, pedido), ` +
-    `diga em uma frase curta que vai passar para um atendente e inclua [TRANSFERIR] na resposta. ` +
-    `A transferência vai para o ramal ${ramal}. Se for caixa postal ou ninguém falar, inclua [DESLIGAR].`;
+  const oferta = (objetivo || "").trim() || "Apresentar a empresa e entender o interesse do contato.";
+  return `VOCÊ ESTÁ FAZENDO UMA LIGAÇÃO DE VENDAS. Objetivo informado pelo usuário: ${oferta}\n` +
+    `Logo depois de se apresentar, ofereça exatamente isso ao cliente, com entusiasmo e em frases curtas. ` +
+    `Destaque benefícios, responda dúvidas e contorne objeções com educação, sempre trazendo a conversa de volta para a oferta. ` +
+    `Não invente preços, prazos ou condições: se perguntarem, diga que o atendente confirma. ` +
+    `Quando o cliente demonstrar interesse em comprar, pedir preço/orçamento ou pedir para falar com uma pessoa, ` +
+    `diga em uma frase que vai passar para um atendente e inclua [TRANSFERIR] (ramal ${ramal}). ` +
+    `Se o cliente recusar de forma clara duas vezes, agradeça e inclua [DESLIGAR]. Se for caixa postal ou ninguém falar, inclua [DESLIGAR].`;
 }
 
 async function executar() {
