@@ -1,0 +1,2 @@
+ALTER TABLE public.cv_maintenance_catalog DROP CONSTRAINT cv_catalog_checklist_responsaveis_validos;
+ALTER TABLE public.cv_maintenance_catalog ADD CONSTRAINT cv_catalog_checklist_responsaveis_validos CHECK (checklist_responsaveis <@ ARRAY['motorista','mecanico','porteiro']::text[]);

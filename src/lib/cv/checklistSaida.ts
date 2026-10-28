@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { normalizarGrupo } from "./gruposBiblioteca";
 
-export type Responsavel = "motorista" | "mecanico";
+export type Responsavel = "motorista" | "mecanico" | "porteiro";
 export interface ChecklistItem {
   id?: string;
   responsavel: Responsavel;
@@ -17,6 +17,7 @@ export interface ChecklistItem {
 
 export const RESPONSAVEIS: { valor: Responsavel; rotulo: string }[] = [
   { valor: "motorista", rotulo: "Motorista" },
+  { valor: "porteiro", rotulo: "Porteiro" },
   { valor: "mecanico", rotulo: "Mecânico" },
 ];
 
@@ -63,6 +64,19 @@ const SUG: Sug[] = [
   ["mecanico", "Elétrica", "Arla 32 abastecido", PESADOS],
   ["mecanico", "Geral", "Vazamentos de óleo, água ou combustível", []],
   ["mecanico", "Geral", "Liberado para sair (assinatura do mecânico)", []],
+  // Portaria — conferência documental e visual, sem substituir inspeção técnica
+  ["porteiro", "Documentação", "Recebi o check list do motorista preenchido e assinado", []],
+  ["porteiro", "Documentação", "Conferi a liberação do mecânico, quando exigida", []],
+  ["porteiro", "Documentação", "Placa e tipo do veículo conferem com o formulário", []],
+  ["porteiro", "Documentação", "Motorista identificado e autorizado para este veículo", []],
+  ["porteiro", "Documentação", "Saída autorizada; destino e motivo registrados", []],
+  ["porteiro", "Geral", "Data, horário de saída e quilometragem registrados", []],
+  ["porteiro", "Segurança", "Ocupantes identificados e uso de cinto / capacete conferido", []],
+  ["porteiro", "Carga", "Portas, baú e carga visualmente seguros; lacre conferido quando aplicável", ["Van", ...CAMINHOES]],
+  ["porteiro", "Segurança", "Sem avarias ou vazamentos novos aparentes; ocorrências registradas", []],
+  ["porteiro", "Segurança", "Não conformidades comunicadas ao responsável; saída retida até autorização quando necessário", []],
+  ["porteiro", "Segurança", "Portão e trajeto de saída livres para passagem segura", []],
+  ["porteiro", "Documentação", "Formulário recolhido e arquivado junto ao registro de saída", []],
 ];
 
 export const itensSugeridos = (): ChecklistItem[] =>
@@ -94,28 +108,32 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
   const ativos = itens.filter(i => i.ativo);
 
   let primeira = true;
+  let fimSecao = 0;
   RESPONSAVEIS.forEach(({ valor, rotulo }) => {
     const lista = ativos.filter(i => i.responsavel === valor)
       .sort((a, b) => a.categoria.localeCompare(b.categoria, "pt-BR") || a.ordem - b.ordem);
     if (!lista.length) return;
-    if (!primeira) doc.addPage();
+    // Portaria vem diretamente abaixo do motorista, sem iniciar folha independente.
+    let inicio = valor === "porteiro" && fimSecao ? fimSecao + 10 : 12;
+    if (!primeira && valor !== "porteiro") doc.addPage();
+    if (inicio > 145) { doc.addPage(); inicio = 12; }
     primeira = false;
 
     doc.setFont("helvetica", "bold").setFontSize(14);
-    doc.text(`Check list diário de saída de veículo — ${rotulo}`, 10, 12);
+    doc.text(`Check list diário de saída de veículo — ${rotulo}`, 10, inicio);
     doc.setFont("helvetica", "normal").setFontSize(9);
-    if (empresa) doc.text(empresa, larg - 10, 12, { align: "right" });
+    if (empresa) doc.text(empresa, larg - 10, inicio, { align: "right" });
     const campos = ["Data: ____/____/______", "Placa: __________", "Hora saída: ______",
       "KM saída: __________", `${rotulo}: ______________________________`];
-    doc.text(campos.join("     "), 10, 19);
+    doc.text(campos.join("     "), 10, inicio + 7);
     doc.setFontSize(7.5);
-    doc.text("Marque apenas a coluna do tipo do veículo que está saindo. OK = conforme · NC = não conforme (descrever em observações). Colunas cinzas não se aplicam.", 10, 24);
+    doc.text("Marque a coluna do veículo. OK = conforme; NC = não conforme (anotar); NA = não se aplica. Colunas cinzas não se aplicam.", 10, inicio + 12);
 
     // Colunas de tipo com largura igual (mín. 18mm p/ caber OK e NC)
     const colTipo = Math.max(18, Math.min(30, (larg - 20 - 24 - 70) / Math.max(1, tipos.length)));
     const corpo = lista.map(i => [i.categoria, i.item, ...tipos.map(t => (aplicaAoTipo(i, t) ? "" : "—"))]);
     autoTable(doc, {
-      startY: 27,
+      startY: inicio + 15,
       head: [["Grupo", "Item a verificar", ...tipos]],
       body: corpo,
       theme: "grid",
@@ -152,6 +170,10 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
     doc.line(10, y, 100, y); doc.line(larg - 100, y, larg - 10, y);
     doc.text(`Assinatura do ${rotulo.toLowerCase()}`, 10, y + 4);
     doc.text("Assinatura do responsável pela liberação", larg - 100, y + 4);
+    if (valor === "porteiro") {
+      doc.text("Decisão: [  ] Saída liberada   [  ] Saída retida     Autorizado por: ____________________", 10, y + 10);
+    }
+    fimSecao = y + (valor === "porteiro" ? 10 : 4);
   });
 
   doc.save("checklist-saida-veiculos.pdf");

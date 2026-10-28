@@ -57,6 +57,13 @@
       "when": 1793190893596,
       "tag": "0007_unificar_biblioteca_checklist_veiculos",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793191315180,
+      "tag": "0008_checklist_responsavel_porteiro",
+      "breakpoints": true
     }
   ]
 }
