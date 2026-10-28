@@ -18,7 +18,7 @@ import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormulario
 import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
 import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
-import { DisparoMassaPanel } from "@/components/atendimento/DisparoMassaPanel";
+import { DisparoMassaPanel, CanalDisparo } from "@/components/atendimento/DisparoMassaPanel";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -90,7 +90,7 @@ import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
-import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { EnvioMassaWizardContent, EnvioMassaWizardPanel, ContactForBulkSend, ConfigCampanhaIa } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
 
