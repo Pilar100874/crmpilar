@@ -115,7 +115,7 @@ function FiltroMulti({ rotulo, opcoes, valor, onChange }: {
   );
 }
 
-export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciarEnvio, abaInicial = "tudo", canalInicial = null, selecionadosIniciais = [] }: Props) {
+export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial = "tudo", canalInicial = null, selecionadosIniciais = [] }: Props) {
   const [canal, setCanal] = useState<CanalDisparo | null>(canalInicial);
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -131,8 +131,6 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarLigacao, onIniciar
   const [fProduto, setFProduto] = useState<string[]>([]);
   const [fGrupo, setFGrupo] = useState<string[]>([]);
   const [selecionados, setSelecionados] = useState<Set<string>>(() => new Set(selecionadosIniciais));
-  const [modo, setModo] = useState<"sequencial" | "previa">("sequencial");
-  const [pararAoReceber, setPararAoReceber] = useState(lerPararAoReceber());
 
   const datasAgendadas = useMemo(() => {
     const m = new Map<string, string[]>();
