@@ -472,57 +472,11 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
 
           {/* Início */}
           <div className="flex-shrink-0 border-t border-border/40 bg-card py-3 pl-4 pr-16">
-            {canal === "telefone" && (
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                {([
-                  { id: "sequencial", label: "Discagem sequencial", icon: ListOrdered, desc: "Liga um após o outro" },
-                  { id: "previa", label: "Aprovação uma a uma", icon: PhoneForwarded, desc: "Você confirma cada ligação" },
-                ] as const).map((m) => {
-                  const Icone = m.icon;
-                  const ativo = modo === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setModo(m.id)}
-                      className={cn(
-                        "flex flex-1 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors",
-                        ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50"
-                      )}
-                    >
-                      <Icone className={cn("h-4 w-4", ativo ? "text-primary" : "text-muted-foreground")} />
-                      <span className="min-w-0">
-                        <span className="block text-xs font-semibold text-foreground">{m.label}</span>
-                        <span className="block text-[10px] text-muted-foreground">{m.desc}</span>
-                      </span>
-                      {ativo && <Check className="ml-auto h-4 w-4 text-primary" />}
-                    </button>
-                  );
-                })}
-                <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Switch checked={pararAoReceber} onCheckedChange={(v) => { setPararAoReceber(v); localStorage.setItem(CHAVE_PARAR_AO_RECEBER, v ? "1" : "0"); }} />
-                  Parar ao receber ligação
-                </label>
-              </div>
-            )}
-            {canal === "ia" && (
-              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_8rem]">
-                <select value={agenteIa} onChange={(e) => setAgenteIa(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-xs text-foreground">
-                  {agentesIa.length === 0 && <option value="">Nenhum agente com "Fazer ligações"</option>}
-                  {agentesIa.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
-                </select>
-                <Input value={ramalIa} onChange={(e) => setRamalIa(e.target.value)} placeholder="Seu ramal" className="h-9 text-xs" aria-label="Ramal do atendente" />
-                <Textarea rows={2} value={objetivoIa} onChange={(e) => setObjetivoIa(e.target.value)} className="text-xs sm:col-span-2"
-                  placeholder="Objetivo da ligação (ex.: oferecer a promoção da semana). Quando o contato responder, a IA transfere para o seu ramal." />
-              </div>
-            )}
             <Button className="h-11 w-full gap-2 text-sm font-semibold" disabled={selecionados.size === 0} onClick={iniciar}>
               <Rocket className="h-4 w-4" />
               {selecionados.size === 0
                 ? "Selecione os contatos"
-                : canal === "telefone" || canal === "ia"
-                  ? `${canal === "ia" ? "Iniciar ligações com IA" : "Iniciar ligações"} (${selecionados.size})`
-                  : `Continuar para a mensagem (${selecionados.size})`}
+                : `Continuar (${selecionados.size})`}
             </Button>
           </div>
         </>
