@@ -54,6 +54,7 @@ export function StepConfirm({
   cancelamentoSolicitado = false,
   onCancel,
   onClose,
+  resumoChamada,
 }: StepConfirmProps) {
   const previewContact = selectedContacts[0] || {
     nome: 'João Silva',
@@ -118,10 +119,10 @@ export function StepConfirm({
             </div>
             <div>
               <h3 className="font-medium flex items-center gap-2">
-                Confirmar Envio
+                {canalEhChamada(canal) ? 'Confirmar ligações' : 'Confirmar Envio'}
                 {canal && (
-                  <Badge variant={canal === 'whatsapp' ? 'default' : 'secondary'} className={canal === 'whatsapp' ? 'bg-green-500' : 'bg-blue-500'}>
-                    {canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                  <Badge variant={canal === 'whatsapp' ? 'default' : 'secondary'} className={canal === 'whatsapp' ? 'bg-green-500' : canal === 'email' ? 'bg-blue-500' : ''}>
+                    {ROTULO_CANAL[canal]}
                   </Badge>
                 )}
               </h3>
