@@ -116,9 +116,15 @@ export function itensDoResponsavel(itens: ChecklistItem[], responsavel: Responsa
 }
 
 export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], responsavel: Responsavel, empresa = "") {
+  // Measure the actual wrapped table before saving, reserving room for the footer.
+  for (let tentativa = 0; tentativa < 6; tentativa++) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const larg = doc.internal.pageSize.getWidth();
+  const altura = doc.internal.pageSize.getHeight();
+  const fontSize = 7.5 - tentativa * 0.4;
+  const cellPadding = Math.max(0.45, 1 - tentativa * 0.12);
   const ativos = itensDoResponsavel(itens, responsavel);
+  let precisaCompactar = false;
 
   let primeira = true;
   RESPONSAVEIS.filter(r => r.valor === responsavel).forEach(({ valor, rotulo }) => {
@@ -144,14 +150,14 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
     if (valor === "porteiro") doc.text("Check list do mecânico: data ____/____/______   válido até ____/____/______   mecânico ____________________   placa __________", 10, inicio + 17);
 
     // Colunas de tipo com largura igual (mín. 18mm p/ caber OK e NC)
-    const colTipo = Math.max(18, Math.min(30, (larg - 20 - 24 - 70) / Math.max(1, tipos.length)));
+    const colTipo = Math.max(18, Math.min(24, (larg - 20 - 34 - 90) / Math.max(1, tipos.length)));
     const corpo = lista.map(i => [i.categoria, i.item, ...tipos.map(t => (aplicaAoTipo(i, t) ? "" : "—"))]);
     autoTable(doc, {
       startY: inicio + (valor === "motorista" ? 15 : 20),
       head: [["Grupo", "Item a verificar", ...tipos]],
       body: corpo,
       theme: "grid",
-      styles: { fontSize: 7.5, cellPadding: 1.2, valign: "middle" },
+      styles: { fontSize, cellPadding, minCellHeight: 4.2, valign: "middle" },
       headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: "center" },
       columnStyles: {
         0: { cellWidth: 34, fontStyle: "bold" },
@@ -176,11 +182,15 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
       margin: { left: 10, right: 10 },
     });
 
-    let y = (doc as any).lastAutoTable.finalY + 6;
-    if (y > 175) { doc.addPage(); y = 15; }
-    doc.setFontSize(9).text("Observações / não conformidades:", 10, y);
-    for (let k = 1; k <= 3; k++) doc.line(10, y + k * 6, larg - 10, y + k * 6);
-    y += 26;
+    let y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+    if ((doc.getNumberOfPages() > 1 || y > altura - 36) && tentativa < 5) {
+      precisaCompactar = true;
+      return;
+    }
+    if (y > altura - 36) { doc.addPage(); y = 15; }
+    doc.setFontSize(8).text("Observações / não conformidades:", 10, y);
+    for (let k = 1; k <= 2; k++) doc.line(10, y + k * 5, larg - 10, y + k * 5);
+    y += 20;
     doc.line(10, y, 100, y); doc.line(larg - 100, y, larg - 10, y);
     doc.text(`Assinatura do ${rotulo.toLowerCase()}`, 10, y + 4);
     doc.text("Assinatura do responsável pela liberação", larg - 100, y + 4);
@@ -192,5 +202,8 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
     }
   });
 
+  if (precisaCompactar) continue;
   doc.save(`checklist-saida-${responsavel}.pdf`);
+  return;
+  }
 }
