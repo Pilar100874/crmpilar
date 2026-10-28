@@ -414,22 +414,7 @@
           <div class="status-line" id="vozStatus">—</div>
           <div class="meta">Ramal da IA na central: atende, faz as ligações do Disparo em massa e ajuda o atendente. O computador precisa estar na mesma rede da central.</div>
           <div id="vozMonitor" class="meta" style="margin-top:8px; line-height:1.6;"></div>
-          <details style="margin-top:10px; border-top:1px solid var(--stroke); padding-top:10px;">
-            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Ajustes avançados (opcional)</summary>
-            <p style="font-size:11px; color:var(--text-2); margin:6px 0 0;">Não precisa preencher: a chave de instalação, a central (tela do PABX) e o ramal/senha (Agentes de Voz) vêm automaticamente. Use só para trocar algum valor.</p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-              <div style="grid-column:1/3"><label style="font-size:11px; color:var(--text-2);">Outra chave (vazio = chave de instalação)</label><input id="vozChave" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Endereço da central</label><input id="vozHost" placeholder="automático (tela do PABX)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Porta</label><input id="vozPorta" placeholder="automático" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Ramal da IA (vazio = o do agente)</label><input id="vozRamal" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Senha do ramal</label><input id="vozSenha" type="password" placeholder="automático (Agentes de Voz)" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-              <div><label style="font-size:11px; color:var(--text-2);">Código de escuta</label><input id="vozEscuta" placeholder="automático" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;"></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
-              <button class="btn" style="background:var(--brand); color:#fff; padding:6px 12px; font-size:13px;" onclick="salvarVoz()">Salvar</button>
-              <span id="vozMsg" style="font-size:11px; color:var(--text-2);"></span>
-            </div>
-          </details>
+          
           <div style="margin-top:10px; font-size:12px; font-weight:600; color:var(--text-2);">Eventos</div>
           <div id="vozEventos" class="meta" style="margin-top:4px; max-height:140px; overflow:auto;"></div>
         </div>
@@ -604,7 +589,6 @@
     async function togglePonto(v){ if(v) await window.coletor.startPonto(); else await window.coletor.stopPonto(); refresh(); }
     async function toggleCameras(v){ if(v) await window.coletor.startCameras(); else await window.coletor.stopCameras(); refresh(); }
     async function toggleVoz(v){ if(v) await window.coletor.vozStart(); else await window.coletor.vozStop(); refreshVoz(); }
-    let vozFormCarregado=false;
     async function refreshVoz(){
       try{
         const s=await window.coletor.vozStatus(); if(!s) return;
@@ -617,13 +601,7 @@
           lig=({receber:'Atendendo',ligar:'Ligando para',assistir:'Ajudando o ramal'}[s.modo]||s.modo)+' '+esc(s.destino)+' · '+t;}
         document.getElementById('vozMonitor').innerHTML=`<b>Ligação:</b> ${lig}<br><b>Cliente:</b> ${esc(s.falaCliente)||'—'}<br><b>IA:</b> ${esc(s.falaIa)||'—'}<br>Atendidas ${s.atendidas} · Feitas ${s.feitas} · Ajudadas ${s.assistidas} · Transferidas ${s.transferidas}`;
         document.getElementById('vozEventos').innerHTML=(s.eventos||[]).map(e=>`${new Date(e.em).toLocaleTimeString('pt-BR')} — ${esc(e.texto)}`).join('<br>')||'—';
-        if(!vozFormCarregado){vozFormCarregado=true;const c=s.config||{};
-          vozChave.value=c.chave||'';vozHost.value=c.host||'';vozPorta.value=c.porta||'';vozRamal.value=c.ramal||'';vozEscuta.value=c.codigoEscuta||'';}
       }catch(e){}
-    }
-    async function salvarVoz(){
-      await window.coletor.vozSalvar({chave:vozChave.value.trim(),host:vozHost.value.trim(),porta:vozPorta.value.trim(),ramal:vozRamal.value.trim(),senha:vozSenha.value,codigoEscuta:vozEscuta.value.trim()});
-      vozSenha.value='';document.getElementById('vozMsg').textContent='Salvo.';refreshVoz();
     }
     setInterval(refreshVoz,1000); setTimeout(refreshVoz,300);
     async function togglePortaria(v){ if(v) await window.coletor.startPortaria(); else await window.coletor.stopPortaria(); refresh(); }
