@@ -58,13 +58,7 @@ class VozActivity : AppCompatActivity() {
             }.start()
         }
 
-        val campos = mapOf(R.id.campo_host to "host", R.id.campo_porta to "porta", R.id.campo_ramal to "ramal",
-            R.id.campo_senha to "senha", R.id.campo_escuta to "codigo_escuta")
-        campos.forEach { (id, k) -> pref.getString(k, null)?.let { findViewById<EditText>(id).setText(it) } }
-        if (pref.getString("codigo_escuta", null) == null) findViewById<EditText>(R.id.campo_escuta).setText("*45")
-
         findViewById<Button>(R.id.btn_iniciar).setOnClickListener {
-            val e = pref.edit(); campos.forEach { (id, k) -> e.putString(k, findViewById<EditText>(id).text.toString().trim()) }; e.apply()
             VozService.iniciar(this)
         }
         findViewById<Button>(R.id.btn_parar).setOnClickListener { VozService.parar(this) }

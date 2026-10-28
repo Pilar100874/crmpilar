@@ -38,20 +38,20 @@ class VozService : Service() {
 
     private fun principal() {
         val pref = getSharedPreferences(PREF, MODE_PRIVATE)
-        // Usa a chave própria da voz, ou a chave de instalação do Coletor (uma chave só).
-        Api.chave = pref.getString("chave", "").orEmpty().ifBlank { br.com.pilar.hub.Prefs.chave(this).uppercase() }
+        // A chave de instalação do Coletor vale para todos os módulos (uma chave só).
+        Api.chave = br.com.pilar.hub.Prefs.chave(this).uppercase().ifBlank { pref.getString("chave", "").orEmpty() }
         trava = (getSystemService(POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pilarvoz:servico").apply { acquire() }
         while (rodando) {
             try {
                 val cfg = Api.config()
-                val ramal = pref.getString("ramal", "")!!.ifBlank { cfg.optString("ramal_ia") }
+                val ramal = cfg.optString("ramal_ia")
                 escutaAgente = cfg.optString("codigo_escuta")
                 val central = cfg.optJSONObject("central")
-                val host = pref.getString("host", "")!!.ifBlank { central?.optString("host") ?: "" }
-                val porta = pref.getString("porta", "")!!.toIntOrNull() ?: central?.optInt("porta", 5060) ?: 5060
+                val host = (central?.optString("host") ?: "")
+                val porta = central?.optInt("porta", 5060) ?: 5060
                 if (host.isBlank() || ramal.isBlank()) { log(if (host.isBlank()) "Central não configurada: preencha a tela Configuração PABX Grandstream UCM" else "Agente sem ramal da IA: preencha em Agentes de Voz"); return }
-                val sip = SipAgente(host, porta, ramal, pref.getString("senha", "")!!.ifBlank { cfg.optString("senha_ramal_ia") }, ::log) { c -> aoReceber(c) }
+                val sip = SipAgente(host, porta, ramal, cfg.optString("senha_ramal_ia"), ::log) { c -> aoReceber(c) }
                 agente = sip
                 if (!sip.registrar()) { Monitor.central = "Falha no registro"; Monitor.avisar(this); sip.parar(); Thread.sleep(15_000); continue }
                 Monitor.servico = "Ativo"; Monitor.central = "Ramal $ramal registrado em $host"; Monitor.avisar(this)
@@ -82,7 +82,7 @@ class VozService : Service() {
 
     private fun executarComando(sip: SipAgente, cmd: JSONObject) {
         val id = cmd.getString("id"); val tipo = cmd.optString("tipo")
-        val escuta = getSharedPreferences(PREF, MODE_PRIVATE).getString("codigo_escuta", "")!!.ifBlank { escutaAgente.ifBlank { "*45" } }
+        val escuta = escutaAgente.ifBlank { "*45" }
         val destino = if (tipo == "ligar") cmd.optString("numero") else "$escuta${cmd.optString("ramal")}"
         log(if (tipo == "ligar") "Ligando para $destino" else "Escutando o ramal ${cmd.optString("ramal")}")
         Thread {
