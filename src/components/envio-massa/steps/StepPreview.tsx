@@ -8,7 +8,7 @@ import {
   ArrowRight, BookOpen, FileText,
   FileSpreadsheet, File, LinkIcon, Paperclip, ExternalLink
 } from "lucide-react";
-import { ContentItem, ContactForBulkSend } from "../types";
+import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
 import { EmailPreview } from './EmailPreview';
 
