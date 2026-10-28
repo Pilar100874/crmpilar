@@ -49,10 +49,12 @@ const SUG: Sug[] = [
   ["motorista", "Fluidos", "Verificar diariamente o nível da água / líquido de arrefecimento, com o motor frio (não abrir o reservatório quente)", []],
   ["motorista", "Motor", "Verificar diariamente o nível do óleo do motor, com o veículo nivelado e motor desligado, conforme manual", []],
   ["motorista", "Motor", "Verificar diariamente se há vazamento de óleo no motor (embaixo do veículo e em volta do motor), antes da saída", []],
+  ["motorista", "Motor", "Conferir se a troca de óleo do motor está em dia (km da última troca dentro do prazo; em dúvida, comunicar o mecânico)", []],
   ["motorista", "Freios", "Testar freios de serviço e estacionamento em local seguro, antes da saída; comunicar falhas e não sair sem liberação", []],
   // Mecânico — itens técnicos
   ["mecanico", "Motor", "Nível do óleo do motor", []],
   ["mecanico", "Motor", "Vazamento de óleo no motor (juntas, tampa de válvulas, cárter, filtro e bujão do cárter)", []],
+  ["mecanico", "Motor", "Troca de óleo em dia (conferir km/horas da última troca, registrar e programar a próxima)", []],
   ["mecanico", "Motor", "Nível do líquido de arrefecimento", QUATRO_RODAS],
   ["mecanico", "Motor", "Correias e mangueiras sem desgaste", QUATRO_RODAS],
   ["mecanico", "Freios", "Nível do fluido de freio", []],
