@@ -28924,6 +28924,8 @@ export type Database = {
           ucm_password: string
           ucm_user: string
           updated_at: string
+          voz_endereco: string
+          voz_porta: number
         }
         Insert: {
           conference_room_number?: string | null
@@ -28947,6 +28949,8 @@ export type Database = {
           ucm_password: string
           ucm_user: string
           updated_at?: string
+          voz_endereco?: string
+          voz_porta?: number
         }
         Update: {
           conference_room_number?: string | null
@@ -28970,6 +28974,8 @@ export type Database = {
           ucm_password?: string
           ucm_user?: string
           updated_at?: string
+          voz_endereco?: string
+          voz_porta?: number
         }
         Relationships: [
           {

@@ -1,0 +1,1 @@
+ALTER TABLE public.ucm_config ADD COLUMN IF NOT EXISTS voz_endereco text NOT NULL DEFAULT 'externo', ADD COLUMN IF NOT EXISTS voz_porta integer NOT NULL DEFAULT 5060;
