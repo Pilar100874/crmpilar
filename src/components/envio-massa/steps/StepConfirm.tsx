@@ -161,8 +161,41 @@ export function StepConfirm({
           <Card className="p-4">
             <h4 className="font-medium mb-3 flex items-center gap-2 text-sm">
               <MessageSquare className="h-4 w-4" />
-              Preview do Conteúdo
+              {canalEhChamada(canal) ? 'Configuração das ligações' : 'Preview do Conteúdo'}
             </h4>
+            {canalEhChamada(canal) && resumoChamada ? (
+              <div className="space-y-2 text-xs">
+                {resumoChamada.modo && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Modo de discagem</span>
+                    <span className="font-medium text-foreground">{resumoChamada.modo}</span>
+                  </div>
+                )}
+                {resumoChamada.agente && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Agente de voz</span>
+                    <span className="font-medium text-foreground">{resumoChamada.agente}</span>
+                  </div>
+                )}
+                {resumoChamada.ramal && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Seu ramal</span>
+                    <span className="font-medium text-foreground">{resumoChamada.ramal}</span>
+                  </div>
+                )}
+                {resumoChamada.objetivo && (
+                  <div className="rounded-lg bg-muted/30 p-2">
+                    <p className="text-muted-foreground mb-1">Objetivo da ligação</p>
+                    <p className="font-medium text-foreground whitespace-pre-wrap">{resumoChamada.objetivo}</p>
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  {canal === 'ia'
+                    ? 'A IA liga em sequência e transfere para o seu ramal quando o contato responder. O acompanhamento fica no ícone de ligações com IA.'
+                    : 'O discador abre no Fluxo de Atendimento e liga para um contato por vez.'}
+                </p>
+              </div>
+            ) : (
             <ScrollArea className="h-[250px]">
               <div className="space-y-2">
                 {/* Preview contact header */}
