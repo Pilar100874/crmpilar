@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { itensSugeridos, aplicaAoTipo } from "./checklistSaida";
+import { itensSugeridos, aplicaAoTipo, RESPONSAVEIS } from "./checklistSaida";
 import { disponivelNoChecklist, selecionarResponsavel } from "./gruposBiblioteca";
 
 describe("check list de saída", () => {
+  it("ordena portaria logo após motorista e antes do mecânico", () => {
+    expect(RESPONSAVEIS.map(r => r.valor)).toEqual(["motorista", "porteiro", "mecanico"]);
+  });
+  it("exige conferência do formulário preenchido pelo porteiro", () => {
+    const recebimento = itensSugeridos().find(i => i.responsavel === "porteiro" && i.item === "Recebi o check list do motorista preenchido e assinado");
+    expect(recebimento).toBeDefined();
+    expect(recebimento && aplicaAoTipo(recebimento, "Carro")).toBe(true);
+  });
   it("inclui água diariamente nas responsabilidades do motorista", () => {
     const agua = itensSugeridos().find(i => i.responsavel === "motorista" && i.item.includes("diariamente") && i.item.includes("água"));
     expect(agua).toBeDefined();

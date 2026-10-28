@@ -18,6 +18,7 @@ import ChecklistSaidaDialog from "./ChecklistSaidaDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { listarCatalogo, CRITICIDADES, type CatalogItem } from "@/lib/cv/catalogo";
 import { listarTiposVeiculoLogistica } from "@/lib/logistica/tiposVeiculo";
+import { RESPONSAVEIS } from "@/lib/cv/checklistSaida";
 
 const itemVazio = {
   codigo: "", tipo_veiculo: "", sistema: "", componente: "", acao: "",
@@ -240,7 +241,7 @@ export default function CVMaintenanceCatalog() {
                   </p>
                 </div>
                 <Badge variant="outline" className={`shrink-0 ${corCriticidade(i.criticidade)}`}>{i.criticidade}</Badge>
-                {!!i.checklist_responsaveis.length && <Badge variant="secondary">{i.checklist_responsaveis.map(r => r === "motorista" ? "Motorista" : "Mecânico").join(" / ")}</Badge>}
+                {!!i.checklist_responsaveis.length && <Badge variant="secondary">{i.checklist_responsaveis.map(r => RESPONSAVEIS.find(x => x.valor === r)?.rotulo ?? r).join(" / ")}</Badge>}
                 {!i.ativo && <Badge variant="secondary" className="shrink-0">Inativo</Badge>}
                 <div className="flex gap-1 shrink-0">
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => abrirEdicao(i)}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -260,7 +261,7 @@ export default function CVMaintenanceCatalog() {
           <div className="space-y-3 border-b pb-3">
             <Label>Utilização do item</Label>
             <div className="flex items-center gap-2"><Switch checked={form.uso_manutencao} onCheckedChange={v => setForm({ ...form, uso_manutencao: v })} /><Label>Manutenção preventiva</Label></div>
-            <div className="flex flex-wrap gap-4">{["motorista", "mecanico"].map(r => <label key={r} className="flex gap-2 items-center text-sm"><Checkbox checked={form.checklist_responsaveis.includes(r)} onCheckedChange={v => setForm({ ...form, checklist_responsaveis: v ? [...form.checklist_responsaveis, r] : form.checklist_responsaveis.filter((x: string) => x !== r) })} />Check list do {r === "motorista" ? "motorista" : "mecânico"}</label>)}</div>
+            <div className="flex flex-wrap gap-4">{RESPONSAVEIS.map(({ valor: r, rotulo }) => <label key={r} className="flex gap-2 items-center text-sm"><Checkbox checked={form.checklist_responsaveis.includes(r)} onCheckedChange={v => setForm({ ...form, checklist_responsaveis: v ? [...form.checklist_responsaveis, r] : form.checklist_responsaveis.filter((x: string) => x !== r) })} />Check list do {rotulo.toLowerCase()}</label>)}</div>
             {!!form.checklist_responsaveis.length && <div><Label>Tipos no check list</Label><div className="flex flex-wrap gap-3 mt-2"><label className="flex items-center gap-2 text-sm"><Checkbox checked={!form.checklist_tipos.length} onCheckedChange={v => v && setForm({ ...form, checklist_tipos: [] })} />Todos</label>{tipos.map(t => <label key={t} className="flex items-center gap-2 text-sm"><Checkbox checked={form.checklist_tipos.includes(t)} onCheckedChange={v => setForm({ ...form, checklist_tipos: v ? [...form.checklist_tipos, t] : form.checklist_tipos.filter((x: string) => x !== t) })} />{t}</label>)}</div></div>}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

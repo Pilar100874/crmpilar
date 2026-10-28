@@ -74,7 +74,7 @@ export default function ChecklistSaidaDialog({ open = true, onOpenChange, tipos,
   const conteudo = <div className="min-w-0 space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Tabs value={aba} onValueChange={v => setAba(v as Responsavel)}>
-        <TabsList>{RESPONSAVEIS.map(r => <TabsTrigger key={r.valor} value={r.valor}>{r.rotulo} ({itens.filter(i => i.ativo && i.checklist_selecionados.includes(r.valor)).length})</TabsTrigger>)}</TabsList>
+        <TabsList className="h-auto flex flex-wrap">{RESPONSAVEIS.map(r => <TabsTrigger key={r.valor} value={r.valor}>{r.rotulo} ({itens.filter(i => i.ativo && i.checklist_selecionados.includes(r.valor)).length})</TabsTrigger>)}</TabsList>
       </Tabs>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={carregarSugestoes} disabled={saving}><Sparkles className="h-4 w-4 mr-1" />Adicionar sugestões</Button>
