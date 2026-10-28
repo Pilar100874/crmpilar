@@ -1,7 +1,7 @@
 # Roteiro
 
 ## Biblioteca e check lists de veículos
-- [ ] Incluir check list do porteiro com itens sugeridos salvos e impressão abaixo do motorista; validar tela e PDF.
+- [x] Incluir check list do porteiro com 12 itens salvos; tela e PDF conferidos, seção abaixo do motorista e seis testes aprovados.
 - [x] Unificar itens por grupos, preservando os prazos da manutenção e os check lists existentes.
 - [x] Criar check lists de motorista e mecânico, incluindo água e óleo diariamente para motorista.
 - [x] Filtrar itens disponíveis por grupo, responsável e tipo; seleção salva conferida após recarregar, PDF baixado e inspecionado, quatro testes aprovados e celular sem rolagem horizontal.
