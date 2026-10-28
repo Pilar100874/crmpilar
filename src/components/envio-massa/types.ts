@@ -66,9 +66,19 @@ export interface MediaGalleryItem {
   duracao_segundos?: number;
 }
 
-export type CanalEnvio = 'whatsapp' | 'email';
+export type CanalEnvio = 'whatsapp' | 'email' | 'telefone' | 'ia';
 
 export type WizardStep = 'channel' | 'filter' | 'compose' | 'preview' | 'schedule' | 'confirm';
+
+/** Canais de chamada (sem mensagem): pulam a etapa Preview. */
+export const canalEhChamada = (canal: CanalEnvio | null) => canal === 'telefone' || canal === 'ia';
+
+export const ROTULO_CANAL: Record<CanalEnvio, string> = {
+  whatsapp: 'WhatsApp',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  ia: 'Ligação com IA',
+};
 
 export interface EnvioMassaState {
   step: WizardStep;
@@ -77,4 +87,11 @@ export interface EnvioMassaState {
   selectedContacts: ContactForBulkSend[];
   contentItems: ContentItem[];
   proximaDataContato: Date;
+  // Configuração dos canais de chamada
+  modoDiscador?: 'sequencial' | 'previa';
+  pararAoReceber?: boolean;
+  agenteIaId?: string;
+  agenteIaNome?: string;
+  ramalIa?: string;
+  objetivoIa?: string;
 }
