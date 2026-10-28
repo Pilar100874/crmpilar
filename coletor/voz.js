@@ -319,7 +319,10 @@ async function principal() {
       // Sem host digitado, usa o servidor da tela Configuração PABX (vem em "central").
       const central = resp.central || {};
       const host = String(v.host || central.host || '').trim();
-      const porta = Number(v.porta || central.porta) || 5060;
+      // Portas web do PABX (8089/8443...) não servem para SIP UDP: nesse caso usa 5060.
+      const pw = [80, 443, 8088, 8089, 8443, 7443];
+      const pd = Number(v.porta || central.porta) || 5060;
+      const porta = pw.includes(pd) ? 5060 : pd;
       const ramal = String(v.ramal || agente.ramal_ia || '').trim();
       escutaAgente = agente.codigo_escuta || '';
       if (!host || !ramal) { MON.central = !host ? 'Central não configurada: preencha a tela Configuração PABX Grandstream UCM' : 'Agente sem ramal da IA: preencha em Agentes de Voz'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
