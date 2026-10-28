@@ -142,8 +142,8 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], respo
       styles: { fontSize: 7.5, cellPadding: 1.2, valign: "middle" },
       headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: "center" },
       columnStyles: {
-        0: { cellWidth: 24, fontStyle: "bold" },
-        1: { cellWidth: larg - 20 - 24 - colTipo * tipos.length },
+        0: { cellWidth: 34, fontStyle: "bold" },
+        1: { cellWidth: larg - 20 - 34 - colTipo * tipos.length },
         ...Object.fromEntries(tipos.map((_, k) => [k + 2, { halign: "center", cellWidth: colTipo }])),
       },
       didParseCell: (d) => {
