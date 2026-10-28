@@ -40,6 +40,11 @@ export default function CampanhaIaPopup() {
             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => alternarPopupCampanhaIa(false)} aria-label="Minimizar"><X className="h-4 w-4" /></Button>
           </div>
           <div className="h-1 bg-muted"><div className="h-1 bg-primary transition-all" style={{ width: `${(feitos / c.itens.length) * 100}%` }} /></div>
+          {c.motivoErro && (
+            <div className="border-b border-destructive/30 bg-destructive/10 px-3 py-2">
+              <p className="text-[11px] font-medium text-destructive">{c.motivoErro}</p>
+            </div>
+          )}
           <div className="max-h-72 overflow-y-auto">
             {c.itens.map((x, i) => (
               <div key={x.id + i} className={cn("flex items-center gap-2 border-b border-border/20 px-3 py-2", x.status === "ligando" && "bg-primary/5")}>

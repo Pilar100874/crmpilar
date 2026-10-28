@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
-import { CHAVE_PARAR_AO_RECEBER, lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
+import { CHAVE_PARAR_AO_RECEBER } from "@/components/atendimento/DiscadorModoDialog";
 import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
@@ -39,7 +39,10 @@ export function StepComposeChamada({
   const [ramalRegistrado, setRamalRegistrado] = useState(obterStatusRamalGlobal().registrado);
 
   // Status ao vivo do Pilar Fone: a ligação só toca no navegador se ele estiver registrado.
-  useEffect(() => ouvirStatusRamalGlobal((s) => setRamalRegistrado(s.registrado)), []);
+  useEffect(() => {
+    const parar = ouvirStatusRamalGlobal((s) => setRamalRegistrado(s.registrado));
+    return () => { parar(); };
+  }, []);
 
   useEffect(() => {
     if (canal !== "ia") return;

@@ -21,6 +21,7 @@ const existentes = [
   ["desfazer_movimento", "Desfazer última movimentação", "tarefa_movimento_desfeito", "remarcar_tarefa", "O comando Desfazer restaura datas, horários e tarefas unidas pela última movimentação registrada nesta agenda."],
   ["atrasados_hoje", "Tarefas atrasadas na data atual", "agenda_aberta", "remarcar_tarefa", "Ao abrir a agenda, traz pendências vencidas para hoje e preserva a data original prevista para o contato."],
   ["retorno_envio_massa_email", "Retorno após disparo de e-mail", "envio_massa_email", "criar_tarefa", "Após o serviço aceitar cada e-mail, registra o retorno na data escolhida. Falha no envio ou cancelamento antes do contato não cria retorno."],
+  ["retorno_disparo_telefone", "Data de retorno do disparo por telefone", "disparo_telefone", "sugerir_data", "A data escolhida na etapa Agendar do disparo em massa por telefone vira a sugestão de próximo contato na barra de finalização de cada ligação do discador."],
 ] as const;
 
 export function completarCatalogo(regras: RegraCatalogo[]): RegraCatalogo[] {
@@ -30,7 +31,8 @@ export function completarCatalogo(regras: RegraCatalogo[]): RegraCatalogo[] {
   });
   for (const [chave, nome, gatilho, acao, descricao] of existentes) {
     if (catalogo.some(r => r.chave === chave || r.chave === `cal_${chave}`)) continue;
-    catalogo.push({ id: `catalogo-${chave}`, chave, nome, gatilho, acao, descricao, tela: chave === 'retorno_envio_massa_email' ? 'Disparo em massa — E-mail' : "Calendário", ativa: true,
+    const telasDisparo: Record<string, string> = { retorno_envio_massa_email: 'Disparo em massa — E-mail', retorno_disparo_telefone: 'Disparo em massa — Telefone' };
+    catalogo.push({ id: `catalogo-${chave}`, chave, nome, gatilho, acao, descricao, tela: telasDisparo[chave] ?? "Calendário", ativa: true,
       condicoes: {}, acao_config: {}, relacoes: {}, sistema: true, executor: "tela", prioridade: 100, execucoes: 0 });
   }
   return catalogo.sort((a, b) => a.prioridade - b.prioridade);
@@ -38,6 +40,7 @@ export function completarCatalogo(regras: RegraCatalogo[]): RegraCatalogo[] {
 
 const explicacoes: Record<string, ExplicacaoRegra> = {
   retorno_envio_massa_email: { modo: "automatico", disparador: "Confirmar o disparo em massa de e-mail após escolher a data de retorno.", condicao: "O serviço de e-mail aceitou o envio daquele contato. A entrega ao destinatário ainda não está confirmada.", resultado: "Cria uma tarefa de retorno na data escolhida (amanhã por padrão). Contatos não processados por cancelamento ou com falha de envio não geram retorno; falha ao salvar a tarefa aparece no acompanhamento." },
+  retorno_disparo_telefone: { modo: "usuario", disparador: "Confirmar o disparo em massa por telefone após escolher a data de retorno na etapa Agendar.", condicao: "O discador abre no Fluxo de Atendimento com os contatos selecionados.", resultado: "A data escolhida aparece como sugestão de próximo contato na barra de finalização de cada ligação; a data só é gravada ao finalizar o atendimento daquele contato." },
   movimento_sem_conflito: { modo: "automatico", disparador: "Arrastar a tarefa para outro dia ou selecionar tarefas, escolher a data e clicar em Mover.", condicao: "Tarefa não atrasada, data diferente e nenhuma validação exige decisão.", resultado: "Salva diretamente na data solicitada. Não abre aviso de conflito." },
   atrasada_nao_move: { modo: "automatico", disparador: "Abrir a agenda ou tentar selecionar uma tarefa atrasada.", condicao: "A tarefa pendente está atrasada, inclusive após realocação automática.", resultado: "Seleção e movimentação manual ficam bloqueadas; o motivo aparece ao lado da seleção." },
   mesma_data_nao_move: { modo: "automatico", disparador: "Selecionar tarefas e escolher a data de destino.", condicao: "Todas as tarefas selecionadas já estão nessa data.", resultado: "O botão Mover fica desativado. Escolha uma data diferente." },

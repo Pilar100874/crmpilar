@@ -149,7 +149,7 @@ export function StepConfirm({
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
               <Calendar className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-sm font-medium">{format(proximaDataContato, "dd/MM")}</p>
+                <p className="text-sm font-medium">{canal === 'ia' ? '—' : format(proximaDataContato, "dd/MM")}</p>
                 <p className="text-[10px] text-muted-foreground">Retorno</p>
               </div>
             </div>
@@ -311,9 +311,11 @@ export function StepConfirm({
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                {canalEhChamada(canal)
-                  ? `As ligações começam na sequência. A data de retorno sugerida é ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.`
-                  : `Serão criadas tarefas no calendário para ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}. Esta ação não pode ser desfeita.`}
+                {canal === 'ia'
+                  ? 'As ligações começam na sequência. O acompanhamento fica no ícone de ligações com IA.'
+                  : canalEhChamada(canal)
+                    ? `As ligações começam na sequência. A data de retorno sugerida é ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.`
+                    : `Serão criadas tarefas no calendário para ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}. Esta ação não pode ser desfeita.`}
               </p>
             </div>
           </div>

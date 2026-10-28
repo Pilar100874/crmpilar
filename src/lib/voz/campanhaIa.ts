@@ -9,6 +9,8 @@ export interface CampanhaIa {
   estabelecimentoId: string; agenteId: string; objetivo: string; ramalAtendente: string;
   itens: ItemCampanha[]; atual: number; estado: "rodando" | "pausada" | "cancelada" | "finalizada";
   aberta: boolean;
+  /** Motivo quando a campanha para sem concluir (ex.: nenhum aparelho de voz conectado). */
+  motivoErro?: string;
 }
 
 let campanha: CampanhaIa | null = null;
@@ -59,6 +61,16 @@ async function executar() {
         await espera(3000);
         if (!campanha || (campanha.estado as string) === "cancelada") { fim = "cancelado"; break; }
         const s = (await db.from("voz_comandos").select("status").eq("id", r.data.id).maybeSingle()).data?.status;
+        // Comando pendente por 30s: nenhum aparelho de voz (Coletor, Pilar Voz ou
+        // servidor) está conectado para executar a ligação — para a campanha com aviso.
+        if (s === "pendente" && Date.now() - inicio > 30_000) {
+          setItem(i, { status: "erro" });
+          set({
+            estado: "finalizada",
+            motivoErro: "Nenhum aparelho de voz conectado à rede do PABX. Ligue o módulo Voz do Coletor, abra o app Pilar Voz ou inicie o servidor de voz e tente novamente.",
+          });
+          return;
+        }
         if (s === "sem_resposta" || s === "erro" || s === "cancelado") fim = s;
         else if (s === "concluido") {
           // Ligação atendida: espera a conversa (ou a transferência) acabar.

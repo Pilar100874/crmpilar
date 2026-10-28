@@ -8,7 +8,7 @@ import {
   ArrowRight, BookOpen, FileText,
   FileSpreadsheet, File, LinkIcon, Paperclip, ExternalLink
 } from "lucide-react";
-import { ContentItem, ContactForBulkSend } from "../types";
+import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
 import { EmailPreview } from './EmailPreview';
 
@@ -17,7 +17,7 @@ interface StepPreviewProps {
   selectedContacts: ContactForBulkSend[];
   onBack: () => void;
   onNext: () => void;
-  canal?: 'email' | 'whatsapp' | null;
+  canal?: CanalEnvio | null;
 }
 
 export function StepPreview({

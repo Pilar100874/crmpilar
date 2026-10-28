@@ -18,13 +18,14 @@ import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormulario
 import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
 import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
-import { DisparoMassaPanel } from "@/components/atendimento/DisparoMassaPanel";
+import { DisparoMassaPanel, CanalDisparo } from "@/components/atendimento/DisparoMassaPanel";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { iniciarCampanhaIa } from "@/lib/voz/campanhaIa";
 import { format, startOfDay, endOfDay, addDays, subDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
@@ -90,7 +91,7 @@ import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
-import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { EnvioMassaWizardContent, EnvioMassaWizardPanel, ContactForBulkSend, ConfigCampanhaIa } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
 
@@ -5012,45 +5013,6 @@ ${recentMessages}
 
   // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
 
-  const iniciarLigacaoSelecionados = async (ids: string[], modo?: "sequencial" | "previa") => {
-    if (ids.length === 0) {
-      toast.error("Selecione os contatos da lista primeiro");
-      return;
-    }
-    const { data: clientes } = await supabase
-      .from("customers")
-      .select("id, nome, email, telefone, tel")
-      .in("id", ids);
-    const hoje = new Date().toLocaleDateString("en-CA");
-    const lista = ids
-      .map((id) => {
-        const tarefa = filteredTasks.find((t: any) => (t.contact_id ?? t.customers?.id) === id);
-        if (tarefa) return tarefa;
-        const c = (clientes || []).find((x: any) => x.id === id);
-        if (!c) return null;
-        return {
-          id: `contato-${id}`, contact_id: id, contact_name: c.nome, title: "Ligação",
-          date: hoje, origem: "ligacao", status: "pending",
-          customers: { id, nome: c.nome, email: c.email, telefone: c.telefone || c.tel },
-        };
-      })
-      .filter((t: any) => t && (t.customers?.telefone || t.customers?.tel));
-    if (lista.length === 0) {
-      toast.error("Nenhum contato selecionado tem telefone");
-      return;
-    }
-    if (modo) {
-      if (!(await validarTelefonia())) return;
-      setTasksSelecionadas(lista);
-      setDiscadorContatos(ids);
-      aplicarModoDiscador(modo);
-      return;
-    }
-    setTasksSelecionadas(lista);
-    setDiscadorContatos(ids);
-    void abrirDiscador();
-  };
-
   const abrirDisparoMassa = () => {
     // Anota a tela de contatos de onde o disparo foi aberto.
     disparoOrigemRef.current = { mobileView, activeTab, showConversationsList };
@@ -5120,7 +5082,7 @@ ${recentMessages}
     if (!config.ramal) return toast.error("Seu usuário não tem ramal configurado");
     const itens = config.contatos
       .filter((c) => c.telefone)
-      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: soDigitosTel(c.telefone) }));
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (c.telefone || "").replace(/\D/g, "") }));
     if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
     const ok = iniciarCampanhaIa({
       estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,
@@ -6085,6 +6047,7 @@ ${recentMessages}
                     onTaskCompleted={loadTodayTasks}
                     discadorModo={activeTab === "visita" ? null : discadorModo}
                     tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
+                    dataRetornoInicial={dataRetornoDiscador}
                     onClose={() => {
                       setAgendaViewMode('default');
                       setFluxoCurrentTask(null);
@@ -7034,6 +6997,7 @@ ${recentMessages}
             onTaskCompleted={loadTodayTasks}
             discadorModo={discadorModo}
             tipoContatoFixo="telefone"
+            dataRetornoInicial={dataRetornoDiscador}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
@@ -7104,7 +7068,6 @@ ${recentMessages}
               fontes={fontesDisparo}
               abaInicial={filtroFila}
               onClose={fecharDisparoMassa}
-              onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
               onIniciarEnvio={iniciarEnvioDoDisparo}
               canalInicial={canalEnvioMassa ?? null}
               selecionadosIniciais={idsEnvioMassa}
@@ -7119,6 +7082,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
               onComplete={loadTodayTasks}
+              onIniciarDiscador={iniciarDiscadorDoWizard}
+              onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
             />
           </div>
         ) : activeTab === "chat" && selectedConversation && selectedConv ? (
@@ -7499,6 +7464,7 @@ ${recentMessages}
             onTaskCompleted={loadTodayTasks}
             discadorModo={activeTab === "visita" ? null : discadorModo}
             tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
+            dataRetornoInicial={dataRetornoDiscador}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
@@ -7583,6 +7549,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
               onComplete={loadTodayTasks}
+              onIniciarDiscador={iniciarDiscadorDoWizard}
+              onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
             />
           </div>
         ) : activeTab === "email" ? (
@@ -7680,6 +7648,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
                     onComplete={loadTodayTasks}
+                    onIniciarDiscador={iniciarDiscadorDoWizard}
+                    onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
                   />
                 </div>
               )}
@@ -8255,7 +8225,6 @@ ${recentMessages}
           fontes={fontesDisparo}
               abaInicial={filtroFila}
           onClose={fecharDisparoMassa}
-          onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
           onIniciarEnvio={iniciarEnvioDoDisparo}
           canalInicial={canalEnvioMassa ?? null}
           selecionadosIniciais={idsEnvioMassa}
@@ -8271,6 +8240,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
           onComplete={loadTodayTasks}
+          onIniciarDiscador={iniciarDiscadorDoWizard}
+          onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
         />
       </div>
     )}
