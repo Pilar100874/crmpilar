@@ -132,14 +132,15 @@ Deno.serve(async (req) => {
         // assim o app e o Coletor não precisam digitar host/porta manualmente.
         const ucm = (await sb.from("ucm_config").select("ucm_host, remote_ip, ucm_host_interno, sip_porta, sip_porta_interna")
           .eq("estabelecimento_id", empresa).maybeSingle()).data;
-        const usaInterno = Boolean(ucm?.ucm_host_interno);
+        // As portas da tela PABX (8089, 8443...) são web/WebSocket do Pilar Fone e da API.
+        // Os aparelhos de voz falam SIP puro por UDP, que no UCM é sempre 5060.
         const central = ucm?.ucm_host
           ? {
               // Aparelhos de voz ficam na rede do PABX: preferem o IP interno; host_externo fica de reserva.
               host: String(ucm.ucm_host_interno || ucm.remote_ip || ucm.ucm_host),
               host_externo: String(ucm.remote_ip || ucm.ucm_host),
-              porta: Number(usaInterno ? (ucm.sip_porta_interna || ucm.sip_porta) : ucm.sip_porta) || 5060,
-              porta_externa: Number(ucm.sip_porta) || 5060,
+              porta: 5060,
+              porta_externa: 5060,
             }
           : null;
         // Central também dentro de "agente": os apps Android leem só esse objeto.
