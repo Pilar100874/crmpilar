@@ -81,6 +81,8 @@ interface FluxoAtendimentoPanelProps {
   discadorModo?: 'previa' | 'sequencial' | null;
   /** Tipo de contato definido pela aba: Tel = telefone, Visita = presencial. */
   tipoContatoFixo?: 'telefone' | 'presencial';
+  /** Data de retorno escolhida no disparo em massa: vence a sugestão padrão. */
+  dataRetornoInicial?: Date | null;
 }
 
 const ALL_TIPOS_CONTATO = [
@@ -103,6 +105,7 @@ export function FluxoAtendimentoPanel({
   onNavigateToItem,
   discadorModo = null,
   tipoContatoFixo = 'telefone',
+  dataRetornoInicial = null,
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
@@ -112,7 +115,7 @@ export function FluxoAtendimentoPanel({
   const [observacao, setObservacao] = useState("");
   const tipoContato: string = tipoContatoFixo;
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
-  const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("finalizar_atendimento"));
+  const [proximaData, setProximaData] = useState<Date>(dataRetornoInicial ?? dataPadraoProximoContato("finalizar_atendimento"));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -151,11 +154,13 @@ export function FluxoAtendimentoPanel({
   }, [estabelecimentoId]);
 
   useEffect(() => {
+    // Data escolhida no disparo em massa tem prioridade sobre a sugestão por tipo.
+    if (dataRetornoInicial) return;
     const config = configDatas.find(c => c.tipo_contato === tipoContato);
     if (config) {
       setProximaData(addDays(new Date(), config.dias_padrao));
     }
-  }, [tipoContato, configDatas]);
+  }, [tipoContato, configDatas, dataRetornoInicial]);
 
   useEffect(() => {
     setSelectedFlag(lerResultadoPendente(currentTask?.contact_id)?.flagId ?? null);
