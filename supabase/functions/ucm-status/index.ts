@@ -115,13 +115,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Status é consultado em polling: sessão ausente/vencida não é erro fatal,
+    // responde 200 com ok:false para não derrubar a tela.
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) return responder({ error: "Não autenticado" }, 401);
+    if (!authHeader?.startsWith("Bearer ")) {
+      return responder({ ok: false, motivo: "Sessão expirada" });
+    }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
+    const { data: claimsData, error: authError } = await supabase.auth.getClaims(
       authHeader.replace("Bearer ", ""),
     );
-    if (authError || !user) return responder({ error: "Não autenticado" }, 401);
+    const sub = claimsData?.claims?.sub as string | undefined;
+    if (authError || !sub) return responder({ ok: false, motivo: "Sessão expirada" });
+    const user = { id: sub };
 
     const { data: usuario } = await supabase
       .from("usuarios")
