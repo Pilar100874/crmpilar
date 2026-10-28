@@ -25,18 +25,8 @@ import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
 import {
   WizardStep, ContentItem, ContactForBulkSend,
   EnvioMassaFilters, EnvioMassaState, CanalEnvio,
-  canalEhChamada, ROTULO_CANAL
+  canalEhChamada, ROTULO_CANAL, ConfigCampanhaIa
 } from "./types";
-
-/** Configuração da campanha de ligação com IA montada no assistente. */
-export interface ConfigCampanhaIa {
-  agenteId: string;
-  agenteNome: string;
-  ramal: string;
-  objetivo: string;
-  contatos: ContactForBulkSend[];
-  dataRetorno: Date;
-}
 
 interface EnvioMassaWizardContentProps {
   onClose: () => void;

@@ -95,3 +95,13 @@ export interface EnvioMassaState {
   ramalIa?: string;
   objetivoIa?: string;
 }
+
+/** Configuração da campanha de ligação com IA montada no assistente. */
+export interface ConfigCampanhaIa {
+  agenteId: string;
+  agenteNome: string;
+  ramal: string;
+  objetivo: string;
+  contatos: ContactForBulkSend[];
+  dataRetorno: Date;
+}
