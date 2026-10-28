@@ -67,15 +67,23 @@ const getInitialState = (): EnvioMassaState => ({
   filters: {},
   selectedContacts: [],
   contentItems: [],
-  proximaDataContato: dataPadraoProximoContato("massa_whatsapp")
+  proximaDataContato: dataPadraoProximoContato("massa_whatsapp"),
+  modoDiscador: 'sequencial',
+  pararAoReceber: lerPararAoReceber(),
+  agenteIaId: '',
+  agenteIaNome: '',
+  ramalIa: '',
+  objetivoIa: ''
 });
 
-export function EnvioMassaWizardContent({ 
+export function EnvioMassaWizardContent({
   onClose,
   onComplete,
   contatosIniciais = [],
   canalInicial,
-  onVoltarSelecao
+  onVoltarSelecao,
+  onIniciarDiscador,
+  onIniciarCampanhaIa
 }: EnvioMassaWizardContentProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
