@@ -43,6 +43,13 @@
       "when": 1793189898778,
       "tag": "0005_cv_checklist_saida",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793190100786,
+      "tag": "0006_cv_movimento_checklist_recebido",
+      "breakpoints": true
     }
   ]
 }

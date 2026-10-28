@@ -7472,6 +7472,7 @@ export type Database = {
       }
       cv_vehicle_movements: {
         Row: {
+          checklist_saida_recebido: boolean
           created_at: string
           damage_notes: string | null
           driver_id: string
@@ -7500,6 +7501,7 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          checklist_saida_recebido?: boolean
           created_at?: string
           damage_notes?: string | null
           driver_id: string
@@ -7528,6 +7530,7 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          checklist_saida_recebido?: boolean
           created_at?: string
           damage_notes?: string | null
           driver_id?: string

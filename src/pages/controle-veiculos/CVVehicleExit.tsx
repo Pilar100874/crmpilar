@@ -164,7 +164,12 @@ export default function CVVehicleExit() {
   };
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
+  const [checklistRecebido, setChecklistRecebido] = useState(false);
+
   const handleSubmit = async () => {
+    if (!checklistRecebido) {
+      return toast.error("Confirme que recebeu o check list de saída preenchido");
+    }
     if (photosRequired && missingRequired.length > 0) {
       setStep(3);
       setPendentesOpen(true);
@@ -193,6 +198,7 @@ export default function CVVehicleExit() {
       exit_notes: form.exit_notes || null,
       inspected_by: user?.id ?? null,
       status: "out",
+      checklist_saida_recebido: true,
       estabelecimento_id: estId,
     } as any).select().single();
 
@@ -517,6 +523,13 @@ export default function CVVehicleExit() {
                   {form.exit_notes && <p><strong>Observações:</strong> {form.exit_notes}</p>}
                   <p><strong>Fotos:</strong> {photos.length} de {angles.length}</p>
                 </div>
+                <label htmlFor="checklistRecebido" className={`flex items-start gap-3 p-3 rounded border cursor-pointer ${checklistRecebido ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/5"}`}>
+                  <Checkbox id="checklistRecebido" checked={checklistRecebido} onCheckedChange={(v) => setChecklistRecebido(v === true)} className="mt-0.5" />
+                  <span className="text-sm">
+                    <strong>Recebi o check list de saída preenchido</strong> (motorista e mecânico) <span className="text-destructive">*</span>
+                    <span className="block text-xs text-muted-foreground">Obrigatório para confirmar a saída.</span>
+                  </span>
+                </label>
               </div>
             )}
           </CardContent>
@@ -528,7 +541,7 @@ export default function CVVehicleExit() {
             {step < STEPS.length - 1 ? (
               <Button onClick={goNext}>Próximo <ChevronRight className="h-4 w-4 ml-2" /></Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={busy} className="bg-warning text-warning-foreground hover:opacity-90">
+              <Button onClick={handleSubmit} disabled={busy || !checklistRecebido} className="bg-warning text-warning-foreground hover:opacity-90">
                 <Save className="h-4 w-4 mr-2" /> {busy ? "Registrando..." : "Confirmar Saída"}
               </Button>
             )}
