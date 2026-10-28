@@ -7584,6 +7584,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
               onComplete={loadTodayTasks}
+              onIniciarDiscador={iniciarDiscadorDoWizard}
+              onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
             />
           </div>
         ) : activeTab === "email" ? (
@@ -7681,6 +7683,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
                     onComplete={loadTodayTasks}
+                    onIniciarDiscador={iniciarDiscadorDoWizard}
+                    onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
                   />
                 </div>
               )}
@@ -8256,7 +8260,6 @@ ${recentMessages}
           fontes={fontesDisparo}
               abaInicial={filtroFila}
           onClose={fecharDisparoMassa}
-          onIniciarLigacao={(ids, modo) => void iniciarLigacaoSelecionados(ids, modo)}
           onIniciarEnvio={iniciarEnvioDoDisparo}
           canalInicial={canalEnvioMassa ?? null}
           selecionadosIniciais={idsEnvioMassa}
@@ -8272,6 +8275,8 @@ ${recentMessages}
               canalInicial={canalEnvioMassa}
               onVoltarSelecao={idsEnvioMassa.length > 0 ? voltarSelecaoDisparo : undefined}
           onComplete={loadTodayTasks}
+          onIniciarDiscador={iniciarDiscadorDoWizard}
+          onIniciarCampanhaIa={iniciarCampanhaIaDoWizard}
         />
       </div>
     )}
