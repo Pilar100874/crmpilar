@@ -256,8 +256,14 @@ export function EnvioMassaWizardContent({
   };
 
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
-  const passosVisiveis = canalInicial ? STEPS.filter(s => s.key !== 'channel') : STEPS;
+  // Canais de chamada não têm mensagem: a etapa "Preview" sai da lista.
+  const chamada = canalEhChamada(state.canal);
+  const passosVisiveis = STEPS.filter(s =>
+    (!canalInicial || s.key !== 'channel') && (!chamada || s.key !== 'preview')
+  );
   const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
+  const rotuloPasso = (s: { key: WizardStep; label: string }) =>
+    s.key === 'compose' && chamada ? 'Configurar' : s.label;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -267,7 +273,7 @@ export function EnvioMassaWizardContent({
           <h2 className="text-base font-semibold">Envio em Massa</h2>
           {state.canal && (
             <Badge variant="secondary" className="text-xs">
-              {state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+              {ROTULO_CANAL[state.canal]}
             </Badge>
           )}
         </div>
