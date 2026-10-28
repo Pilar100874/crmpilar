@@ -514,7 +514,9 @@ export default function Atendimento() {
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
   const [showEnvioMassaWizard, setShowEnvioMassaWizardState] = useState(false);
   const [idsEnvioMassa, setIdsEnvioMassa] = useState<string[]>([]);
-  const [canalEnvioMassa, setCanalEnvioMassa] = useState<"whatsapp" | "email" | undefined>(undefined);
+  const [canalEnvioMassa, setCanalEnvioMassa] = useState<CanalDisparo | undefined>(undefined);
+  // Data de retorno escolhida na etapa Agendar do disparo por telefone.
+  const [dataRetornoDiscador, setDataRetornoDiscador] = useState<Date | null>(null);
   const [showDisparoMassa, setShowDisparoMassaState] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
@@ -5076,11 +5078,59 @@ ${recentMessages}
     setMobileView(origem.mobileView);
   };
 
-  const iniciarEnvioDoDisparo = (ids: string[], canal: "whatsapp" | "email") => {
+  const iniciarEnvioDoDisparo = (ids: string[], canal: CanalDisparo) => {
     setIdsEnvioMassa(ids);
     setCanalEnvioMassa(canal);
     setShowDisparoMassa(false);
     setShowEnvioMassaWizard(true);
+  };
+
+  // Canal Telefone do assistente: valida PABX + ramal e abre o discador no
+  // Fluxo de Atendimento com a data de retorno escolhida na etapa Agendar.
+  const iniciarDiscadorDoWizard = async (contatos: ContactForBulkSend[], modo: "sequencial" | "previa", dataRetorno: Date) => {
+    if (contatos.length === 0) return;
+    if (!(await validarTelefonia())) return;
+    const hoje = new Date().toLocaleDateString("en-CA");
+    const lista = contatos
+      .filter((c) => c.telefone)
+      .map((c) => ({
+        id: `contato-${c.id}`, contact_id: c.id, contact_name: c.nome, title: "Ligação",
+        date: hoje, origem: "ligacao", status: "pending",
+        customers: { id: c.id, nome: c.nome, email: c.email ?? undefined, telefone: c.telefone ?? undefined },
+      }));
+    if (lista.length === 0) {
+      toast.error("Nenhum contato selecionado tem telefone");
+      return;
+    }
+    setDataRetornoDiscador(dataRetorno);
+    setTasksSelecionadas(lista as any);
+    setDiscadorContatos(contatos.map((c) => c.id));
+    setShowEnvioMassaWizard(false);
+    setIdsEnvioMassa([]);
+    setCanalEnvioMassa(undefined);
+    aplicarModoDiscador(modo);
+  };
+
+  // Canal Ligação com IA do assistente: inicia a campanha sequencial; o
+  // acompanhamento (pausar/cancelar) fica no popup global de ligações com IA.
+  const iniciarCampanhaIaDoWizard = async (config: ConfigCampanhaIa) => {
+    const est = estabelecimentoId || (await getEstabelecimentoId());
+    if (!est) return;
+    if (!config.agenteId) return toast.error('Nenhum agente de voz com "Fazer ligações" ativo');
+    if (!config.ramal) return toast.error("Seu usuário não tem ramal configurado");
+    const itens = config.contatos
+      .filter((c) => c.telefone)
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: soDigitosTel(c.telefone) }));
+    if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
+    const ok = iniciarCampanhaIa({
+      estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,
+      ramalAtendente: config.ramal, itens,
+    });
+    if (!ok) return toast.error("Já existe uma sequência de ligações com IA em andamento");
+    toast.success(`A IA começou a ligar para ${itens.length} contato(s)`);
+    setShowEnvioMassaWizard(false);
+    setIdsEnvioMassa([]);
+    setCanalEnvioMassa(undefined);
   };
 
   const voltarSelecaoDisparo = () => {

@@ -13,6 +13,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { StepChannel } from "./steps/StepChannel";
 import { StepFilter } from "./steps/StepFilter";
 import { StepCompose } from "./steps/StepCompose";
+import { StepComposeChamada } from "./steps/StepComposeChamada";
 import { StepPreview } from "./steps/StepPreview";
 import { StepSchedule } from "./steps/StepSchedule";
 import { StepConfirm } from "./steps/StepConfirm";
@@ -20,9 +21,11 @@ import { useContactsFilter } from "./hooks/useContactsFilter";
 import { useQuickReplies } from "./hooks/useQuickReplies";
 import { useMediaGallery } from "./hooks/useMediaGallery";
 import { useEnvioMassaTemplates } from "./hooks/useEnvioMassaTemplates";
-import { 
-  WizardStep, ContentItem, ContactForBulkSend, 
-  EnvioMassaFilters, EnvioMassaState, CanalEnvio 
+import { lerPararAoReceber } from "@/components/atendimento/DiscadorModoDialog";
+import {
+  WizardStep, ContentItem, ContactForBulkSend,
+  EnvioMassaFilters, EnvioMassaState, CanalEnvio,
+  canalEhChamada, ROTULO_CANAL, ConfigCampanhaIa
 } from "./types";
 
 interface EnvioMassaWizardPanelProps {
@@ -32,6 +35,10 @@ interface EnvioMassaWizardPanelProps {
   canalInicial?: CanalEnvio;
   /** Quando a seleção veio da tela de Disparo em massa, voltar ao filtro reabre essa mesma tela. */
   onVoltarSelecao?: () => void;
+  /** Canal Telefone: inicia o discador no Fluxo de Atendimento. */
+  onIniciarDiscador?: (contatos: ContactForBulkSend[], modo: 'sequencial' | 'previa', dataRetorno: Date) => void;
+  /** Canal Ligação com IA: inicia a campanha sequencial de ligações. */
+  onIniciarCampanhaIa?: (config: ConfigCampanhaIa) => void;
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
@@ -49,15 +56,23 @@ const getInitialState = (): EnvioMassaState => ({
   filters: {},
   selectedContacts: [],
   contentItems: [],
-  proximaDataContato: addDays(new Date(), 1)
+  proximaDataContato: addDays(new Date(), 1),
+  modoDiscador: 'sequencial',
+  pararAoReceber: lerPararAoReceber(),
+  agenteIaId: '',
+  agenteIaNome: '',
+  ramalIa: '',
+  objetivoIa: ''
 });
 
-export function EnvioMassaWizardPanel({ 
+export function EnvioMassaWizardPanel({
   onClose,
   onComplete,
   contatosIniciais = [],
   canalInicial,
-  onVoltarSelecao
+  onVoltarSelecao,
+  onIniciarDiscador,
+  onIniciarCampanhaIa
 }: EnvioMassaWizardPanelProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
@@ -228,6 +243,24 @@ export function EnvioMassaWizardPanel({
       return;
     }
 
+    // Canais de chamada: a execução fica com o discador (Fluxo de Atendimento)
+    // ou com a campanha de IA (popup global); o assistente só entrega a configuração.
+    if (state.canal === 'telefone') {
+      onIniciarDiscador?.(state.selectedContacts, state.modoDiscador ?? 'sequencial', state.proximaDataContato);
+      return;
+    }
+    if (state.canal === 'ia') {
+      onIniciarCampanhaIa?.({
+        agenteId: state.agenteIaId || '',
+        agenteNome: state.agenteIaNome || '',
+        ramal: (state.ramalIa || '').trim(),
+        objetivo: (state.objetivoIa || '').trim(),
+        contatos: state.selectedContacts,
+        dataRetorno: state.proximaDataContato,
+      });
+      return;
+    }
+
     if (state.canal === 'email') {
       await executarEnvio(state.selectedContacts, state.canal, contact => enviarEmailMassa(state.contentItems, contact, estabelecimentoId, usuarioId, format(state.proximaDataContato, 'yyyy-MM-dd')));
       return;
@@ -366,8 +399,14 @@ export function EnvioMassaWizardPanel({
   };
 
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
-  const passosVisiveis = canalInicial ? STEPS.filter(s => s.key !== 'channel') : STEPS;
+  // Canais de chamada não têm mensagem: a etapa "Preview" sai da lista.
+  const chamada = canalEhChamada(state.canal);
+  const passosVisiveis = STEPS.filter(s =>
+    (!canalInicial || s.key !== 'channel') && (!chamada || s.key !== 'preview')
+  );
   const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
+  const rotuloPasso = (s: { key: WizardStep; label: string }) =>
+    s.key === 'compose' && chamada ? 'Configurar' : s.label;
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -380,7 +419,7 @@ export function EnvioMassaWizardPanel({
           <h1 className="text-lg font-semibold">Envio em Massa</h1>
           {state.canal && (
             <Badge variant="secondary">
-              {state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+              {ROTULO_CANAL[state.canal]}
             </Badge>
           )}
         </div>
@@ -408,13 +447,13 @@ export function EnvioMassaWizardPanel({
             >
               {index + 1}
             </div>
-            <span 
+            <span
               className={`
                 hidden xl:block ml-2 text-sm whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
-              {step.label}
+              {rotuloPasso(step)}
             </span>
             {index < passosVisiveis.length - 1 && (
               <div 
@@ -455,7 +494,23 @@ export function EnvioMassaWizardPanel({
             />
           )}
 
-          {state.step === 'compose' && (
+          {state.step === 'compose' && (chamada && state.canal ? (
+            <StepComposeChamada
+              canal={state.canal}
+              modoDiscador={state.modoDiscador ?? 'sequencial'}
+              pararAoReceber={state.pararAoReceber ?? false}
+              agenteIaId={state.agenteIaId ?? ''}
+              ramalIa={state.ramalIa ?? ''}
+              objetivoIa={state.objetivoIa ?? ''}
+              onModoChange={(modo) => setState(prev => ({ ...prev, modoDiscador: modo }))}
+              onPararAoReceberChange={(v) => setState(prev => ({ ...prev, pararAoReceber: v }))}
+              onAgenteChange={(id, nome) => setState(prev => ({ ...prev, agenteIaId: id, agenteIaNome: nome }))}
+              onRamalChange={(ramal) => setState(prev => ({ ...prev, ramalIa: ramal }))}
+              onObjetivoChange={(objetivo) => setState(prev => ({ ...prev, objetivoIa: objetivo }))}
+              onBack={() => goToStep('filter')}
+              onNext={() => goToStep('schedule')}
+            />
+          ) : (
             <StepCompose
             canal={state.canal}
             onTemplatesChanged={recarregarTemplates}
@@ -469,7 +524,7 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('filter')}
               onNext={() => goToStep('preview')}
             />
-          )}
+          ))}
 
           {state.step === 'preview' && (
             <StepPreview
@@ -485,7 +540,7 @@ export function EnvioMassaWizardPanel({
             <StepSchedule
               proximaDataContato={state.proximaDataContato}
               onDateChange={handleDateChange}
-              onBack={() => goToStep('preview')}
+              onBack={() => goToStep(chamada ? 'compose' : 'preview')}
               onNext={() => goToStep('confirm')}
             />
           )}
@@ -504,6 +559,12 @@ export function EnvioMassaWizardPanel({
               onBack={() => goToStep('schedule')}
               onConfirm={handleConfirm}
               canal={state.canal}
+              resumoChamada={chamada ? {
+                modo: state.canal === 'telefone' ? (state.modoDiscador === 'previa' ? 'Aprovação uma a uma' : 'Discagem sequencial') : undefined,
+                agente: state.canal === 'ia' ? state.agenteIaNome : undefined,
+                ramal: state.canal === 'ia' ? state.ramalIa : undefined,
+                objetivo: state.canal === 'ia' ? state.objetivoIa : undefined,
+              } : undefined}
             />
           )}
         </div>

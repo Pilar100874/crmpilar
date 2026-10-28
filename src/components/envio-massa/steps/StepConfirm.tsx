@@ -12,10 +12,18 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
+import { ContentItem, ContactForBulkSend, CanalEnvio, ROTULO_CANAL, canalEhChamada } from "../types";
 import { ItemEnvio } from '../hooks/execucaoSequencial';
 import { MonitorEnvio } from './MonitorEnvio';
 import { EmailPreview } from './EmailPreview';
+
+/** Resumo da configuração de chamada (Telefone / Ligação com IA). */
+export interface ResumoChamada {
+  modo?: string;
+  agente?: string;
+  ramal?: string;
+  objetivo?: string;
+}
 
 interface StepConfirmProps {
   contentItems: ContentItem[];
@@ -30,6 +38,7 @@ interface StepConfirmProps {
   cancelamentoSolicitado?: boolean;
   onCancel?: () => void;
   onClose?: () => void;
+  resumoChamada?: ResumoChamada;
 }
 
 export function StepConfirm({
@@ -45,6 +54,7 @@ export function StepConfirm({
   cancelamentoSolicitado = false,
   onCancel,
   onClose,
+  resumoChamada,
 }: StepConfirmProps) {
   const previewContact = selectedContacts[0] || {
     nome: 'João Silva',
@@ -109,10 +119,10 @@ export function StepConfirm({
             </div>
             <div>
               <h3 className="font-medium flex items-center gap-2">
-                Confirmar Envio
+                {canalEhChamada(canal) ? 'Confirmar ligações' : 'Confirmar Envio'}
                 {canal && (
-                  <Badge variant={canal === 'whatsapp' ? 'default' : 'secondary'} className={canal === 'whatsapp' ? 'bg-green-500' : 'bg-blue-500'}>
-                    {canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                  <Badge variant={canal === 'whatsapp' ? 'default' : 'secondary'} className={canal === 'whatsapp' ? 'bg-green-500' : canal === 'email' ? 'bg-blue-500' : ''}>
+                    {ROTULO_CANAL[canal]}
                   </Badge>
                 )}
               </h3>
@@ -132,8 +142,8 @@ export function StepConfirm({
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
               <MessageSquare className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-lg font-bold">{contentItems.length}</p>
-                <p className="text-[10px] text-muted-foreground">Itens</p>
+                <p className="text-lg font-bold">{canalEhChamada(canal) ? selectedContacts.length : contentItems.length}</p>
+                <p className="text-[10px] text-muted-foreground">{canalEhChamada(canal) ? 'Ligações' : 'Itens'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
@@ -151,8 +161,41 @@ export function StepConfirm({
           <Card className="p-4">
             <h4 className="font-medium mb-3 flex items-center gap-2 text-sm">
               <MessageSquare className="h-4 w-4" />
-              Preview do Conteúdo
+              {canalEhChamada(canal) ? 'Configuração das ligações' : 'Preview do Conteúdo'}
             </h4>
+            {canalEhChamada(canal) && resumoChamada ? (
+              <div className="space-y-2 text-xs">
+                {resumoChamada.modo && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Modo de discagem</span>
+                    <span className="font-medium text-foreground">{resumoChamada.modo}</span>
+                  </div>
+                )}
+                {resumoChamada.agente && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Agente de voz</span>
+                    <span className="font-medium text-foreground">{resumoChamada.agente}</span>
+                  </div>
+                )}
+                {resumoChamada.ramal && (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                    <span className="text-muted-foreground">Seu ramal</span>
+                    <span className="font-medium text-foreground">{resumoChamada.ramal}</span>
+                  </div>
+                )}
+                {resumoChamada.objetivo && (
+                  <div className="rounded-lg bg-muted/30 p-2">
+                    <p className="text-muted-foreground mb-1">Objetivo da ligação</p>
+                    <p className="font-medium text-foreground whitespace-pre-wrap">{resumoChamada.objetivo}</p>
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  {canal === 'ia'
+                    ? 'A IA liga em sequência e transfere para o seu ramal quando o contato responder. O acompanhamento fica no ícone de ligações com IA.'
+                    : 'O discador abre no Fluxo de Atendimento e liga para um contato por vez.'}
+                </p>
+              </div>
+            ) : (
             <ScrollArea className="h-[250px]">
               <div className="space-y-2">
                 {/* Preview contact header */}
@@ -230,6 +273,7 @@ export function StepConfirm({
                 ))}
               </div>
             </ScrollArea>
+            )}
           </Card>
 
           {/* Destinatários */}
@@ -267,8 +311,9 @@ export function StepConfirm({
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                Serão criadas tarefas no calendário para {format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.
-                Esta ação não pode ser desfeita.
+                {canalEhChamada(canal)
+                  ? `As ligações começam na sequência. A data de retorno sugerida é ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}.`
+                  : `Serão criadas tarefas no calendário para ${format(proximaDataContato, "dd 'de' MMMM", { locale: ptBR })}. Esta ação não pode ser desfeita.`}
               </p>
             </div>
           </div>
@@ -282,7 +327,7 @@ export function StepConfirm({
         </Button>
         <Button onClick={onConfirm} className="gap-2">
           <Send className="h-4 w-4" />
-          Confirmar Envio
+          {canalEhChamada(canal) ? 'Iniciar ligações' : 'Confirmar Envio'}
         </Button>
       </div>
     </div>
