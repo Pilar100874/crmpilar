@@ -68,14 +68,13 @@ function wavPara8k(b64) {
 // ─── API do CRM ──────────────────────────────────────────────────────────
 async function api(acao, extra = {}) {
   const cfg = loadConfig();
-  const v = cfg.voz || {};
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90_000);
   try {
     const resp = await fetch(`${cfg.url}/functions/v1/voz-dispositivo`, {
       method: 'POST', signal: ctl.signal,
       headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` },
-      // Sem chave específica da voz, usa a chave de instalação do Coletor.
-      body: JSON.stringify({ ...extra, chave: String(v.chave || cfg.chaveEmpresa || '').trim().toUpperCase(), acao }),
+      // A chave de instalação do Coletor vale para todos os módulos, inclusive a voz.
+      body: JSON.stringify({ ...extra, chave: String(cfg.chaveEmpresa || '').trim().toUpperCase(), acao }),
     });
     const json = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(json.error || `Erro ${resp.status}`);
@@ -313,20 +312,19 @@ function log(t) {
 async function principal() {
   while (rodando) {
     try {
-      const v = loadConfig().voz || {};
       const resp = (await api('config')) || {};
       const agente = resp.agente || {};
-      // Sem host digitado, usa o servidor da tela Configuração PABX (vem em "central").
+      // Central e ramal vêm sempre do CRM: servidor da tela Configuração PABX (vem em "central").
       const central = resp.central || {};
-      const host = String(v.host || central.host || '').trim();
+      const host = String(central.host || '').trim();
       // Portas web do PABX (8089/8443...) não servem para SIP UDP: nesse caso usa 5060.
       const pw = [80, 443, 8088, 8089, 8443, 7443];
-      const pd = Number(v.porta || central.porta) || 5060;
+      const pd = Number(central.porta) || 5060;
       const porta = pw.includes(pd) ? 5060 : pd;
-      const ramal = String(v.ramal || agente.ramal_ia || '').trim();
+      const ramal = String(agente.ramal_ia || '').trim();
       escutaAgente = agente.codigo_escuta || '';
       if (!host || !ramal) { MON.central = !host ? 'Central não configurada: preencha a tela Configuração PABX Grandstream UCM' : 'Agente sem ramal da IA: preencha em Agentes de Voz'; log(MON.central); rodando = false; MON.servico = 'Parado'; return; }
-      sip = new Sip({ host, porta, ramal, senha: v.senha || agente.senha_ramal_ia || '', log, aoReceber: (c) => aoReceber(c) });
+      sip = new Sip({ host, porta, ramal, senha: agente.senha_ramal_ia || '', log, aoReceber: (c) => aoReceber(c) });
       await sip.abrir();
       if (!(await sip.registrar())) { MON.central = 'Falha no registro'; await sip.parar(); sip = null; await dormir(15_000); continue; }
       MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${host}`; log(MON.central);
@@ -355,7 +353,7 @@ async function aoReceber(c) {
 
 async function executarComando(cmd) {
   const tipo = cmd.tipo;
-  const escuta = (loadConfig().voz || {}).codigoEscuta || escutaAgente || '*45';
+  const escuta = escutaAgente || '*45';
   const destino = tipo === 'ligar' ? cmd.numero : `${escuta}${cmd.ramal}`;
   log(tipo === 'ligar' ? `Ligando para ${destino}` : `Escutando o ramal ${cmd.ramal}`);
   const c = await sip.ligar(destino);
@@ -435,13 +433,8 @@ function stopVoz() {
 }
 // Ao sair do app: para sem mudar a escolha salva (volta ligado no próximo início).
 function pararVozSemSalvar() { rodando = false; if (sip) { sip.parar(); sip = null; } }
-function statusVoz() { return { ...MON, rodando, config: { ...(loadConfig().voz || {}), senha: undefined } }; }
-function salvarConfigVoz(v) {
-  const atual = loadConfig().voz || {};
-  const novo = { ...atual, ...v }; if (!v.senha) novo.senha = atual.senha;
-  saveConfig({ voz: novo });
-  if (rodando) { pararVozSemSalvar(); setTimeout(startVoz, 500); }
-  return statusVoz();
-}
+function statusVoz() { return { ...MON, rodando }; }
+// Mantido por compatibilidade: a voz não tem mais ajustes locais (tudo vem do CRM).
+function salvarConfigVoz() { return statusVoz(); }
 
 module.exports = { startVoz, stopVoz, statusVoz, salvarConfigVoz, pararVozSemSalvar };
