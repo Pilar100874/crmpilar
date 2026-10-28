@@ -243,6 +243,24 @@ export function EnvioMassaWizardPanel({
       return;
     }
 
+    // Canais de chamada: a execução fica com o discador (Fluxo de Atendimento)
+    // ou com a campanha de IA (popup global); o assistente só entrega a configuração.
+    if (state.canal === 'telefone') {
+      onIniciarDiscador?.(state.selectedContacts, state.modoDiscador ?? 'sequencial', state.proximaDataContato);
+      return;
+    }
+    if (state.canal === 'ia') {
+      onIniciarCampanhaIa?.({
+        agenteId: state.agenteIaId || '',
+        agenteNome: state.agenteIaNome || '',
+        ramal: (state.ramalIa || '').trim(),
+        objetivo: (state.objetivoIa || '').trim(),
+        contatos: state.selectedContacts,
+        dataRetorno: state.proximaDataContato,
+      });
+      return;
+    }
+
     if (state.canal === 'email') {
       await executarEnvio(state.selectedContacts, state.canal, contact => enviarEmailMassa(state.contentItems, contact, estabelecimentoId, usuarioId, format(state.proximaDataContato, 'yyyy-MM-dd')));
       return;
@@ -381,8 +399,14 @@ export function EnvioMassaWizardPanel({
   };
 
   // O canal já foi escolhido antes de abrir o assistente: a etapa "Canal" sai da lista.
-  const passosVisiveis = canalInicial ? STEPS.filter(s => s.key !== 'channel') : STEPS;
+  // Canais de chamada não têm mensagem: a etapa "Preview" sai da lista.
+  const chamada = canalEhChamada(state.canal);
+  const passosVisiveis = STEPS.filter(s =>
+    (!canalInicial || s.key !== 'channel') && (!chamada || s.key !== 'preview')
+  );
   const currentStepIndex = Math.max(0, passosVisiveis.findIndex(s => s.key === state.step));
+  const rotuloPasso = (s: { key: WizardStep; label: string }) =>
+    s.key === 'compose' && chamada ? 'Configurar' : s.label;
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
