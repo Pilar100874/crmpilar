@@ -242,8 +242,9 @@ class Sip {
         this.ack(c, r);
         const d = this.destinoRtp(r.corpo); if (!d) { c.desligar(); return null; }
         c.rtp.iniciar(d.ip, d.porta); c.ativa = true; return c;
-      } else { this.ack(c, r); this.log(`Ligação para ${numero} recusada (${r.status})`); c.encerrar(); return null; }
+      } else { this.ack(c, r); this.ultimoErro = `Central recusou (${r.status} ${r.motivo || ''})`.trim(); this.log(`Ligação para ${numero} recusada (${r.status})`); c.encerrar(); return null; }
     }
+    this.ultimoErro = 'Ninguém atendeu em ' + limiteSeg + 's'; this.log(`Ligação para ${numero}: ${this.ultimoErro}`);
     c.desligar(); return null;
   }
   noDialogo(c, metodo, extra = []) {
@@ -363,9 +364,10 @@ async function executarComando(cmd) {
   const escuta = escutaAgente || '*45';
   const destino = tipo === 'ligar' ? cmd.numero : `${escuta}${cmd.ramal}`;
   log(tipo === 'ligar' ? `Ligando para ${destino}` : `Escutando o ramal ${cmd.ramal}`);
-  if (!sip) return;
+  if (!sip) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'erro', erro: 'Ramal da IA não registrado' })); return; }
+  sip.ultimoErro = '';
   const c = await sip.ligar(destino);
-  if (!c) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta' })); return; }
+  if (!c) { silencioso(api('comando_status', { comando_id: cmd.id, status: 'sem_resposta', erro: sip.ultimoErro || null })); return; }
   silencioso(api('comando_status', { comando_id: cmd.id, status: 'concluido' }));
   const cfg = (await silencioso(api('config', { agente_id: cmd.agente_id || null })))?.agente || {};
   conduzir(c, cfg, tipo === 'ligar' ? 'ligar' : 'assistir', cmd.objetivo || null, cmd.numero || null, cmd.ramal || null);

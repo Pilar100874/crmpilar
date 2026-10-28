@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { aplicarRegrasDiscagem } from "../_shared/regrasDiscagem.ts";
 
 /**
  * Ponte do aplicativo Android "Pilar Voz" com o CRM.
@@ -204,16 +205,32 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
       case "comandos": {
+        // Pedidos esquecidos (aparelho estava desligado) não podem disparar ligações depois.
+        const limite = new Date(Date.now() - 2 * 60_000).toISOString();
+        await sb.from("voz_comandos").update({ status: "cancelado", erro: "expirado: nenhum aparelho de voz conectado a tempo" })
+          .eq("estabelecimento_id", empresa).eq("status", "pendente").lt("created_at", limite);
         const { data } = await sb.from("voz_comandos").select("*").eq("estabelecimento_id", empresa)
           .eq("status", "pendente").order("created_at").limit(1);
         const cmd = data?.[0];
         if (!cmd) return json({ comando: null });
         await sb.from("voz_comandos").update({ status: "executando", processado_em: new Date().toISOString() }).eq("id", cmd.id);
+        if (cmd.tipo === "ligar" && cmd.numero) {
+          // Mesmas regras de discagem do telefone (sem DDI 55, sem DDD local, 015 nos demais).
+          const { data: r } = await sb.from("ucm_config")
+            .select("discagem_regras_ativas, discagem_ddi_local, discagem_ddd_local, discagem_prefixo_outro_ddd")
+            .eq("estabelecimento_id", empresa).maybeSingle();
+          cmd.numero = aplicarRegrasDiscagem(String(cmd.numero), {
+            ativas: r?.discagem_regras_ativas ?? true,
+            ddiLocal: String(r?.discagem_ddi_local ?? "55"),
+            dddLocal: String(r?.discagem_ddd_local ?? "11"),
+            prefixo: String(r?.discagem_prefixo_outro_ddd ?? "015"),
+          });
+        }
         return json({ comando: cmd });
       }
       case "comando_status": {
         const status = ["concluido", "sem_resposta", "erro"].includes(corpo.status) ? corpo.status : "erro";
-        await sb.from("voz_comandos").update({ status, erro: corpo.erro ?? null })
+        await sb.from("voz_comandos").update({ status, erro: corpo.erro ? String(corpo.erro).slice(0, 300) : null })
           .eq("id", String(corpo.comando_id ?? "")).eq("estabelecimento_id", empresa);
         return json({ ok: true });
       }
