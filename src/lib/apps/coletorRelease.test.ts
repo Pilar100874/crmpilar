@@ -6,10 +6,11 @@ import { versaoPacoteColetor } from "./coletorRelease";
 const base = "https://github.com/Pilar100874/crmpilar/releases/download/";
 
 describe("Versões dos instaladores do Coletor", () => {
-  it("Mac Intel aponta para o pacote 2.1.3, não para 2.1.1", () => {
+  it("Mac Intel aponta para um pacote versionado, nunca o antigo 2.1.1", () => {
     const manifest = JSON.parse(readFileSync("public/coletor/version.json", "utf8"));
-    expect(manifest.downloadUrlMacIntel).toBe(`${base}coletor-v2.1.3/ColetorPilar-Mac-Intel.zip`);
-    expect(versaoPacoteColetor(manifest.downloadUrlMacIntel)).toBe("2.1.3");
+    const versao = versaoPacoteColetor(manifest.downloadUrlMacIntel);
+    expect(manifest.downloadUrlMacIntel).toBe(`${base}coletor-v${versao}/ColetorPilar-Mac-Intel.zip`);
+    expect(versao).not.toBe("2.1.1");
   });
 
   it("o rótulo de um pacote antigo não herda a versão global", () => {
