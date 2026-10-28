@@ -33,7 +33,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
     if (!canal) return contacts;
     
     return contacts.filter(c => {
-      if (canal === 'whatsapp') return !!c.telefone;
+      if (canal === 'whatsapp' || canal === 'telefone' || canal === 'ia') return !!c.telefone;
       if (canal === 'email') return !!c.email;
       return true;
     });
