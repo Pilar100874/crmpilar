@@ -64,6 +64,13 @@
       "when": 1793191315180,
       "tag": "0008_checklist_responsavel_porteiro",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793212531111,
+      "tag": "0009_migration",
+      "breakpoints": true
     }
   ]
 }

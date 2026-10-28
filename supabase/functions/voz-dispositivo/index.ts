@@ -130,17 +130,17 @@ Deno.serve(async (req) => {
         if (!a) return json({ error: "Nenhum agente de voz ativo. Cadastre em Agentes de Voz." }, 404);
         // Endereço da central vem da tela Configuração PABX Grandstream UCM,
         // assim o app e o Coletor não precisam digitar host/porta manualmente.
-        const ucm = (await sb.from("ucm_config").select("ucm_host, remote_ip, ucm_host_interno, sip_porta, sip_porta_interna")
+        const ucm = (await sb.from("ucm_config").select("ucm_host, remote_ip, ucm_host_interno, voz_endereco, voz_porta")
           .eq("estabelecimento_id", empresa).maybeSingle()).data;
-        // As portas da tela PABX (8089, 8443...) são web/WebSocket do Pilar Fone e da API.
-        // Os aparelhos de voz falam SIP puro por UDP, que no UCM é sempre 5060.
+        // Endereço e porta SIP (UDP) da voz vêm da seção "Agentes de voz" da tela PABX; padrão: externo, 5060.
+        const externo = String(ucm?.remote_ip || ucm?.ucm_host || "");
+        const portaVoz = Number(ucm?.voz_porta) || 5060;
         const central = ucm?.ucm_host
           ? {
-              // Aparelhos de voz ficam na rede do PABX: preferem o IP interno; host_externo fica de reserva.
-              host: String(ucm.ucm_host_interno || ucm.remote_ip || ucm.ucm_host),
-              host_externo: String(ucm.remote_ip || ucm.ucm_host),
-              porta: 5060,
-              porta_externa: 5060,
+              host: ucm.voz_endereco === "interno" && ucm.ucm_host_interno ? String(ucm.ucm_host_interno) : externo,
+              host_externo: externo,
+              porta: portaVoz,
+              porta_externa: portaVoz,
             }
           : null;
         // Central também dentro de "agente": os apps Android leem só esse objeto.

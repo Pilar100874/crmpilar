@@ -37,12 +37,14 @@ FUNC = f"{SUPA_URL}/functions/v1"
 
 # Sem UCM_HOST no ambiente, usa o servidor da tela Configuração PABX Grandstream UCM.
 if not UCM_HOST:
-    ucm = (db.table("ucm_config").select("ucm_host, remote_ip, ucm_host_interno")
+    ucm = (db.table("ucm_config").select("ucm_host, remote_ip, ucm_host_interno, voz_endereco, voz_porta")
            .eq("estabelecimento_id", EMPRESA).limit(1).execute())
     if ucm.data:
         d = ucm.data[0]
-        UCM_HOST = d.get("ucm_host_interno") or d.get("remote_ip") or d.get("ucm_host") or ""
-# A porta da tela PABX (8089) é web/WebSocket; SIP por UDP no UCM é 5060.
+        externo = d.get("remote_ip") or d.get("ucm_host") or ""
+        UCM_HOST = (d.get("ucm_host_interno") if d.get("voz_endereco") == "interno" else None) or externo
+        if not UCM_PORTA:
+            UCM_PORTA = int(d.get("voz_porta") or 5060)
 if not UCM_PORTA:
     UCM_PORTA = 5060
 if not UCM_HOST:
