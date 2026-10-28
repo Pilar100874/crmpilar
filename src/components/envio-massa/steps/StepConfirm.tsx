@@ -12,10 +12,18 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
+import { ContentItem, ContactForBulkSend, CanalEnvio, ROTULO_CANAL, canalEhChamada } from "../types";
 import { ItemEnvio } from '../hooks/execucaoSequencial';
 import { MonitorEnvio } from './MonitorEnvio';
 import { EmailPreview } from './EmailPreview';
+
+/** Resumo da configuração de chamada (Telefone / Ligação com IA). */
+export interface ResumoChamada {
+  modo?: string;
+  agente?: string;
+  ramal?: string;
+  objetivo?: string;
+}
 
 interface StepConfirmProps {
   contentItems: ContentItem[];
@@ -30,6 +38,7 @@ interface StepConfirmProps {
   cancelamentoSolicitado?: boolean;
   onCancel?: () => void;
   onClose?: () => void;
+  resumoChamada?: ResumoChamada;
 }
 
 export function StepConfirm({
