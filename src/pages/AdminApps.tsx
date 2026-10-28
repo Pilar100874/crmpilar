@@ -21,6 +21,7 @@ import { Check, ChevronDown, KeyRound, Download, Smartphone, Apple, HelpCircle, 
 import { baixarArquivo } from "@/lib/baixarArquivo";
 import { Fragment } from "react";
 import ChavesPainel from "@/pages/automacao/AutomacaoChavesApp";
+import { versaoPacoteColetor } from "@/lib/apps/coletorRelease";
 
 /** Tipos de chave que cada aplicativo aceita, na ordem de preferência. */
 const chavesDoApp = (app: { nome: string; icone: string }): string[] => {
@@ -151,7 +152,10 @@ export default function AdminApps() {
   const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
   const coletorMacAsUrl = coletorInfo?.downloadUrlMacAppleSilicon || COLETOR_MAC_APPLE_SILICON_FALLBACK_URL;
   const coletorMacIntelUrl = coletorInfo?.downloadUrlMacIntel || COLETOR_MAC_INTEL_FALLBACK_URL;
-  const coletorVersao = coletorInfo?.version ? `v${coletorInfo.version}` : undefined;
+  const versaoColetor = (url: string) => {
+    const version = versaoPacoteColetor(url);
+    return version ? `v${version}` : undefined;
+  };
 
   const apps: AppRow[] = [
     {
@@ -277,7 +281,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: coletorFileName,
       url: coletorUrl,
-      versao: coletorVersao,
+      versao: versaoColetor(coletorUrl),
       appSlug: "coletor",
       ajuda: {
         titulo: "Coletor (Windows) — como instalar",
@@ -297,7 +301,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Mac-AppleSilicon.zip",
       url: coletorMacAsUrl,
-      versao: coletorVersao,
+      versao: versaoColetor(coletorMacAsUrl),
       appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
@@ -317,7 +321,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Mac-Intel.zip",
       url: coletorMacIntelUrl,
-      versao: coletorVersao,
+      versao: versaoColetor(coletorMacIntelUrl),
       appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Mac — como instalar",
@@ -337,7 +341,7 @@ export default function AdminApps() {
       recursos: ["Ponto", "Câmeras", "Automação", "Voz"],
       arquivo: "ColetorPilar-Linux.AppImage",
       url: coletorLinuxUrl,
-      versao: coletorVersao,
+      versao: versaoColetor(coletorLinuxUrl),
       appSlug: "coletor",
       ajuda: {
         titulo: "Coletor no Linux — como instalar",

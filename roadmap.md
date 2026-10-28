@@ -1,5 +1,9 @@
 # Roteiro
 
+## Atualização do Coletor Mac
+- [x] Corrigir links antigos do Mac, exibir a versão do pacote de cada plataforma e impedir anúncios incorretos no atualizador.
+- [x] Sincronizar a publicação dos instaladores; pacote Intel baixado e confirmado como 2.1.3 no Info.plist e package.json, quatro testes aprovados e tela autenticada conferida. Instalação no Mac do usuário não verificada neste ambiente Linux.
+
 ## Biblioteca e check lists de veículos
 - [x] Incluir liberação semanal do mecânico e conferência cruzada pela portaria; itens salvos, dois PDFs baixados e revisados e 14 testes aprovados.
 - [x] Incluir freios no motorista e gerar três PDFs separados; downloads reais e dez testes conferidos. Revisão visual corrigiu página quase vazia do motorista ampliando a coluna de grupos; três formulários sem cortes ou sobreposições.

@@ -67,34 +67,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update public/coletor/version.json
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
-        run: |
-          $version = "${{ steps.pkg.outputs.version }}"
-          $repo = "${{ github.repository }}"
-          $url = "https://github.com/$repo/releases/download/coletor-v$version/ColetorPilar-Setup.exe"
-          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
-          $json.version = $version
-          $json.downloadUrl = $url
-          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
-
-      - name: Commit version.json bump
-        working-directory: ${{ github.workspace }}
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet public/coletor/version.json; then
-            echo "version.json unchanged"
-          else
-            git add public/coletor/version.json
-            git commit -m "chore(coletor): publish installer v${{ steps.pkg.outputs.version }} [skip ci]"
-            for i in 1 2 3 4 5; do
-              git pull --rebase --autostash origin main && git push origin HEAD:main && break
-              echo "push retry $i..."
-              sleep 3
-            done
-          fi
 
   build-linux:
     runs-on: ubuntu-latest
@@ -139,33 +111,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update public/coletor/version.json
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
-        run: |
-          $version = "${{ steps.pkg.outputs.version }}"
-          $repo = "${{ github.repository }}"
-          $base = "https://github.com/$repo/releases/download/coletor-v$version"
-          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
-          $json | Add-Member -NotePropertyName downloadUrlLinux -NotePropertyValue "$base/ColetorPilar-Linux.AppImage" -Force
-          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
-
-      - name: Commit version.json bump
-        working-directory: ${{ github.workspace }}
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet public/coletor/version.json; then
-            echo "version.json unchanged"
-          else
-            git add public/coletor/version.json
-            git commit -m "chore(coletor): publish linux installer v${{ steps.pkg.outputs.version }} [skip ci]"
-            for i in 1 2 3 4 5; do
-              git pull --rebase --autostash origin main && git push origin HEAD:main && break
-              echo "push retry $i..."
-              sleep 3
-            done
-          fi
 
   build-mac:
     runs-on: macos-latest
@@ -212,18 +157,42 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update public/coletor/version.json
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
-        run: |
-          $version = "${{ steps.pkg.outputs.version }}"
-          $repo = "${{ github.repository }}"
-          $base = "https://github.com/$repo/releases/download/coletor-v$version"
-          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
-          $json | Add-Member -NotePropertyName downloadUrlMacAppleSilicon -NotePropertyValue "$base/ColetorPilar-Mac-AppleSilicon.zip" -Force
-          $json | Add-Member -NotePropertyName downloadUrlMacIntel -NotePropertyValue "$base/ColetorPilar-Mac-Intel.zip" -Force
-          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
 
+  publish-manifest:
+    needs: [build, build-linux, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Publish matching platform URLs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(node -p "require('./coletor/package.json').version")
+          for FILE in ColetorPilar-Setup.exe ColetorPilar-Linux.AppImage ColetorPilar-Mac-Intel.zip ColetorPilar-Mac-AppleSilicon.zip; do
+            gh release view "coletor-v$VERSION" --json assets --jq '.assets[].name' | grep -Fx "$FILE" || exit 1
+          done
+          node <<'NODE'
+          const fs = require('fs');
+          const version = require('./coletor/package.json').version;
+          const file = 'public/coletor/version.json';
+          const json = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+          const base = `https://github.com/${process.env.GH_REPO}/releases/download/coletor-v${version}`;
+          Object.assign(json, {
+            version,
+            downloadUrl: `${base}/ColetorPilar-Setup.exe`,
+            downloadUrlLinux: `${base}/ColetorPilar-Linux.AppImage`,
+            downloadUrlMacIntel: `${base}/ColetorPilar-Mac-Intel.zip`,
+            downloadUrlMacAppleSilicon: `${base}/ColetorPilar-Mac-AppleSilicon.zip`,
+          });
+          fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+          NODE
       - name: Commit version.json bump
         working-directory: ${{ github.workspace }}
         run: |
@@ -233,7 +202,7 @@ jobs:
             echo "version.json unchanged"
           else
             git add public/coletor/version.json
-            git commit -m "chore(coletor): publish mac installers v${{ steps.pkg.outputs.version }} [skip ci]"
+            git commit -m "chore(coletor): publish installer v$(node -p "require('./coletor/package.json').version") [skip ci]"
             for i in 1 2 3 4 5; do
               git pull --rebase --autostash origin main && git push origin HEAD:main && break
               echo "push retry $i..."
