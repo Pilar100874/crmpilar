@@ -299,40 +299,12 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
 
   const escolherCanal = (k: CanalDisparo) => { setCanal(k); setSelecionados(new Set()); };
 
-  const [agentesIa, setAgentesIa] = useState<{ id: string; nome: string }[]>([]);
-  const [agenteIa, setAgenteIa] = useState("");
-  const [objetivoIa, setObjetivoIa] = useState("");
-  const [ramalIa, setRamalIa] = useState("");
-  useEffect(() => {
-    if (canal !== "ia") return;
-    void (async () => {
-      const est = await getEstabelecimentoId();
-      const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos").eq("estabelecimento_id", est).eq("ativo", true);
-      const l = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));
-      setAgentesIa(l); setAgenteIa((v) => v || l[0]?.id || "");
-      const r = await meuRamal(); if (r) setRamalIa((v) => v || r);
-    })();
-  }, [canal]);
-
-  const iniciarIa = async () => {
-    const est = await getEstabelecimentoId();
-    if (!est) return;
-    if (!agenteIa) return toast.error('Nenhum agente de voz com "Fazer ligações" ativo');
-    if (!ramalIa.trim()) return toast.error("Seu usuário não tem ramal configurado");
-    const itens = contatos.filter((c) => selecionados.has(c.id) && c.numero)
-      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa, numero: c.numero }));
-    const ok = iniciarCampanhaIa({ estabelecimentoId: est, agenteId: agenteIa, objetivo: objetivoIa.trim(), ramalAtendente: ramalIa.trim(), itens });
-    if (!ok) return toast.error("Já existe uma sequência de ligações com IA em andamento");
-    toast.success(`A IA começou a ligar para ${itens.length} contato(s)`);
-    onClose();
-  };
-
+  // Todos os canais seguem para o assistente de disparo: mensagens montam o
+  // conteúdo; chamadas (telefone/IA) configuram modo, agente e data de retorno.
   const iniciar = () => {
     const ids = [...selecionados];
     if (!canal || ids.length === 0) return;
-    if (canal === "ia") return void iniciarIa();
-    if (canal === "telefone") onIniciarLigacao(ids, modo);
-    else onIniciarEnvio(ids, canal);
+    onIniciarEnvio(ids, canal);
   };
 
   const cfgCanal = CANAIS.find((c) => c.id === canal);
