@@ -145,7 +145,7 @@ export default function CVMaintenanceCatalog() {
         subtitle="Marque quais itens fazem parte do roteiro padrão de cada tipo de veículo"
         actions={
           <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setChecklistAberto(true)} variant="outline" className="bg-white/10 text-white border-white/40 hover:bg-white/20">
+          <Button onClick={() => setChecklistAberto(true)} variant="outline">
             <ListChecks className="h-4 w-4 mr-1" />Check list de saída
           </Button>
           <Button onClick={abrirNovo} className="bg-white text-primary hover:bg-white/90">
