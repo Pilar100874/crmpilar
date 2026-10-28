@@ -21,12 +21,12 @@ async function responder(key: string, sistema: string, historico: { papel: strin
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({
-      model: "openai/gpt-6-astra",
+      model: "openai/gpt-5-nano",
       instructions: sistema,
       input,
       stream: true,
       store: false,
-      reasoning: { effort: "low" },
+      reasoning: { effort: "minimal" },
     }),
   });
   if (!r.ok || !r.body) throw Object.assign(new Error(await r.text()), { status: r.status });
