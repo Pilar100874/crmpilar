@@ -1,5 +1,10 @@
 # Roteiro
 
+## Biblioteca e check lists de veículos
+- [x] Unificar itens por grupos, preservando os prazos da manutenção e os check lists existentes.
+- [x] Criar check lists de motorista e mecânico, incluindo água e óleo diariamente para motorista.
+- [x] Filtrar itens disponíveis por grupo, responsável e tipo; seleção salva conferida após recarregar, PDF baixado e inspecionado, quatro testes aprovados e celular sem rolagem horizontal.
+
 ## Modelos e disparo de e-mail
 - [x] Reabrir o Disparo em massa do zero a cada clique no atalho: fecha o assistente aberto no quadro central e limpa canal/contatos do disparo anterior; conferido no navegador em meio ao fluxo do WhatsApp.
 - [x] Montar e salvar modelos de e-mail com assunto, textos, imagens e variáveis; prévia personalizada por contato. Salvamento e reutilização conferidos com um modelo comercial real.

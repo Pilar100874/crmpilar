@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { normalizarGrupo } from "./gruposBiblioteca";
 
 export type Responsavel = "motorista" | "mecanico";
 export interface ChecklistItem {
@@ -44,6 +45,8 @@ const SUG: Sug[] = [
   ["motorista", "Geral", "Nível de combustível suficiente para a rota", []],
   ["motorista", "Geral", "Lataria sem avarias novas (anotar)", []],
   ["motorista", "Geral", "Vazamentos visíveis sob o veículo", []],
+  ["motorista", "Fluidos", "Verificar diariamente o nível da água / líquido de arrefecimento, com o motor frio (não abrir o reservatório quente)", []],
+  ["motorista", "Motor", "Verificar diariamente o nível do óleo do motor, com o veículo nivelado e motor desligado, conforme manual", []],
   // Mecânico — itens técnicos
   ["mecanico", "Motor", "Nível do óleo do motor", []],
   ["mecanico", "Motor", "Nível do líquido de arrefecimento", QUATRO_RODAS],
@@ -64,7 +67,7 @@ const SUG: Sug[] = [
 
 export const itensSugeridos = (): ChecklistItem[] =>
   SUG.map(([responsavel, categoria, item, tipos_veiculo], ordem) => ({
-    responsavel, categoria, item, tipos_veiculo, ordem, ativo: true,
+    responsavel, categoria: normalizarGrupo(categoria), item, tipos_veiculo, ordem, ativo: true,
   }));
 
 /** Item vale para o tipo? (lista vazia = todos) */
@@ -73,11 +76,16 @@ export const aplicaAoTipo = (i: Pick<ChecklistItem, "tipos_veiculo">, tipo: stri
 
 export async function listarChecklist(): Promise<ChecklistItem[]> {
   const { data, error } = await supabase
-    .from("cv_checklist_saida_itens")
+    .from("cv_maintenance_catalog")
     .select("*")
-    .order("responsavel").order("ordem");
+    .eq("ativo", true)
+    .order("sistema").order("checklist_ordem");
   if (error) throw error;
-  return (data ?? []) as ChecklistItem[];
+  return (data ?? []).flatMap(i => RESPONSAVEIS
+    .filter(r => i.checklist_selecionados.includes(r.valor))
+    .map(r => ({ id: i.id, responsavel: r.valor, categoria: normalizarGrupo(i.sistema),
+      item: i.uso_manutencao ? `${i.componente} — ${i.acao}` : i.componente,
+      tipos_veiculo: i.checklist_tipos, ordem: i.checklist_ordem, ativo: i.ativo })));
 }
 
 export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empresa = "") {
@@ -87,7 +95,8 @@ export function gerarPdfChecklist(itens: ChecklistItem[], tipos: string[], empre
 
   let primeira = true;
   RESPONSAVEIS.forEach(({ valor, rotulo }) => {
-    const lista = ativos.filter(i => i.responsavel === valor);
+    const lista = ativos.filter(i => i.responsavel === valor)
+      .sort((a, b) => a.categoria.localeCompare(b.categoria, "pt-BR") || a.ordem - b.ordem);
     if (!lista.length) return;
     if (!primeira) doc.addPage();
     primeira = false;
