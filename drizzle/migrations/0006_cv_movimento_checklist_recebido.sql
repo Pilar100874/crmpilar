@@ -1,0 +1,1 @@
+ALTER TABLE public.cv_vehicle_movements ADD COLUMN IF NOT EXISTS checklist_saida_recebido boolean NOT NULL DEFAULT false;
