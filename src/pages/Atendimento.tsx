@@ -25,6 +25,7 @@ import { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } fro
 import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { iniciarCampanhaIa } from "@/lib/voz/campanhaIa";
 import { format, startOfDay, endOfDay, addDays, subDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
@@ -5120,7 +5121,7 @@ ${recentMessages}
     if (!config.ramal) return toast.error("Seu usuário não tem ramal configurado");
     const itens = config.contatos
       .filter((c) => c.telefone)
-      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: soDigitosTel(c.telefone) }));
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (c.telefone || "").replace(/\D/g, "") }));
     if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
     const ok = iniciarCampanhaIa({
       estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,
