@@ -71,6 +71,13 @@
       "when": 1793212531111,
       "tag": "0009_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793717035292,
+      "tag": "0010_voz_ramais_usuario",
+      "breakpoints": true
     }
   ]
 }
