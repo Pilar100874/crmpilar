@@ -335,13 +335,22 @@ async function principal(minha) {
       if (!ativo()) { await soltar(); return; }
       if (!(await s.registrar())) { MON.central = 'Falha no registro'; await soltar(); await dormir(15_000); continue; }
       MON.servico = 'Ativo'; MON.central = `Ramal ${ramal} registrado em ${host}`; log(MON.central);
+      // Ramais de atendente virtual dos usuários (Editar usuário → Ramais de IA).
+      const extras = [];
+      for (const x of (resp.ramais_extras || [])) {
+        const rx = String(x.ramal || '').trim(); if (!rx || rx === ramal) continue;
+        const e = new Sip({ host, porta, ramal: rx, senha: x.senha || '', log, aoReceber: (c) => aoReceberExtra(e, c, x) });
+        try { await e.abrir(); if (await e.registrar()) { extras.push(e); log(`Ramal virtual ${rx} registrado`); } else { await e.parar(); log(`Ramal virtual ${rx} não registrou`); } } catch (err) { log(`Ramal ${rx}: ${err.message}`); }
+      }
+      const soltarExtras = async () => { for (const e of extras) { try { await e.parar(); } catch { /* */ } } };
       let ultimo = Date.now();
       while (ativo()) {
-        if (Date.now() - ultimo > 240_000) { if (!(await s.registrar())) { MON.central = 'Registro perdido'; break; } ultimo = Date.now(); }
+        if (Date.now() - ultimo > 240_000) { if (!(await s.registrar())) { MON.central = 'Registro perdido'; break; } for (const e of extras) silencioso(e.registrar()); ultimo = Date.now(); }
         const cmd = (await silencioso(api('comandos')))?.comando;
         if (cmd) executarComando(cmd);
         await dormir(3000);
       }
+      await soltarExtras();
       await soltar();
     } catch (e) {
       MON.central = 'Erro: ' + e.message; log('Erro: ' + e.message); await dormir(15_000);
@@ -357,6 +366,14 @@ async function aoReceber(c) {
   log(`Atendendo ${c.numero}`);
   await sip.atender(c);
   conduzir(c, cfg, 'receber', null, c.numero, null);
+}
+
+async function aoReceberExtra(e, c, x) {
+  const cfg = (await silencioso(api('config', { agente_id: x.agente_id })))?.agente;
+  if (!cfg || e.chamadas.size > 1) { e.recusar(c); return; }
+  log(`Atendendo ${c.numero} no ramal virtual ${e.ramal}`);
+  await e.atender(c);
+  conduzir(c, { ...cfg, ramal_transferencia: x.transferir_para || cfg.ramal_transferencia }, 'receber', null, c.numero, x.transferir_para || null);
 }
 
 async function executarComando(cmd) {
@@ -392,7 +409,7 @@ async function turno(wav, hist, modo, objetivo, extra, chamadaId, numero, agente
 }
 
 async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
-  const chamadaId = (await silencioso(api('iniciar', { modo, numero, ramal, agente_id: cfg.id || null })))?.id || null;
+  const chamadaId = (await silencioso(api('iniciar', { modo, numero, ramal, objetivo, agente_id: cfg.id || null })))?.id || null;
   const hist = [];
   Object.assign(MON, { modo, destino: numero || ramal || '?', inicio: Date.now(), falaCliente: '', falaIa: '' });
   if (modo === 'receber') MON.atendidas++; else if (modo === 'ligar') MON.feitas++; else MON.assistidas++;
@@ -402,7 +419,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
     hist.push({ papel, texto });
     if (chamadaId) silencioso(api('fala', { chamada_id: chamadaId, papel, texto }));
   };
-  let erro = false;
+  let erro = false; let transferidoPara = null;
   try {
     if (modo !== 'assistir' && cfg.saudacao) {
       const r = await silencioso(turno(null, [{ papel: 'cliente', texto: '.' }], 'receber', null, `Diga exatamente, sem mudar nada: ${cfg.saudacao}`, null, null, cfg.id || null));
@@ -428,7 +445,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
             if (r.audio_b64) c.rtp.tocar(wavPara8k(r.audio_b64));
             while (c.ativa && c.rtp.tocando()) await dormir(100);
             const transf = modo === 'ligar' && ramal ? ramal : cfg.ramal_transferencia;
-            if (resp.includes('[TRANSFERIR]') && transf) { MON.transferidas++; log(`Transferindo para o ramal ${transf}`); c.transferir(transf); await dormir(4000); break; }
+            if (resp.includes('[TRANSFERIR]') && transf) { MON.transferidas++; transferidoPara = transf; log(`Transferindo para o ramal ${transf}`); c.transferir(transf); await dormir(4000); break; }
             if (resp.includes('[DESLIGAR]')) break;
           }
         }
@@ -438,7 +455,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
   } catch (e) { erro = true; log('Erro na ligação: ' + e.message); }
   finally {
     c.desligar();
-    if (chamadaId) silencioso(api('finalizar', { chamada_id: chamadaId, status: erro ? 'erro' : 'finalizada' }));
+    if (chamadaId) silencioso(api('finalizar', { chamada_id: chamadaId, status: erro ? 'erro' : 'finalizada', transferido_para: transferidoPara }));
     Object.assign(MON, { modo: null, destino: null, inicio: 0 });
     log('Ligação encerrada');
   }
