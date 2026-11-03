@@ -34,7 +34,7 @@ export default function CampanhaIaPopup() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground">Ligações com IA</p>
               <p className="text-[11px] text-muted-foreground">
-                {feitos}/{c.itens.length} · {c.estado === "rodando" ? "em andamento" : c.estado === "pausada" ? "pausada" : c.estado === "cancelada" ? "cancelada" : "finalizada"} · atendente ramal {c.ramalAtendente}
+                {feitos}/{c.itens.length} · {c.estado === "rodando" ? (c.aguardandoRamal ? "pausada – aguardando ramal livre" : "em andamento") : c.estado === "pausada" ? "pausada" : c.estado === "cancelada" ? "cancelada" : "finalizada"} · atendente ramal {c.ramalAtendente}
               </p>
             </div>
             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => alternarPopupCampanhaIa(false)} aria-label="Minimizar"><X className="h-4 w-4" /></Button>
