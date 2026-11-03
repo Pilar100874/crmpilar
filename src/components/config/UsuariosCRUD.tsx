@@ -1,3 +1,4 @@
+import { UsuarioRamaisIA } from "./UsuarioRamaisIA";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { USUARIO_COLUNAS_PUBLICAS } from "@/lib/usuariosColunas";
@@ -1147,6 +1148,16 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               O servidor (PABX), a porta, o servidor alternativo, a porta alternativa e o ramal da TV/portaria agora
               ficam no cadastro da unidade. O usuário usa automaticamente os dados da unidade em que está vinculado.
             </div>
+          </div>
+
+          <div className="mt-4">
+            {editingId ? (
+              <UsuarioRamaisIA usuarioId={editingId} estabelecimentoId={selectedEstabelecimentoId || estabelecimentoId} />
+            ) : (
+              <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+                Salve o usuário para configurar os ramais de IA (atendente virtual e fazer ligações).
+              </p>
+            )}
           </div>
 
           <div className="mt-4 rounded-lg border border-border p-3">

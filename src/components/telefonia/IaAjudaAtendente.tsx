@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { Switch } from "@/components/ui/switch";
+import { usuarioAtualId } from "@/lib/voz/ramaisUsuario";
 
 const db = supabase as any;
 const CHAVE = "pilar:ia-ajuda";
@@ -58,7 +59,12 @@ export default function IaAjudaAtendente({ local, className = "" }: Props) {
 
   useEffect(() => { void meuRamal().then(setRamal); }, []);
 
+  const gravarAjuda = async (on: boolean) => {
+    const id = await usuarioAtualId(); const est = await getEstabelecimentoId();
+    if (id && est) await db.from("voz_ramais_usuario").upsert({ usuario_id: id, estabelecimento_id: est, ajuda_ativa: on }, { onConflict: "usuario_id" });
+  };
   const ativar = async (on: boolean) => {
+    void gravarAjuda(on);
     if (!on) { atualizar({ ativa: false }); setSugestoes([]); return; }
     const est = await getEstabelecimentoId();
     if (!est || !ramal) return toast.error("Seu usuário não tem ramal configurado");

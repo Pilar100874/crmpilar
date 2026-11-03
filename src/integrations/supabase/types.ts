@@ -28924,8 +28924,11 @@ export type Database = {
           ucm_password: string
           ucm_user: string
           updated_at: string
+          voz_agente_empresa_id: string | null
           voz_endereco: string
           voz_porta: number
+          voz_ramal_empresa: string | null
+          voz_senha_ramal_empresa: string | null
         }
         Insert: {
           conference_room_number?: string | null
@@ -28949,8 +28952,11 @@ export type Database = {
           ucm_password: string
           ucm_user: string
           updated_at?: string
+          voz_agente_empresa_id?: string | null
           voz_endereco?: string
           voz_porta?: number
+          voz_ramal_empresa?: string | null
+          voz_senha_ramal_empresa?: string | null
         }
         Update: {
           conference_room_number?: string | null
@@ -28974,8 +28980,11 @@ export type Database = {
           ucm_password?: string
           ucm_user?: string
           updated_at?: string
+          voz_agente_empresa_id?: string | null
           voz_endereco?: string
           voz_porta?: number
+          voz_ramal_empresa?: string | null
+          voz_senha_ramal_empresa?: string | null
         }
         Relationships: [
           {
@@ -30820,11 +30829,13 @@ export type Database = {
           iniciada_em: string
           modo: string
           numero: string | null
+          objetivo: string | null
           ramal_monitorado: string | null
           resumo: string | null
           status: string
           sugestoes: Json
           transcricao: Json
+          transferido_para: string | null
         }
         Insert: {
           agente_id?: string | null
@@ -30835,11 +30846,13 @@ export type Database = {
           iniciada_em?: string
           modo?: string
           numero?: string | null
+          objetivo?: string | null
           ramal_monitorado?: string | null
           resumo?: string | null
           status?: string
           sugestoes?: Json
           transcricao?: Json
+          transferido_para?: string | null
         }
         Update: {
           agente_id?: string | null
@@ -30850,11 +30863,13 @@ export type Database = {
           iniciada_em?: string
           modo?: string
           numero?: string | null
+          objetivo?: string | null
           ramal_monitorado?: string | null
           resumo?: string | null
           status?: string
           sugestoes?: Json
           transcricao?: Json
+          transferido_para?: string | null
         }
         Relationships: [
           {
@@ -30918,6 +30933,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voz_ramais_usuario: {
+        Row: {
+          agente_virtual_id: string | null
+          ajuda_ativa: boolean
+          estabelecimento_id: string
+          ligacoes_ativo: boolean
+          ramal_ligacoes: string | null
+          ramal_virtual: string | null
+          senha_ligacoes: string | null
+          senha_virtual: string | null
+          updated_at: string
+          usuario_id: string
+          virtual_ativo: boolean
+        }
+        Insert: {
+          agente_virtual_id?: string | null
+          ajuda_ativa?: boolean
+          estabelecimento_id: string
+          ligacoes_ativo?: boolean
+          ramal_ligacoes?: string | null
+          ramal_virtual?: string | null
+          senha_ligacoes?: string | null
+          senha_virtual?: string | null
+          updated_at?: string
+          usuario_id: string
+          virtual_ativo?: boolean
+        }
+        Update: {
+          agente_virtual_id?: string | null
+          ajuda_ativa?: boolean
+          estabelecimento_id?: string
+          ligacoes_ativo?: boolean
+          ramal_ligacoes?: string | null
+          ramal_virtual?: string | null
+          senha_ligacoes?: string | null
+          senha_virtual?: string | null
+          updated_at?: string
+          usuario_id?: string
+          virtual_ativo?: boolean
+        }
+        Relationships: []
       }
       webhook_chat_messages: {
         Row: {

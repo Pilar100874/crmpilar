@@ -1,3 +1,4 @@
+import { meusRamaisIa, podeLigarComIa } from "@/lib/voz/ramaisUsuario";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, ChevronDown, Loader2, Mail, MessageCircle, Phone,
@@ -297,6 +298,8 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
   const limparFiltros = () => { setFData([]); setFTipo([]); setFCategoria([]); setFProspect([]); setFUsuario([]); setFLocal([]); setFProduto([]); setFGrupo([]); setBusca(""); };
   const temFiltro = fData.length + fTipo.length + fCategoria.length + fProspect.length + fUsuario.length + fLocal.length + fProduto.length + fGrupo.length > 0 || !!busca;
 
+  const [iaLiberada, setIaLiberada] = useState(false);
+  useEffect(() => { void meusRamaisIa().then((r) => setIaLiberada(podeLigarComIa(r))); }, []);
   const escolherCanal = (k: CanalDisparo) => { setCanal(k); setSelecionados(new Set()); };
 
   // Todos os canais seguem para o assistente de disparo: mensagens montam o
@@ -346,19 +349,22 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
           <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {CANAIS.map((k) => {
               const Icone = k.icon;
+              const bloqueado = k.id === "ia" && !iaLiberada;
               return (
                 <button
                   key={k.id}
                   type="button"
+                  disabled={bloqueado}
+                  title={bloqueado ? "Habilite o ramal \"Fazer ligações\" em Editar usuário para usar" : undefined}
                   onClick={() => escolherCanal(k.id)}
-                  className="group flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-card p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg animate-fade-in"
+                  className="disabled:pointer-events-none disabled:opacity-50 group flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-card p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg animate-fade-in"
                 >
                   <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", k.fundo)}>
                     <Icone className={cn("h-6 w-6", k.cor)} />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">{k.label}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{k.desc}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{bloqueado ? "Habilite o ramal \"Fazer ligações\" no cadastro do usuário" : k.desc}</p>
                   </div>
                   <div className="mt-auto flex w-full items-end justify-between">
                     <span className="text-2xl font-bold tabular-nums text-foreground">

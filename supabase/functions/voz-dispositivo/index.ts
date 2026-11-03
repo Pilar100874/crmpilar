@@ -76,6 +76,40 @@ async function contextoCrm(sb: SB, empresa: string, numero: string): Promise<str
   return `\n\nDados do CRM sobre quem está na ligação (use para sugerir: relembre compras, retome orçamentos em aberto, contorne motivos de perda, ofereça reposição e produtos relacionados; nunca invente dados):\n- ${p.join("\n- ").slice(0, 6000)}`;
 }
 
+/** Resumo para o atendente que recebe a transferência saber como continuar. */
+async function resumir(falas: { papel: string; texto: string }[], objetivo: string | null): Promise<string | null> {
+  const key = Deno.env.get("LOVABLE_API_KEY");
+  if (!key) return null;
+  const conversa = falas.map((f) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n").slice(0, 8000);
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    method: "POST",
+    headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+    body: JSON.stringify({
+      model: "openai/gpt-6-astra",
+      stream: true,
+      store: false,
+      reasoning: { effort: "low" },
+      instructions: "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.",
+      input: `${objetivo ? `Objetivo da ligação: ${objetivo.slice(0, 500)}\n\n` : ""}Conversa:\n${conversa}`,
+    }),
+  });
+  if (!r.ok || !r.body) return null;
+  // Lê o fluxo SSE e junta os pedaços de texto.
+  const leitor = r.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = ""; let texto = "";
+  for (;;) {
+    const { value, done } = await leitor.read();
+    if (done) break;
+    buf += value;
+    const linhas = buf.split("\n"); buf = linhas.pop() ?? "";
+    for (const l of linhas) {
+      if (!l.startsWith("data:")) continue;
+      try { const ev = JSON.parse(l.slice(5).trim()); if (ev.type === "response.output_text.delta") texto += ev.delta ?? ""; } catch { /* */ }
+    }
+  }
+  return texto.trim() || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -127,7 +161,39 @@ Deno.serve(async (req) => {
 
     switch (acao) {
       case "config": {
-        const a = await agente();
+        let a = await agente();
+        // Ramal da empresa (Configuração PABX → Agentes de voz): ramal registrado para
+        // atender, com o agente escolhido para ele.
+        const ue = (await sb.from("ucm_config").select("voz_ramal_empresa, voz_senha_ramal_empresa, voz_agente_empresa_id")
+          .eq("estabelecimento_id", empresa).maybeSingle()).data;
+        if (!corpo.agente_id && ue?.voz_ramal_empresa) {
+          const esc = ue.voz_agente_empresa_id
+            ? (await sb.from("voz_agentes").select("*").eq("id", ue.voz_agente_empresa_id).eq("estabelecimento_id", empresa).maybeSingle()).data
+            : null;
+          a = { ...(esc ?? a ?? {}), ramal_ia: ue.voz_ramal_empresa, senha_ramal_ia: ue.voz_senha_ramal_empresa ?? "" };
+        }
+        // Ligação em andamento por este agente: sai pelo ramal "fazer ligações" de quem disparou.
+        if (corpo.agente_id && a) {
+          const desde = new Date(Date.now() - 2 * 60_000).toISOString();
+          const cmd = (await sb.from("voz_comandos").select("criado_por").eq("estabelecimento_id", empresa)
+            .eq("agente_id", String(corpo.agente_id)).eq("tipo", "ligar").eq("status", "executando")
+            .gte("processado_em", desde).order("processado_em", { ascending: false }).limit(1).maybeSingle()).data;
+          if (cmd?.criado_por) {
+            const u = (await sb.from("usuarios").select("id").eq("auth_user_id", cmd.criado_por).maybeSingle()).data;
+            const r = u ? (await sb.from("voz_ramais_usuario").select("ligacoes_ativo, ramal_ligacoes, senha_ligacoes").eq("usuario_id", u.id).maybeSingle()).data : null;
+            if (r?.ligacoes_ativo && r.ramal_ligacoes) a = { ...a, ramal_ia: r.ramal_ligacoes, senha_ramal_ia: r.senha_ligacoes ?? "" };
+          }
+        }
+        // Ramais de atendente virtual de cada usuário: o aparelho registra todos e
+        // transfere para o ramal do próprio usuário.
+        const { data: rus } = await sb.from("voz_ramais_usuario").select("usuario_id, ramal_virtual, senha_virtual, agente_virtual_id")
+          .eq("estabelecimento_id", empresa).eq("virtual_ativo", true).not("ramal_virtual", "is", null);
+        const ids = (rus ?? []).map((r: SB) => r.usuario_id);
+        const { data: us } = ids.length ? await sb.from("usuarios").select("id, ramal").in("id", ids) : { data: [] };
+        const ramais_extras = (rus ?? []).filter((r: SB) => r.agente_virtual_id).map((r: SB) => ({
+          ramal: r.ramal_virtual, senha: r.senha_virtual ?? "", agente_id: r.agente_virtual_id,
+          transferir_para: (us ?? []).find((x: SB) => x.id === r.usuario_id)?.ramal ?? null,
+        }));
         if (!a) return json({ error: "Nenhum agente de voz ativo. Cadastre em Agentes de Voz." }, 404);
         // Endereço da central vem da tela Configuração PABX Grandstream UCM,
         // assim o app e o Coletor não precisam digitar host/porta manualmente.
@@ -145,7 +211,7 @@ Deno.serve(async (req) => {
             }
           : null;
         // Central também dentro de "agente": os apps Android leem só esse objeto.
-        return json({ agente: { ...a, central }, central });
+        return json({ agente: { ...a, central, ramais_extras }, central, ramais_extras });
       }
       case "turno": {
         const a = await agente();
@@ -178,6 +244,7 @@ Deno.serve(async (req) => {
         const { data, error } = await sb.from("voz_chamadas").insert({
           estabelecimento_id: empresa, agente_id: a.id, modo: corpo.modo ?? "receber",
           numero: corpo.numero ?? null, ramal_monitorado: corpo.ramal ?? null,
+          objetivo: corpo.objetivo ? String(corpo.objetivo).slice(0, 2000) : null,
         }).select("id").single();
         if (error) return json({ error: error.message }, 500);
         return json({ id: data.id });
@@ -197,7 +264,22 @@ Deno.serve(async (req) => {
       case "finalizar": {
         const c = await chamadaDaEmpresa(String(corpo.chamada_id ?? ""));
         if (!c) return json({ error: "chamada não encontrada" }, 404);
+        const cc = (await sb.from("voz_chamadas").select("modo, ramal_monitorado, transcricao, objetivo")
+          .eq("id", c.id).maybeSingle()).data as SB;
+        const falas = (cc?.transcricao ?? []) as { papel: string; texto: string }[];
+        let transferido = corpo.transferido_para ? String(corpo.transferido_para) : null;
+        // Aparelhos antigos não avisam a transferência: deduz pela última fala da IA.
+        const ultimaIa = [...falas].reverse().find((f) => f.papel === "agente")?.texto ?? "";
+        if (!transferido && cc?.modo === "ligar" && cc.ramal_monitorado && /atendente|transfer|passar|vou te passar|um momento/i.test(ultimaIa)) {
+          transferido = String(cc.ramal_monitorado);
+        }
+        let resumo: string | null = null;
+        if (transferido && falas.length >= 2) {
+          try { resumo = await resumir(falas, cc?.objetivo ?? null); } catch (e) { console.error("resumo", e); }
+        }
         await sb.from("voz_chamadas").update({
+          ...(transferido ? { transferido_para: transferido } : {}),
+          ...(resumo ? { resumo } : {}),
           status: corpo.status === "erro" ? "erro" : "finalizada",
           finalizada_em: new Date().toISOString(),
           duracao_seg: Math.round((Date.now() - new Date(c.iniciada_em as string).getTime()) / 1000),
