@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { consultarRamalOcupado } from "@/lib/voz/ramaisUsuario";
 
 const db = supabase as any;
 
@@ -11,6 +12,8 @@ export interface CampanhaIa {
   aberta: boolean;
   /** Motivo quando a campanha para sem concluir (ex.: nenhum aparelho de voz conectado). */
   motivoErro?: string;
+  /** Pausada sozinha: o ramal do usuário está ocupado; retoma quando ficar livre. */
+  aguardandoRamal?: boolean;
 }
 
 let campanha: CampanhaIa | null = null;
@@ -48,6 +51,13 @@ async function executar() {
       const i = campanha.itens.findIndex((x) => x.status === "aguardando");
       if (i < 0) { set({ estado: "finalizada" }); break; }
       set({ atual: i });
+      // Só liga com o ramal do usuário livre; ocupado, aguarda e retoma sozinho.
+      while (campanha && campanha.estado === "rodando" && (await consultarRamalOcupado(campanha.ramalAtendente)) === true) {
+        if (!campanha.aguardandoRamal) set({ aguardandoRamal: true });
+        await espera(5000);
+      }
+      if (!campanha || campanha.estado !== "rodando") break;
+      if (campanha.aguardandoRamal) set({ aguardandoRamal: false });
       setItem(i, { status: "ligando" });
       const c = campanha;
       const { data: u } = await supabase.auth.getUser();
