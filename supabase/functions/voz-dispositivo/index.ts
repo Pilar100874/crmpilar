@@ -81,20 +81,33 @@ async function resumir(falas: { papel: string; texto: string }[], objetivo: stri
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
   const conversa = falas.map((f) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n").slice(0, 8000);
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks." },
-        { role: "user", content: `${objetivo ? `Objetivo da ligação: ${objetivo.slice(0, 500)}\n\n` : ""}Conversa:\n${conversa}` },
-      ],
+      model: "openai/gpt-6-astra",
+      stream: true,
+      store: false,
+      reasoning: { effort: "low" },
+      instructions: "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.",
+      input: `${objetivo ? `Objetivo da ligação: ${objetivo.slice(0, 500)}\n\n` : ""}Conversa:\n${conversa}`,
     }),
   });
-  if (!r.ok) return null;
-  const j = await r.json();
-  return String(j?.choices?.[0]?.message?.content ?? "").trim() || null;
+  if (!r.ok || !r.body) return null;
+  // Lê o fluxo SSE e junta os pedaços de texto.
+  const leitor = r.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = ""; let texto = "";
+  for (;;) {
+    const { value, done } = await leitor.read();
+    if (done) break;
+    buf += value;
+    const linhas = buf.split("\n"); buf = linhas.pop() ?? "";
+    for (const l of linhas) {
+      if (!l.startsWith("data:")) continue;
+      try { const ev = JSON.parse(l.slice(5).trim()); if (ev.type === "response.output_text.delta") texto += ev.delta ?? ""; } catch { /* */ }
+    }
+  }
+  return texto.trim() || null;
 }
 
 Deno.serve(async (req) => {
