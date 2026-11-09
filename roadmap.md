@@ -1,6 +1,7 @@
 # Roadmap — Atendimento
 - [x] Copiloto de respostas (3 sugestões no chat)
 - [x] Próximo cliente (botão + Alt+↓)
+- [x] Próximo cliente e cliente anterior no topo da fila, ao lado do tour (Alt+↓ / Alt+↑)
 - [x] Repetir último pedido
 - [x] Urgência dos recebidos
 - [x] Régua de follow-up de orçamentos (cria tarefas D+2/D+5)

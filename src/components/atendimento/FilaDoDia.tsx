@@ -13,6 +13,8 @@ import {
   MapPin,
   Send,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   MessageCircle,
   Inbox,
@@ -46,7 +48,7 @@ import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
 import { RemetentesIgnoradosDialog } from "./RemetentesIgnoradosDialog";
 import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
 import { GraduationCap } from "lucide-react";
-import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
+import { URGENCIA, SELO_CREDITO, proximoDaFila, registrarVisita, vizinhoDoHistorico, HISTORICO_VAZIO, type HistoricoFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
 
@@ -270,15 +272,49 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     return ordenada;
   }, [items, filtro, ordenacao, canaisAtivos, somenteNaoFinalizados, pendencias]);
 
-  const abrirProximo = () => {
-    const atual = visiveis.find((i) => i.selecionado)?.id ?? null;
-    const prox = proximoDaFila(visiveis, atual);
-    if (!prox) return;
-    prox.onClick();
-    setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(prox.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
-  };
+  /** Cliente aberto agora (mesmo que a aba filtrada não o mostre). */
+  const contatoAbertoId = useMemo(() => items.find((i) => i.selecionado)?.id ?? null, [items]);
+  const chaveContato = (item: FilaItem) => item.contactId ?? item.id;
+  const [historico, setHistorico] = useState<HistoricoFila>(HISTORICO_VAZIO);
+  /** Guarda o cliente que acabou de abrir; se ele voltou atrás, o trecho "à frente" é descartado. */
+  const registrarAbertura = (item: FilaItem) => setHistorico((h) => registrarVisita(h, item.id));
+  /** Aberturas vindas de fora da fila (calendário, chat, atalhos) também entram no histórico. */
   useEffect(() => {
-    const tecla = (e: KeyboardEvent) => { if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); abrirProximo(); } };
+    setHistorico((h) => {
+      const aberto = items.find((i) => i.id === contatoAbertoId);
+      const ultimo = items.find((i) => i.id === h.lista[h.i]);
+      if (aberto && ultimo && chaveContato(aberto) === chaveContato(ultimo)) return h;
+      return registrarVisita(h, contatoAbertoId);
+    });
+  }, [contatoAbertoId, items]);
+
+  const itemPorId = (id: string | null) => (id ? items.find((i) => i.id === id) ?? null : null);
+  const abrirItem = (item: FilaItem | null) => {
+    if (!item) return;
+    registrarAbertura(item);
+    item.onClick();
+    setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(item.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
+  };
+
+  const idAnterior = vizinhoDoHistorico(historico, -1);
+  const idAvancar = vizinhoDoHistorico(historico, 1);
+  const podeVoltar = !!itemPorId(idAnterior);
+  const proximoDaLista = useMemo(() => proximoDaFila(visiveis, contatoAbertoId), [visiveis, contatoAbertoId]);
+  const podeAvancar = !!itemPorId(idAvancar) || !!proximoDaLista;
+
+  const abrirAnterior = () => abrirItem(itemPorId(idAnterior));
+  const abrirProximo = () => {
+    const retomar = itemPorId(idAvancar);
+    if (retomar) { abrirItem(retomar); return; }
+    abrirItem(proximoDaLista);
+  };
+
+  useEffect(() => {
+    const tecla = (e: KeyboardEvent) => {
+      if (!e.altKey) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); abrirProximo(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); abrirAnterior(); }
+    };
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
   });
@@ -342,6 +378,31 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             )}
           </div>
           <div className="flex items-center gap-1.5">
+            <div
+              className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-muted/40 p-0.5"
+              data-tour="fila-navegacao"
+            >
+              <button
+                type="button"
+                onClick={abrirAnterior}
+                disabled={!podeVoltar}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Cliente anterior"
+                title={podeVoltar ? "Cliente anterior (atalho: Alt + seta para cima)" : "Nenhum cliente aberto antes deste"}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={abrirProximo}
+                disabled={!podeAvancar}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Próximo cliente"
+                title={itemPorId(idAvancar) ? "Retoma o cliente seguinte do histórico (atalho: Alt + seta para baixo)" : "Abre o próximo cliente da fila (atalho: Alt + seta para baixo)"}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => setTutorialAberto(true)}
@@ -598,7 +659,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
       </div>
 
-      {(termometro || visiveis.length > 0) && (
+      {termometro && (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border/40 px-3 py-1.5">
           {termometro && (
             <>
@@ -606,12 +667,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <span title="Clientes no ciclo de recompra" className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Reposição: {termometro.reposicao}</span>
               <span title="Orçamentos sem retorno" className="rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">Orçamentos: {termometro.orcamentos}</span>
             </>
-          )}
-          {visiveis.length > 0 && (
-            <Button size="sm" variant="outline" className="ml-auto h-7 gap-1 px-2 text-[11px]" title="Abrir o próximo cliente da fila (atalho: Alt + seta para baixo)"
-              onClick={() => abrirProximo()}>
-              <ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Próximo cliente
-            </Button>
           )}
         </div>
       )}
@@ -634,7 +689,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <div key={item.id} data-fila-id={item.id} data-fila-contato={item.contactId ?? undefined}>
               <div
                 onClick={() => {
-                  item.onClick();
+                  abrirItem(item);
                 }}
                 title={item.tipo === "potencial" ? "Potencial" : item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
