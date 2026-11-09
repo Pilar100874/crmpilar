@@ -43,10 +43,18 @@ Deno.serve(async (req) => {
     }));
 
     // Construir contexto
+    let historico = '';
+    if (conversation?.customer_id) {
+      const { data: orcs } = await supabase.from('orcamentos')
+        .select('etapa, valor_total, created_at, orcamento_itens(quantidade, produtos(nome))')
+        .eq('cliente_id', conversation.customer_id).order('created_at', { ascending: false }).limit(5);
+      historico = (orcs ?? []).map((o: any) => `- ${String(o.created_at).slice(0, 10)} ${o.etapa} R$ ${Math.round(Number(o.valor_total) || 0)}: ${(o.orcamento_itens ?? []).slice(0, 5).map((i: any) => `${i.quantidade}x ${i.produtos?.nome ?? 'item'}`).join(', ')}`).join('\n');
+    }
     const contextInfo = [
       `Cliente: ${conversation?.customer?.nome || 'N/A'}`,
       `Canal: ${conversation?.canal || 'N/A'}`,
       `Status: ${conversation?.chat_status || 'N/A'}`,
+      historico ? `Últimos orçamentos/pedidos:\n${historico}` : 'Sem orçamentos anteriores.',
     ].join('\n');
 
     // Chamar Lovable AI
@@ -73,7 +81,10 @@ Regras:
 - Seja conciso mas completo
 - Ofereça soluções práticas
 
-Baseado no histórico, sugira uma resposta apropriada para o atendente enviar.`
+- Nunca invente preços, prazos ou estoque que não estejam no contexto
+
+Baseado no histórico, sugira 3 respostas curtas e diferentes (ex.: confirmar pedido, esclarecer prazo, negociar).
+Responda SOMENTE em JSON: {"sugestoes":[{"titulo":"até 4 palavras","texto":"mensagem pronta"}]}`
           },
           ...messageHistory
         ],
@@ -85,11 +96,19 @@ Baseado no histórico, sugira uma resposta apropriada para o atendente enviar.`
     }
 
     const aiData = await aiResponse.json();
-    const suggestion = aiData.choices[0].message.content;
+    const bruto = String(aiData.choices[0].message.content ?? '');
+    let sugestoes: { titulo: string; texto: string }[] = [];
+    try {
+      const j = JSON.parse(bruto.slice(bruto.indexOf('{'), bruto.lastIndexOf('}') + 1));
+      sugestoes = (j.sugestoes ?? []).filter((x: any) => x?.texto).slice(0, 3);
+    } catch { /* resposta fora do formato */ }
+    if (!sugestoes.length) sugestoes = [{ titulo: 'Sugestão', texto: bruto }];
+    const suggestion = sugestoes[0].texto;
 
     return new Response(JSON.stringify({
       success: true,
       suggestion,
+      sugestoes,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
