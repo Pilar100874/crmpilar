@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
-import { Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
+import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -150,6 +150,13 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
   if (canais.has(item.canal)) return true;
   return (item.canais || []).some((c) => canais.has(c));
 }
+
+const ICONE_ABA: Partial<Record<FiltroFila, typeof LayoutList>> = {
+  tudo: LayoutList,
+  agendados: CalendarClock,
+  recebidos: Inbox,
+  potenciais: Sparkles,
+};
 
 export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados, termometro }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
@@ -434,7 +441,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtros */}
-        <div className="mt-2.5 grid min-w-0 grid-cols-[0.6fr_1fr_1fr_1fr] gap-1" data-filtros-contatos data-tour="fila-abas">
+        <div className="mt-2.5 grid min-w-0 grid-cols-4 gap-1" data-filtros-contatos data-tour="fila-abas">
           {chips.map((chip) => {
             const ativo = filtro === chip.id;
             return (
@@ -444,6 +451,8 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 variant="ghost"
                 aria-pressed={ativo}
                 onClick={() => setFiltro(chip.id)}
+                title={chip.label}
+                aria-label={chip.label}
                 className={cn(
                   "flex h-9 min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-medium transition-colors",
                   ativo
@@ -451,7 +460,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                     : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 )}
               >
-                {chip.label}
+                {(() => { const Icone = ICONE_ABA[chip.id] ?? LayoutList; return <Icone className="h-4 w-4 shrink-0" />; })()}
                 <span
                   className={cn(
                     "h-5 shrink-0 px-1 rounded-full flex items-center justify-center text-[10px] font-bold",
