@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classificarUrgencia, proximoDaFila, planejarRegua, type OrcRegua } from "./copilotoAtendimento";
+import { classificarUrgencia, proximoDaFila, planejarRegua, registrarVisita, vizinhoDoHistorico, HISTORICO_VAZIO, type OrcRegua } from "./copilotoAtendimento";
 
 const DIA = 86_400_000;
 const hoje = Date.parse("2026-11-09T12:00:00Z");
@@ -18,6 +18,36 @@ describe("copiloto do atendimento", () => {
     expect(proximoDaFila(l, "a")?.id).toBe("b");
     expect(proximoDaFila(l, "b")).toBeNull();
     expect(proximoDaFila(l, null)?.id).toBe("a");
+  });
+
+  it("histórico guarda a ordem e permite voltar um cliente", () => {
+    const h = registrarVisita(registrarVisita(registrarVisita(HISTORICO_VAZIO, "a"), "b"), "c");
+    expect(h.lista).toEqual(["a", "b", "c"]);
+    expect(vizinhoDoHistorico(h, -1)).toBe("b");
+    expect(vizinhoDoHistorico(h, 1)).toBeNull();
+  });
+
+  it("voltar atrás não duplica e a seta da direita retoma o cliente", () => {
+    const aberto = registrarVisita(registrarVisita(registrarVisita(HISTORICO_VAZIO, "a"), "b"), "c");
+    const voltou = registrarVisita(aberto, "a");
+    expect(voltou.lista).toEqual(["a", "b", "c"]);
+    expect(voltou.i).toBe(0);
+    expect(vizinhoDoHistorico(voltou, 1)).toBe("b");
+    expect(registrarVisita(voltou, "a")).toBe(voltou);
+  });
+
+  it("abrir cliente novo depois de voltar descarta o futuro", () => {
+    const aberto = registrarVisita(registrarVisita(registrarVisita(HISTORICO_VAZIO, "a"), "b"), "c");
+    const novo = registrarVisita(registrarVisita(aberto, "a"), "z");
+    expect(novo.lista).toEqual(["a", "z"]);
+    expect(vizinhoDoHistorico(novo, 1)).toBeNull();
+    expect(vizinhoDoHistorico(novo, -1)).toBeNull();
+  });
+
+  it("sem cliente aberto antes, não há para onde voltar", () => {
+    const primeiro = registrarVisita(HISTORICO_VAZIO, "a");
+    expect(vizinhoDoHistorico(primeiro, -1)).toBeNull();
+    expect(registrarVisita(primeiro, null)).toBe(primeiro);
   });
 
   it("régua: D+2 por WhatsApp, D+5 por e-mail, para se o cliente respondeu", () => {
