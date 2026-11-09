@@ -29,6 +29,7 @@ export interface ContactForBulkSend {
   id: string;
   nome: string;
   telefone: string | null;
+  tel?: string | null;
   email: string | null;
   empresa?: string | null;
   tags?: string[];

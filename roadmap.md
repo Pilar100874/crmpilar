@@ -1,5 +1,12 @@
 # Roteiro
 
+## Revisão dos quatro apontamentos de monitoramento
+- [x] Preservar retornos futuros na realocação e na classificação de atrasos; respeitar a configuração salva nos dois calendários.
+- [x] Exibir resumo de transferência somente com indicação explícita do aparelho; função publicada e testes aprovados.
+- [x] Preservar telefones fixos no assistente e na execução de chamadas; regressões dos canais Telefone e IA aprovadas, avanço à confirmação conferido sem discar.
+- [x] Abrir a finalização pelo cartão clicado mesmo fora do filtro da fila; contato real ausente de Recebidos conferido na tela sem finalizar dados salvos.
+- [x] Executar testes de regressão e conferir o Atendimento autenticado: 44 testes aprovados e compilação sem erros. Ligações reais não executadas; datas anteriormente sobrescritas não restauradas por falta do valor original.
+
 ## Atualização do Coletor Mac
 - [x] Corrigir links antigos do Mac, exibir a versão do pacote de cada plataforma e impedir anúncios incorretos no atualizador.
 - [x] Sincronizar a publicação dos instaladores; pacote Intel baixado e confirmado como 2.1.3 no Info.plist e package.json, quatro testes aprovados e tela autenticada conferida. Instalação no Mac do usuário não verificada neste ambiente Linux.

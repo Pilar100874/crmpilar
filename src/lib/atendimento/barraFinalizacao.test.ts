@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 
 describe("finalização pelo cartão clicado", () => {
+  it("aceita o cartão do canal explicitamente aberto mesmo ausente da fila Agendados", () => {
+    const filaAgendados = ['outro-contato'];
+    const contatoDoChat = 'cliente-sem-tarefa-hoje';
+    expect(filaAgendados.includes(contatoDoChat)).toBe(false);
+    expect(contatoDaBarraFinalizacao(contatoDoChat, contatoDoChat, [contatoDoChat])).toBe(contatoDoChat);
+  });
   it("não abre pendências sem clicar num cartão", () => {
     expect(contatoDaBarraFinalizacao(null, "a", ["a", "b"])).toBeNull();
   });

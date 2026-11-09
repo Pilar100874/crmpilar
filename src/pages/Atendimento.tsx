@@ -26,6 +26,8 @@ import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { iniciarCampanhaIa } from "@/lib/voz/campanhaIa";
+import { numeroParaChamada } from "@/components/envio-massa/numeroChamada";
+import { filtroRealocacaoDiaria, filtroPendenciasAtrasadas } from "@/lib/calendario/atrasos";
 import { format, startOfDay, endOfDay, addDays, subDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
@@ -1760,16 +1762,22 @@ export default function Atendimento() {
       const dateStr = format(date, 'yyyy-MM-dd');
 
       // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
-      // atual — pendências com data anterior (ou remarcadas) voltam para hoje,
-      // preservando a data original ("Deveria ter contatado em").
+      // atual — somente datas vencidas voltam para hoje. Retornos futuros são preservados.
       if (dateStr === format(new Date(), 'yyyy-MM-dd')) {
-        const { error: erroAlinhamento } = await supabase
+        const est = estabelecimentoId || await getEstabelecimentoId();
+        const { data: regra, error: erroRegra } = est ? await supabase
+          .from('calendario_regras').select('ativa')
+          .eq('estabelecimento_id', est).eq('tipo', 'realocacao_diaria_tarefas').maybeSingle()
+          : { data: null, error: true };
+        if (!erroRegra && (regra?.ativa ?? true)) {
+          const { error: erroAlinhamento } = await supabase
           .from('calendario_tarefas')
           .update({ date: dateStr })
           .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
-          .or(`date.lt.${dateStr},and(data_original.lt.${dateStr},date.neq.${dateStr})`)
+          .or(filtroRealocacaoDiaria(dateStr))
           .not('status', 'in', '("concluido","cancelado","completed")');
-        if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+          if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+        }
       }
 
       // Fetch tasks first - usar o ID da tabela usuarios
@@ -1784,13 +1792,12 @@ export default function Atendimento() {
         return;
       }
 
-      // Tarefas atrasadas: pendentes com data original anterior à agenda —
-      // entram na fila mesmo que tenham sido remarcadas para uma data futura.
+      // Datas históricas só indicam atraso quando a tarefa não está no futuro.
       const { data: atrasadasData } = await supabase
         .from('calendario_tarefas')
         .select('*')
         .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
-        .or(`date.lt.${dateStr},data_original.lt.${dateStr}`)
+        .or(filtroPendenciasAtrasadas(dateStr))
         .not('status', 'in', '("concluido","cancelado","completed")');
       const tarefasAtrasadasLista = (atrasadasData || []).filter(
         (t: any) => !["concluido", "cancelado", "completed"].includes(t.status) &&
@@ -4694,13 +4701,27 @@ ${recentMessages}
       const d = (e as CustomEvent).detail as { customerId?: string };
       if (!d?.customerId) return;
       const item = filaItems.find((i) => i.contactId === d.customerId);
-      if (!item) return;
-      item.onClick();
+      if (item) {
+        item.onClick();
+      } else {
+        // O próprio botão do cartão é uma seleção explícita, mesmo fora da fila filtrada.
+        const contato: any = contatosBase.find((c: any) => c.id === d.customerId);
+        if (clienteCabecalho?.id !== d.customerId) {
+          if (!contato) { toast.error("Contato não encontrado para finalizar o atendimento"); return; }
+          fecharConteudoCentral();
+          setSelectedTelContato(contato);
+          setAgendaViewMode('default');
+          setActiveTab('tel');
+          setMobileView('main');
+        }
+        setSelecaoFila({ itemId: `contato-${d.customerId}`, contactId: d.customerId });
+        setContatoFinalizarId(d.customerId);
+      }
       setFocoBarra((n) => n + 1);
     };
     window.addEventListener(EVENTO_FINALIZAR, h);
     return () => window.removeEventListener(EVENTO_FINALIZAR, h);
-  }, [filaItems]);
+  }, [filaItems, contatosBase, clienteCabecalho]);
 
   useEffect(() => {
     const id = contatoSelecionarPendenteRef.current;
@@ -5054,11 +5075,11 @@ ${recentMessages}
     if (!(await validarTelefonia())) return;
     const hoje = new Date().toLocaleDateString("en-CA");
     const lista = contatos
-      .filter((c) => c.telefone)
+      .filter((c) => numeroParaChamada(c))
       .map((c) => ({
         id: `contato-${c.id}`, contact_id: c.id, contact_name: c.nome, title: "Ligação",
         date: hoje, origem: "ligacao", status: "pending",
-        customers: { id: c.id, nome: c.nome, email: c.email ?? undefined, telefone: c.telefone ?? undefined },
+        customers: { id: c.id, nome: c.nome, email: c.email ?? undefined, telefone: numeroParaChamada(c) ?? undefined },
       }));
     if (lista.length === 0) {
       toast.error("Nenhum contato selecionado tem telefone");
@@ -5081,8 +5102,8 @@ ${recentMessages}
     if (!config.agenteId) return toast.error('Nenhum agente de voz com "Fazer ligações" ativo');
     if (!config.ramal) return toast.error("Seu usuário não tem ramal configurado");
     const itens = config.contatos
-      .filter((c) => c.telefone)
-      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (c.telefone || "").replace(/\D/g, "") }));
+      .filter((c) => numeroParaChamada(c))
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (numeroParaChamada(c) || "").replace(/\D/g, "") }));
     if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
     const ok = iniciarCampanhaIa({
       estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,
