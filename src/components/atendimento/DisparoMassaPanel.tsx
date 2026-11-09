@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
 export type CanalDisparo = "whatsapp" | "email" | "telefone" | "ia";
-type Aba = "tudo" | "agendados" | "recebidos";
+type Aba = "tudo" | "agendados" | "recebidos" | "potenciais";
 type FiltroData = "hoje" | "atrasados" | "futuros";
 
 export interface DisparoFontes {
@@ -24,6 +25,8 @@ export interface DisparoFontes {
   recebidos: string[];
   /** E-mails de remetentes com e-mail recebido sem resposta. */
   recebidosEmails: string[];
+  /** Clientes potenciais (mesma lista da aba Potenciais), com o motivo. */
+  potenciais?: { id: string; tipo: string; rotulo: string; motivo: string; produto?: string }[];
 }
 
 interface Props {
@@ -139,7 +142,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
     return m;
   }, [fontes.agendados]);
 
-  const chaveFontes = [fontes.tudo.length, fontes.agendados.length, fontes.recebidos.length, fontes.recebidosEmails.length].join("-");
+  const chaveFontes = [fontes.tudo.length, fontes.agendados.length, fontes.recebidos.length, fontes.recebidosEmails.length, fontes.potenciais?.length || 0].join("-");
 
   useEffect(() => {
     let cancelado = false;
@@ -236,11 +239,13 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
     return { ids: s, emails };
   }, [fontes.recebidos, fontes.recebidosEmails]);
   const tudoSet = useMemo(() => new Set(fontes.tudo), [fontes.tudo]);
+  const potenciaisMap = useMemo(() => new Map((fontes.potenciais || []).map((p) => [p.id, p])), [fontes.potenciais]);
 
   const temCanal = (c: Contato, k: CanalDisparo) => (k === "whatsapp" ? c.temWhats : k === "email" ? c.temEmail : c.temTel);
   const naAba = (c: Contato, a: Aba) => {
     if (a === "agendados") return datasAgendadas.has(c.id);
     if (a === "recebidos") return recebidosSet.ids.has(c.id) || contatosEmailRecebido.has(c.id);
+    if (a === "potenciais") return potenciaisMap.has(c.id);
     return tudoSet.has(c.id);
   };
   const contatosEmailRecebido = useMemo(
@@ -382,7 +387,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
           {/* Filtros */}
           <div className="flex-shrink-0 space-y-2 border-b border-border/40 px-4 py-3">
             <div className="flex flex-wrap items-center gap-1.5">
-              {(["tudo", "agendados", "recebidos"] as Aba[]).map((a) => {
+              {(["tudo", "agendados", "recebidos", "potenciais"] as Aba[]).map((a) => {
                 const ativo = aba === a;
                 const total = totalAba(a);
                 return (
@@ -395,7 +400,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
                       ativo ? "bg-primary/10 font-semibold text-primary" : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                     )}
                   >
-                    {a === "tudo" ? "Tudo" : a === "agendados" ? "Agendados" : "Recebidos"}
+                    {a === "tudo" ? "Tudo" : a === "agendados" ? "Agendados" : a === "recebidos" ? "Recebidos" : "Potenciais"}
                     <span className={cn("flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold", ativo ? "bg-primary text-primary-foreground" : "bg-background text-foreground/70")}>
                       {total}
                     </span>

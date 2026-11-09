@@ -4784,7 +4784,8 @@ ${recentMessages}
       .map((task: any) => ({ id: task.contact_id as string, data: task.date ?? null })),
     recebidos: conversasRecebidasAgrupadas.map((g: any) => g.conv.customer_id).filter(Boolean),
     recebidosEmails: emailsRecebidosAgrupados.map((e: any) => e.from_email).filter(Boolean),
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
+    potenciais: potenciais.map((p) => ({ id: p.clienteId, tipo: p.tipo, rotulo: ROTULO_TIPO[p.tipo], motivo: p.motivos.join("; ") || p.motivo, produto: p.produto })),
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciais]);
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
@@ -7122,7 +7123,7 @@ ${recentMessages}
             <DisparoMassaPanel
               key={`disparo-desktop-${disparoNonce}`}
               fontes={fontesDisparo}
-              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
+              abaInicial={filtroFila}
               onClose={fecharDisparoMassa}
               onIniciarEnvio={iniciarEnvioDoDisparo}
               canalInicial={canalEnvioMassa ?? null}
@@ -8279,7 +8280,7 @@ ${recentMessages}
         <DisparoMassaPanel
           key={`disparo-mobile-${disparoNonce}`}
           fontes={fontesDisparo}
-              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
+              abaInicial={filtroFila}
           onClose={fecharDisparoMassa}
           onIniciarEnvio={iniciarEnvioDoDisparo}
           canalInicial={canalEnvioMassa ?? null}
