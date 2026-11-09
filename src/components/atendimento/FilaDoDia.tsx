@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
-import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
+import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, Ban, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -43,6 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
 import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
+import { RemetentesIgnoradosDialog } from "./RemetentesIgnoradosDialog";
 import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
 import { SimulacoesAtendimentoDialog } from "./SimulacoesAtendimentoDialog";
 import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
@@ -195,6 +196,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [prazosAberto, setPrazosAberto] = useState(false);
   const [regrasPotenciaisAberto, setRegrasPotenciaisAberto] = useState(false);
   const [automacoesAberto, setAutomacoesAberto] = useState(false);
+  const [ignoradosAberto, setIgnoradosAberto] = useState(false);
   const [tutorialAberto, setTutorialAberto] = useState(false);
   const [simulacoesAberto, setSimulacoesAberto] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
