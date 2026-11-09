@@ -1,3 +1,4 @@
+import { executarAgendaPorCiclo } from "@/lib/voz/publicoInteligente";
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
 import { analisarDestino, type AnaliseDestino } from "@/lib/calendario/analiseDestino";

@@ -1,3 +1,5 @@
+import { OrigemAgendamento } from "./OrigemAgendamento";
+import type { InfoOrigem } from "@/lib/calendario/origemAgendamento";
 import { useEffect, useState, type ReactNode } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
