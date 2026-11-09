@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const file = form.get('file');
     if (!(file instanceof Blob)) return json({ error: 'Áudio ausente' }, 400);
     const up = new FormData();
-    up.append('model', 'openai/gpt-4o-mini-transcribe');
+    up.append('model', 'openai/gpt-transcribe');
     up.append('language', 'pt');
     up.append('file', file, `ligacao.${(file.type || '').includes('mp4') ? 'mp4' : 'webm'}`);
     const tr = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: up });
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const ai = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3.8-flash',
         messages: [
           { role: 'system', content: `Hoje é ${hoje}. Resuma ligações comerciais em português. Responda SOMENTE JSON: {"resumo":"até 2 frases","data_retorno":"YYYY-MM-DD ou null se nada foi combinado","motivo":"motivo do retorno ou null","objecao":"objeção do cliente ou null"}` },
           { role: 'user', content: texto.slice(0, 12000) },
