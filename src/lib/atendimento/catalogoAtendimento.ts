@@ -9,6 +9,7 @@ import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGE
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
 import { pendenciasCadastro } from "./pendenciasCadastro";
+import { ehEmailAutomatico, emailIgnorado } from "./remetentesIgnorados";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
@@ -49,6 +50,20 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "remetentes-ignorados",
+    modulo: "Fila e organização",
+    titulo: "Remetentes que não são clientes",
+    oQueE: "E-mails automáticos (no-reply, notificações, boletos, newsletters) não entram nos Recebidos, e você pode ignorar e-mails, domínios ou números que não são clientes.",
+    regraNegocio: "A caixa de Recebidos deve mostrar só quem precisa de atendimento. Ignorar nunca apaga mensagens e pode ser desfeito a qualquer momento.",
+    comoUsar: ["No cartão dos Recebidos, clique em Não é cliente.", "Escolha ignorar o e-mail, todo o domínio ou o número.", "Para desfazer, abra ⋮ › Remetentes ignorados e clique em Reativar."],
+    simular: () => [
+      passo("E-mail no-reply sai dos Recebidos sozinho", ehEmailAutomatico("noreply@banco.com.br")),
+      passo("Cliente comum continua aparecendo", !ehEmailAutomatico("joao@cliente.com.br", "Pedido")),
+      passo("Domínio ignorado esconde todos os e-mails dele", emailIgnorado("ana@fornecedor.com", [{ tipo: "dominio", valor: "fornecedor.com" }])),
+      passo("Depois de reativar, volta a aparecer", !emailIgnorado("ana@fornecedor.com", [])),
+    ],
+  },
   {
     id: "cadastro-incompleto",
     modulo: "Atendimento e finalização",
