@@ -27,7 +27,7 @@ export function CamposAgenteEditor({ campos, onChange }: { campos: CampoAgente[]
       </div>
       {campos.length === 0 && <p className="text-xs text-muted-foreground">Ex.: "O que deseja ofertar" (Produto do sistema, usuário preenche).</p>}
       {campos.map((c, i) => (
-        <div key={c.id} className="grid gap-2 rounded-md bg-muted/30 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto] sm:items-center">
+        <div key={c.id} className="grid gap-2 rounded-md bg-muted/30 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_12rem_auto] sm:items-center">
           <Input value={c.rotulo} placeholder="Pergunta / rótulo do campo" autoFocus={!c.rotulo} onChange={(e) => mudar(i, { rotulo: e.target.value })} />
           <Select value={c.tipo} onValueChange={(v: any) => mudar(i, { tipo: v, valor: null })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
