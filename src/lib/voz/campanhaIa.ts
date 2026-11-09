@@ -5,7 +5,7 @@ import { consultarRamalOcupado } from "@/lib/voz/ramaisUsuario";
 const db = supabase as any;
 
 export type StatusItem = "aguardando" | "ligando" | "concluido" | "sem_resposta" | "erro" | "cancelado";
-export interface ItemCampanha { id: string; nome: string; empresa: string; numero: string; status: StatusItem; comandoId?: string }
+export interface ItemCampanha { id: string; nome: string; empresa: string; numero: string; status: StatusItem; gancho?: string; comandoId?: string }
 export interface CampanhaIa {
   estabelecimentoId: string; agenteId: string; objetivo: string; ramalAtendente: string;
   itens: ItemCampanha[]; atual: number; estado: "rodando" | "pausada" | "cancelada" | "finalizada";
@@ -64,7 +64,7 @@ async function executar() {
       const r = await db.from("voz_comandos").insert({
         estabelecimento_id: c.estabelecimentoId, agente_id: c.agenteId, tipo: "ligar",
         numero: c.itens[i].numero, ramal: c.ramalAtendente,
-        objetivo: objetivoCom(c.ramalAtendente, c.objetivo), criado_por: u.user?.id ?? null,
+        objetivo: objetivoCom(c.ramalAtendente, c.objetivo) + (c.itens[i].gancho ? `\n${c.itens[i].gancho}` : ""), criado_por: u.user?.id ?? null,
       }).select("id").single();
       if (r.error) { setItem(i, { status: "erro" }); continue; }
       setItem(i, { comandoId: r.data.id });

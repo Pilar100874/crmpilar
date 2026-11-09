@@ -301,6 +301,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                   ["usar_historico", "Histórico de compras e orçamentos", "Últimos produtos, frequência e data da última compra"],
                   ["usar_pagamento", "Formas e prazos de pagamento", "Condições habituais usadas nos pedidos do cliente"],
                   ["sugerir_similares", "Sugerir reposição e produtos similares", "Compara a oferta com o que o cliente já compra"],
+                  ["usar_gancho_potencial", "Adaptar abordagem ao motivo de cliente potencial", "Só vale quando o disparo usa o filtro Clientes potenciais"],
                 ] as const).map(([k, l, d]) => (
                   <label key={k} className="flex items-start gap-2 text-sm">
                     <Switch checked={(atual.config as any)?.[k] !== false}
