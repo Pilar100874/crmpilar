@@ -5,17 +5,32 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
-import { classificarUrgencia, planejarRegua, proximoDaFila, SELO_CREDITO } from "./copilotoAtendimento";
+import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira } from "./copilotoAtendimento";
+import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { origemDoCanalMassa } from "./prazosProximoContato";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
-import { ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
 const DIA = 86_400_000;
 
 export interface PassoSimulacao { descricao: string; ok: boolean; detalhe?: string }
 
+export const MODULOS = [
+  "Primeiros passos",
+  "Fila e organização",
+  "Atendimento e finalização",
+  "Clientes potenciais",
+  "Copiloto e IA",
+  "Disparo em massa",
+  "Telefonia e voz",
+  "Agenda automática",
+  "Configurações do Atendimento",
+] as const;
+export type ModuloAtendimento = (typeof MODULOS)[number];
+
 export interface RecursoAtendimento {
   id: string;
+  modulo: ModuloAtendimento;
   titulo: string;
   /** O que o recurso faz, em linguagem do atendente. */
   oQueE: string;
@@ -35,6 +50,7 @@ const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   {
     id: "fila",
+    modulo: "Fila e organização",
     titulo: "Fila de contatos e abas",
     oQueE: "Lista quem você deve atender hoje, separada em Tudo, Agendados, Recebidos e Potenciais.",
     regraNegocio: "Agendados são compromissos já marcados; Recebidos são clientes esperando resposta; Potenciais são oportunidades calculadas pelo sistema. Separar ajuda a atender primeiro quem já está esperando.",
@@ -53,6 +69,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "finalizacao",
+    modulo: "Atendimento e finalização",
     titulo: "Finalização obrigatória do atendimento",
     oQueE: "Todo atendimento iniciado precisa terminar com a data do próximo contato ou com o cliente inativado.",
     regraNegocio: "Nenhum cliente pode ficar sem próximo contato: assim a carteira não esfria e o cliente não compra do concorrente por falta de retorno.",
@@ -71,6 +88,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "potenciais",
+    modulo: "Clientes potenciais",
     titulo: "Clientes potenciais",
     oQueE: "O sistema sugere clientes com chance de compra e sempre mostra o motivo.",
     regraNegocio: "Quem compra a cada X dias, tem orçamento parado, parou de comprar ou caiu de volume precisa ser procurado antes do concorrente. Nada vira tarefa sozinho: você decide.",
@@ -97,6 +115,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "urgencia",
+    modulo: "Copiloto e IA",
     titulo: "Urgência das mensagens recebidas",
     oQueE: "Mensagens recebidas ganham um selo: Reclamação, Cotação ou Dúvida.",
     regraNegocio: "Reclamação é atendida primeiro para não perder o cliente; cotação logo depois, porque é venda na mesa.",
@@ -111,6 +130,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "credito",
+    modulo: "Atendimento e finalização",
     titulo: "Selo de crédito",
     oQueE: "O cartão mostra se o cliente está liberado, com boleto a vencer ou bloqueado no financeiro.",
     regraNegocio: "Evita perder tempo negociando com quem está bloqueado antes de falar com o financeiro.",
@@ -121,6 +141,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "regua",
+    modulo: "Agenda automática",
     titulo: "Régua de follow-up de orçamentos",
     oQueE: "Orçamento sem resposta gera tarefa de cobrança: D+2 por WhatsApp e D+5 por e-mail.",
     regraNegocio: "Ninguém precisa lembrar de cobrar proposta. O sistema só cria a tarefa com a mensagem pronta; nenhuma mensagem sai sem você.",
@@ -138,6 +159,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "disparo",
+    modulo: "Disparo em massa",
     titulo: "Disparo em massa",
     oQueE: "Envia WhatsApp, e-mail, ligação ou ligação com IA para vários clientes de uma vez.",
     regraNegocio: "Todo cliente que recebe o disparo já ganha a data do próximo contato, e quem recebeu algo nos últimos dias não recebe de novo por outro canal.",
@@ -156,12 +178,252 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "configuracoes",
+    modulo: "Configurações do Atendimento",
     titulo: "Menu ⋮ ao lado de Contatos",
     oQueE: "Reúne as definições da tela: datas dos próximos contatos, regras de potenciais, automações, bot de atendimento e assumir contatos de colegas.",
     regraNegocio: "Cada empresa ajusta prazos e regras ao seu jeito de vender, sem depender de suporte.",
     comoUsar: ["Clique nos 3 pontinhos ao lado de Contatos.", "Escolha a definição e salve."],
     alvo: "fila-menu",
     simular: () => [passo("Prazos e regras padrão estão disponíveis", CONFIG_PADRAO.protecao.limite > 0)],
+  },
+{
+    id: "visao-geral", modulo: "Primeiros passos",
+    titulo: "Como a tela de Atendimento funciona",
+    oQueE: "À esquerda fica a fila de contatos do dia; no centro abre o cliente escolhido (conversa, histórico, tarefa, agenda, orçamentos); no topo fica a barra de datas.",
+    regraNegocio: "O dia do vendedor é guiado pela fila: ninguém precisa decidir de cabeça quem chamar. Todo contato entra por um motivo (agendado, recebeu mensagem ou foi sugerido) e só sai quando ganha o próximo passo.",
+    comoUsar: ["Comece pela aba Recebidos (quem está esperando).", "Depois atenda Agendados de hoje e atrasados.", "No tempo livre, trabalhe a aba Potenciais.", "Sempre finalize o atendimento com a próxima data."],
+    alvo: "fila-abas",
+    simular: () => [passo("Todos os recursos do Atendimento têm regra e passo a passo", CATALOGO_ATENDIMENTO.every((r) => r.regraNegocio && r.comoUsar.length > 0), `${CATALOGO_ATENDIMENTO.length} recursos`)],
+  },
+  {
+    id: "barra-datas", modulo: "Fila e organização",
+    titulo: "Barra de datas (Atrasados, Hoje, próximos dias)",
+    oQueE: "Os botões de data no topo mostram as tarefas do dia escolhido em forma de tabela.",
+    regraNegocio: "Atrasados aparecem primeiro porque cliente esquecido é cliente perdido. Tarefas atrasadas são trazidas para hoje sem nunca puxar para trás uma data futura que você escolheu.",
+    comoUsar: ["Clique em Atrasados para ver o que ficou para trás.", "Clique em um dia para ver as tarefas dele.", "Clique em uma tarefa para selecionar o contato na aba Tudo."],
+    simular: () => {
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const futura = new Date(hoje.getTime() + 7 * DIA);
+      const passada = new Date(hoje.getTime() - 2 * DIA);
+      const deveRealocar = (d: Date) => d < hoje;
+      return [
+        passo("Tarefa de 2 dias atrás é trazida para hoje", deveRealocar(passada)),
+        passo("Tarefa marcada para daqui 7 dias continua na data escolhida", !deveRealocar(futura)),
+      ];
+    },
+  },
+  {
+    id: "recebidos", modulo: "Fila e organização",
+    titulo: "Recebidos não respondidos e sinalizados",
+    oQueE: "A aba Recebidos lista todo WhatsApp e e-mail em que a última mensagem é do cliente. A bandeira permite tirar da lista sem responder.",
+    regraNegocio: "Nenhuma mensagem de cliente pode ficar sem resposta. Quando não há o que responder (ex.: um \"obrigado\"), você sinaliza e ela sai da lista, mas continua consultável no filtro Sinalizados.",
+    comoUsar: ["Abra a aba Recebidos.", "Responda ou clique na bandeira para sinalizar.", "Use o filtro Sinalizados para rever o que foi marcado."],
+    alvo: "fila-abas",
+    simular: () => {
+      const conversa = (ultimaDe: "cliente" | "empresa") => ultimaDe === "cliente";
+      return [
+        passo("Última mensagem do cliente → aparece em Recebidos", conversa("cliente")),
+        passo("Última mensagem da empresa → sai de Recebidos", !conversa("empresa")),
+      ];
+    },
+  },
+  {
+    id: "menus-cliente", modulo: "Atendimento e finalização",
+    titulo: "Menus do cliente (Histórico, Tarefa, Agenda, Orçamentos)",
+    oQueE: "Ao abrir um cliente, a barra de menus troca o conteúdo central sem recarregar a tela. O menu Tarefa abre a pendência mais urgente ou a última tarefa.",
+    regraNegocio: "Tudo sobre o cliente fica a um clique, para o vendedor não perder o fio da conversa. A tarefa abre bloqueada para leitura, evitando alterações sem querer; para mudar, use ⋮ → Editar tarefa.",
+    comoUsar: ["Clique no cartão do cliente.", "Escolha Histórico, Tarefa, Agenda ou Orçamentos.", "Na tarefa, use ⋮ → Editar tarefa para liberar os campos."],
+    simular: () => {
+      const pendentes = [{ id: "t1", data: 3 }, { id: "t2", data: 1 }];
+      const maisUrgente = [...pendentes].sort((a, b) => a.data - b.data)[0];
+      return [passo("Menu Tarefa abre a pendência mais urgente", maisUrgente.id === "t2")];
+    },
+  },
+  {
+    id: "repetir-pedido", modulo: "Atendimento e finalização",
+    titulo: "Repetir último pedido",
+    oQueE: "No menu ⋮ do cartão, cria um novo orçamento com os mesmos itens do último pedido finalizado.",
+    regraNegocio: "Cliente de reposição costuma comprar o mesmo mix. Repetir o pedido em um clique economiza tempo e diminui erro de digitação.",
+    comoUsar: ["Abra o menu ⋮ do cartão.", "Clique em Repetir último pedido.", "Revise quantidades e envie o orçamento."],
+    simular: () => [passo("Ciclo médio é calculado a partir das compras", Math.round(cicloMedio([0, 10 * DIA, 20 * DIA]) ?? 0) === 10, "compras a cada 10 dias")],
+  },
+  {
+    id: "termometro", modulo: "Clientes potenciais",
+    titulo: "Termômetro da carteira",
+    oQueE: "Contadores no topo da fila: clientes em risco, hora de reposição e orçamentos parados.",
+    regraNegocio: "Mostra a saúde da carteira antes que as vendas caiam: risco = inativos e queda de volume.",
+    comoUsar: ["Olhe os números no topo da fila.", "Abra a aba Potenciais para agir sobre eles."],
+    simular: () => {
+      const t = termometroCarteira([{ tipo: "inativo" }, { tipo: "queda_volume" }, { tipo: "recompra" }, { tipo: "orcamento" }] as any);
+      return [
+        passo("Inativo + queda de volume contam como risco", t.risco === 2),
+        passo("Recompra conta como reposição", t.reposicao === 1),
+        passo("Orçamento parado é contado", t.orcamentos === 1),
+      ];
+    },
+  },
+  {
+    id: "dispensar", modulo: "Clientes potenciais",
+    titulo: "Sem interesse agora",
+    oQueE: "Tira o cliente da lista de Potenciais por 15, 30 ou 60 dias, guardando a objeção.",
+    regraNegocio: "Insistir com quem acabou de dizer não queima o relacionamento. A objeção registrada ajuda a próxima abordagem.",
+    comoUsar: ["No menu ⋮ do cartão potencial, clique em Sem interesse agora.", "Escolha o motivo e o prazo."],
+    simular: () => {
+      const hoje = Date.now();
+      const orcs: OrcPotencial[] = [{ clienteId: "x", etapa: "orcamento", criado: iso(5, hoje), valor: 900, itens: [] }];
+      return [passo("Cliente dispensado não aparece em Potenciais", calcularPotenciais(orcs, CONFIG_PADRAO, hoje, new Set(["x"])).length === 0)];
+    },
+  },
+  {
+    id: "copiloto-chat", modulo: "Copiloto e IA",
+    titulo: "Sugerir respostas no chat",
+    oQueE: "Botão acima da caixa de texto que gera até 3 respostas prontas, considerando a conversa e os últimos orçamentos.",
+    regraNegocio: "Responder rápido vende mais. A IA só sugere; você escolhe, ajusta e envia.",
+    comoUsar: ["Abra a conversa do cliente.", "Clique em Sugerir respostas.", "Clique numa sugestão para colocá-la na caixa de texto, ajuste e envie."],
+    simular: () => [passo("Pergunta do cliente é reconhecida como dúvida", classificarUrgencia("Qual o prazo de entrega?") === "duvida")],
+  },
+  {
+    id: "resumo-ligacao", modulo: "Copiloto e IA",
+    titulo: "Resumo automático após a ligação",
+    oQueE: "Depois de uma ligação gravada no Pilar Fone, a IA resume a conversa e já preenche a barra de finalização com a data de retorno combinada.",
+    regraNegocio: "O vendedor não precisa digitar o que conversou; o histórico fica completo e o retorno combinado não é esquecido.",
+    comoUsar: ["Ligue pelo Pilar Fone.", "Ao desligar, confira o resumo sugerido na barra de finalização.", "Ajuste se precisar e finalize."],
+    simular: () => {
+      salvarSugestaoLigacao("sim-lig", { resumo: "Cliente pediu retorno dia 25", dataRetorno: "2026-11-25" });
+      const lido = lerSugestaoLigacao("sim-lig");
+      limparSugestaoLigacao("sim-lig");
+      return [
+        passo("Resumo da ligação chega à barra de finalização", lido?.resumo === "Cliente pediu retorno dia 25"),
+        passo("Data de retorno combinada é sugerida", lido?.dataRetorno === "2026-11-25"),
+        passo("Sugestão some depois de finalizar", lerSugestaoLigacao("sim-lig") === null),
+      ];
+    },
+  },
+  {
+    id: "modelos", modulo: "Disparo em massa",
+    titulo: "Modelos de WhatsApp e e-mail",
+    oQueE: "Textos prontos com imagens e variáveis, administrados no botão Gerenciar modelos.",
+    regraNegocio: "Padroniza a comunicação da empresa e evita erros. E-mail sempre exige assunto.",
+    comoUsar: ["No disparo, clique em Gerenciar modelos.", "Crie o texto com {{contato}}, {{empresa}}, {{motivo}} ou {{produto}}.", "Escolha o modelo na etapa de composição."],
+    simular: () => {
+      const t = substituirVariaveis("Oi {{contato}} da {{empresa}}", { id: "m", nome: "Rui", empresa: "Loja X", telefone: null, email: null });
+      return [passo("Variáveis do modelo são preenchidas", t === "Oi Rui da Loja X", t)];
+    },
+  },
+  {
+    id: "monitor-envio", modulo: "Disparo em massa",
+    titulo: "Acompanhar e cancelar o envio",
+    oQueE: "Na última etapa, o envio acontece um a um com status de cada cliente e botão para cancelar.",
+    regraNegocio: "Cancelar para só os próximos envios; quem já recebeu continua com seu retorno agendado. Envios que falharem não geram tarefa.",
+    comoUsar: ["Confirme o disparo.", "Acompanhe a lista de status.", "Clique em Cancelar se precisar parar."],
+    simular: () => {
+      const fila = ["a", "b", "c"]; const enviados: string[] = []; let cancelado = false;
+      for (const c of fila) { if (cancelado) break; enviados.push(c); if (c === "b") cancelado = true; }
+      return [passo("Cancelar no 2º cliente impede o 3º", enviados.join(",") === "a,b")];
+    },
+  },
+  {
+    id: "trava-canais", modulo: "Disparo em massa",
+    titulo: "Proteção contra excesso de mensagens",
+    oQueE: "Quem recebeu disparo em qualquer canal nos últimos dias fica de fora do próximo disparo.",
+    regraNegocio: "O cliente não deve receber a mesma oferta por WhatsApp, e-mail e ligação na mesma semana. Isso evita bloqueios e desgaste.",
+    comoUsar: ["Use os filtros inteligentes no disparo.", "A opção de excluir quem recebeu recentemente já vem ligada."],
+    simular: () => {
+      const recebeuHa = 2, trava = CONFIG_PADRAO.protecao.contatoRecenteDias;
+      return [passo(`Quem recebeu há ${recebeuHa} dias fica fora (trava de ${trava} dias)`, recebeuHa < trava)];
+    },
+  },
+  {
+    id: "pilar-fone", modulo: "Telefonia e voz",
+    titulo: "Pilar Fone e regras de discagem",
+    oQueE: "Telefone dentro do CRM, ligado ao ramal do PABX. O número é ajustado automaticamente antes de discar.",
+    regraNegocio: "Remove o 55, não disca o DDD local e coloca a operadora para outros DDDs. Número fora do padrão é barrado antes de discar.",
+    comoUsar: ["Abra o Pilar Fone no canto da tela.", "Confira se o ramal está conectado (verde).", "Clique no telefone do cliente para ligar."],
+    simular: () => [
+      passo("Celular do DDD local é discado sem DDD", prepararNumeroDiscagem("+55 15 99876-5432", { dddLocal: "15" }) === "998765432"),
+      passo("Outro DDD ganha o código da operadora", prepararNumeroDiscagem("+55 11 99876-5432", { dddLocal: "15" }) === "01511998765432"),
+      passo("Celular sem o 9 inicial é barrado", !validarNumeroDiscagem("11887654321").valido),
+    ],
+  },
+  {
+    id: "ligacao-ia", modulo: "Telefonia e voz",
+    titulo: "Ligação com IA",
+    oQueE: "No disparo em massa, um agente de voz liga para os clientes, apresenta a oferta e transfere para você quem tiver interesse, com resumo da conversa.",
+    regraNegocio: "Só funciona se o seu ramal de ligações estiver liberado. Se você estiver ocupado, as ligações pausam até você ficar livre, para nenhum cliente interessado ficar esperando.",
+    comoUsar: ["Disparo em massa → Ligação com IA.", "Escolha o agente e preencha os campos da oferta.", "Acompanhe a campanha; pause ou cancele quando quiser."],
+    simular: () => {
+      const g = ganchoPotencial({ tipo: "recompra", motivo: "Compra a cada 20 dias", produto: "Papel" });
+      return [
+        passo("A IA recebe o motivo do cliente para abrir a conversa", g.includes("Compra a cada 20 dias")),
+        passo("A IA recebe a abordagem certa para recompra", g.includes("estoque")),
+        passo("Sem motivo, a IA não recebe gancho inventado", ganchoPotencial(undefined) === ""),
+      ];
+    },
+  },
+  {
+    id: "agenda-inteligente", modulo: "Agenda automática",
+    titulo: "Origem de cada agendamento",
+    oQueE: "Toda tarefa mostra se foi criada de forma manual, automática ou inteligente, e o motivo.",
+    regraNegocio: "Você sempre sabe por que precisa ligar para alguém. Tarefas inteligentes de reposição só são criadas para quem já comprou 2 vezes ou mais e não tem outra tarefa pendente.",
+    comoUsar: ["Abra a tarefa pelo menu Tarefa ou pela agenda.", "Veja o quadro de origem e motivo."],
+    simular: () => [passo("Ciclo de reposição só existe com 2 compras ou mais", cicloMedio([Date.now()]) === null)],
+  },
+  {
+    id: "reconquista", modulo: "Agenda automática",
+    titulo: "Reconquista de orçamento perdido",
+    oQueE: "Orçamento marcado como perdido gera uma tarefa de retorno em 15 dias.",
+    regraNegocio: "Muitas vezes o concorrente não entrega bem. Voltar a falar depois de algumas semanas recupera vendas.",
+    comoUsar: ["Marque o orçamento como perdido.", "A tarefa de reconquista aparece em Agendados na data."],
+    simular: () => [passo("Mensagens da régua de cobrança usam o nome do cliente", MENSAGEM_REGUA.D2("Ana").includes("Ana"))],
+  },
+  {
+    id: "automacoes", modulo: "Configurações do Atendimento",
+    titulo: "Automações (IA e fora do horário)",
+    oQueE: "Define horário e quantidade de clientes para a IA ligar sozinha e a resposta automática fora do expediente no WhatsApp.",
+    regraNegocio: "A IA trabalha a carteira enquanto você atende; fora do horário o cliente recebe aviso e você retoma no primeiro horário útil.",
+    comoUsar: ["Menu ⋮ ao lado de Contatos → Automações.", "Preencha horário, quantidade e texto.", "Salve."],
+    alvo: "fila-menu",
+    simular: () => [
+      passo("Robô de ligações vem desligado até você ativar", CONFIG_PADRAO.roboIa.ativo === false),
+      passo("Resposta fora do horário vem desligada até você ativar", CONFIG_PADRAO.plantao.ativo === false),
+    ],
+  },
+  {
+    id: "bot", modulo: "Configurações do Atendimento",
+    titulo: "Bot de atendimento",
+    oQueE: "Escolha um robô de WhatsApp para responder seus clientes e ligue/desligue no botão ao lado de Contatos.",
+    regraNegocio: "Quando você está fora, o robô faz a triagem. Ligado, ele responde os clientes da sua carteira; desligado, as mensagens caem em Recebidos.",
+    comoUsar: ["Menu ⋮ → Bot de atendimento → escolha o robô.", "Use o botão com ícone de robô ao lado de Contatos para ligar ou desligar."],
+    alvo: "fila-menu",
+    simular: () => {
+      const responde = (bot: string | null, ativo: boolean) => !!bot && ativo;
+      return [
+        passo("Bot escolhido e ligado responde", responde("b1", true)),
+        passo("Bot desligado não responde", !responde("b1", false)),
+        passo("Sem bot escolhido, ninguém responde automático", !responde(null, true)),
+      ];
+    },
+  },
+  {
+    id: "prazos", modulo: "Configurações do Atendimento",
+    titulo: "Datas dos próximos contatos",
+    oQueE: "Define quantos dias depois o cliente volta para a fila ao finalizar um atendimento.",
+    regraNegocio: "Cada empresa tem seu ritmo de contato. O prazo vira a data sugerida, que você pode mudar na hora.",
+    comoUsar: ["Menu ⋮ → Datas dos próximos contatos.", "Ajuste os dias e salve."],
+    alvo: "fila-menu",
+    simular: () => [passo("Finalizar atendimento tem prazo próprio", origemDoCanalMassa("telefone") !== ("finalizar_atendimento" as any))],
+  },
+  {
+    id: "assumir", modulo: "Configurações do Atendimento",
+    titulo: "Assumir contatos de colegas",
+    oQueE: "Gerentes e administradores podem trazer para a própria fila os contatos de outros vendedores.",
+    regraNegocio: "Nas férias ou faltas, a carteira não pode parar. Seus contatos continuam aparecendo junto.",
+    comoUsar: ["Menu ⋮ → Assumir contatos de...", "Marque as pessoas. Marcar um gerente traz os vendedores dele."],
+    alvo: "fila-menu",
+    simular: () => {
+      const meus = ["a"], dele = ["b"], fila = [...meus, ...dele];
+      return [passo("Seus contatos continuam junto dos assumidos", fila.includes("a") && fila.includes("b"))];
+    },
   },
 ];
 
@@ -174,3 +436,9 @@ export function simularRecurso(r: RecursoAtendimento): ResultadoSimulacao {
   catch (e) { passos = [passo("Erro ao simular", false, e instanceof Error ? e.message : String(e))]; }
   return { recurso: r, passos, ok: passos.length > 0 && passos.every((p) => p.ok), ms: Math.round(performance.now() - t0) };
 }
+
+/** Recursos na ordem dos módulos, para o tutorial e as simulações. */
+export function recursosPorModulo(): { modulo: ModuloAtendimento; recursos: RecursoAtendimento[] }[] {
+  return MODULOS.map((m) => ({ modulo: m, recursos: CATALOGO_ATENDIMENTO.filter((r) => r.modulo === m) })).filter((g) => g.recursos.length);
+}
+export const CATALOGO_ORDENADO = (): RecursoAtendimento[] => recursosPorModulo().flatMap((g) => g.recursos);
