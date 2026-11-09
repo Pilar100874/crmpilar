@@ -342,17 +342,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-muted-foreground hidden xl:inline">Ordenar por:</span>
-            <Select value={ordenacao} onValueChange={(valor) => setOrdenacao(valor as OrdenacaoFila)}>
-              <SelectTrigger className="h-8 w-[104px] rounded-lg text-xs bg-card border-border/60">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="prioridade">Prioridade</SelectItem>
-                <SelectItem value="horario">Horário</SelectItem>
-                <SelectItem value="nome">Nome</SelectItem>
-              </SelectContent>
-            </Select>
             <button
               type="button"
               onClick={() => setTutorialAberto(true)}
@@ -374,6 +363,24 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    Ordenar fila: {ordenacao === "prioridade" ? "Prioridade" : ordenacao === "horario" ? "Horário" : "Nome"}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-72">
+                    {([
+                      { v: "prioridade", t: "Prioridade (recomendado)", d: "Coloca no topo quem precisa de você primeiro: 1º mensagens urgentes ou reclamações, 2º contatos atrasados, 3º quem tem mais mensagens sem resposta, 4º horário agendado. O atalho Alt + ↓ segue esta ordem." },
+                      { v: "horario", t: "Horário agendado", d: "Mostra os contatos pela hora marcada, do mais cedo ao mais tarde. Bom para seguir a agenda do dia à risca." },
+                      { v: "nome", t: "Nome do contato", d: "Ordem alfabética (A–Z). Útil para achar um contato rapidamente." },
+                    ] as const).map((o) => (
+                      <DropdownMenuItem key={o.v} onSelect={() => setOrdenacao(o.v)} className="flex flex-col items-start gap-0.5">
+                        <span className="text-sm font-medium">{ordenacao === o.v ? "✓ " : ""}{o.t}</span>
+                        <span className="text-[11px] leading-snug text-muted-foreground whitespace-normal">{o.d}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>

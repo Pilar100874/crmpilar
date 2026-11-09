@@ -151,7 +151,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     titulo: "Urgência das mensagens recebidas",
     oQueE: "Mensagens recebidas ganham um selo: Reclamação, Cotação ou Dúvida.",
     regraNegocio: "Reclamação é atendida primeiro para não perder o cliente; cotação logo depois, porque é venda na mesa.",
-    comoUsar: ["Veja o selo colorido no cartão da aba Recebidos.", "Ordene por Prioridade para que as urgentes subam."],
+    comoUsar: ["Veja o selo colorido no cartão da aba Recebidos.", "No menu ⋮, em Ordenar fila, escolha Prioridade para que as urgentes subam."],
     alvo: "fila-abas",
     simular: () => [
       passo("\"Produto chegou quebrado\" é reclamação", classificarUrgencia("O produto chegou quebrado") === "reclamacao"),
