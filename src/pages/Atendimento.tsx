@@ -1,3 +1,4 @@
+import { ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -5128,9 +5129,13 @@ ${recentMessages}
     if (!est) return;
     if (!config.agenteId) return toast.error('Nenhum agente de voz com "Fazer ligações" ativo');
     if (!config.ramal) return toast.error("Seu usuário não tem ramal configurado");
+    // Flag do agente: adapta a abertura ao motivo de cliente potencial.
+    const cfgAg = ((await (supabase as any).from("voz_agentes").select("config").eq("id", config.agenteId).maybeSingle()).data?.config ?? {}) as Record<string, unknown>;
+    const usarGancho = cfgAg.usar_gancho_potencial !== false;
     const itens = config.contatos
       .filter((c) => numeroParaChamada(c))
-      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (numeroParaChamada(c) || "").replace(/\D/g, "") }));
+      .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (numeroParaChamada(c) || "").replace(/\D/g, ""),
+        gancho: usarGancho ? ganchoPotencial(ganchosPotenciais.get(c.id)) || undefined : undefined }));
     if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
     const ok = iniciarCampanhaIa({
       estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,

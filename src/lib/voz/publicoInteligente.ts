@@ -19,6 +19,23 @@ export interface Protecao { contatadoRecente: Set<string>; comTarefaFutura: Set<
 
 /** Motivos do último filtro inteligente aplicado (lidos ao criar os retornos). */
 export const ultimosMotivos = new Map<string, string>();
+/** Motivos de Potenciais do último filtro "Clientes potenciais" (usados como gancho da IA). */
+export const ganchosPotenciais = new Map<string, { tipo: string; motivo: string; produto?: string }>();
+
+const ABORDAGEM: Record<string, string> = {
+  recompra: "Abra checando se o estoque do produto habitual está acabando e ofereça agilizar a reposição.",
+  orcamento: "Pergunte se o cliente analisou a proposta enviada e tire dúvidas de prazo ou pagamento.",
+  inativo: "Abra em tom de relacionamento, diga que sentiram falta e pergunte se algo mudou na necessidade.",
+  acao_comercial: "Apresente a condição especial do item em foco, lembrando que o cliente já o compra.",
+  queda_volume: "Abra como pós-venda, pergunte como estão as operações e se o consumo mudou.",
+  cross_sell: "Lembre o produto que o cliente compra e sugira o item complementar.",
+};
+/** Instrução de abertura personalizada para um cliente vindo da lista de Potenciais. */
+export function ganchoPotencial(g: { tipo: string; motivo: string; produto?: string } | undefined): string {
+  if (!g) return "";
+  return `GANCHO DESTE CLIENTE (motivo de cliente potencial): ${g.motivo}${g.produto ? ` — produto em foco: ${g.produto}` : ""}. ` +
+    `${ABORDAGEM[g.tipo] ?? "Use esse motivo para abrir a conversa."} Use o motivo de forma natural, sem dizer que é um sistema.`;
+}
 
 /** Ciclo médio em dias entre compras (precisa de ao menos 2 compras). */
 export function cicloMedio(datas: number[]): number | null {
