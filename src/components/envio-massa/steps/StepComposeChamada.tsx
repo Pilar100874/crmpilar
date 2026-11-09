@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
 import { montarObjetivo } from "@/lib/voz/publicoInteligente";
+import { camposPendentes, lerCampos, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
   produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; texto: string;
@@ -23,6 +24,7 @@ type Oferta = {
 const OFERTA_INICIAL: Oferta = { produto: null, condicao: "", descontoMax: 0, texto: "", reposicao: true, similar: true, complementares: false, recepcao: true };
 /** Mantém o formulário ao voltar/avançar etapas. */
 let ultimaOferta: Oferta | null = null;
+let ultimosValores: Record<string, ValorCampo> = {};
 
 interface Props {
   canal: CanalEnvio;
@@ -46,7 +48,7 @@ export function StepComposeChamada({
   onModoChange, onPararAoReceberChange, onAgenteChange, onRamalChange, onObjetivoChange,
   onBack, onNext,
 }: Props) {
-  const [agentes, setAgentes] = useState<{ id: string; nome: string }[]>([]);
+  const [agentes, setAgentes] = useState<{ id: string; nome: string; config?: unknown }[]>([]);
   const [ramalRegistrado, setRamalRegistrado] = useState(obterStatusRamalGlobal().registrado);
 
   // Status ao vivo do Pilar Fone: a ligação só toca no navegador se ele estiver registrado.
@@ -59,7 +61,7 @@ export function StepComposeChamada({
     if (canal !== "ia") return;
     void (async () => {
       const est = await getEstabelecimentoId();
-      const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos")
+      const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos, config")
         .eq("estabelecimento_id", est).eq("ativo", true);
       const lista = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));
       setAgentes(lista);
@@ -74,13 +76,22 @@ export function StepComposeChamada({
   const mudar = (p: Partial<Oferta>) => {
     const n = { ...oferta, ...p };
     setOferta(n); ultimaOferta = n;
-    onObjetivoChange(montarObjetivo({ ...n, produtoNome: n.produto?.nome }));
+    emitir(n, valores);
   };
+  const [valores, setValores] = useState<Record<string, ValorCampo>>(() => ultimosValores);
+  const emitir = (n: Oferta, v: Record<string, ValorCampo>) =>
+    onObjetivoChange([textoCampos(campos, v), montarObjetivo({ ...n, produtoNome: n.produto?.nome })].filter(Boolean).join(" "));
+  const mudarCampo = (id: string, valor: ValorCampo) => {
+    const v = { ...valores, [id]: valor }; setValores(v); ultimosValores = v; emitir(oferta, v);
+  };
+  const campos = lerCampos(agentes.find((a) => a.id === agenteIaId)?.config);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (canal === "ia") emitir(oferta, valores); }, [agenteIaId, agentes.length]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (canal === "ia") mudar({}); }, [canal]);
 
-  const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim();
+  const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim() && camposPendentes(campos, valores).length === 0;
 
   return (
     <div className="flex flex-col min-w-0 space-y-4">
@@ -169,6 +180,31 @@ export function StepComposeChamada({
               <p className="text-[10px] text-muted-foreground">Quando o contato responder, a IA transfere a ligação para este ramal.</p>
             </div>
           </Card>
+
+          {campos.length > 0 && (
+            <Card className="p-4 space-y-3">
+              <h4 className="font-medium text-sm">Informações para o agente</h4>
+              {campos.map((c) => (
+                <div key={c.id} className="space-y-1.5 min-w-0">
+                  <Label className="text-xs">{c.rotulo}{c.obrigatorio && <span className="text-destructive"> *</span>}</Label>
+                  {c.tipo === "produto" ? (
+                    <ProdutoBusca valor={(valores[c.id] as any) ?? null} onChange={(p) => mudarCampo(c.id, p)} />
+                  ) : c.tipo === "opcoes" ? (
+                    <div className="flex flex-wrap gap-2">
+                      {(c.opcoes ?? []).map((o) => (
+                        <Button key={o} type="button" size="sm" variant={valores[c.id] === o ? "default" : "outline"}
+                          onClick={() => mudarCampo(c.id, valores[c.id] === o ? null : o)}>{o}</Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <Input type={c.tipo === "numero" ? "number" : "text"} className="h-9 text-xs"
+                      value={typeof valores[c.id] === "string" ? (valores[c.id] as string) : ""}
+                      onChange={(e) => mudarCampo(c.id, e.target.value)} />
+                  )}
+                </div>
+              ))}
+            </Card>
+          )}
 
           <Card className="p-4 space-y-3">
             <h4 className="font-medium text-sm">O que ofertar</h4>
