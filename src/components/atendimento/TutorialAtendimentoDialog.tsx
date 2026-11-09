@@ -48,14 +48,36 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
   const total = lista.length;
   const r = lista[Math.min(i, total - 1)];
   const demo = useMemo(() => simularRecurso(r), [r]);
-  useDestaque(r.alvo, open);
+  const [praticaFeita, setPraticaFeita] = useState(false);
+  const pratica = r.pratica;
+  useDestaque(pratica?.alvo ?? r.alvo, open);
+  useEffect(() => { setPraticaFeita(false); }, [i]);
+  // Espera o usuário clicar/preencher o ponto destacado antes de liberar o avanço.
+  useEffect(() => {
+    if (!open || !pratica || praticaFeita) return;
+    const el = document.querySelector<HTMLElement>(`[data-tour="${pratica.alvo}"]`);
+    if (!el) { setPraticaFeita(true); return; }
+    el.classList.add("animate-pulse");
+    const ok = (e: Event) => {
+      if (pratica.tipo === "preencher") {
+        const v = (e.target as HTMLInputElement)?.value ?? "";
+        if (v.trim().length < 2) return;
+      }
+      setPraticaFeita(true);
+    };
+    const evento = pratica.tipo === "preencher" ? "input" : "click";
+    el.addEventListener(evento, ok, true);
+    return () => { el.removeEventListener(evento, ok, true); el.classList.remove("animate-pulse"); };
+  }, [open, pratica, praticaFeita, i]);
   useEffect(() => { if (open) { setI(0); setEtapa(0); } }, [open]);
   useEffect(() => { setEtapa(0); }, [i]);
 
   if (!open) return null;
   const fechar = () => { localStorage.setItem(CHAVE_TUTORIAL_VISTO, "1"); onOpenChange(false); };
   const nPassos = demo.passos.length;
+  const bloqueado = !!pratica && !praticaFeita;
   const proximo = () => {
+    if (bloqueado) return;
     if (etapa < nPassos) setEtapa(etapa + 1);
     else if (i < total - 1) setI(i + 1);
     else fechar();
@@ -113,6 +135,12 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
               </ol>
               {r.alvo && <p className="mt-1 text-[11px] text-primary">O ponto da tela está destacado com uma borda.</p>}
             </div>
+            {pratica && (
+              <div className={cn("rounded-lg border p-2.5", praticaFeita ? "border-success/40 bg-success/10" : "border-warning/50 bg-warning/10")}>
+                <p className="mb-0.5 text-xs font-semibold text-foreground">{praticaFeita ? "✓ Feito! Pode avançar." : "Sua vez"}</p>
+                <p className="text-xs text-muted-foreground">{pratica.instrucao}</p>
+              </div>
+            )}
             <div>
               <p className="mb-1 text-xs font-semibold text-foreground">Demonstração com exemplo ({Math.min(etapa, nPassos)}/{nPassos})</p>
               {etapa === 0 ? (
@@ -138,7 +166,7 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
         </div>
         <div className="flex justify-between gap-2">
           <Button size="sm" variant="outline" disabled={i === 0 && etapa === 0} onClick={anterior}><ChevronLeft className="h-4 w-4" />Anterior</Button>
-          <Button size="sm" onClick={proximo}>{ultimo ? "Concluir" : etapa < nPassos ? "Próximo passo" : "Próximo recurso"}<ChevronRight className="h-4 w-4" /></Button>
+          <Button size="sm" onClick={proximo} disabled={bloqueado} title={bloqueado ? "Faça a ação indicada para continuar" : undefined}>{ultimo ? "Concluir" : etapa < nPassos ? "Próximo passo" : "Próximo recurso"}<ChevronRight className="h-4 w-4" /></Button>
         </div>
       </div>
     </div>
