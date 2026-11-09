@@ -11,6 +11,7 @@ import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEnt
 import { chamadaPareceDiscador, limparChamadaDiscador } from '@/lib/telefonia/discadorMarker';
 import { extrairDesafio, calcularCabecalhoAuth } from '@/lib/telefonia/digestSip';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
+import { resumirLigacao } from '@/lib/telefonia/resumoLigacao';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
 const fabricaSdhPadrao = Web.defaultSessionDescriptionHandlerFactory();
