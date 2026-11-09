@@ -4445,6 +4445,16 @@ ${recentMessages}
     orcamentosVisiveis.map((orcamento) => orcamento.empresa_id || `sem-empresa-${orcamento.cliente_id || "geral"}`),
   ).size;
 
+  const abrirItemContato = (contato: any) => {
+    setActiveTab("agenda");
+    setSelectedTaskId(null);
+    setSelectedTaskData(null);
+    setSelectedAgendaContato(contato);
+    openDetailsPanel(setShowClientDetailsAgenda);
+    setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
+  };
+  const termometro = useMemo(() => termometroCarteira(potenciais), [potenciais]);
+
   // Itens unificados da "Fila do dia" (coluna esquerda desktop)
   const filaItems = useMemo<FilaItem[]>(() => {
     const lista: FilaItem[] = [];
@@ -4469,13 +4479,29 @@ ${recentMessages}
           id: `contato-${contato.id}`,
           tipo: pot ? "potencial" : "agendado",
           potencial: pot ? { rotulo: ROTULO_TIPO[pot.tipo], motivos: pot.motivos } : undefined,
-          menuItems: pot ? [
+          credito: (creditoLocal[principal?.empresa_id] ?? principal?.empresas?.situacao_credito) as SituacaoCredito | undefined,
+          onCredito: principal?.empresa_id ? (sit: SituacaoCredito) => {
+            void salvarSituacaoCredito(principal.empresa_id, sit)
+              .then(() => { setCreditoLocal((m) => ({ ...m, [principal.empresa_id]: sit })); toast.success(SELO_CREDITO[sit].rotulo); })
+              .catch(() => toast.error("Não foi possível salvar a situação de crédito"));
+          } : undefined,
+          menuItems: [
+            { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
+            { label: "Repetir último pedido (novo orçamento)", onClick: () => {
+              void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
+                if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
+                toast.success("Orçamento criado com os itens do último pedido");
+                setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contato.id, nome: contato.nome });
+              }).catch(() => toast.error("Não foi possível repetir o pedido"));
+            } },
+            ...(pot ? [
             { label: "Copiar mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).then(() => toast.success("Mensagem copiada")); } },
             ...(contato.telefone ? [{ label: "Enviar WhatsApp com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no chat"); abrirCanalDoContato(contato.id, "chat"); } }] : []),
             ...(contato.email ? [{ label: "Enviar e-mail com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no e-mail"); abrirCanalDoContato(contato.id, "email"); } }] : []),
             { label: "Agendar retorno", onClick: () => { setHistoricoCliente(null); setOrcamentosCliente(null); setAgendaContato({ id: contato.id, nome: contato.nome }); } },
             { label: "Sem interesse agora", onClick: () => setDispensarAlvo({ id: contato.id, nome: contato.nome }) },
-          ] : undefined,
+          ] : []),
+          ],
           contactId: contato.id,
           nome: contato.nome,
           empresa: empresaNome,
@@ -4520,14 +4546,7 @@ ${recentMessages}
             setOrcamentoSheetOpen(true);
             if (isMobile) setMobileView("main");
           },
-          onClick: () => {
-            setActiveTab("agenda");
-            setSelectedTaskId(null);
-            setSelectedTaskData(null);
-            setSelectedAgendaContato(contato);
-            openDetailsPanel(setShowClientDetailsAgenda);
-            setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
-          },
+          onClick: () => abrirItemContato(contato),
         });
       });
     }
