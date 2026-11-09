@@ -8,6 +8,7 @@ import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial 
 import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira } from "./copilotoAtendimento";
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
+import { pendenciasCadastro } from "./pendenciasCadastro";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
@@ -48,6 +49,18 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "cadastro-incompleto",
+    modulo: "Atendimento e finalização",
+    titulo: "Alerta de cadastro incompleto",
+    oQueE: "Ao abrir uma conversa, o painel Cadastro e vínculos avisa quais dados importantes faltam.",
+    regraNegocio: "Contato sem telefone/WhatsApp, e-mail, empresa vinculada ou CNPJ/CPF da empresa atrapalha disparos, orçamentos e cobrança; o aviso lembra o atendente de corrigir.",
+    comoUsar: ["Abra a conversa do cliente.", "Veja o aviso vermelho no painel de cadastro.", "Edite o contato ou vincule/edite a empresa para o aviso sumir."],
+    simular: () => [
+      passo("Contato sem e-mail e sem empresa gera aviso", pendenciasCadastro({ nome: "Ana", whatsapp: "1" }).length === 2),
+      passo("Cadastro completo não gera aviso", pendenciasCadastro({ nome: "Ana", whatsapp: "1", email: "a@b", companies: [{ id: "1", cnpj: "9" }] }).length === 0),
+    ],
+  },
   {
     id: "fila",
     modulo: "Fila e organização",
