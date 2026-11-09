@@ -16,6 +16,7 @@ import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
 import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
+import { ehEmailAutomatico, emailIgnorado, telefoneIgnorado, extrairEmail, dominioDe, normalizarTelefone, type RemetenteIgnorado, type TipoIgnorado } from "@/lib/atendimento/remetentesIgnorados";
 import { classificarUrgencia, repetirUltimoPedido, termometroCarteira, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
@@ -4116,11 +4117,11 @@ ${recentMessages}
   const ignorarRemetente = useCallback(async (tipo: TipoIgnorado, valor: string) => {
     if (!valor) return;
     const { error } = await (supabase as any).from("recebidos_ignorados")
-      .upsert({ tipo, valor, criado_por_nome: usuarioNome || null }, { onConflict: "estabelecimento_id,tipo,valor" });
+      .upsert({ tipo, valor }, { onConflict: "estabelecimento_id,tipo,valor" });
     if (error) { toast.error("Não foi possível ignorar o remetente"); return; }
     setRemetentesIgnorados((l) => [...l, { tipo, valor }]);
     toast.success("Remetente ignorado — reative em ⋮ › Remetentes ignorados");
-  }, [usuarioNome]);
+  }, []);
 
   const conversasRecebidasBase = useMemo(() => conversations.filter((conv) =>
     !telefoneIgnorado(conv.customer?.telefone, remetentesIgnorados) &&
@@ -4128,7 +4129,7 @@ ${recentMessages}
     !!conv.lastCustomerMessage &&
     (!conv.lastMessage || conv.lastMessage.sender === "customer" ||
       new Date(conv.lastCustomerMessage.created_at).getTime() >= new Date(conv.lastMessage.created_at).getTime())
-  ), [conversations]);
+  ), [conversations, remetentesIgnorados]);
 
   // E-mail não respondido: recebido na caixa de entrada sem e-mail enviado ao remetente depois dele
   // (lido ou não).
@@ -4142,12 +4143,13 @@ ${recentMessages}
     });
     return userEmails.filter((email: any) => {
       if (!(email.folder === "inbox" || !email.folder)) return false;
+      if (ehEmailAutomatico(email.from_email, email.subject, email.body) || emailIgnorado(email.from_email, remetentesIgnorados)) return false;
       const raw = String(email.from_email || "").toLowerCase();
       const addr = (raw.match(/<([^>]+)>/)?.[1] || raw).trim();
       const recebido = new Date(email.date || email.created_at || 0).getTime();
       return !((ultimoEnvio.get(addr) || 0) > recebido);
     });
-  }, [userEmails]);
+  }, [userEmails, remetentesIgnorados]);
 
   // Sinalizações "tratado sem responder" (por usuário). Itens sinalizados saem de Recebidos;
   // no WhatsApp, uma nova mensagem do cliente depois da sinalização faz a conversa voltar.
@@ -4673,6 +4675,10 @@ ${recentMessages}
           horario: (conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at) ? format(new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
           sinalizado: convSinalizada(conv),
+          ...(normalizarTelefone(conv.customer?.telefone) ? {
+            ignorarOpcoes: [{ rotulo: `Ignorar número ${conv.customer?.telefone}`, tipo: "telefone" as const, valor: normalizarTelefone(conv.customer?.telefone) }],
+            onIgnorar: (tipo: TipoIgnorado, valor: string) => void ignorarRemetente(tipo, valor),
+          } : {}),
           onSinalizar: () => void alternarSinalizacao("whatsapp", conv.id, !convSinalizada(conv)),
           selecionado: selectedConversation === conv.id || (!!conv.customer_id && conversations.find((c: any) => c.id === selectedConversation)?.customer_id === conv.customer_id),
           onClick: () => {
@@ -4705,6 +4711,11 @@ ${recentMessages}
           urgencia: classificarUrgencia(`${email.subject || ""} ${String((email as any).body || "").replace(/<[^>]+>/g, " ").slice(0, 600)}`) ?? undefined,
           canal: "email",
           origem: "E-mail",
+          ignorarOpcoes: [
+            { rotulo: `Ignorar ${extrairEmail(email.from_email)}`, tipo: "email" as const, valor: extrairEmail(email.from_email) },
+            ...(dominioDe(email.from_email || "") ? [{ rotulo: `Ignorar todo o domínio @${dominioDe(email.from_email || "")}`, tipo: "dominio" as const, valor: dominioDe(email.from_email || "") }] : []),
+          ],
+          onIgnorar: (tipo: TipoIgnorado, valor: string) => void ignorarRemetente(tipo, valor),
           sinalizado: emailSinalizado(email),
           onSinalizar: () => void alternarSinalizacao("email", email.id, !emailSinalizado(email)),
           horario: (email as any).created_at ? format(new Date((email as any).created_at), "HH:mm") : "",
