@@ -9,6 +9,8 @@ import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
 import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 
+import { lazy, Suspense } from "react";
+const EmpresasLazy = lazy(() => import("@/pages/Empresas"));
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
@@ -95,8 +97,11 @@ export function UnifiedDetailsPanel({
     const id = empresa?.id || empresaId;
     if (!id) return;
     const nomeEmpresa = empresa?.nome_fantasia || empresa?.nome || empresa?.company_fantasia || empresa?.company_name || nome;
-    abrirExtrasDaEmpresa({ tipo, empresaId: id, empresaNome: nomeEmpresa });
+    abrirExtraInline({ tipo, empresaId: id });
   };
+  const [extraInline, setExtraInline] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string } | null>(null);
+  const abrirExtraInline = (v: { tipo: "localizacao" | "qualificacao"; empresaId: string }) =>
+    setExtraInline((atual) => (atual && atual.tipo === v.tipo && atual.empresaId === v.empresaId ? null : v));
   const [contatoOpen, setContatoOpen] = useState(true);
   const [extrasOpen, setExtrasOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
@@ -297,7 +302,7 @@ export function UnifiedDetailsPanel({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
+    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-card">
       {/* PARTE 1 - Nome da Empresa/Cliente */}
       <div className="relative p-4 border-b flex-shrink-0">
         {onOcultar && (
@@ -321,7 +326,7 @@ export function UnifiedDetailsPanel({
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
+      <div className="flex-1 p-4 space-y-4">
         
         {/* PARTE 2 - Empresa Vinculada - Colapsável */}
         <Collapsible open={empresasOpen} onOpenChange={setEmpresasOpen}>
@@ -753,6 +758,21 @@ export function UnifiedDetailsPanel({
                     <ShieldCheck className="w-3.5 h-3.5 mr-2 text-primary" />
                     Ver qualificação
                   </Button>
+                  {extraInline && (
+                    <div className="mt-1 rounded-md border border-border bg-background">
+                      <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5">
+                        <span className="text-xs font-semibold">{extraInline.tipo === "localizacao" ? "Localização" : "Qualificação"}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" title="Recolher" onClick={() => setExtraInline(null)}>
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="min-w-0 overflow-x-hidden">
+                        <Suspense fallback={<div className="py-6 text-center text-xs text-muted-foreground">Carregando...</div>}>
+                          <EmpresasLazy key={`${extraInline.empresaId}-${extraInline.tipo}`} empresaIdInicial={extraInline.empresaId} abaInicial={extraInline.tipo} onFecharEmbutido={() => setExtraInline(null)} />
+                        </Suspense>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -813,7 +833,7 @@ export function UnifiedDetailsPanel({
                 className="w-full justify-start text-xs"
                 onClick={() => {
                   const nomeEmpresa = emp?.nome_fantasia || emp?.nome || emp?.company_fantasia || emp?.company_name || "empresa";
-                  abrirExtrasDaEmpresa({ tipo: extrasPicker.tipo, empresaId: emp.id, empresaNome: nomeEmpresa });
+                  abrirExtraInline({ tipo: extrasPicker.tipo, empresaId: emp.id });
                   setExtrasPicker(null);
                 }}
               >
