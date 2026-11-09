@@ -3897,6 +3897,7 @@ ${recentMessages}
   };
   // Potenciais: clientes sugeridos por dados e comportamento, sempre com o motivo visível.
   const [potenciais, setPotenciais] = useState<Potencial[]>([]);
+  const [creditoLocal, setCreditoLocal] = useState<Record<string, SituacaoCredito>>({});
   const [dispensarAlvo, setDispensarAlvo] = useState<{ id: string; nome: string } | null>(null);
   const potenciaisPorCliente = useMemo(() => new Map(potenciais.map((p) => [p.clienteId, p])), [potenciais]);
 
