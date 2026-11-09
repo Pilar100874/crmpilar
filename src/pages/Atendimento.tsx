@@ -96,6 +96,7 @@ import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBa
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
+import { pendenciasCadastro } from "@/lib/atendimento/pendenciasCadastro";
 import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel, ContactForBulkSend, ConfigCampanhaIa } from "@/components/envio-massa";
@@ -4722,6 +4723,16 @@ ${recentMessages}
         onOrcamentosCentro: envolve(item.onOrcamentosCentro),
         onOrcamento: envolve(item.onOrcamento),
       };
+    });
+
+    // Aviso de cadastro incompleto no cartão (mesma regra do painel de cadastro).
+    const contatoPorId = new Map(contatosComIndicadores.map((c: any) => [c.id, c]));
+    comSelecao = comSelecao.map((item) => {
+      const c: any = item.contactId ? contatoPorId.get(item.contactId) : null;
+      if (!c) return item;
+      const faltas = pendenciasCadastro({ nome: c.nome, telefone: c.tel, whatsapp: c.telefone, email: c.email, companies: c.companies })
+        .filter((f) => f !== "CNPJ/CPF da empresa");
+      return faltas.length ? { ...item, cadastroFaltando: faltas } : item;
     });
 
     // Discador ativo: destaca o card do contato que está sendo ligado
