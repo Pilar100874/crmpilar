@@ -75,7 +75,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     oQueE: "O sistema sugere clientes com chance de compra e sempre mostra o motivo.",
     regraNegocio: "Quem compra a cada X dias, tem orçamento parado, parou de comprar ou caiu de volume precisa ser procurado antes do concorrente. Nada vira tarefa sozinho: você decide.",
     comoUsar: ["Abra a aba Potenciais.", "Leia o motivo no cartão.", "No menu ⋮ do cartão: copie a mensagem sugerida, agende retorno ou marque Sem interesse agora.", "As regras ficam no menu ⋮ ao lado de Contatos → Regras de clientes potenciais."],
-    alvo: "fila-potenciais",
+    alvo: "fila-abas",
     simular: () => {
       const hoje = Date.now();
       const orcs: OrcPotencial[] = [
