@@ -45,7 +45,7 @@ import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
 import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
 import { RemetentesIgnoradosDialog } from "./RemetentesIgnoradosDialog";
 import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
-import { SimulacoesAtendimentoDialog } from "./SimulacoesAtendimentoDialog";
+import { GraduationCap } from "lucide-react";
 import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
@@ -300,13 +300,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         }}
       />
       <TutorialAtendimentoDialog open={tutorialAberto} onOpenChange={setTutorialAberto} />
-      <SimulacoesAtendimentoDialog
-        open={simulacoesAberto}
-        onOpenChange={(v) => {
-          setSimulacoesAberto(v);
-          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
-        }}
-      />
       <RemetentesIgnoradosDialog
         open={ignoradosAberto}
         onOpenChange={(v) => {
@@ -360,6 +353,15 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 <SelectItem value="nome">Nome</SelectItem>
               </SelectContent>
             </Select>
+            <button
+              type="button"
+              onClick={() => setTutorialAberto(true)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-muted transition-colors"
+              aria-label="Tour interativo do Atendimento"
+              title="Tour interativo do Atendimento"
+            >
+              <GraduationCap className="h-4 w-4" />
+            </button>
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
@@ -372,9 +374,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => { setTimeout(() => setTutorialAberto(true), 0); }}>Guia completo do Atendimento</DropdownMenuItem>
-                {ehAdmin && <DropdownMenuItem onSelect={() => { setTimeout(() => setSimulacoesAberto(true), 0); }}>Simulações do Atendimento (admin)</DropdownMenuItem>}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>
