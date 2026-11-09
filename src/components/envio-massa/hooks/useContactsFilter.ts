@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from '../types';
+import { numeroParaChamada } from '../numeroChamada';
 
 interface CampaignPermissions {
   id: string;
@@ -32,8 +33,11 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
   const contactsByChannel = useMemo(() => {
     if (!canal) return contacts;
     
+    if (canal === 'telefone' || canal === 'ia') {
+      return contacts.filter(c => numeroParaChamada(c)).map(c => ({ ...c, telefone: numeroParaChamada(c) }));
+    }
     return contacts.filter(c => {
-      if (canal === 'whatsapp' || canal === 'telefone' || canal === 'ia') return !!c.telefone;
+      if (canal === 'whatsapp') return !!c.telefone;
       if (canal === 'email') return !!c.email;
       return true;
     });
@@ -197,6 +201,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
           id,
           nome,
           telefone,
+          tel,
           email,
           tags,
           created_at,
@@ -280,6 +285,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
           id: c.id,
           nome: c.nome || 'Sem nome',
           telefone: c.telefone,
+          tel: c.tel,
           email: c.email,
           empresa: c.customer_empresas?.[0]?.empresas?.nome_fantasia || 
                    c.customer_empresas?.[0]?.empresas?.nome || null,

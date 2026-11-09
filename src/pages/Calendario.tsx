@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { avisoMisturaDiaTodo, detectarDestinoCalendario, prepararMovimento, selecaoNaMesmaData } from "@/lib/calendario/movimentacao";
-import { dataPrevistaAtraso, tarefaAtrasada } from "@/lib/calendario/atrasos";
+import { dataPrevistaAtraso, tarefaAtrasada, filtroRealocacaoDiaria } from "@/lib/calendario/atrasos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -892,15 +892,18 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
       }
 
       // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
-      // atual — pendências com data anterior (ou remarcadas para outro dia) voltam
-      // para hoje, preservando a data original ("Deveria ter contatado em").
-      if (realocacaoRef.current) {
+      // atual — somente datas vencidas voltam para hoje, nunca retornos futuros.
+      // Ler a configuração antes da atualização evita a corrida com loadRegras.
+      const { data: regraRealocacao, error: erroRegraRealocacao } = await supabase
+        .from('calendario_regras').select('ativa')
+        .eq('estabelecimento_id', estabelecimentoId).eq('tipo', 'realocacao_diaria_tarefas').maybeSingle();
+      if (!erroRegraRealocacao && (regraRealocacao?.ativa ?? true)) {
         const hojeStr = format(new Date(), 'yyyy-MM-dd');
         let alinhar = (supabase as any)
           .from('calendario_tarefas')
           .update({ date: hojeStr })
           .eq('estabelecimento_id', estabelecimentoId)
-          .or(`date.lt.${hojeStr},and(data_original.lt.${hojeStr},date.neq.${hojeStr})`)
+          .or(filtroRealocacaoDiaria(hojeStr))
           .not('status', 'in', '("concluido","cancelado","completed")');
         if (isAdmin) {
           if (selectedUserIds.length > 0) alinhar = alinhar.in('user_id', selectedUserIds);

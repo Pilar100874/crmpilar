@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { aplicarRegrasDiscagem } from "../_shared/regrasDiscagem.ts";
+import { destinoTransferencia } from "../_shared/transferenciaConfirmada.ts";
 
 /**
  * Ponte do aplicativo Android "Pilar Voz" com o CRM.
@@ -267,12 +268,7 @@ Deno.serve(async (req) => {
         const cc = (await sb.from("voz_chamadas").select("modo, ramal_monitorado, transcricao, objetivo")
           .eq("id", c.id).maybeSingle()).data as SB;
         const falas = (cc?.transcricao ?? []) as { papel: string; texto: string }[];
-        let transferido = corpo.transferido_para ? String(corpo.transferido_para) : null;
-        // Aparelhos antigos não avisam a transferência: deduz pela última fala da IA.
-        const ultimaIa = [...falas].reverse().find((f) => f.papel === "agente")?.texto ?? "";
-        if (!transferido && cc?.modo === "ligar" && cc.ramal_monitorado && /atendente|transfer|passar|vou te passar|um momento/i.test(ultimaIa)) {
-          transferido = String(cc.ramal_monitorado);
-        }
+        const transferido = destinoTransferencia(corpo);
         let resumo: string | null = null;
         if (transferido && falas.length >= 2) {
           try { resumo = await resumir(falas, cc?.objetivo ?? null); } catch (e) { console.error("resumo", e); }
