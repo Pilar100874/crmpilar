@@ -4103,7 +4103,27 @@ ${recentMessages}
 
   // Fonte estável da aba "Recebidos": não depende da aba, agenda, pasta ou contato selecionado.
   // WhatsApp não respondido: a última mensagem da conversa foi enviada pelo cliente.
+  // Remetentes ignorados (não são clientes) — gerenciados/reativados no menu ⋮ da fila.
+  const [remetentesIgnorados, setRemetentesIgnorados] = useState<RemetenteIgnorado[]>([]);
+  const carregarIgnorados = useCallback(() => {
+    void (supabase as any).from("recebidos_ignorados").select("id, tipo, valor").then(({ data }: any) => setRemetentesIgnorados(data || []));
+  }, []);
+  useEffect(() => {
+    carregarIgnorados();
+    window.addEventListener("recebidos-ignorados:atualizar", carregarIgnorados);
+    return () => window.removeEventListener("recebidos-ignorados:atualizar", carregarIgnorados);
+  }, [carregarIgnorados]);
+  const ignorarRemetente = useCallback(async (tipo: TipoIgnorado, valor: string) => {
+    if (!valor) return;
+    const { error } = await (supabase as any).from("recebidos_ignorados")
+      .upsert({ tipo, valor, criado_por_nome: usuarioNome || null }, { onConflict: "estabelecimento_id,tipo,valor" });
+    if (error) { toast.error("Não foi possível ignorar o remetente"); return; }
+    setRemetentesIgnorados((l) => [...l, { tipo, valor }]);
+    toast.success("Remetente ignorado — reative em ⋮ › Remetentes ignorados");
+  }, [usuarioNome]);
+
   const conversasRecebidasBase = useMemo(() => conversations.filter((conv) =>
+    !telefoneIgnorado(conv.customer?.telefone, remetentesIgnorados) &&
     conv.chat_status !== "encerrado" &&
     !!conv.lastCustomerMessage &&
     (!conv.lastMessage || conv.lastMessage.sender === "customer" ||
