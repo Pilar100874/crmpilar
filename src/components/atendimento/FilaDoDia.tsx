@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
-import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
+import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, Ban, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -43,6 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
 import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
+import { RemetentesIgnoradosDialog } from "./RemetentesIgnoradosDialog";
 import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
 import { SimulacoesAtendimentoDialog } from "./SimulacoesAtendimentoDialog";
 import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
@@ -82,6 +83,9 @@ export interface FilaItem {
   /** Recebidos: item sinalizado como tratado sem resposta. */
   sinalizado?: boolean;
   onSinalizar?: () => void;
+  /** Recebidos: opções para ignorar o remetente (não é cliente). */
+  ignorarOpcoes?: { rotulo: string; tipo: "email" | "dominio" | "telefone"; valor: string }[];
+  onIgnorar?: (tipo: "email" | "dominio" | "telefone", valor: string) => void;
   /** Recebidos: classificação de urgência do texto (IA de palavras-chave). */
   urgencia?: NivelUrgencia;
   /** Situação de crédito da empresa principal do contato. */
@@ -192,6 +196,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [prazosAberto, setPrazosAberto] = useState(false);
   const [regrasPotenciaisAberto, setRegrasPotenciaisAberto] = useState(false);
   const [automacoesAberto, setAutomacoesAberto] = useState(false);
+  const [ignoradosAberto, setIgnoradosAberto] = useState(false);
   const [tutorialAberto, setTutorialAberto] = useState(false);
   const [simulacoesAberto, setSimulacoesAberto] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
@@ -302,6 +307,13 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
           if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
         }}
       />
+      <RemetentesIgnoradosDialog
+        open={ignoradosAberto}
+        onOpenChange={(v) => {
+          setIgnoradosAberto(v);
+          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
+        }}
+      />
       <AutomacoesAtendimentoDialog
         open={automacoesAberto}
         onOpenChange={(v) => {
@@ -366,6 +378,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setIgnoradosAberto(true), 0); }}>Remetentes ignorados</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}
@@ -694,6 +707,22 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         <Flag className="h-3 w-3" /> {item.sinalizado ? "Sinalizado · desfazer" : "Sinalizar"}
                       </button>
                     )}
+                    {item.onIgnorar && item.ignorarOpcoes?.length ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button type="button" title="Não é cliente — ignorar remetente"
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-1 mr-1 inline-flex h-6 items-center gap-1 rounded-md border border-border/60 bg-card px-2 text-[10px] font-semibold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
+                            <Ban className="h-3 w-3" /> Não é cliente
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                          {item.ignorarOpcoes.map((o) => (
+                            <DropdownMenuItem key={o.tipo + o.valor} onSelect={() => item.onIgnorar!(o.tipo, o.valor)}>{o.rotulo}</DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : null}
                     {item.contactId && pendencias.includes(item.contactId) && (
                       <button type="button" title="Finalizar atendimento (próximo contato)"
                         onClick={(e) => {

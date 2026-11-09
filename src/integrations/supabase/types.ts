@@ -24892,6 +24892,36 @@ export type Database = {
           },
         ]
       }
+      recebidos_ignorados: {
+        Row: {
+          criado_em: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          estabelecimento_id: string
+          id: string
+          tipo: string
+          valor: string
+        }
+        Insert: {
+          criado_em?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          estabelecimento_id?: string
+          id?: string
+          tipo: string
+          valor: string
+        }
+        Update: {
+          criado_em?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          estabelecimento_id?: string
+          id?: string
+          tipo?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       recebidos_sinalizados: {
         Row: {
           id: string
