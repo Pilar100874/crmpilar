@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { CamposAgenteEditor } from "@/components/telefonia/CamposAgenteEditor";
+import { lerCampos } from "@/lib/voz/camposAgente";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
