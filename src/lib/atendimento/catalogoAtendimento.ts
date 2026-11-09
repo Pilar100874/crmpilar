@@ -42,6 +42,8 @@ export interface RecursoAtendimento {
   comoUsar: string[];
   /** Elemento da tela destacado no tutorial (atributo data-tour). */
   alvo?: string;
+  /** Prática obrigatória no tour: o usuário precisa clicar/preencher o alvo para avançar. */
+  pratica?: { tipo: "clicar" | "preencher"; alvo: string; instrucao: string };
   /** Simulação em memória: não envia mensagens nem grava dados. */
   simular: () => PassoSimulacao[];
 }
@@ -84,6 +86,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Agendados são compromissos já marcados; Recebidos são clientes esperando resposta; Potenciais são oportunidades calculadas pelo sistema. Separar ajuda a atender primeiro quem já está esperando.",
     comoUsar: ["Escolha uma aba no topo da lista.", "Use os ícones de canal para filtrar por WhatsApp, e-mail ou telefone.", "Clique no cartão para abrir o cliente; ele fica destacado enquanto estiver aberto."],
     alvo: "fila-abas",
+    pratica: { tipo: "clicar", alvo: "fila-abas", instrucao: "Clique em uma das abas destacadas (Tudo, Agendados, Recebidos ou Potenciais)." },
     simular: () => {
       const lista = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const p1 = proximoDaFila(lista, "a");
@@ -103,6 +106,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Nenhum cliente pode ficar sem próximo contato: assim a carteira não esfria e o cliente não compra do concorrente por falta de retorno.",
     comoUsar: ["Atenda o cliente normalmente.", "Ao trocar de contato sem finalizar, o cartão fica com aviso de pendência.", "Clique de novo no cartão para reabrir a barra e finalize com a próxima data.", "Use o filtro Não finalizados para ver todas as pendências."],
     alvo: "fila-nao-finalizados",
+    pratica: { tipo: "clicar", alvo: "fila-nao-finalizados", instrucao: "Clique no filtro de Não finalizados destacado." },
     simular: () => {
       const pend = ["joao", "maria"];
       return [
@@ -193,6 +197,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Todo cliente que recebe o disparo já ganha a data do próximo contato, e quem recebeu algo nos últimos dias não recebe de novo por outro canal.",
     comoUsar: ["Clique em Disparo em massa e escolha o canal.", "Selecione os clientes (a aba Potenciais traz o motivo).", "Use variáveis como {{contato}}, {{motivo}} e {{produto}}.", "Acompanhe o envio um a um e cancele se precisar."],
     alvo: "fila-disparo",
+    pratica: { tipo: "clicar", alvo: "fila-disparo", instrucao: "Clique no botão de Disparo em massa destacado." },
     simular: () => {
       ganchosPotenciais.set("sim-1", { tipo: "recompra", motivo: "Compra a cada 20 dias", produto: "Papel toalha" } as any);
       const texto = substituirVariaveis("Olá {{contato}}, {{motivo}} — {{produto}}", { id: "sim-1", nome: "Ana", telefone: null, email: null });
@@ -212,6 +217,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Cada empresa ajusta prazos e regras ao seu jeito de vender, sem depender de suporte.",
     comoUsar: ["Clique nos 3 pontinhos ao lado de Contatos.", "Escolha a definição e salve."],
     alvo: "fila-menu",
+    pratica: { tipo: "clicar", alvo: "fila-menu", instrucao: "Clique nos 3 pontinhos destacados para ver as definições." },
     simular: () => [passo("Prazos e regras padrão estão disponíveis", CONFIG_PADRAO.protecao.limite > 0)],
   },
 {
