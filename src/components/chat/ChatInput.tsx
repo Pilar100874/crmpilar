@@ -167,6 +167,8 @@ export default function ChatInput({
   
   // Agent Assist states
   const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
+  const [sugestoesIa, setSugestoesIa] = useState<{ titulo: string; texto: string }[]>([]);
+  useEffect(() => { setSugestoesIa([]); }, [conversationId]);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   
   const [isTranslating, setIsTranslating] = useState(false);
@@ -678,9 +680,11 @@ export default function ChatInput({
         body: { conversationId, messages: conversationMessages.slice(-10) }
       });
       if (response.error) throw response.error;
-      const suggestion = response.data?.suggestion;
-      if (suggestion) {
-        setMessage(suggestion);
+      const lista = (response.data?.sugestoes ?? []) as { titulo: string; texto: string }[];
+      if (lista.length > 1) {
+        setSugestoesIa(lista);
+      } else if (response.data?.suggestion) {
+        setMessage(response.data.suggestion);
         toast.success("Sugestão gerada!");
       }
     } catch (error) {
@@ -1308,6 +1312,27 @@ export default function ChatInput({
       <div className="relative overflow-visible">
         {/* Main input container */}
         <div className="relative z-10 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible">
+          {/* Copiloto: respostas sugeridas pela IA */}
+          {conversationId && conversationMessages.length > 0 && (
+            <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1">
+              {sugestoesIa.length === 0 ? (
+                <button type="button" disabled={isGeneratingContextResponse || disabled} onClick={() => { void handleGenerateContextResponse(); }}
+                  className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-[11px] font-semibold text-warning hover:bg-warning/20 disabled:opacity-60">
+                  {isGeneratingContextResponse ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Sugerir respostas
+                </button>
+              ) : (
+                <>
+                  {sugestoesIa.map((s, i) => (
+                    <button key={i} type="button" title={s.texto} onClick={() => { setMessage(s.texto); setSugestoesIa([]); textareaRef.current?.focus(); }}
+                      className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
+                      <Sparkles className="h-3 w-3 shrink-0" /><span className="truncate">{s.titulo}</span>
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => setSugestoesIa([])} className="text-[11px] text-muted-foreground hover:text-foreground">Fechar</button>
+                </>
+              )}
+            </div>
+          )}
           {/* Input row */}
           <div className="flex items-end gap-2 overflow-visible relative z-10">
             {/* Expandable Tools Menu - positioned to expand upward */}
