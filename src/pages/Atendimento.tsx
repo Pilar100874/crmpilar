@@ -12,7 +12,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
-import { FilaDoDia, type FilaItem, type FilaCanal } from "@/components/atendimento/FilaDoDia";
+import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
+import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
+import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
+import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
 import { ChamadaRecebidaDialog, type ContatoBinado } from "@/components/atendimento/ChamadaRecebidaDialog";
@@ -3886,10 +3889,14 @@ ${recentMessages}
     : undefined;
 
   // Filtro das abas da Fila do dia controla a origem dos contatos (substitui a flag "Usar agenda")
-  const [filtroFila, setFiltroFila] = useState<"tudo" | "agendados" | "recebidos">(() => (usarAgenda ? "agendados" : "tudo"));
-  const aoTrocarFiltroFila = (valor: "tudo" | "agendados" | "recebidos") => {
+  const [filtroFila, setFiltroFila] = useState<FiltroFila>(() => (usarAgenda ? "agendados" : "tudo"));
+  const aoTrocarFiltroFila = (valor: FiltroFila) => {
     setFiltroFila(valor);
   };
+  // Potenciais: clientes sugeridos por dados e comportamento, sempre com o motivo visível.
+  const [potenciais, setPotenciais] = useState<Potencial[]>([]);
+  const [dispensarAlvo, setDispensarAlvo] = useState<{ id: string; nome: string } | null>(null);
+  const potenciaisPorCliente = useMemo(() => new Map(potenciais.map((p) => [p.clienteId, p])), [potenciais]);
 
   // Base de contatos das abas Tel / Chats / E-mails
   const contatosPendentes = useContatosPendentes(pendenciasAtendimento);
@@ -4442,8 +4449,10 @@ ${recentMessages}
 
     // Aba "Tudo": todos os contatos vinculados ao usuário (ou aos usuários que ele está vendo),
     // um cartão por contato — não por tarefa.
-    if (filtroFila === "tudo") {
+    if (filtroFila === "tudo" || filtroFila === "potenciais") {
       contatosComIndicadores.forEach((contato) => {
+        const pot = filtroFila === "potenciais" ? potenciaisPorCliente.get(contato.id) : undefined;
+        if (filtroFila === "potenciais" && !pot) return;
         const ce = contato.companies || [];
         const principal = ce.find((c: any) => c.is_primary) || ce[0];
         const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4456,11 +4465,17 @@ ${recentMessages}
               : "telefone";
         lista.push({
           id: `contato-${contato.id}`,
-          tipo: "agendado",
+          tipo: pot ? "potencial" : "agendado",
+          potencial: pot ? { rotulo: ROTULO_TIPO[pot.tipo], motivos: pot.motivos } : undefined,
+          menuItems: pot ? [
+            { label: "Copiar mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).then(() => toast.success("Mensagem copiada")); } },
+            { label: "Agendar retorno", onClick: () => { setHistoricoCliente(null); setOrcamentosCliente(null); setAgendaContato({ id: contato.id, nome: contato.nome }); } },
+            { label: "Sem interesse agora", onClick: () => setDispensarAlvo({ id: contato.id, nome: contato.nome }) },
+          ] : undefined,
           contactId: contato.id,
           nome: contato.nome,
           empresa: empresaNome,
-          motivo: contato.referencia || "Meu contato",
+          motivo: pot ? pot.motivo : contato.referencia || "Meu contato",
           canal,
           horario: (contato.diasAtraso || 0) > 0
             ? (contato.horarioAtraso || (contato.horario || "").slice(0, 5))
@@ -4693,7 +4708,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -4744,7 +4759,19 @@ ${recentMessages}
     tudo: contatosVinculados.length,
     agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados]);
+    potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
+
+  const chaveContatosPotenciais = useMemo(() => contatosVinculados.map((c: any) => c.id).sort().join(","), [contatosVinculados]);
+  useEffect(() => {
+    if (!estabelecimentoId || !chaveContatosPotenciais) { setPotenciais([]); return; }
+    let ativo = true;
+    const carregar = () => { void carregarPotenciais(estabelecimentoId, chaveContatosPotenciais.split(",")).then((r) => { if (ativo) setPotenciais(r); }).catch(() => {}); };
+    carregar();
+    window.addEventListener("atendimento:potenciais-alterados", carregar);
+    window.addEventListener(EVENTO_TAREFAS_ALTERADAS, carregar);
+    return () => { ativo = false; window.removeEventListener("atendimento:potenciais-alterados", carregar); window.removeEventListener(EVENTO_TAREFAS_ALTERADAS, carregar); };
+  }, [estabelecimentoId, chaveContatosPotenciais]);
 
   // Fontes da tela de disparo em massa (mesmas regras das abas Tudo/Agendados/Recebidos)
   const fontesDisparo = useMemo(() => ({
@@ -6803,6 +6830,7 @@ ${recentMessages}
             )}
 
         {/* Fila do dia - lista unificada (visual da referência) */}
+        <DispensarPotencialDialog alvo={dispensarAlvo} usuarioId={usuarioId || null} onClose={() => setDispensarAlvo(null)} />
         <FilaDoDia
           items={filaItems}
           tablet={isTablet}
@@ -7087,7 +7115,7 @@ ${recentMessages}
             <DisparoMassaPanel
               key={`disparo-desktop-${disparoNonce}`}
               fontes={fontesDisparo}
-              abaInicial={filtroFila}
+              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
               onClose={fecharDisparoMassa}
               onIniciarEnvio={iniciarEnvioDoDisparo}
               canalInicial={canalEnvioMassa ?? null}
@@ -8244,7 +8272,7 @@ ${recentMessages}
         <DisparoMassaPanel
           key={`disparo-mobile-${disparoNonce}`}
           fontes={fontesDisparo}
-              abaInicial={filtroFila}
+              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
           onClose={fecharDisparoMassa}
           onIniciarEnvio={iniciarEnvioDoDisparo}
           canalInicial={canalEnvioMassa ?? null}

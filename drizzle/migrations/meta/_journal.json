@@ -85,6 +85,13 @@
       "when": 1794260518089,
       "tag": "0011_tarefas_motivo_origem",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794261968179,
+      "tag": "0012_potenciais_regras",
+      "breakpoints": true
     }
   ]
 }

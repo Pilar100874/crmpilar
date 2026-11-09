@@ -30,3 +30,4 @@
 
 - Ligações com IA usam filtros inteligentes (src/lib/voz/publicoInteligente.ts) e o formulário da oferta vira o objetivo do comando; permissões do agente ficam em voz_agentes.config, assim aparelhos antigos funcionam sem mudança.
 - Every created task records modo_criacao (manual/automatico/inteligente) and motivo, shown via descreverOrigem in the task panel; cross-channel send throttling reads envio_massa follow-up tasks, so no separate send log is needed.
+- Potenciais (Atendimento queue tab) are computed on the fly by src/lib/atendimento/potenciais.ts from potenciais_config rules, never stored as tasks; dismissals live in potenciais_dispensas, so the list stays fresh without polluting the agenda.

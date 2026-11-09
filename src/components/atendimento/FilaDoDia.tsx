@@ -16,6 +16,7 @@ import {
   MoreVertical,
   MessageCircle,
   Inbox,
+  Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -40,12 +41,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
 
 export interface FilaItem {
   id: string;
-  tipo: "agendado" | "recebido";
+  tipo: "agendado" | "recebido" | "potencial";
+  /** Potenciais: motivo (sempre visível) de o cliente estar na lista. */
+  potencial?: { rotulo: string; motivos: string[] };
   contactId?: string | null;
   nome: string;
   empresa?: string;
@@ -76,7 +80,7 @@ export interface FilaItem {
   onSinalizar?: () => void;
 }
 
-type FiltroFila = "tudo" | "agendados" | "recebidos";
+export type FiltroFila = "tudo" | "agendados" | "recebidos" | "potenciais";
 type OrdenacaoFila = "prioridade" | "horario" | "nome";
 
 const CANAL_CONFIG: Record<FilaCanal, { label: string; icon: typeof Phone; cor: string; fundo: string; borda: string }> = {
@@ -123,7 +127,7 @@ interface FilaDoDiaProps {
   onFiltroChange?: (filtro: FiltroFila) => void;
   assumirContatos?: AssumirContatosConfig;
   /** Totais fixos de cada aba (não dependem da aba ativa). */
-  totais?: { tudo: number; agendados: number; recebidos: number };
+  totais?: { tudo: number; agendados: number; recebidos: number; potenciais?: number };
   /** Recebidos: alterna a visão dos itens sinalizados como tratados sem resposta. */
   verSinalizados?: boolean;
   onToggleSinalizados?: () => void;
@@ -166,6 +170,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [canaisAtivos, setCanaisAtivos] = useState<Set<FilaCanal>>(new Set());
   const [somenteNaoFinalizados, setSomenteNaoFinalizados] = useState(false);
   const [prazosAberto, setPrazosAberto] = useState(false);
+  const [regrasPotenciaisAberto, setRegrasPotenciaisAberto] = useState(false);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -183,6 +188,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const baseAba = useMemo(() => {
     if (filtro === "agendados") return items.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") return items.filter((item) => item.tipo === "recebido");
+    if (filtro === "potenciais") return items.filter((item) => item.tipo === "potencial");
     return items;
   }, [items, filtro]);
 
@@ -196,6 +202,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     let lista = items;
     if (filtro === "agendados") lista = lista.filter((item) => item.tipo === "agendado");
     if (filtro === "recebidos") lista = lista.filter((item) => item.tipo === "recebido");
+    if (filtro === "potenciais") lista = lista.filter((item) => item.tipo === "potencial");
     if (canaisAtivos.size > 0) lista = lista.filter((item) => temCanalItem(item, canaisAtivos));
     if (somenteNaoFinalizados) lista = lista.filter((item) => itemNaoFinalizado(item.contactId, pendencias));
 
@@ -222,10 +229,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
     { id: "agendados", label: "Agendados", total: totais?.agendados ?? totalAgendados },
     { id: "recebidos", label: "Recebidos", total: totais?.recebidos ?? totalRecebidos },
+    { id: "potenciais", label: "Potenciais", total: totais?.potenciais ?? items.filter((item) => item.tipo === "potencial").length },
   ];
 
   return (
     <div className="flex min-w-0 flex-col flex-1 min-h-0 overflow-x-hidden bg-background">
+      <RegrasPotenciaisDialog
+        open={regrasPotenciaisAberto}
+        onOpenChange={(v) => {
+          setRegrasPotenciaisAberto(v);
+          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
+        }}
+      />
       <PrazosProximoContatoDialog
         open={prazosAberto}
         onOpenChange={(v) => {
@@ -278,6 +293,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}
@@ -355,7 +371,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtros */}
-        <div className="mt-2.5 grid min-w-0 grid-cols-[0.7fr_1fr_1fr] gap-1" data-filtros-contatos>
+        <div className="mt-2.5 grid min-w-0 grid-cols-[0.6fr_1fr_1fr_1fr] gap-1" data-filtros-contatos>
           {chips.map((chip) => {
             const ativo = filtro === chip.id;
             return (
@@ -497,7 +513,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             </div>
             <p className="text-sm font-medium">Fila vazia</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {somenteNaoFinalizados ? "Nenhum contato com atendimento pendente de finalização" : vazioTexto || "Nenhum item para exibir"}
+              {somenteNaoFinalizados ? "Nenhum contato com atendimento pendente de finalização" : filtro === "potenciais" ? "Nenhum cliente potencial pelas regras atuais" : vazioTexto || "Nenhum item para exibir"}
             </p>
           </div>
         ) : (
@@ -508,11 +524,11 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 onClick={() => {
                   item.onClick();
                 }}
-                title={item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
+                title={item.tipo === "potencial" ? "Potencial" : item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
                    "group relative mb-3 overflow-hidden rounded-md border border-border/60 bg-card cursor-pointer transition-colors before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
                    tablet ? "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-3" : "flex items-center gap-3 px-3 py-3.5",
-                  item.atrasado ? "before:bg-destructive" : item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary",
+                  item.atrasado ? "before:bg-destructive" : item.tipo === "potencial" ? "before:bg-warning" : item.tipo === "recebido" ? "before:bg-success" : item.assumido ? "before:bg-info" : "before:bg-primary",
                   item.assumido && !item.selecionado && "bg-info/[0.05]",
                   item.selecionado
                     ? "bg-primary/10 ring-2 ring-primary/60 shadow-sm"
@@ -605,7 +621,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         </button>
                       </div>
                     )}
-                      <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id)}>
+                      {item.potencial && (
+                        <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-warning/10 px-2 py-1.5">
+                          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-warning">{item.potencial.rotulo}</p>
+                            {item.potencial.motivos.map((m) => <p key={m} className="break-words text-[11px] text-foreground">{m}</p>)}
+                          </div>
+                        </div>
+                      )}
+                      <div id={`proxima-acao-${item.id}`} hidden={!acoesExpandidas.has(item.id) || !!item.potencial}>
                       <div className="mt-1 flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-2">
                         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                         <div className="min-w-0">
