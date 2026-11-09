@@ -84,7 +84,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     titulo: "Fila de contatos e abas",
     oQueE: "Lista quem você deve atender hoje, separada em Tudo, Agendados, Recebidos e Potenciais.",
     regraNegocio: "Agendados são compromissos já marcados; Recebidos são clientes esperando resposta; Potenciais são oportunidades calculadas pelo sistema. Separar ajuda a atender primeiro quem já está esperando.",
-    comoUsar: ["Escolha uma aba no topo da lista.", "Use os ícones de canal para filtrar por WhatsApp, e-mail ou telefone.", "Clique no cartão para abrir o cliente; ele fica destacado enquanto estiver aberto."],
+    comoUsar: ["Escolha uma aba no topo da lista.", "Use os ícones de canal para filtrar por WhatsApp, e-mail ou telefone.", "Clique no cartão para abrir o cliente; ele fica destacado enquanto estiver aberto.", "Use as setas no topo da fila para abrir o próximo cliente ou voltar ao anterior."],
     alvo: "fila-abas",
     pratica: { tipo: "clicar", alvo: "fila-abas", instrucao: "Clique em uma das abas destacadas (Tudo, Agendados, Recebidos ou Potenciais)." },
     simular: () => {
