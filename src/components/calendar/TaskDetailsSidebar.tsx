@@ -73,6 +73,14 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
     return () => { cancelled = true; };
   }, [task.contactId, task.id]);
 
+  const [origemInfo, setOrigemInfo] = useState<InfoOrigem | null>(null);
+  useEffect(() => {
+    setOrigemInfo(null);
+    if (!task.id || creating) return;
+    void (supabase as any).from("calendario_tarefas").select("modo_criacao, motivo, origem, origem_sub_item, created_at")
+      .eq("id", task.id).maybeSingle().then(({ data }: any) => data && setOrigemInfo(data));
+  }, [task.id, creating]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -115,6 +123,7 @@ export function TaskDetailsSidebar({ task, onClose, onEdit, onDelete, onUpdate, 
           </div>
           <p className="flex items-start gap-2 text-xs"><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />{format(task.date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} · {task.time || (task.isAllDay ? "Dia todo" : "Sem horário")}</p>
         </div>}
+        {!creating && origemInfo && <OrigemAgendamento info={origemInfo} />}
         {editor}
         {!editor && <section>
           <div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">Contato</h3>{task.contactId && <Button variant="link" className="h-auto p-0 text-xs text-info" onClick={() => { onClose(); abrirHistoricoDoContato({ customerId: task.contactId, nome: name }); }}>Ver no CRM</Button>}</div>
