@@ -36,6 +36,32 @@ export function proximoDaFila<T extends { id: string }>(lista: T[], atualId?: st
   return lista[i + 1] ?? null;
 }
 
+// ---------------- Histórico de clientes abertos (voltar / avançar) ----------------
+export type HistoricoFila = { lista: string[]; i: number };
+
+export const HISTORICO_VAZIO: HistoricoFila = { lista: [], i: -1 };
+
+/**
+ * Registra o cliente que acabou de abrir. Se ele já estava no histórico (a pessoa
+ * voltou atrás), só move o ponteiro: nada é duplicado. Se abriu um cliente novo
+ * depois de ter voltado, o trecho "à frente" do ponteiro é descartado.
+ */
+export function registrarVisita(h: HistoricoFila, id: string | null): HistoricoFila {
+  if (!id) return h;
+  if (h.lista[h.i] === id) return h;
+  const ja = h.lista.lastIndexOf(id);
+  if (ja >= 0 && ja <= h.i) return { lista: h.lista, i: ja };
+  const base = h.lista.slice(0, h.i + 1);
+  return { lista: [...base, id], i: base.length };
+}
+
+/** Cliente ao lado do atual no histórico: -1 = anterior, +1 = avançar. Null se não houver. */
+export function vizinhoDoHistorico(h: HistoricoFila, direcao: -1 | 1): string | null {
+  const alvo = h.i + direcao;
+  if (alvo < 0 || alvo >= h.lista.length) return null;
+  return h.lista[alvo];
+}
+
 // ---------------- Termômetro da carteira ----------------
 export function termometroCarteira(pots: Potencial[]) {
   const risco = pots.filter((p) => p.tipo === "queda_volume" || p.tipo === "inativo").length;
