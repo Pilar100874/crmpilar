@@ -5,7 +5,7 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
-import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira } from "./copilotoAtendimento";
+import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, registrarVisita, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira, vizinhoDoHistorico, HISTORICO_VAZIO, type HistoricoFila } from "./copilotoAtendimento";
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
 import { pendenciasCadastro } from "./pendenciasCadastro";
