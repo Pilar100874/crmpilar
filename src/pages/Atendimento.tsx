@@ -84,7 +84,7 @@ import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendime
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { useRegistrosContato } from "@/hooks/useRegistrosContato";
-import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa } from "@/lib/atendimento/registrosContato";
+import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa, type RegistrosContato } from "@/lib/atendimento/registrosContato";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
 import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
@@ -8480,6 +8480,7 @@ interface MobileListContentProps {
   emailsNaoLidosPerEmail: Record<string, number>;
   chatsNaoLidosPerPhone: Record<string, number>;
   indicadoresPorContato: Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>;
+  registrosPorContato: Map<string, RegistrosContato>;
   agendaViewMode: 'default' | 'fluxo' | 'massa';
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
   setDiscadorModo: (modo: 'previa' | 'sequencial' | null) => void;
@@ -8546,6 +8547,7 @@ function MobileListContent({
   emailsNaoLidosPerEmail,
   chatsNaoLidosPerPhone,
   indicadoresPorContato,
+  registrosPorContato,
   agendaViewMode,
   setAgendaViewMode,
   setDiscadorModo,
