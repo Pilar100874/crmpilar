@@ -16,7 +16,7 @@ import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
 import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
-import { classificarUrgencia, repetirUltimoPedido, termometroCarteira, proximoDaFila, executarReguaOrcamentos, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
+import { classificarUrgencia, repetirUltimoPedido, termometroCarteira, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
@@ -4734,7 +4734,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -6264,6 +6264,7 @@ ${recentMessages}
           verSinalizados={verSinalizados}
           onToggleSinalizados={() => setVerSinalizados((v) => !v)}
           totalSinalizados={totalSinalizados}
+          termometro={termometro.total > 0 ? termometro : undefined}
                 />
               </div>
               <div className="flex flex-shrink-0 items-center gap-1 border-t border-border/50 bg-card px-2 py-1">
@@ -6877,6 +6878,7 @@ ${recentMessages}
           verSinalizados={verSinalizados}
           onToggleSinalizados={() => setVerSinalizados((v) => !v)}
           totalSinalizados={totalSinalizados}
+          termometro={termometro.total > 0 ? termometro : undefined}
         />
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
