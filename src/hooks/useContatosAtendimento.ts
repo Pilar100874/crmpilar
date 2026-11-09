@@ -59,7 +59,7 @@ export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
       if (customerIds.length) {
         const { data: customers, error: customersError } = await supabase
           .from("customers")
-          .select("id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) )")
+          .select("id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj, situacao_credito ) )")
           .in("id", customerIds.slice(0, 500));
         if (customersError) throw customersError;
         vinculadosDiretos = (customers ?? []).map((customer) => ({ customers: customer }));
@@ -76,7 +76,7 @@ export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
       if (empresaIds.length) {
         const { data: ce } = await supabase
           .from("customer_empresas")
-          .select("customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) ) )")
+          .select("customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj, situacao_credito ) ) )")
           .in("empresa_id", empresaIds.slice(0, 500));
         viaEmpresa = ce ?? [];
       }
