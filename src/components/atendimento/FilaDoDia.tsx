@@ -127,7 +127,7 @@ interface FilaDoDiaProps {
   onFiltroChange?: (filtro: FiltroFila) => void;
   assumirContatos?: AssumirContatosConfig;
   /** Totais fixos de cada aba (não dependem da aba ativa). */
-  totais?: { tudo: number; agendados: number; recebidos: number };
+  totais?: { tudo: number; agendados: number; recebidos: number; potenciais?: number };
   /** Recebidos: alterna a visão dos itens sinalizados como tratados sem resposta. */
   verSinalizados?: boolean;
   onToggleSinalizados?: () => void;

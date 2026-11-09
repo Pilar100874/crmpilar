@@ -18,6 +18,7 @@ export function DispensarPotencialDialog({ alvo, usuarioId, onClose }: { alvo: {
     setSalvando(true);
     try {
       const e = await getEstabelecimentoId();
+      if (!e) throw new Error("sem empresa");
       await dispensarPotencial(e, alvo.id, usuarioId, motivo, dias);
       toast.success(`${alvo.nome} volta aos potenciais em ${dias} dias`);
       onClose();
