@@ -99,6 +99,36 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     },
   },
   {
+    id: "navegacao-clientes",
+    modulo: "Fila e organização",
+    titulo: "Próximo cliente e cliente anterior",
+    oQueE: "Dois botões no topo da fila, ao lado do tour: um abre o próximo cliente, o outro volta para o cliente que você acabou de deixar.",
+    regraNegocio: "A fila é grande e o atendente pula de cliente em cliente. Navegar pelos botões do topo evita procurar o cartão na lista e perder o fio da conversa: o sistema lembra a ordem em que os clientes foram abertos.",
+    comoUsar: [
+      "Abra um cliente clicando no cartão.",
+      "Clique na seta para a direita para abrir o próximo da fila (atalho: Alt + seta para baixo).",
+      "Clique na seta para a esquerda para voltar ao cliente anterior (atalho: Alt + seta para cima).",
+      "Se você voltar atrás e depois abrir um cliente novo, a lista recomeça dali: a seta da direita retoma quem estava à frente.",
+    ],
+    alvo: "fila-navegacao",
+    pratica: { tipo: "clicar", alvo: "fila-navegacao", instrucao: "Clique em uma das setas destacadas no topo da fila (próximo ou anterior)." },
+    simular: () => {
+      const a = registrarVisita(HISTORICO_VAZIO, "joao");
+      const b = registrarVisita(a, "maria");
+      const c = registrarVisita(b, "pedro");
+      const voltou = registrarVisita(c, "joao");
+      const novo = registrarVisita(voltou, "ana");
+      return [
+        passo("Abrir clientes guarda a ordem", b.lista.join(" → ") === "joao → maria", `Histórico: ${b.lista.join(" → ")}`),
+        passo("Seta da esquerda devolve o cliente anterior", vizinhoDoHistorico(c, -1) === "maria"),
+        passo("Seta da direita avança para o seguinte do histórico", vizinhoDoHistorico(voltou, 1) === "maria"),
+        passo("Voltar atrás não duplica o cliente", voltou.lista.join(" → ") === "joao → maria → pedro", `Histórico: ${voltou.lista.join(" → ")}`),
+        passo("Abrir um cliente novo depois de voltar descarta o futuro", novo.lista.join(" → ") === "joao → ana", `Histórico: ${novo.lista.join(" → ")}`),
+        passo("Sem cliente aberto antes, não há para onde voltar", vizinhoDoHistorico({ lista: ["joao"], i: 0 } as HistoricoFila, -1) === null),
+      ];
+    },
+  },
+  {
     id: "finalizacao",
     modulo: "Atendimento e finalização",
     titulo: "Finalização obrigatória do atendimento",
