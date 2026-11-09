@@ -20,7 +20,8 @@ const brl = (v: unknown) => `R$ ${Number(v ?? 0).toFixed(2).replace(".", ",")}`;
 const dt = (s: unknown) => (s ? String(s).slice(0, 10).split("-").reverse().join("/") : "");
 
 /** Reúne o máximo de informação do CRM sobre o número da ligação para o modo "ajudar o atendente". */
-async function contextoCrm(sb: SB, empresa: string, numero: string): Promise<string> {
+const cacheCrm = new Map<string, { t: number; v: string }>();
+async function contextoCrm(sb: SB, empresa: string, numero: string, opts = { historico: true, pagamento: true }): Promise<string> {
   const d = dig(numero);
   if (d.length < 8) return "";
   const fim = d.slice(-8);
@@ -51,7 +52,7 @@ async function contextoCrm(sb: SB, empresa: string, numero: string): Promise<str
     ? sb.from("anotacoes_ligacao").select("texto,created_at").eq("customer_id", cli.id).order("created_at", { ascending: false }).limit(5)
     : Promise.resolve({ data: [] });
   const orcs = filtros.length
-    ? sb.from("orcamentos").select("id,etapa,status,valor_total,motivo_perda,observacoes,created_at, orcamento_itens(quantidade,preco_unitario,produtos(nome,codigo))")
+    ? sb.from("orcamentos").select("id,etapa,status,valor_total,motivo_perda,observacoes,created_at, condicoes_pagamento(nome), orcamento_itens(quantidade,preco_unitario,produtos(nome,codigo))")
       .eq("estabelecimento_id", empresa).or(filtros.join(",")).order("created_at", { ascending: false }).limit(8)
     : Promise.resolve({ data: [] });
   const pedRec = sb.from("pedidos_recebidos").select("numero_pedido,valor_total,status,data_pedido,created_at,itens_json")
@@ -61,18 +62,33 @@ async function contextoCrm(sb: SB, empresa: string, numero: string): Promise<str
   const [t, n, o, pr, pe] = await Promise.all([tarefas, notas, orcs, pedRec, pedEc]);
 
   const itens = (arr: SB[] | undefined, f: (i: SB) => string) => (arr ?? []).slice(0, 8).map(f).join("; ");
-  for (const x of o.data ?? []) {
+  for (const x of opts.historico ? o.data ?? [] : []) {
     p.push(`Orçamento ${dt(x.created_at)} — ${x.etapa}/${x.status}, ${brl(x.valor_total)}${x.motivo_perda ? `, perdido por: ${x.motivo_perda}` : ""}. Itens: ${itens(x.orcamento_itens, (i) => `${i.quantidade}x ${i.produtos?.nome ?? "produto"} a ${brl(i.preco_unitario)}`)}`);
   }
-  for (const x of pr.data ?? []) {
+  for (const x of opts.historico ? pr.data ?? [] : []) {
     const its = Array.isArray(x.itens_json) ? itens(x.itens_json, (i) => `${i.quantidade ?? ""}x ${i.nome ?? i.titulo ?? i.descricao ?? "item"}`) : "";
     p.push(`Compra ${dt(x.data_pedido ?? x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}${its ? `. Itens: ${its}` : ""}`);
   }
-  for (const x of pe.data ?? []) {
+  for (const x of opts.historico ? pe.data ?? [] : []) {
     p.push(`Compra loja virtual ${dt(x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}. Itens: ${itens(x.pedidos_ecommerce_itens, (i) => `${i.quantidade}x ${i.nome_produto}`)}`);
   }
   for (const x of n.data ?? []) p.push(`Anotação ${dt(x.created_at)}: ${String(x.texto).slice(0, 200)}`);
   for (const x of t.data ?? []) p.push(`Tarefa ${dt(x.date)} (${x.status}): ${x.title}${x.description ? ` — ${String(x.description).slice(0, 150)}` : ""}`);
+  // Hábitos: ciclo de compra e forma de pagamento habitual (orçamentos finalizados).
+  const fin = (o.data ?? []).filter((x: SB) => x.etapa === "finalizado");
+  if (opts.historico && fin.length) {
+    const datas = fin.map((x: SB) => Date.parse(x.created_at)).sort((a: number, b: number) => a - b);
+    const dias = Math.floor((Date.now() - datas[datas.length - 1]) / 86_400_000);
+    const ciclo = datas.length > 1 ? Math.round((datas[datas.length - 1] - datas[0]) / (datas.length - 1) / 86_400_000) : null;
+    p.unshift(`Hábito de compra: ${fin.length} pedido(s) recentes, último há ${dias} dias${ciclo ? `, compra em média a cada ${ciclo} dias` : ""}`);
+  }
+  if (opts.pagamento) {
+    const conds = fin.map((x: SB) => x.condicoes_pagamento?.nome).filter(Boolean);
+    if (conds.length) {
+      const cont = new Map<string, number>(); for (const c of conds) cont.set(c, (cont.get(c) ?? 0) + 1);
+      p.unshift(`Pagamento habitual: ${[...cont.entries()].sort((a, b) => b[1] - a[1])[0][0]}`);
+    }
+  }
   if (!p.length) return "\n\nDados do CRM: número não encontrado no cadastro (cliente novo ou não identificado).";
   return `\n\nDados do CRM sobre quem está na ligação (use para sugerir: relembre compras, retome orçamentos em aberto, contorne motivos de perda, ofereça reposição e produtos relacionados; nunca invente dados):\n- ${p.join("\n- ").slice(0, 6000)}`;
 }
@@ -219,12 +235,24 @@ Deno.serve(async (req) => {
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
         const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${corpo.objetivo}\n\n` : "";
         let crm = "";
-        if ((corpo.modo ?? "receber") === "assistir" || corpo.contexto_crm) {
+        const cfgA = (a.config ?? {}) as Record<string, unknown>;
+        const modoT = corpo.modo ?? "receber";
+        // Ligação de vendas: usa o histórico do cliente se o agente tiver permissão.
+        const vendas = modoT === "ligar" && (cfgA.usar_historico !== false || cfgA.usar_pagamento !== false);
+        if (modoT === "assistir" || corpo.contexto_crm || vendas) {
           let numero = String(corpo.numero ?? "");
           if (!numero && corpo.chamada_id) {
             numero = (await sb.from("voz_chamadas").select("numero").eq("id", String(corpo.chamada_id)).eq("estabelecimento_id", empresa).maybeSingle()).data?.numero ?? "";
           }
-          try { crm = await contextoCrm(sb, empresa, numero); } catch (e) { console.error("contexto CRM", e); }
+          const chave = `${empresa}:${corpo.chamada_id ?? numero}`;
+          const c = cacheCrm.get(chave);
+          if (c && Date.now() - c.t < 10 * 60_000) crm = c.v;
+          else {
+            const opts = vendas ? { historico: cfgA.usar_historico !== false, pagamento: cfgA.usar_pagamento !== false } : undefined;
+            try { crm = await contextoCrm(sb, empresa, numero, opts); cacheCrm.set(chave, { t: Date.now(), v: crm }); } catch (e) { console.error("contexto CRM", e); }
+          }
+          if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
+          if (vendas && crm) crm = crm.slice(0, 2500);
         }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",

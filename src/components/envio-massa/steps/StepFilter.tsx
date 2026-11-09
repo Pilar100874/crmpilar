@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
+import { PublicoInteligente } from "../PublicoInteligente";
 
 interface StepFilterProps {
   contacts: ContactForBulkSend[];
@@ -95,6 +96,9 @@ export function StepFilter({
               </Button>
             ))}
           </div>
+        )}
+        {(canal === 'ia' || canal === 'telefone') && (
+          <PublicoInteligente contacts={contacts} onAplicar={(sel) => onSelectContacts(sel)} />
         )}
         {/* Resumo Anti-Bloqueio */}
         {blockedContacts.length > 0 && (
