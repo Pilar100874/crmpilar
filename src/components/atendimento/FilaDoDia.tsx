@@ -513,7 +513,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             </div>
             <p className="text-sm font-medium">Fila vazia</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {somenteNaoFinalizados ? "Nenhum contato com atendimento pendente de finalização" : vazioTexto || "Nenhum item para exibir"}
+              {somenteNaoFinalizados ? "Nenhum contato com atendimento pendente de finalização" : filtro === "potenciais" ? "Nenhum cliente potencial pelas regras atuais" : vazioTexto || "Nenhum item para exibir"}
             </p>
           </div>
         ) : (
