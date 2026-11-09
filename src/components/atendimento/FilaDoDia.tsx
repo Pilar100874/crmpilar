@@ -13,6 +13,8 @@ import {
   MapPin,
   Send,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   MessageCircle,
   Inbox,
@@ -46,7 +48,7 @@ import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
 import { RemetentesIgnoradosDialog } from "./RemetentesIgnoradosDialog";
 import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
 import { GraduationCap } from "lucide-react";
-import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
+import { URGENCIA, SELO_CREDITO, proximoDaFila, registrarVisita, vizinhoDoHistorico, HISTORICO_VAZIO, type HistoricoFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
 
@@ -270,15 +272,39 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     return ordenada;
   }, [items, filtro, ordenacao, canaisAtivos, somenteNaoFinalizados, pendencias]);
 
-  const abrirProximo = () => {
-    const atual = visiveis.find((i) => i.selecionado)?.id ?? null;
-    const prox = proximoDaFila(visiveis, atual);
-    if (!prox) return;
-    prox.onClick();
-    setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(prox.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
-  };
+  /** Cliente aberto agora (mesmo que a aba filtrada não o mostre). */
+  const contatoAbertoId = useMemo(() => items.find((i) => i.selecionado)?.id ?? null, [items]);
+  const [historico, setHistorico] = useState<HistoricoFila>(HISTORICO_VAZIO);
   useEffect(() => {
-    const tecla = (e: KeyboardEvent) => { if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); abrirProximo(); } };
+    setHistorico((h) => registrarVisita(h, contatoAbertoId));
+  }, [contatoAbertoId]);
+
+  const itemPorId = (id: string | null) => (id ? items.find((i) => i.id === id) ?? null : null);
+  const abrirItem = (item: FilaItem | null) => {
+    if (!item) return;
+    item.onClick();
+    setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(item.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
+  };
+
+  const idAnterior = vizinhoDoHistorico(historico, -1);
+  const idAvancar = vizinhoDoHistorico(historico, 1);
+  const podeVoltar = !!itemPorId(idAnterior);
+  const proximoDaLista = useMemo(() => proximoDaFila(visiveis, contatoAbertoId), [visiveis, contatoAbertoId]);
+  const podeAvancar = !!itemPorId(idAvancar) || !!proximoDaLista;
+
+  const abrirAnterior = () => abrirItem(itemPorId(idAnterior));
+  const abrirProximo = () => {
+    const retomar = itemPorId(idAvancar);
+    if (retomar) { abrirItem(retomar); return; }
+    abrirItem(proximoDaLista);
+  };
+
+  useEffect(() => {
+    const tecla = (e: KeyboardEvent) => {
+      if (!e.altKey) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); abrirProximo(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); abrirAnterior(); }
+    };
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
   });
