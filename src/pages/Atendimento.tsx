@@ -8807,6 +8807,7 @@ function MobileListContent({
             selecionadoId={contatoTelefoneSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
         {activeTab === "tel" && (
@@ -8818,6 +8819,7 @@ function MobileListContent({
             selecionadoId={contatoTelefoneSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
 
@@ -9008,6 +9010,7 @@ function MobileListContent({
             selecionadoId={contatoEmailSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoEmail}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
 
