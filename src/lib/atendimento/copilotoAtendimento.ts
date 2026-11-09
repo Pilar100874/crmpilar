@@ -106,11 +106,11 @@ export async function executarReguaOrcamentos(estab: string, usuarioId: string) 
   const ids = [...new Set(lista.map((o) => o.clienteId))];
   const [{ data: tarefas }, { data: convs }] = await Promise.all([
     db.from("calendario_tarefas").select("origem_sub_item, description").eq("estabelecimento_id", estab).like("origem_sub_item", "regua_orc:%").gte("created_at", desde),
-    db.from("conversations").select("customer_id, last_customer_message_at, updated_at").in("customer_id", ids),
+    db.from("conversations").select("customer_id, sla_ultima_resposta_cliente_at").in("customer_id", ids),
   ]);
   const ja = new Set<string>((tarefas ?? []).map((t: any) => String(t.origem_sub_item).slice("regua_orc:".length)));
   const resp = new Map<string, number>();
-  for (const c of convs ?? []) { const t = Date.parse(c.last_customer_message_at || ""); if (Number.isFinite(t)) resp.set(c.customer_id, Math.max(t, resp.get(c.customer_id) ?? 0)); }
+  for (const c of convs ?? []) { const t = Date.parse(c.sla_ultima_resposta_cliente_at || ""); if (Number.isFinite(t)) resp.set(c.customer_id, Math.max(t, resp.get(c.customer_id) ?? 0)); }
   const plano = planejarRegua(lista, Date.now(), resp, ja);
   if (!plano.length) return 0;
   const { data: nomes } = await db.from("customers").select("id, nome").in("id", plano.map((p) => p.clienteId));
