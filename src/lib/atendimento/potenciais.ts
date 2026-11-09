@@ -90,7 +90,8 @@ export function calcularPotenciais(
       for (const o of compras) {
         const t = Date.parse(o.criado); if (hoje - t > janela) continue;
         const it = o.itens.find((i) => focoProd.has(i.produtoId) || (i.categoriaId && focoGrupo.has(i.categoriaId)));
-        if (it && (!ultimaFoco || t > ultimaFoco.t)) ultimaFoco = { t, nome: nomesProduto.get(it.produtoId) ?? "item em foco" };
+        if (it && (!ultimaFoco || t > ultimaFoco.t))
+          ultimaFoco = { t, nome: nomesProduto.get(it.produtoId) ?? cfg.acaoComercial.produtos.find((p) => p.id === it.produtoId)?.nome ?? "item em foco" };
       }
       if (ultimaFoco) {
         const d = Math.floor((hoje - ultimaFoco.t) / DIA);
