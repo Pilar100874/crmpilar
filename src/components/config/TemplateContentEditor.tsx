@@ -93,6 +93,8 @@ const VARIABLES = [
   { key: '{{empresa}}', label: 'Empresa' },
   { key: '{{whatsapp}}', label: 'WhatsApp' },
   { key: '{{email}}', label: 'E-mail' },
+  { key: '{{motivo}}', label: 'Motivo (potencial)' },
+  { key: '{{produto}}', label: 'Produto (potencial)' },
 ];
 
 // Sortable item component

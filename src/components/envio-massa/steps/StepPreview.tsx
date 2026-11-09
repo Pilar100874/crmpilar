@@ -43,7 +43,9 @@ export function StepPreview({
       .replace(/\{\{contato\}\}/gi, previewContact.nome)
       .replace(/\{\{empresa\}\}/gi, previewContact.empresa || 'N/A')
       .replace(/\{\{whatsapp\}\}/gi, previewContact.telefone || 'N/A')
-      .replace(/\{\{email\}\}/gi, previewContact.email || 'N/A');
+      .replace(/\{\{email\}\}/gi, previewContact.email || 'N/A')
+      .replace(/\{\{motivo\}\}/gi, 'comprou Papel Interfolhado há 30 dias')
+      .replace(/\{\{produto\}\}/gi, 'Papel Interfolhado');
   };
 
   const getFileIcon = (fileType?: string) => {
