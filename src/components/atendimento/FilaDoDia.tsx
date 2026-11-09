@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
+import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
 import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
@@ -179,6 +180,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [somenteNaoFinalizados, setSomenteNaoFinalizados] = useState(false);
   const [prazosAberto, setPrazosAberto] = useState(false);
   const [regrasPotenciaisAberto, setRegrasPotenciaisAberto] = useState(false);
+  const [automacoesAberto, setAutomacoesAberto] = useState(false);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -264,6 +266,13 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
           if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
         }}
       />
+      <AutomacoesAtendimentoDialog
+        open={automacoesAberto}
+        onOpenChange={(v) => {
+          setAutomacoesAberto(v);
+          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
+        }}
+      />
       <PrazosProximoContatoDialog
         open={prazosAberto}
         onOpenChange={(v) => {
@@ -317,6 +326,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     {botUsuario.botAtual ? `Bot: ${botUsuario.botAtual.nome}` : "Bot de atendimento"}

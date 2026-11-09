@@ -17,6 +17,8 @@ export interface ConfigPotenciais {
   quedaVolume: { ativo: boolean; percentual: number; janelaDias: number };
   crossSell: { ativo: boolean; pares: ParCrossSell[] };
   protecao: { limite: number; contatoRecenteDias: number; ignorarComTarefa: boolean };
+  roboIa: { ativo: boolean; horario: string; clientesPorDia: number; agenteId: string; remarcarDias: number; diasUteis: boolean };
+  plantao: { ativo: boolean; inicio: string; fim: string; sabado: boolean; domingo: boolean; texto: string };
 }
 
 export const CONFIG_PADRAO: ConfigPotenciais = {
@@ -27,6 +29,8 @@ export const CONFIG_PADRAO: ConfigPotenciais = {
   quedaVolume: { ativo: true, percentual: 50, janelaDias: 60 },
   crossSell: { ativo: false, pares: [] },
   protecao: { limite: 20, contatoRecenteDias: 3, ignorarComTarefa: true },
+  roboIa: { ativo: false, horario: "10:00", clientesPorDia: 10, agenteId: "", remarcarDias: 3, diasUteis: true },
+  plantao: { ativo: false, inicio: "08:00", fim: "18:00", sabado: false, domingo: false, texto: "Olá! Recebemos sua mensagem fora do nosso horário de atendimento. Retornaremos no primeiro horário útil." },
 };
 
 export const ROTULO_TIPO: Record<TipoPotencial, string> = {
