@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
 import { montarObjetivo } from "@/lib/voz/publicoInteligente";
-import { camposPendentes, lerCampos, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
+import { camposPendentes, camposUsaveis, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
   produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; texto: string;
@@ -84,7 +84,7 @@ export function StepComposeChamada({
   const mudarCampo = (id: string, valor: ValorCampo) => {
     const v = { ...valores, [id]: valor }; setValores(v); ultimosValores = v; emitir(oferta, v);
   };
-  const campos = lerCampos(agentes.find((a) => a.id === agenteIaId)?.config);
+  const campos = camposUsaveis(agentes.find((a) => a.id === agenteIaId)?.config);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (canal === "ia") emitir(oferta, valores); }, [agenteIaId, agentes.length]);
 
@@ -186,8 +186,10 @@ export function StepComposeChamada({
               <h4 className="font-medium text-sm">Informações para o agente</h4>
               {campos.map((c) => (
                 <div key={c.id} className="space-y-1.5 min-w-0">
-                  <Label className="text-xs">{c.rotulo}{c.obrigatorio && <span className="text-destructive"> *</span>}</Label>
-                  {c.tipo === "produto" ? (
+                  <Label className="text-xs">{c.rotulo}{!c.fixo && <span className="text-destructive"> *</span>}</Label>
+                  {c.fixo ? (
+                    <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">{c.valor == null ? "—" : typeof c.valor === "string" ? c.valor || "—" : c.valor.nome} · definido no agente</p>
+                  ) : c.tipo === "produto" ? (
                     <ProdutoBusca valor={(valores[c.id] as any) ?? null} onChange={(p) => mudarCampo(c.id, p)} />
                   ) : c.tipo === "opcoes" ? (
                     <div className="flex flex-wrap gap-2">
