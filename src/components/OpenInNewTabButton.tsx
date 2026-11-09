@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,13 @@ function isTouchOrSmallScreen(): boolean {
 }
 
 export default function OpenInNewTabButton() {
+  // Reavalia ao girar ou redimensionar a tela (o CSS também esconde em telas pequenas/toque).
+  const [, forcar] = useState(0);
+  useEffect(() => {
+    const f = () => forcar((n) => n + 1);
+    window.addEventListener("resize", f);
+    return () => window.removeEventListener("resize", f);
+  }, []);
   if (isSoloMode() || isNoTabMode()) return null;
   // Em celular/tablet não faz sentido abrir nova aba — ocultamos o botão.
   if (isTouchOrSmallScreen()) return null;
@@ -58,7 +66,7 @@ export default function OpenInNewTabButton() {
             variant="outline"
             onClick={abrirNovaAba}
             aria-label="Abrir esta tela em uma nova aba"
-            className="fixed bottom-4 right-4 z-[1000] h-10 w-10 rounded-full shadow-lg bg-background/95 backdrop-blur border-border hover:bg-accent"
+            className="fixed bottom-4 right-4 z-[1000] hidden h-10 [@media(min-width:1025px)_and_(pointer:fine)]:inline-flex w-10 rounded-full shadow-lg bg-background/95 backdrop-blur border-border hover:bg-accent"
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
