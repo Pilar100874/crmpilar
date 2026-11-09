@@ -188,7 +188,7 @@ export function StepComposeChamada({
                 <div key={c.id} className="space-y-1.5 min-w-0">
                   <Label className="text-xs">{c.rotulo}{!c.fixo && <span className="text-destructive"> *</span>}</Label>
                   {c.fixo ? (
-                    <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">{typeof c.valor === "object" && c.valor ? c.valor.nome : (c.valor || "—")} · definido no agente</p>
+                    <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">{c.valor == null ? "—" : typeof c.valor === "string" ? c.valor || "—" : c.valor.nome} · definido no agente</p>
                   ) : c.tipo === "produto" ? (
                     <ProdutoBusca valor={(valores[c.id] as any) ?? null} onChange={(p) => mudarCampo(c.id, p)} />
                   ) : c.tipo === "opcoes" ? (
