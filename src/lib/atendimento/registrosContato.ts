@@ -66,27 +66,23 @@ export interface FontesRegistros {
  */
 export function montarRegistrosPorContato(fontes: FontesRegistros): Map<string, RegistrosContato> {
   const mapa = new Map<string, RegistrosContato>();
-  const garantir = (id: string): RegistrosContato => {
-    let atual = mapa.get(id);
-    if (!atual) {
-      atual = { ...REGISTROS_VAZIOS };
-      mapa.set(id, atual);
-    }
-    return atual;
+  const conhecidos = new Set<string>();
+  fontes.contatos.forEach((contato) => {
+    if (!contato?.id) return;
+    conhecidos.add(contato.id);
+    mapa.set(contato.id, { ...REGISTROS_VAZIOS });
+  });
+
+  /** Só conta registro de contato que existe na lista — nada de criar ficha avulsa. */
+  const somar = (id: string | null | undefined, campo: keyof RegistrosContato) => {
+    if (!id || !conhecidos.has(id)) return;
+    const atual = mapa.get(id) as RegistrosContato;
+    atual[campo] += 1;
   };
 
-  fontes.contatos.forEach((contato) => {
-    if (contato?.id) garantir(contato.id);
-  });
-  fontes.tarefas.forEach((tarefa) => {
-    if (tarefa?.contact_id) garantir(tarefa.contact_id).tarefas += 1;
-  });
-  fontes.conversas.forEach((conversa) => {
-    if (conversa?.customer_id) garantir(conversa.customer_id).conversas += 1;
-  });
-  fontes.orcamentos.forEach((orcamento) => {
-    if (orcamento?.cliente_id) garantir(orcamento.cliente_id).orcamentos += 1;
-  });
+  fontes.tarefas.forEach((tarefa) => somar(tarefa?.contact_id, "tarefas"));
+  fontes.conversas.forEach((conversa) => somar(conversa?.customer_id, "conversas"));
+  fontes.orcamentos.forEach((orcamento) => somar(orcamento?.cliente_id, "orcamentos"));
 
   const contatoPorEndereco = new Map<string, string>();
   fontes.contatos.forEach((contato) => {
@@ -99,7 +95,7 @@ export function montarRegistrosPorContato(fontes: FontesRegistros): Map<string, 
       const contatoId = contatoPorEndereco.get(endereco);
       if (!contatoId || vistos.has(contatoId)) return;
       vistos.add(contatoId);
-      garantir(contatoId).emails += 1;
+      somar(contatoId, "emails");
     });
   });
 
