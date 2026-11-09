@@ -74,6 +74,7 @@ export function AtendimentoClientCard({
   className,
   historicoClienteId,
   historicoClienteNome,
+  temHistorico = true,
 }: AtendimentoClientCardProps) {
   const compacto = useAtendimentoCardsCompactos();
   const nomeCartao = parseTituloCartao(title).nome;
@@ -139,6 +140,7 @@ export function AtendimentoClientCard({
       </div>
       {historicoClienteId && (
         <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
+          {temHistorico && (
           <button
             type="button"
             title="Ver histórico do cliente"
@@ -151,6 +153,7 @@ export function AtendimentoClientCard({
           >
             <History className="h-3.5 w-3.5" />
           </button>
+          )}
           <button
             type="button"
             disabled={!pendente}
