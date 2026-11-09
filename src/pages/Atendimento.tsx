@@ -4504,6 +4504,7 @@ ${recentMessages}
       contatosComIndicadores.forEach((contato) => {
         const pot = filtroFila === "potenciais" ? potenciaisPorCliente.get(contato.id) : undefined;
         if (filtroFila === "potenciais" && !pot) return;
+        const r = registrosPorContato.get(contato.id);
         const ce = contato.companies || [];
         const principal = ce.find((c: any) => c.is_primary) || ce[0];
         const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4526,13 +4527,13 @@ ${recentMessages}
           } : undefined,
           menuItems: [
             { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
-            { label: "Repetir último pedido (novo orçamento)", onClick: () => {
+            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: () => {
               void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
                 if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
                 toast.success("Orçamento criado com os itens do último pedido");
                 setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contato.id, nome: contato.nome });
               }).catch(() => toast.error("Não foi possível repetir o pedido"));
-            } },
+            } }] : []),
             ...(pot ? [
             { label: "Copiar mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).then(() => toast.success("Mensagem copiada")); } },
             ...(contato.telefone ? [{ label: "Enviar WhatsApp com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no chat"); abrirCanalDoContato(contato.id, "chat"); } }] : []),
@@ -4542,6 +4543,9 @@ ${recentMessages}
           ] : []),
           ],
           contactId: contato.id,
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: contato.nome,
           empresa: empresaNome,
           motivo: pot ? pot.motivo : contato.referencia || "Meu contato",
@@ -4594,6 +4598,7 @@ ${recentMessages}
     if (filtroFila === "agendados") filteredTasks
       .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
       .forEach((task: any) => {
+      const r = registrosPorContato.get(task.contact_id);
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4613,6 +4618,9 @@ ${recentMessages}
         id: `task-${task.id}`,
         tipo: "agendado",
         contactId: task.contact_id,
+        temHistorico: possuiHistorico(r),
+        temAgenda: possuiAgenda(r),
+        temOrcamento: possuiOrcamento(r),
         nome,
         empresa: empresaNome,
         motivo,
@@ -4675,12 +4683,16 @@ ${recentMessages}
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
       .forEach((grupo) => {
         const conv = grupo.conv;
+        const r = conv.customer_id ? registrosPorContato.get(conv.customer_id) : undefined;
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
         lista.push({
           id: `conv-${conv.id}`,
           tipo: "recebido",
           contactId: conv.customer_id,
+          temHistorico: true,
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: conv.customer?.nome || "Sem nome",
           empresa: empresaNome,
           motivo: "Mensagem recebida",
