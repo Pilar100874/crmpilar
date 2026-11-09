@@ -23205,6 +23205,54 @@ export type Database = {
           },
         ]
       }
+      potenciais_config: {
+        Row: {
+          config: Json
+          estabelecimento_id: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          estabelecimento_id: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          estabelecimento_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      potenciais_dispensas: {
+        Row: {
+          ate: string
+          created_at: string
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          motivo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          ate: string
+          created_at?: string
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          motivo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          ate?: string
+          created_at?: string
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       produto_campos_customizados: {
         Row: {
           ativo: boolean | null
