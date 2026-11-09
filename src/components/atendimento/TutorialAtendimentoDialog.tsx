@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, ListTree, X, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,10 +66,10 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
   };
   const ultimo = i === total - 1 && etapa >= nPassos;
 
-  return (
+  return createPortal(
     <div role="dialog" aria-label="Tour do Atendimento"
       style={pos ? { left: pos.x, top: pos.y } : { left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}
-      className="fixed z-[700] flex max-h-[min(640px,calc(100vh-2rem))] w-[min(420px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl">
+      className="fixed z-[9999] flex max-h-[min(640px,calc(100vh-2rem))] w-[min(420px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl">
       <div className="flex cursor-move touch-none select-none items-center gap-2 border-b border-border px-3 py-2" title="Arraste para mover"
         onPointerDown={(e) => {
           if ((e.target as HTMLElement).closest("button")) return;
@@ -141,5 +142,7 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
         </div>
       </div>
     </div>
+    ,
+    document.body,
   );
 }
