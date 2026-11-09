@@ -4707,7 +4707,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila]);
+  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -4768,8 +4768,8 @@ ${recentMessages}
     const carregar = () => { void carregarPotenciais(estabelecimentoId, chaveContatosPotenciais.split(",")).then((r) => { if (ativo) setPotenciais(r); }).catch(() => {}); };
     carregar();
     window.addEventListener("atendimento:potenciais-alterados", carregar);
-    window.addEventListener(EVENTO_TAREFAS_ALTERADAS_POT, carregar);
-    return () => { ativo = false; window.removeEventListener("atendimento:potenciais-alterados", carregar); window.removeEventListener(EVENTO_TAREFAS_ALTERADAS_POT, carregar); };
+    window.addEventListener(EVENTO_TAREFAS_ALTERADAS, carregar);
+    return () => { ativo = false; window.removeEventListener("atendimento:potenciais-alterados", carregar); window.removeEventListener(EVENTO_TAREFAS_ALTERADAS, carregar); };
   }, [estabelecimentoId, chaveContatosPotenciais]);
 
   // Fontes da tela de disparo em massa (mesmas regras das abas Tudo/Agendados/Recebidos)
@@ -6829,6 +6829,7 @@ ${recentMessages}
             )}
 
         {/* Fila do dia - lista unificada (visual da referência) */}
+        <DispensarPotencialDialog alvo={dispensarAlvo} usuarioId={usuarioId || null} onClose={() => setDispensarAlvo(null)} />
         <FilaDoDia
           items={filaItems}
           tablet={isTablet}
@@ -7113,7 +7114,7 @@ ${recentMessages}
             <DisparoMassaPanel
               key={`disparo-desktop-${disparoNonce}`}
               fontes={fontesDisparo}
-              abaInicial={filtroFila}
+              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
               onClose={fecharDisparoMassa}
               onIniciarEnvio={iniciarEnvioDoDisparo}
               canalInicial={canalEnvioMassa ?? null}
@@ -8270,7 +8271,7 @@ ${recentMessages}
         <DisparoMassaPanel
           key={`disparo-mobile-${disparoNonce}`}
           fontes={fontesDisparo}
-              abaInicial={filtroFila}
+              abaInicial={filtroFila === "potenciais" ? "tudo" : filtroFila}
           onClose={fecharDisparoMassa}
           onIniciarEnvio={iniciarEnvioDoDisparo}
           canalInicial={canalEnvioMassa ?? null}
