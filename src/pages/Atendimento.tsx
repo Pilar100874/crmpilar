@@ -3956,7 +3956,7 @@ ${recentMessages}
   const registrosPorContato = useRegistrosContato({
     contatos: contatosBase,
     tarefas: todayTasks,
-    conversas,
+    conversas: conversations,
     emails: userEmails,
     orcamentos,
   });
