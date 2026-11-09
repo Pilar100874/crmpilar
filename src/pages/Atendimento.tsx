@@ -4518,6 +4518,9 @@ ${recentMessages}
         lista.push({
           id: `contato-${contato.id}`,
           tipo: pot ? "potencial" : "agendado",
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           potencial: pot ? { rotulo: ROTULO_TIPO[pot.tipo], motivos: pot.motivos } : undefined,
           credito: (creditoLocal[principal?.empresa_id] ?? principal?.empresas?.situacao_credito) as SituacaoCredito | undefined,
           onCredito: principal?.empresa_id ? (sit: SituacaoCredito) => {
@@ -4729,10 +4732,14 @@ ${recentMessages}
     // Recebidos: e-mails recebidos e não respondidos, um por contato
     (filtroFila === "recebidos" ? emailsRecebidosAgrupados : [])
       .forEach((email) => {
+        const r = (email as any).customer_id ? registrosPorContato.get((email as any).customer_id) : undefined;
         lista.push({
           id: `email-${email.id}`,
           tipo: "recebido",
           contactId: (email as any).customer_id || undefined,
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: (email as any).from_name || email.from_email || "Sem nome",
           motivo: "E-mail recebido",
           urgencia: classificarUrgencia(`${email.subject || ""} ${String((email as any).body || "").replace(/<[^>]+>/g, " ").slice(0, 600)}`) ?? undefined,
