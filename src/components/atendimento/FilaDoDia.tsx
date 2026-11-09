@@ -323,7 +323,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onConfigurarRegra}>Configurar regra</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>
