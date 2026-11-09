@@ -41,7 +41,7 @@ describe("copiloto do atendimento", () => {
     const novo = registrarVisita(registrarVisita(aberto, "a"), "z");
     expect(novo.lista).toEqual(["a", "z"]);
     expect(vizinhoDoHistorico(novo, 1)).toBeNull();
-    expect(vizinhoDoHistorico(novo, -1)).toBeNull();
+    expect(vizinhoDoHistorico(novo, -1)).toBe("a");
   });
 
   it("sem cliente aberto antes, não há para onde voltar", () => {
