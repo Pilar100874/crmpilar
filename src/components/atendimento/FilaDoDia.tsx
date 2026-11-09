@@ -274,14 +274,24 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
 
   /** Cliente aberto agora (mesmo que a aba filtrada não o mostre). */
   const contatoAbertoId = useMemo(() => items.find((i) => i.selecionado)?.id ?? null, [items]);
+  const chaveContato = (item: FilaItem) => item.contactId ?? item.id;
   const [historico, setHistorico] = useState<HistoricoFila>(HISTORICO_VAZIO);
+  /** Guarda o cliente que acabou de abrir; se ele voltou atrás, o trecho "à frente" é descartado. */
+  const registrarAbertura = (item: FilaItem) => setHistorico((h) => registrarVisita(h, item.id));
+  /** Aberturas vindas de fora da fila (calendário, chat, atalhos) também entram no histórico. */
   useEffect(() => {
-    setHistorico((h) => registrarVisita(h, contatoAbertoId));
-  }, [contatoAbertoId]);
+    setHistorico((h) => {
+      const aberto = items.find((i) => i.id === contatoAbertoId);
+      const ultimo = items.find((i) => i.id === h.lista[h.i]);
+      if (aberto && ultimo && chaveContato(aberto) === chaveContato(ultimo)) return h;
+      return registrarVisita(h, contatoAbertoId);
+    });
+  }, [contatoAbertoId, items]);
 
   const itemPorId = (id: string | null) => (id ? items.find((i) => i.id === id) ?? null : null);
   const abrirItem = (item: FilaItem | null) => {
     if (!item) return;
+    registrarAbertura(item);
     item.onClick();
     setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(item.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
   };
@@ -679,7 +689,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <div key={item.id} data-fila-id={item.id} data-fila-contato={item.contactId ?? undefined}>
               <div
                 onClick={() => {
-                  item.onClick();
+                  abrirItem(item);
                 }}
                 title={item.tipo === "potencial" ? "Potencial" : item.tipo === "recebido" ? "Recebido" : item.assumido ? "Agendado (contato assumido)" : "Agendado"}
                 className={cn(
