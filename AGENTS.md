@@ -27,3 +27,5 @@
 - Calendar realocation queries use the current task date and read the saved rule before writing; historical contact dates cannot reschedule future follow-ups.
 - Call channels resolve mobile or landline through numeroParaChamada while keeping WhatsApp numbers separate, so selected landline contacts survive the wizard.
 - Voice transfer summaries require an explicit device destination; transcript keywords cannot prove a transfer and must not produce popups.
+
+- Ligações com IA usam filtros inteligentes (src/lib/voz/publicoInteligente.ts) e o formulário da oferta vira o objetivo do comando; permissões do agente ficam em voz_agentes.config, assim aparelhos antigos funcionam sem mudança.
