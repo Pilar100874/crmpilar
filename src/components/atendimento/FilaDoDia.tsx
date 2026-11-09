@@ -43,6 +43,8 @@ import {
 import { cn } from "@/lib/utils";
 import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
 import { AutomacoesAtendimentoDialog } from "./AutomacoesAtendimentoDialog";
+import { TutorialAtendimentoDialog, CHAVE_TUTORIAL_VISTO } from "./TutorialAtendimentoDialog";
+import { SimulacoesAtendimentoDialog } from "./SimulacoesAtendimentoDialog";
 import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
@@ -181,6 +183,23 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
   const [prazosAberto, setPrazosAberto] = useState(false);
   const [regrasPotenciaisAberto, setRegrasPotenciaisAberto] = useState(false);
   const [automacoesAberto, setAutomacoesAberto] = useState(false);
+  const [tutorialAberto, setTutorialAberto] = useState(false);
+  const [simulacoesAberto, setSimulacoesAberto] = useState(false);
+  const [ehAdmin, setEhAdmin] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem(CHAVE_TUTORIAL_VISTO)) setTimeout(() => setTutorialAberto(true), 800);
+    let vivo = true;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: eu } = await (supabase as any).from("usuarios").select("id, grupos_acesso(perfil)").eq("auth_user_id", auth.user.id).limit(1).maybeSingle();
+      const grupo: any = Array.isArray(eu?.grupos_acesso) ? eu.grupos_acesso[0] : eu?.grupos_acesso;
+      const ids = [auth.user.id, eu?.id].filter(Boolean);
+      const { data: role } = await supabase.from("user_roles").select("user_id").in("user_id", ids).eq("role", "admin").limit(1).maybeSingle();
+      if (vivo) setEhAdmin(!!role || grupo?.perfil === "admin");
+    })();
+    return () => { vivo = false; };
+  }, []);
 
   const alternarCanal = (canal: FilaCanal) => {
     setCanaisAtivos((anterior) => {
@@ -266,6 +285,14 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
           if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
         }}
       />
+      <TutorialAtendimentoDialog open={tutorialAberto} onOpenChange={setTutorialAberto} />
+      <SimulacoesAtendimentoDialog
+        open={simulacoesAberto}
+        onOpenChange={(v) => {
+          setSimulacoesAberto(v);
+          if (!v) setTimeout(() => { document.body.style.pointerEvents = ""; }, 300);
+        }}
+      />
       <AutomacoesAtendimentoDialog
         open={automacoesAberto}
         onOpenChange={(v) => {
@@ -318,11 +345,15 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   type="button"
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                   aria-label="Mais opções"
+                  data-tour="fila-menu"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setTutorialAberto(true), 0); }}>Tutorial: como usar o Atendimento</DropdownMenuItem>
+                {ehAdmin && <DropdownMenuItem onSelect={() => { setTimeout(() => setSimulacoesAberto(true), 0); }}>Simulações do Atendimento (admin)</DropdownMenuItem>}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setRegrasPotenciaisAberto(true), 0); }}>Regras de clientes potenciais</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setAutomacoesAberto(true), 0); }}>Automações (IA e fora do horário)</DropdownMenuItem>
@@ -403,7 +434,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtros */}
-        <div className="mt-2.5 grid min-w-0 grid-cols-[0.6fr_1fr_1fr_1fr] gap-1" data-filtros-contatos>
+        <div className="mt-2.5 grid min-w-0 grid-cols-[0.6fr_1fr_1fr_1fr] gap-1" data-filtros-contatos data-tour="fila-abas">
           {chips.map((chip) => {
             const ativo = filtro === chip.id;
             return (
@@ -474,6 +505,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             <button
               type="button"
               onClick={() => setSomenteNaoFinalizados((v) => !v)}
+              data-tour="fila-nao-finalizados"
               aria-pressed={somenteNaoFinalizados}
               aria-label="Ver somente contatos com atendimento não finalizado"
               title={`Não finalizados (${totalNaoFinalizados})`}
@@ -507,7 +539,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Disparo em massa: WhatsApp, E-mail ou Telefone */}
-        <div className="flex items-center gap-2 mt-2.5">
+        <div className="flex items-center gap-2 mt-2.5" data-tour="fila-disparo">
           <Button
             variant="outline"
             onClick={() => onDisparoMassa?.()}
