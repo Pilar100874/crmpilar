@@ -307,6 +307,10 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                   </label>
                 ))}
               </div>
+              {atual.modos?.includes("ligar") && (
+                <CamposAgenteEditor campos={lerCampos(atual.config)}
+                  onChange={(campos) => setAtual({ ...atual, config: { ...(atual.config ?? {}), campos } })} />
+              )}
               <div className="space-y-1">
                 <Label>Qualidade da voz</Label>
                 <Select value={atual.qualidade} onValueChange={(v: any) => setAtual({ ...atual, qualidade: v })}>
