@@ -914,6 +914,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
       }
 
+      // Agenda inteligente: cria ligações de reposição pelo ciclo médio de compra (1x/dia).
+      const { data: regraCiclo } = await supabase.from('calendario_regras').select('ativa')
+        .eq('estabelecimento_id', estabelecimentoId).eq('tipo', 'agendamento_ciclo_compra').maybeSingle();
+      if ((regraCiclo?.ativa ?? true) && currentUsuarioId) {
+        try { await executarAgendaPorCiclo(estabelecimentoId, currentUsuarioId); } catch (e) { console.error("Agenda inteligente:", e); }
+      }
+
       let query = (supabase as any)
         .from('calendario_tarefas')
         .select('*')
