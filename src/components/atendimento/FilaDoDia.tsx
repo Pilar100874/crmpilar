@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
-import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
+import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";

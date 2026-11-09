@@ -4703,7 +4703,7 @@ ${recentMessages}
       });
 
     // Qualquer ação num cartão deixa aquele contato como o selecionado da fila.
-    const comSelecao = lista.map((item) => {
+    let comSelecao = lista.map((item) => {
       const marcar = () => {
         setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
         setContatoFinalizarId(item.contactId ?? null);
