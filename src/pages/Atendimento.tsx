@@ -83,6 +83,8 @@ import { useModoSimultaneo, lerModoSimultaneo } from "@/hooks/usePendenciasAtend
 import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendimento/BarraProximoContato";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
+import { useRegistrosContato } from "@/hooks/useRegistrosContato";
+import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa } from "@/lib/atendimento/registrosContato";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
 import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
@@ -3949,6 +3951,16 @@ ${recentMessages}
     return ordenarPendentesPrimeiro([...extras, ...contatosBaseSemPendentes], (c) => c.id, pendenciasAtendimento);
   }, [contatosBaseSemPendentes, contatosPendentes, pendenciasAtendimento]);
 
+  // Registros de cada contato: os atalhos (histórico, tarefa, agenda, orçamentos) só
+  // aparecem quando existe o que abrir — contato recém-cadastrado não tem lista vazia.
+  const registrosPorContato = useRegistrosContato({
+    contatos: contatosBase,
+    tarefas: todayTasks,
+    conversas,
+    emails: userEmails,
+    orcamentos,
+  });
+
   // Contatos com WhatsApp que ainda não possuem conversa aberta
   const contatosSemConversa = useMemo(() => {
     const comConversa = new Set(filteredConversations.map((c) => c.customer_id));
@@ -4313,6 +4325,9 @@ ${recentMessages}
       empresa: base.empresa || (cad.companies || []).find((x: any) => x?.is_primary)?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome_fantasia || (cad.companies || [])[0]?.empresas?.nome || null,
     };
   }, [clienteCabecalhoBase, contatosBase]);
+
+  // Atalhos do cabeçalho do cliente: sem registro, o botão que só abriria lista vazia some.
+  const registrosDoCabecalho = registrosPorContato.get(clienteCabecalho?.id || "");
 
   // Sem lista agregada nem fallback: a barra pertence ao cartão aberto.
   const contatoPendenteBarra = useMemo(() => {
