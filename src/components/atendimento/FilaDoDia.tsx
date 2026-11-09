@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PrazosProximoContatoDialog } from "./PrazosProximoContatoDialog";
-import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded } from "lucide-react";
+import { LayoutList, CalendarClock, Bot, CalendarCheck, CalendarDays, FileText, Flag, History, PhoneCall, ListOrdered, PhoneForwarded, UserX } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useBotUsuario } from "./useBotUsuario";
 import { usePendenciasAtendimento, useModoSimultaneo } from "@/hooks/usePendenciasAtendimento";
@@ -87,6 +87,8 @@ export interface FilaItem {
   /** Situação de crédito da empresa principal do contato. */
   credito?: SituacaoCredito;
   onCredito?: (s: SituacaoCredito) => void;
+  /** Itens importantes faltando no cadastro do contato. */
+  cadastroFaltando?: string[];
 }
 
 export type FiltroFila = "tudo" | "agendados" | "recebidos" | "potenciais";
@@ -636,6 +638,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                    <div className="min-w-0 flex-1">
                      <p className={cn("text-[14px] font-semibold text-foreground leading-tight", tablet ? "break-words" : "truncate")}>
                       {item.nome}
+                      {item.cadastroFaltando?.length ? (
+                        <span
+                          role="img"
+                          aria-label={`Cadastro incompleto: ${item.cadastroFaltando.join(", ")}`}
+                          title={`Cadastro incompleto — falta: ${item.cadastroFaltando.join(", ")}`}
+                          className="ml-1 inline-flex align-middle text-destructive"
+                        >
+                          <UserX className="h-3.5 w-3.5" />
+                        </span>
+                      ) : null}
                     </p>
                      {item.tipo === "recebido" && (() => {
                        const cfg = CANAL_CONFIG[item.canal];
