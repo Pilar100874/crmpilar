@@ -933,6 +933,7 @@ export const useSipConnection = () => {
           caminho,
           tamanho_bytes: blob.size,
         });
+        void resumirLigacao(blob, g.numero, usuario.id);
       }
 
       toast({
