@@ -148,7 +148,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
     let cancelado = false;
     (async () => {
       setCarregando(true);
-      const ids = Array.from(new Set([...fontes.tudo, ...fontes.agendados.map((a) => a.id), ...fontes.recebidos]));
+      const ids = Array.from(new Set([...fontes.tudo, ...fontes.agendados.map((a) => a.id), ...fontes.recebidos, ...(fontes.potenciais || []).map((p) => p.id)]));
       const campos = "id, nome, telefone, tel, email, cidade, estado, empresa_id, customer_empresas ( empresa_id, is_primary )";
       const lotes: any[] = [];
       for (let i = 0; i < ids.length; i += 300) {
@@ -312,6 +312,9 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
   const iniciar = () => {
     const ids = [...selecionados];
     if (!canal || ids.length === 0) return;
+    // Potenciais escolhidos levam o motivo para {{motivo}}/{{produto}} e para a fala da IA.
+    ganchosPotenciais.clear();
+    for (const id of ids) { const p = potenciaisMap.get(id); if (p) ganchosPotenciais.set(id, { tipo: p.tipo, motivo: p.motivo, produto: p.produto }); }
     onIniciarEnvio(ids, canal);
   };
 
@@ -474,6 +477,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
                     <div className="hidden items-center gap-1 sm:flex">
                       {c.tipo && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{ROTULO_TIPO[c.tipo] || c.tipo}</span>}
                       {c.prospect && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{ROTULO_STATUS[c.prospect] || c.prospect}</span>}
+                      {potenciaisMap.has(c.id) && <span title={potenciaisMap.get(c.id)!.motivo} className="rounded-md bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">{potenciaisMap.get(c.id)!.rotulo}</span>}
                     </div>
                   </label>
                 );
