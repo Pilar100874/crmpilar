@@ -1014,8 +1014,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
 
   const loadTasksRef = useRef(loadTasks);
   loadTasksRef.current = loadTasks;
-  // Ref da regra "Realocação Diária de Tarefas" — evita recarregar loadTasks quando a regra muda
-  const realocacaoRef = useRef(true);
 
   useEffect(() => {
     (async () => {
@@ -1069,7 +1067,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
           regras.forEach((regra: any) => {
             regrasMap[regra.tipo] = regra.ativa;
           });
-          realocacaoRef.current = regrasMap.realocacao_diaria_tarefas ?? true;
 
           setCalendarioRegras({
             bloquear_datas_passadas: regrasMap.bloquear_datas_passadas ?? true,
