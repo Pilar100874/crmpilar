@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, ListTree, X, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,22 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
   const [i, setI] = useState(0);
   const [etapa, setEtapa] = useState(0); // 0 = explicação; 1..n = passos da demonstração revelados
   const [indice, setIndice] = useState(false);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const arraste = useRef<{ dx: number; dy: number } | null>(null);
+  useEffect(() => {
+    const mover = (e: PointerEvent) => {
+      if (!arraste.current) return;
+      const w = Math.min(420, window.innerWidth - 16);
+      setPos({
+        x: Math.max(8, Math.min(window.innerWidth - w - 8, e.clientX - arraste.current.dx)),
+        y: Math.max(8, Math.min(window.innerHeight - 80, e.clientY - arraste.current.dy)),
+      });
+    };
+    const soltar = () => { arraste.current = null; };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+    return () => { window.removeEventListener("pointermove", mover); window.removeEventListener("pointerup", soltar); };
+  }, []);
   const total = lista.length;
   const r = lista[Math.min(i, total - 1)];
   const demo = useMemo(() => simularRecurso(r), [r]);
@@ -51,8 +67,15 @@ export function TutorialAtendimentoDialog({ open, onOpenChange }: { open: boolea
 
   return (
     <div role="dialog" aria-label="Tour do Atendimento"
-      className="fixed bottom-4 right-4 z-[700] flex max-h-[80vh] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl">
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+      style={pos ? { left: pos.x, top: pos.y } : { left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}
+      className="fixed z-[700] flex max-h-[min(640px,calc(100vh-2rem))] w-[min(420px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl">
+      <div className="flex cursor-move touch-none select-none items-center gap-2 border-b border-border px-3 py-2" title="Arraste para mover"
+        onPointerDown={(e) => {
+          if ((e.target as HTMLElement).closest("button")) return;
+          const box = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+          arraste.current = { dx: e.clientX - box.left, dy: e.clientY - box.top };
+          setPos({ x: box.left, y: box.top });
+        }}>
         <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
         <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{r.modulo} · Recurso {i + 1} de {total}</p>
         <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Índice de recursos" onClick={() => setIndice(!indice)}><ListTree className="h-4 w-4" /></Button>
