@@ -11,6 +11,7 @@ import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "
 
 import { lazy, Suspense } from "react";
 const EmpresasLazy = lazy(() => import("@/pages/Empresas"));
+import { pendenciasCadastro } from "@/lib/atendimento/pendenciasCadastro";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
@@ -327,6 +328,17 @@ export function UnifiedDetailsPanel({
 
       {/* Conteúdo Principal */}
       <div className="flex-1 p-4 space-y-4">
+        {(() => {
+          const faltas = pendenciasCadastro({ nome, telefone, whatsapp, email, companies });
+          if (!faltas.length) return null;
+          return (
+            <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs">
+              <p className="font-semibold text-destructive">Cadastro incompleto</p>
+              <p className="mt-1 text-foreground">Falta: {faltas.join(", ")}.</p>
+              <p className="mt-1 text-muted-foreground">Corrija em Contato / Empresa vinculada abaixo.</p>
+            </div>
+          );
+        })()}
         
         {/* PARTE 2 - Empresa Vinculada - Colapsável */}
         <Collapsible open={empresasOpen} onOpenChange={setEmpresasOpen}>
