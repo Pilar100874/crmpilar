@@ -1,3 +1,4 @@
+import { substituirVariaveis } from './emailMensagem';
 import { enviarEmailMassa } from "./enviarEmailMassa";
 import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect } from "react";
@@ -148,13 +149,7 @@ export function EnvioMassaWizardDialog({
   };
 
   // Replace variables in content
-  const replaceVariables = (text: string, contact: ContactForBulkSend) => {
-    return text
-      .replace(/\{\{contato\}\}/gi, contact.nome)
-      .replace(/\{\{empresa\}\}/gi, contact.empresa || 'N/A')
-      .replace(/\{\{whatsapp\}\}/gi, contact.telefone || 'N/A')
-      .replace(/\{\{email\}\}/gi, contact.email || 'N/A');
-  };
+  const replaceVariables = (text: string, contact: ContactForBulkSend) => substituirVariaveis(text, contact, 'N/A');
 
   // Send
   const handleConfirm = async () => {

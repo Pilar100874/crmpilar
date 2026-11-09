@@ -34,6 +34,8 @@ interface EnvioMassaTemplatesCRUDProps {
 
 const VARIAVEIS_DISPONIVEIS = [
   { key: '{{contato}}', desc: 'Nome do contato' },
+  { key: '{{motivo}}', desc: 'Motivo do cliente potencial' },
+  { key: '{{produto}}', desc: 'Produto do cliente potencial' },
   { key: '{{empresa}}', desc: 'Empresa do contato' },
   { key: '{{whatsapp}}', desc: 'Número de WhatsApp' },
   { key: '{{email}}', desc: 'Email do contato' },

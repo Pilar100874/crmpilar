@@ -1,8 +1,14 @@
 import { ContentItem, ContactForBulkSend } from './types';
+import { ganchosPotenciais } from '@/lib/voz/publicoInteligente';
 
+/** Substitui variáveis do disparo; {{motivo}} e {{produto}} vêm do filtro "Clientes potenciais". */
+export function substituirVariaveis(texto: string, contato: ContactForBulkSend, vazio = '') {
+  const g = ganchosPotenciais.get(contato.id);
+  const valores: Record<string, string> = { contato: contato.nome, empresa: contato.empresa || vazio, whatsapp: contato.telefone || vazio, email: contato.email || vazio, motivo: g?.motivo || '', produto: g?.produto || '' };
+  return texto.replace(/\{\{(contato|empresa|whatsapp|email|motivo|produto)\}\}/gi, (_, chave: string) => valores[chave.toLowerCase()] || '');
+}
 export function substituirVariaveisEmail(texto: string, contato: ContactForBulkSend) {
-  const valores: Record<string, string> = { contato: contato.nome, empresa: contato.empresa || '', whatsapp: contato.telefone || '', email: contato.email || '' };
-  return texto.replace(/\{\{(contato|empresa|whatsapp|email)\}\}/gi, (_, chave: string) => valores[chave.toLowerCase()] || '');
+  return substituirVariaveis(texto, contato);
 }
 export function escaparHtmlEmail(texto: string) {
   return texto.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));

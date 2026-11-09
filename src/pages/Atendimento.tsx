@@ -4470,6 +4470,8 @@ ${recentMessages}
           potencial: pot ? { rotulo: ROTULO_TIPO[pot.tipo], motivos: pot.motivos } : undefined,
           menuItems: pot ? [
             { label: "Copiar mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).then(() => toast.success("Mensagem copiada")); } },
+            ...(contato.telefone ? [{ label: "Enviar WhatsApp com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no chat"); abrirCanalDoContato(contato.id, "chat"); } }] : []),
+            ...(contato.email ? [{ label: "Enviar e-mail com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no e-mail"); abrirCanalDoContato(contato.id, "email"); } }] : []),
             { label: "Agendar retorno", onClick: () => { setHistoricoCliente(null); setOrcamentosCliente(null); setAgendaContato({ id: contato.id, nome: contato.nome }); } },
             { label: "Sem interesse agora", onClick: () => setDispensarAlvo({ id: contato.id, nome: contato.nome }) },
           ] : undefined,
