@@ -725,6 +725,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                           {menuItem.label}
                         </DropdownMenuItem>
                       ))}
+                      {item.onCredito && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>Situação de crédito</DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            {(Object.keys(SELO_CREDITO) as SituacaoCredito[]).map((k) => (
+                              <DropdownMenuItem key={k} onClick={(e) => { e.stopPropagation(); item.onCredito!(k); }}>
+                                {item.credito === k ? "✓ " : ""}{SELO_CREDITO[k].rotulo}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
