@@ -62,14 +62,14 @@ async function contextoCrm(sb: SB, empresa: string, numero: string, opts = { his
   const [t, n, o, pr, pe] = await Promise.all([tarefas, notas, orcs, pedRec, pedEc]);
 
   const itens = (arr: SB[] | undefined, f: (i: SB) => string) => (arr ?? []).slice(0, 8).map(f).join("; ");
-  for (const x of o.data ?? []) {
+  for (const x of opts.historico ? o.data ?? [] : []) {
     p.push(`Orçamento ${dt(x.created_at)} — ${x.etapa}/${x.status}, ${brl(x.valor_total)}${x.motivo_perda ? `, perdido por: ${x.motivo_perda}` : ""}. Itens: ${itens(x.orcamento_itens, (i) => `${i.quantidade}x ${i.produtos?.nome ?? "produto"} a ${brl(i.preco_unitario)}`)}`);
   }
-  for (const x of pr.data ?? []) {
+  for (const x of opts.historico ? pr.data ?? [] : []) {
     const its = Array.isArray(x.itens_json) ? itens(x.itens_json, (i) => `${i.quantidade ?? ""}x ${i.nome ?? i.titulo ?? i.descricao ?? "item"}`) : "";
     p.push(`Compra ${dt(x.data_pedido ?? x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}${its ? `. Itens: ${its}` : ""}`);
   }
-  for (const x of pe.data ?? []) {
+  for (const x of opts.historico ? pe.data ?? [] : []) {
     p.push(`Compra loja virtual ${dt(x.created_at)} pedido ${x.numero_pedido ?? ""} — ${brl(x.valor_total)}, ${x.status}. Itens: ${itens(x.pedidos_ecommerce_itens, (i) => `${i.quantidade}x ${i.nome_produto}`)}`);
   }
   for (const x of n.data ?? []) p.push(`Anotação ${dt(x.created_at)}: ${String(x.texto).slice(0, 200)}`);
