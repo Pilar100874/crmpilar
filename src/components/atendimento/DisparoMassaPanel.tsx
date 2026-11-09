@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
 export type CanalDisparo = "whatsapp" | "email" | "telefone" | "ia";
-type Aba = "tudo" | "agendados" | "recebidos";
+type Aba = "tudo" | "agendados" | "recebidos" | "potenciais";
 type FiltroData = "hoje" | "atrasados" | "futuros";
 
 export interface DisparoFontes {
@@ -24,6 +25,8 @@ export interface DisparoFontes {
   recebidos: string[];
   /** E-mails de remetentes com e-mail recebido sem resposta. */
   recebidosEmails: string[];
+  /** Clientes potenciais (mesma lista da aba Potenciais), com o motivo. */
+  potenciais?: { id: string; tipo: string; rotulo: string; motivo: string; produto?: string }[];
 }
 
 interface Props {
@@ -139,13 +142,13 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
     return m;
   }, [fontes.agendados]);
 
-  const chaveFontes = [fontes.tudo.length, fontes.agendados.length, fontes.recebidos.length, fontes.recebidosEmails.length].join("-");
+  const chaveFontes = [fontes.tudo.length, fontes.agendados.length, fontes.recebidos.length, fontes.recebidosEmails.length, fontes.potenciais?.length || 0].join("-");
 
   useEffect(() => {
     let cancelado = false;
     (async () => {
       setCarregando(true);
-      const ids = Array.from(new Set([...fontes.tudo, ...fontes.agendados.map((a) => a.id), ...fontes.recebidos]));
+      const ids = Array.from(new Set([...fontes.tudo, ...fontes.agendados.map((a) => a.id), ...fontes.recebidos, ...(fontes.potenciais || []).map((p) => p.id)]));
       const campos = "id, nome, telefone, tel, email, cidade, estado, empresa_id, customer_empresas ( empresa_id, is_primary )";
       const lotes: any[] = [];
       for (let i = 0; i < ids.length; i += 300) {
@@ -236,11 +239,13 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
     return { ids: s, emails };
   }, [fontes.recebidos, fontes.recebidosEmails]);
   const tudoSet = useMemo(() => new Set(fontes.tudo), [fontes.tudo]);
+  const potenciaisMap = useMemo(() => new Map((fontes.potenciais || []).map((p) => [p.id, p])), [fontes.potenciais]);
 
   const temCanal = (c: Contato, k: CanalDisparo) => (k === "whatsapp" ? c.temWhats : k === "email" ? c.temEmail : c.temTel);
   const naAba = (c: Contato, a: Aba) => {
     if (a === "agendados") return datasAgendadas.has(c.id);
     if (a === "recebidos") return recebidosSet.ids.has(c.id) || contatosEmailRecebido.has(c.id);
+    if (a === "potenciais") return potenciaisMap.has(c.id);
     return tudoSet.has(c.id);
   };
   const contatosEmailRecebido = useMemo(
@@ -307,6 +312,9 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
   const iniciar = () => {
     const ids = [...selecionados];
     if (!canal || ids.length === 0) return;
+    // Potenciais escolhidos levam o motivo para {{motivo}}/{{produto}} e para a fala da IA.
+    ganchosPotenciais.clear();
+    for (const id of ids) { const p = potenciaisMap.get(id); if (p) ganchosPotenciais.set(id, { tipo: p.tipo, motivo: p.motivo, produto: p.produto }); }
     onIniciarEnvio(ids, canal);
   };
 
@@ -382,7 +390,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
           {/* Filtros */}
           <div className="flex-shrink-0 space-y-2 border-b border-border/40 px-4 py-3">
             <div className="flex flex-wrap items-center gap-1.5">
-              {(["tudo", "agendados", "recebidos"] as Aba[]).map((a) => {
+              {(["tudo", "agendados", "recebidos", "potenciais"] as Aba[]).map((a) => {
                 const ativo = aba === a;
                 const total = totalAba(a);
                 return (
@@ -395,7 +403,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
                       ativo ? "bg-primary/10 font-semibold text-primary" : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                     )}
                   >
-                    {a === "tudo" ? "Tudo" : a === "agendados" ? "Agendados" : "Recebidos"}
+                    {a === "tudo" ? "Tudo" : a === "agendados" ? "Agendados" : a === "recebidos" ? "Recebidos" : "Potenciais"}
                     <span className={cn("flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold", ativo ? "bg-primary text-primary-foreground" : "bg-background text-foreground/70")}>
                       {total}
                     </span>
@@ -469,6 +477,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
                     <div className="hidden items-center gap-1 sm:flex">
                       {c.tipo && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{ROTULO_TIPO[c.tipo] || c.tipo}</span>}
                       {c.prospect && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{ROTULO_STATUS[c.prospect] || c.prospect}</span>}
+                      {potenciaisMap.has(c.id) && <span title={potenciaisMap.get(c.id)!.motivo} className="rounded-md bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">{potenciaisMap.get(c.id)!.rotulo}</span>}
                     </div>
                   </label>
                 );
