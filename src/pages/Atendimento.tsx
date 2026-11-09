@@ -16,6 +16,7 @@ import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
 import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
+import { classificarUrgencia, repetirUltimoPedido, termometroCarteira, proximoDaFila, executarReguaOrcamentos, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
@@ -4627,6 +4628,7 @@ ${recentMessages}
           motivo: "Mensagem recebida",
           canal: "whatsapp",
           origem: rotuloOrigemConversa(conv.canal),
+          urgencia: classificarUrgencia(conv.lastCustomerMessage?.content || conv.lastCustomerMessage?.text) ?? undefined,
           horario: (conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at) ? format(new Date(conv.lastCustomerMessage?.created_at || conv.lastMessage?.created_at), "HH:mm") : format(new Date(conv.updated_at), "HH:mm"),
           mensagensNovas: grupo.novas,
           sinalizado: convSinalizada(conv),
@@ -4659,6 +4661,7 @@ ${recentMessages}
           contactId: (email as any).customer_id || undefined,
           nome: (email as any).from_name || email.from_email || "Sem nome",
           motivo: "E-mail recebido",
+          urgencia: classificarUrgencia(`${email.subject || ""} ${(email as any).body_text || (email as any).snippet || ""}`) ?? undefined,
           canal: "email",
           origem: "E-mail",
           sinalizado: emailSinalizado(email),
