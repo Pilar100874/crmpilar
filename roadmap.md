@@ -1,5 +1,12 @@
 # Roteiro
 
+## Revisão dos quatro apontamentos de monitoramento
+- [ ] Preservar retornos futuros na realocação e na classificação de atrasos.
+- [ ] Exibir resumo de transferência somente com indicação explícita do aparelho.
+- [ ] Preservar telefones fixos no assistente e na execução de chamadas.
+- [ ] Abrir a finalização pelo cartão clicado mesmo fora do filtro da fila.
+- [ ] Executar testes de regressão e conferir o Atendimento autenticado.
+
 ## Atualização do Coletor Mac
 - [x] Corrigir links antigos do Mac, exibir a versão do pacote de cada plataforma e impedir anúncios incorretos no atualizador.
 - [x] Sincronizar a publicação dos instaladores; pacote Intel baixado e confirmado como 2.1.3 no Info.plist e package.json, quatro testes aprovados e tela autenticada conferida. Instalação no Mac do usuário não verificada neste ambiente Linux.
