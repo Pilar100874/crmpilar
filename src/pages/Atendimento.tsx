@@ -6959,6 +6959,7 @@ ${recentMessages}
             empresaId={extrasEmpresa.empresaId}
             empresaNome={extrasEmpresa.empresaNome}
             onClose={() => setExtrasEmpresa(null)}
+            top={clienteCabecalho && !isMobile ? alturaCabecalho : 0}
           />
         )}
         {/* Últimos orçamentos do cliente em tela central */}
