@@ -16,6 +16,8 @@ interface ContatosCanalListProps {
   onSelecionar?: (contato: ContatoAtendimento) => void;
   selecionadoId?: string | null;
   colorirPorEmpresa?: boolean;
+  /** Falso quando o contato ainda não tem registros: esconde o botão de histórico do cartão. */
+  temHistorico?: (contato: ContatoAtendimento) => boolean;
 }
 
 const icones = {
@@ -42,6 +44,7 @@ export default function ContatosCanalList({
   onSelecionar,
   selecionadoId = null,
   colorirPorEmpresa = false,
+  temHistorico,
 }: ContatosCanalListProps) {
   const Icone = icones[canal];
   const pendencias = usePendenciasAtendimento();
@@ -89,6 +92,7 @@ export default function ContatosCanalList({
           indicators={<AtendimentoCardIndicators {...contato} />}
           historicoClienteId={contato.id}
           historicoClienteNome={contato.nome}
+          temHistorico={temHistorico ? temHistorico(contato) : true}
           className={colorirPorEmpresa
             ? temEmpresa
               ? "border-primary/80 hover:border-primary"

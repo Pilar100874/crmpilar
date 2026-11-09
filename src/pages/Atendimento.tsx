@@ -6088,6 +6088,10 @@ ${recentMessages}
                   tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
+                  temHistorico={possuiHistorico(registrosDoCabecalho)}
+                  temTarefa={possuiTarefa(registrosDoCabecalho)}
+                  temAgenda={possuiAgenda(registrosDoCabecalho)}
+                  temOrcamento={possuiOrcamento(registrosDoCabecalho)}
                 />
               </div>
             </div>
@@ -7018,6 +7022,10 @@ ${recentMessages}
             onTogglePainel={alternarPainelDetalhes}
             filaAberta={showConversationsList}
             onToggleFila={() => setShowConversationsList((valor) => !valor)}
+            temHistorico={possuiHistorico(registrosDoCabecalho)}
+            temTarefa={possuiTarefa(registrosDoCabecalho)}
+            temAgenda={possuiAgenda(registrosDoCabecalho)}
+            temOrcamento={possuiOrcamento(registrosDoCabecalho)}
           />
           </div>
         )}
@@ -8855,6 +8863,7 @@ function MobileListContent({
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     historicoClienteId={contact.contactId}
                     historicoClienteNome={contact.nome}
+                    temHistorico={possuiHistorico(registrosPorContato.get(contact.contactId))}
                   />
                 ))}
               </>
