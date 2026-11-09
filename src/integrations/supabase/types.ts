@@ -4359,6 +4359,8 @@ export type Database = {
           estabelecimento_id: string
           id: string
           is_all_day: boolean | null
+          modo_criacao: string
+          motivo: string | null
           origem: string
           origem_sub_item: string | null
           status: string
@@ -4378,6 +4380,8 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           is_all_day?: boolean | null
+          modo_criacao?: string
+          motivo?: string | null
           origem: string
           origem_sub_item?: string | null
           status?: string
@@ -4397,6 +4401,8 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           is_all_day?: boolean | null
+          modo_criacao?: string
+          motivo?: string | null
           origem?: string
           origem_sub_item?: string | null
           status?: string
