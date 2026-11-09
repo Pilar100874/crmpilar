@@ -7,7 +7,7 @@ import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
 import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira } from "./copilotoAtendimento";
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
-import { origemDoCanalMassa } from "./prazosProximoContato";
+import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
 
@@ -411,7 +411,10 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Cada empresa tem seu ritmo de contato. O prazo vira a data sugerida, que você pode mudar na hora.",
     comoUsar: ["Menu ⋮ → Datas dos próximos contatos.", "Ajuste os dias e salve."],
     alvo: "fila-menu",
-    simular: () => [passo("Finalizar atendimento tem prazo próprio", origemDoCanalMassa("telefone") !== ("finalizar_atendimento" as any))],
+    simular: () => {
+      const d = dataPadraoProximoContato("finalizar_atendimento", new Date(2026, 0, 1));
+      return [passo("Finalizar atendimento sugere uma data futura", d.getTime() > new Date(2026, 0, 1).getTime(), d.toLocaleDateString("pt-BR"))];
+    },
   },
   {
     id: "assumir", modulo: "Configurações do Atendimento",

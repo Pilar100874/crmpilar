@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, FlaskConical, Loader2, XCircle } from "lucide-react";
-import { CATALOGO_ATENDIMENTO, simularRecurso, type ResultadoSimulacao } from "@/lib/atendimento/catalogoAtendimento";
+import { CATALOGO_ATENDIMENTO, recursosPorModulo, simularRecurso, type ResultadoSimulacao, type RecursoAtendimento } from "@/lib/atendimento/catalogoAtendimento";
 
 const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -14,7 +14,7 @@ export function SimulacoesAtendimentoDialog({ open, onOpenChange }: { open: bool
     for (const id of ids) {
       const r = CATALOGO_ATENDIMENTO.find((x) => x.id === id)!;
       setRodando(id);
-      await espera(350);
+      await espera(200);
       const res = simularRecurso(r);
       setResultados((ant) => ({ ...ant, [id]: res }));
     }
@@ -35,10 +35,15 @@ export function SimulacoesAtendimentoDialog({ open, onOpenChange }: { open: bool
           <p className="text-sm text-muted-foreground">
             {feitos.length === 0 ? `${CATALOGO_ATENDIMENTO.length} recursos para testar` : `${feitos.length - falhas} aprovados · ${falhas} com atenção`}
           </p>
-          <Button disabled={!!rodando} onClick={() => { setResultados({}); void rodar(CATALOGO_ATENDIMENTO.map((r) => r.id)); }}>Testar tudo</Button>
+          <Button disabled={!!rodando} onClick={() => { setResultados({}); void rodar(recursosPorModulo().flatMap((g) => g.recursos.map((r) => r.id))); }}>Testar tudo</Button>
         </div>
-        <div className="space-y-2">
-          {CATALOGO_ATENDIMENTO.map((r) => {
+        {recursosPorModulo().map((g) => (
+        <div key={g.modulo} className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.modulo}</p>
+            <Button size="sm" variant="ghost" disabled={!!rodando} onClick={() => void rodar(g.recursos.map((x: RecursoAtendimento) => x.id))}>Testar módulo</Button>
+          </div>
+          {g.recursos.map((r) => {
             const res = resultados[r.id];
             return (
               <div key={r.id} className="rounded-lg border border-border p-3">
@@ -68,6 +73,7 @@ export function SimulacoesAtendimentoDialog({ open, onOpenChange }: { open: bool
             );
           })}
         </div>
+        ))}
       </DialogContent>
     </Dialog>
   );
