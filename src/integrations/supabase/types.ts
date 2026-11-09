@@ -9120,6 +9120,7 @@ export type Database = {
           contato_nome: string | null
           contato_telefone: string | null
           created_at: string | null
+          credito_obs: string | null
           custom_fields: Json | null
           data_fundacao: string | null
           email: string | null
@@ -9151,6 +9152,7 @@ export type Database = {
           segmento_id: string | null
           site: string | null
           situacao_cadastral: string | null
+          situacao_credito: string
           status_comercial: string
           tags: string[] | null
           telefone: string | null
@@ -9181,6 +9183,7 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string | null
+          credito_obs?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
           email?: string | null
@@ -9212,6 +9215,7 @@ export type Database = {
           segmento_id?: string | null
           site?: string | null
           situacao_cadastral?: string | null
+          situacao_credito?: string
           status_comercial?: string
           tags?: string[] | null
           telefone?: string | null
@@ -9242,6 +9246,7 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string | null
+          credito_obs?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
           email?: string | null
@@ -9273,6 +9278,7 @@ export type Database = {
           segmento_id?: string | null
           site?: string | null
           situacao_cadastral?: string | null
+          situacao_credito?: string
           status_comercial?: string
           tags?: string[] | null
           telefone?: string | null

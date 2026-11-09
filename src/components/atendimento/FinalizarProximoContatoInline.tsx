@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { EVENTO_SUGESTAO_LIGACAO, lerSugestaoLigacao, limparSugestaoLigacao } from "@/lib/atendimento/copilotoAtendimento";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { addDays, format } from "date-fns";
 import { CalendarDays, Info, Loader2 } from "lucide-react";
@@ -38,6 +39,21 @@ export function FinalizarProximoContatoInline({ contato, canalInicial, usuarioId
   const [salvando, setSalvando] = useState(false);
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
 
+  // Resumo da ligação feito pela IA: pré-preenche resumo e data combinada (o usuário confirma).
+  useEffect(() => {
+    const aplicar = () => {
+      const s = lerSugestaoLigacao(contato.id);
+      if (!s) return;
+      setResumo((r) => r || s.resumo);
+      if (s.dataRetorno) setQuando(`${s.dataRetorno}T10:00`);
+      if (s.motivo || s.dataRetorno) setResultado("Solicitou retorno");
+    };
+    aplicar();
+    const ouvir = (e: Event) => { if ((e as CustomEvent).detail?.contactId === contato.id) aplicar(); };
+    window.addEventListener(EVENTO_SUGESTAO_LIGACAO, ouvir);
+    return () => window.removeEventListener(EVENTO_SUGESTAO_LIGACAO, ouvir);
+  }, [contato.id]);
+
   const data = quando ? new Date(quando) : null;
 
   const executar = async (escolha?: "nova" | "antiga" | "ambas") => {
@@ -56,6 +72,7 @@ export function FinalizarProximoContatoInline({ contato, canalInicial, usuarioId
         escolha,
       });
       limparPendencia(contato.id);
+      limparSugestaoLigacao(contato.id);
       toast.success("Atendimento finalizado e próximo contato agendado");
       setResumo("");
       onFinalizado?.();

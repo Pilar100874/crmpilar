@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { RegrasPotenciaisDialog } from "./RegrasPotenciaisDialog";
+import { URGENCIA, SELO_CREDITO, proximoDaFila, type NivelUrgencia, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 
 export type FilaCanal = "telefone" | "whatsapp" | "email" | "visita";
 
@@ -78,6 +79,11 @@ export interface FilaItem {
   /** Recebidos: item sinalizado como tratado sem resposta. */
   sinalizado?: boolean;
   onSinalizar?: () => void;
+  /** Recebidos: classificação de urgência do texto (IA de palavras-chave). */
+  urgencia?: NivelUrgencia;
+  /** Situação de crédito da empresa principal do contato. */
+  credito?: SituacaoCredito;
+  onCredito?: (s: SituacaoCredito) => void;
 }
 
 export type FiltroFila = "tudo" | "agendados" | "recebidos" | "potenciais";
@@ -132,6 +138,8 @@ interface FilaDoDiaProps {
   verSinalizados?: boolean;
   onToggleSinalizados?: () => void;
   totalSinalizados?: number;
+  /** Termômetro da carteira (calculado a partir dos potenciais). */
+  termometro?: { risco: number; reposicao: number; orcamentos: number };
 }
 
 /** O item pertence ao canal se for o canal de origem ou se o contato tiver esse canal disponível. */
@@ -140,7 +148,7 @@ function temCanalItem(item: FilaItem, canais: Set<FilaCanal>) {
   return (item.canais || []).some((c) => canais.has(c));
 }
 
-export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados, termometro }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [acoesExpandidas, setAcoesExpandidas] = useState<Set<string>>(new Set());
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
@@ -215,6 +223,8 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     } else {
       // Prioridade: atrasados primeiro, depois com mensagens novas, depois por horário
       ordenada.sort((a, b) => {
+        const urg = (b.urgencia ? URGENCIA[b.urgencia].peso : 0) - (a.urgencia ? URGENCIA[a.urgencia].peso : 0);
+        if (urg !== 0) return urg;
         const atrasoDiff = Number(b.atrasado || false) - Number(a.atrasado || false);
         if (atrasoDiff !== 0) return atrasoDiff;
         const msgDiff = (b.mensagensNovas || 0) - (a.mensagensNovas || 0);
@@ -224,6 +234,19 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
     }
     return ordenada;
   }, [items, filtro, ordenacao, canaisAtivos, somenteNaoFinalizados, pendencias]);
+
+  const abrirProximo = () => {
+    const atual = visiveis.find((i) => i.selecionado)?.id ?? null;
+    const prox = proximoDaFila(visiveis, atual);
+    if (!prox) return;
+    prox.onClick();
+    setTimeout(() => document.querySelector(`[data-fila-id="${CSS.escape(prox.id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
+  };
+  useEffect(() => {
+    const tecla = (e: KeyboardEvent) => { if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); abrirProximo(); } };
+    window.addEventListener("keydown", tecla);
+    return () => window.removeEventListener("keydown", tecla);
+  });
 
   const chips: { id: FiltroFila; label: string; total: number }[] = [
     { id: "tudo", label: "Tudo", total: totais?.tudo ?? items.length },
@@ -504,6 +527,24 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
       </div>
 
+      {(termometro || visiveis.length > 0) && (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-border/40 px-3 py-1.5">
+          {termometro && (
+            <>
+              <span title="Clientes com queda de compras ou inativos" className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold", termometro.risco > 0 ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-border text-muted-foreground")}>Em risco: {termometro.risco}</span>
+              <span title="Clientes no ciclo de recompra" className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Reposição: {termometro.reposicao}</span>
+              <span title="Orçamentos sem retorno" className="rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">Orçamentos: {termometro.orcamentos}</span>
+            </>
+          )}
+          {visiveis.length > 0 && (
+            <Button size="sm" variant="outline" className="ml-auto h-7 gap-1 px-2 text-[11px]" title="Abrir o próximo cliente da fila (atalho: Alt + seta para baixo)"
+              onClick={() => abrirProximo()}>
+              <ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Próximo cliente
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Lista */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-3 pt-3">
         {visiveis.length === 0 ? (
@@ -519,7 +560,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         ) : (
           visiveis.map((item) => {
             return (
-              <div key={item.id} data-fila-contato={item.contactId ?? undefined}>
+              <div key={item.id} data-fila-id={item.id} data-fila-contato={item.contactId ?? undefined}>
               <div
                 onClick={() => {
                   item.onClick();
@@ -568,6 +609,19 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                           )}
                         </p>
                      )}
+                    {(item.urgencia || item.credito) && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        {item.urgencia && (
+                          <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-semibold",
+                            item.urgencia === "reclamacao" ? "border-destructive/40 bg-destructive/10 text-destructive" : item.urgencia === "cotacao" ? "border-success/40 bg-success/10 text-success" : "border-warning/40 bg-warning/10 text-warning")}>
+                            {URGENCIA[item.urgencia].rotulo}
+                          </span>
+                        )}
+                        {item.credito && item.credito !== "nao_informado" && (
+                          <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-semibold", SELO_CREDITO[item.credito].classe)}>{SELO_CREDITO[item.credito].rotulo}</span>
+                        )}
+                      </div>
+                    )}
                     {item.onSinalizar && (
                       <button type="button"
                         title={item.sinalizado ? "Remover sinalização (volta para Recebidos)" : "Sinalizar como tratado sem responder"}
@@ -671,6 +725,18 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                           {menuItem.label}
                         </DropdownMenuItem>
                       ))}
+                      {item.onCredito && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>Situação de crédito</DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            {(Object.keys(SELO_CREDITO) as SituacaoCredito[]).map((k) => (
+                              <DropdownMenuItem key={k} onClick={(e) => { e.stopPropagation(); item.onCredito!(k); }}>
+                                {item.credito === k ? "✓ " : ""}{SELO_CREDITO[k].rotulo}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button

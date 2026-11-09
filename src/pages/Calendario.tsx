@@ -1,4 +1,5 @@
 import { executarAgendaPorCiclo } from "@/lib/voz/publicoInteligente";
+import { executarReguaOrcamentos } from "@/lib/atendimento/copilotoAtendimento";
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
 import { analisarDestino, type AnaliseDestino } from "@/lib/calendario/analiseDestino";
@@ -920,6 +921,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         .eq('estabelecimento_id', estabelecimentoId).eq('tipo', 'agendamento_ciclo_compra').maybeSingle();
       if ((regraCiclo?.ativa ?? true) && currentUsuarioId) {
         try { await executarAgendaPorCiclo(estabelecimentoId, currentUsuarioId); } catch (e) { console.error("Agenda inteligente:", e); }
+      }
+      if (currentUsuarioId) {
+        try { await executarReguaOrcamentos(estabelecimentoId, currentUsuarioId); } catch (e) { console.error("Régua de orçamentos:", e); }
       }
 
       let query = (supabase as any)
