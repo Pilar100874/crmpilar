@@ -1,3 +1,4 @@
+import { ultimosMotivos } from "@/lib/voz/publicoInteligente";
 import { supabase } from '@/integrations/supabase/client';
 import { montarEmail } from './emailMensagem';
 import { ContentItem, ContactForBulkSend } from './types';
@@ -12,6 +13,6 @@ export async function enviarEmailMassa(itens: ContentItem[], contato: ContactFor
   const funcao = configuracoes?.some(c => c.provider === 'google' && c.enabled) ? 'gmail-send-email' : 'send-email-smtp';
   const { data, error } = await supabase.functions.invoke(funcao, { body: { to: contato.email, ...mensagem } });
   if (error || data?.success !== true) throw new Error(data?.error || 'O serviço de e-mail não confirmou o envio');
-  const { error: retornoError } = await supabase.from('calendario_tarefas').insert({ user_id: usuarioId, estabelecimento_id: estabelecimentoId, contact_id: contato.id, contact_name: contato.nome, title: 'Retorno: Envio em massa (E-mail)', description: mensagem.body.substring(0, 1000), date: dataRetorno, origem: 'envio_massa', origem_sub_item: 'email', status: 'pendente' });
+  const { error: retornoError } = await supabase.from('calendario_tarefas').insert({ user_id: usuarioId, estabelecimento_id: estabelecimentoId, contact_id: contato.id, contact_name: contato.nome, title: 'Retorno: Envio em massa (E-mail)', description: mensagem.body.substring(0, 1000), date: dataRetorno, origem: 'envio_massa', origem_sub_item: 'email', status: 'pendente', modo_criacao: ultimosMotivos.has(contato.id) ? 'inteligente' : 'automatico', motivo: 'Disparo em massa por e-mail' + (ultimosMotivos.get(contato.id) ? ` — ${ultimosMotivos.get(contato.id)}` : '') } as any);
   return { status: 'encaminhado', detalhe: retornoError ? 'Aceito pelo serviço de e-mail; falha ao registrar retorno. Não reenvie este e-mail.' : 'Aceito pelo serviço de e-mail; retorno registrado. Entrega não confirmada.' };
 }

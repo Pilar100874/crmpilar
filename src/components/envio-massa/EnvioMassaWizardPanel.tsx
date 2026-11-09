@@ -7,6 +7,7 @@ import { X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
+import { ultimosMotivos } from "@/lib/voz/publicoInteligente";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -293,8 +294,10 @@ export function EnvioMassaWizardPanel({
             date: format(state.proximaDataContato, 'yyyy-MM-dd'),
             origem: 'envio_massa',
             origem_sub_item: state.canal,
-            status: 'pendente'
-          });
+            status: 'pendente',
+            modo_criacao: ultimosMotivos.has(contact.id) ? 'inteligente' : 'automatico',
+            motivo: `Disparo em massa por ${state.canal === 'whatsapp' ? 'WhatsApp' : 'e-mail'}` + (ultimosMotivos.get(contact.id) ? ` — ${ultimosMotivos.get(contact.id)}` : ''),
+          } as any);
 
         if (error) throw new Error('Não foi possível registrar o retorno deste contato');
 

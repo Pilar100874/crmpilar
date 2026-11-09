@@ -220,6 +220,8 @@ export async function finalizarAtendimento(p: FinalizarParams) {
       origem: tarefaOrigem,
       status: "pending",
       data_original: dataOriginal,
+      modo_criacao: "manual",
+      motivo: `Próximo contato definido ao finalizar o atendimento (${ROTULO_CANAL[p.canal]})`,
     });
     if (novaErr) throw novaErr;
   }

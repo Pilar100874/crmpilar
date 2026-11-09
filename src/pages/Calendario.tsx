@@ -1,3 +1,4 @@
+import { executarAgendaPorCiclo } from "@/lib/voz/publicoInteligente";
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
 import { analisarDestino, type AnaliseDestino } from "@/lib/calendario/analiseDestino";
@@ -912,6 +913,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
         }
         const { error: erroAlinhamento } = await alinhar;
         if (erroAlinhamento) console.error("Erro ao realocar tarefas atrasadas:", erroAlinhamento);
+      }
+
+      // Agenda inteligente: cria ligações de reposição pelo ciclo médio de compra (1x/dia).
+      const { data: regraCiclo } = await supabase.from('calendario_regras').select('ativa')
+        .eq('estabelecimento_id', estabelecimentoId).eq('tipo', 'agendamento_ciclo_compra').maybeSingle();
+      if ((regraCiclo?.ativa ?? true) && currentUsuarioId) {
+        try { await executarAgendaPorCiclo(estabelecimentoId, currentUsuarioId); } catch (e) { console.error("Agenda inteligente:", e); }
       }
 
       let query = (supabase as any)

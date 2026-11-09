@@ -34,3 +34,28 @@ describe("públicos inteligentes", () => {
     expect(montarObjetivo({ descontoMax: 5, reposicao: false, similar: false, complementares: false, recepcao: false })).toContain("até 5%");
   });
 });
+
+import { planejarPorCiclo, aplicarProtecao as ap } from "./publicoInteligente";
+import { descreverOrigem } from "@/lib/calendario/origemAgendamento";
+describe("agenda inteligente", () => {
+  it("compra a cada 10 dias: agenda 10 dias após a última", () => {
+    const p = planejarPorCiclo([
+      { clienteId: "a", etapa: "finalizado", criado: d(14), produtos: [] },
+      { clienteId: "a", etapa: "finalizado", criado: d(4), produtos: [] },
+    ], hoje, new Set());
+    expect(p[0].data).toBe(new Date(hoje + 6 * 86_400_000).toISOString().slice(0, 10));
+  });
+  it("não agenda quem já tem tarefa pendente", () => {
+    expect(planejarPorCiclo([
+      { clienteId: "a", etapa: "finalizado", criado: d(14), produtos: [] },
+      { clienteId: "a", etapa: "finalizado", criado: d(4), produtos: [] },
+    ], hoje, new Set(["a"]))).toHaveLength(0);
+  });
+  it("exclui quem recebeu disparo em outro canal", () => {
+    const r = ap(new Map([["a", "x"]]), { contatadoRecente: new Set(), comTarefaFutura: new Set(), disparoRecente: new Set(["a"]) }, { recente: false, agendado: false, canais: true });
+    expect(r.size).toBe(0);
+  });
+  it("tarefa sem modo é manual", () => {
+    expect(descreverOrigem({}).motivo).toBe("Criado manualmente pelo usuário");
+  });
+});

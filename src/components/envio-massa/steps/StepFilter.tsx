@@ -97,7 +97,7 @@ export function StepFilter({
             ))}
           </div>
         )}
-        {(canal === 'ia' || canal === 'telefone') && (
+        {canal && (
           <PublicoInteligente contacts={contacts} onAplicar={(sel) => onSelectContacts(sel)} />
         )}
         {/* Resumo Anti-Bloqueio */}

@@ -29,3 +29,4 @@
 - Voice transfer summaries require an explicit device destination; transcript keywords cannot prove a transfer and must not produce popups.
 
 - Ligações com IA usam filtros inteligentes (src/lib/voz/publicoInteligente.ts) e o formulário da oferta vira o objetivo do comando; permissões do agente ficam em voz_agentes.config, assim aparelhos antigos funcionam sem mudança.
+- Every created task records modo_criacao (manual/automatico/inteligente) and motivo, shown via descreverOrigem in the task panel; cross-channel send throttling reads envio_massa follow-up tasks, so no separate send log is needed.

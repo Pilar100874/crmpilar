@@ -15,7 +15,10 @@ export const PUBLICOS: { id: PublicoId; rotulo: string; desc: string }[] = [
 export interface OrcResumo {
   clienteId: string; etapa: string; criado: string; motivoPerda?: string | null; produtos: string[];
 }
-export interface Protecao { contatadoRecente: Set<string>; comTarefaFutura: Set<string> }
+export interface Protecao { contatadoRecente: Set<string>; comTarefaFutura: Set<string>; disparoRecente?: Set<string> }
+
+/** Motivos do último filtro inteligente aplicado (lidos ao criar os retornos). */
+export const ultimosMotivos = new Map<string, string>();
 
 /** Ciclo médio em dias entre compras (precisa de ao menos 2 compras). */
 export function cicloMedio(datas: number[]): number | null {
@@ -56,24 +59,27 @@ export function classificarPublico(
 }
 
 /** Remove contatos protegidos (ligados recentemente ou com retorno já agendado). */
-export function aplicarProtecao(ids: Map<string, string>, p: Protecao, ativa: { recente: boolean; agendado: boolean }) {
+export function aplicarProtecao(ids: Map<string, string>, p: Protecao, ativa: { recente: boolean; agendado: boolean; canais?: boolean }) {
   const r = new Map(ids);
   for (const id of ids.keys()) {
-    if ((ativa.recente && p.contatadoRecente.has(id)) || (ativa.agendado && p.comTarefaFutura.has(id))) r.delete(id);
+    if ((ativa.recente && p.contatadoRecente.has(id)) || (ativa.agendado && p.comTarefaFutura.has(id)) || (ativa.canais && p.disparoRecente?.has(id))) r.delete(id);
   }
   return r;
 }
 
-export async function carregarDadosPublico(estab: string, clientes: { id: string; telefone?: string | null }[]) {
+export async function carregarDadosPublico(estab: string, clientes: { id: string; telefone?: string | null }[], diasCanais = 3) {
   const desde = new Date(Date.now() - 400 * DIA).toISOString();
   const hoje = new Date().toISOString().slice(0, 10);
-  const [o, t, c] = await Promise.all([
+  const [o, t, c, m] = await Promise.all([
     db.from("orcamentos").select("cliente_id, etapa, created_at, motivo_perda, orcamento_itens(produto_id)")
       .eq("estabelecimento_id", estab).gte("created_at", desde).limit(5000),
     db.from("calendario_tarefas").select("contact_id").gt("date", hoje)
       .not("status", "in", '("concluido","cancelado","completed")').limit(5000),
     db.from("voz_chamadas").select("numero").eq("estabelecimento_id", estab)
       .gte("iniciada_em", new Date(Date.now() - 7 * DIA).toISOString()).limit(5000),
+    // Qualquer disparo em massa (WhatsApp, e-mail, telefone, IA) registra um retorno com origem envio_massa.
+    db.from("calendario_tarefas").select("contact_id").eq("estabelecimento_id", estab).eq("origem", "envio_massa")
+      .gte("created_at", new Date(Date.now() - diasCanais * DIA).toISOString()).limit(5000),
   ]);
   const orcs: OrcResumo[] = (o.data ?? []).filter((x: any) => x.cliente_id).map((x: any) => ({
     clienteId: x.cliente_id, etapa: x.etapa, criado: x.created_at, motivoPerda: x.motivo_perda,
@@ -82,7 +88,8 @@ export async function carregarDadosPublico(estab: string, clientes: { id: string
   const fins = new Set((c.data ?? []).map((x: any) => String(x.numero ?? "").replace(/\D/g, "").slice(-8)).filter((s: string) => s.length === 8));
   const contatadoRecente = new Set(clientes.filter((cl) => fins.has(String(cl.telefone ?? "").replace(/\D/g, "").slice(-8))).map((cl) => cl.id));
   const comTarefaFutura = new Set<string>((t.data ?? []).map((x: any) => x.contact_id).filter(Boolean));
-  return { orcs, protecao: { contatadoRecente, comTarefaFutura } as Protecao };
+  const disparoRecente = new Set<string>((m.data ?? []).map((x: any) => x.contact_id).filter(Boolean));
+  return { orcs, protecao: { contatadoRecente, comTarefaFutura, disparoRecente } as Protecao };
 }
 
 export interface ConfigOferta {
@@ -103,4 +110,50 @@ export function montarObjetivo(c: ConfigOferta): string {
   if (c.recepcao) p.push("Se atender recepção/portaria, peça para falar com o responsável por compras (o contato cadastrado); se não estiver, pergunte o melhor horário e ramal.");
   if (c.texto?.trim()) p.push(c.texto.trim());
   return p.join(" ");
+}
+
+export interface AgendaCiclo { clienteId: string; data: string; motivo: string }
+
+/** Agendamento inteligente: próxima ligação = última compra + ciclo médio (dentro dos próximos `janela` dias). */
+export function planejarPorCiclo(orcs: OrcResumo[], hoje: number, comTarefa: Set<string>, janela = 7): AgendaCiclo[] {
+  const porCli = new Map<string, number[]>();
+  for (const o of orcs) if (o.etapa === "finalizado") {
+    const t = Date.parse(o.criado); if (!Number.isFinite(t)) continue;
+    porCli.set(o.clienteId, [...(porCli.get(o.clienteId) ?? []), t]);
+  }
+  const out: AgendaCiclo[] = [];
+  for (const [cli, datas] of porCli) {
+    if (comTarefa.has(cli)) continue;
+    const c = cicloMedio(datas); if (!c || c < 1) continue;
+    const ultima = Math.max(...datas);
+    const proxima = ultima + Math.round(c) * DIA;
+    if (proxima > hoje + janela * DIA) continue;
+    const alvo = Math.max(proxima, hoje);
+    const dias = Math.floor((hoje - ultima) / DIA);
+    out.push({ clienteId: cli, data: new Date(alvo).toISOString().slice(0, 10),
+      motivo: `Compra em média a cada ${Math.round(c)} dias; último pedido há ${dias} dias` });
+  }
+  return out;
+}
+
+/** Cria as tarefas do agendamento inteligente (uma vez por dia, ao abrir a agenda). */
+export async function executarAgendaPorCiclo(estab: string, usuarioId: string) {
+  const chave = `agenda-ciclo:${estab}:${new Date().toISOString().slice(0, 10)}`;
+  if (localStorage.getItem(chave)) return 0;
+  localStorage.setItem(chave, "1");
+  const { orcs, protecao } = await carregarDadosPublico(estab, []);
+  const pend = await db.from("calendario_tarefas").select("contact_id").eq("estabelecimento_id", estab)
+    .not("status", "in", '("concluido","cancelado","completed")').limit(5000);
+  const comTarefa = new Set<string>([...protecao.comTarefaFutura, ...(pend.data ?? []).map((x: any) => x.contact_id)]);
+  const plano = planejarPorCiclo(orcs, Date.now(), comTarefa);
+  if (!plano.length) return 0;
+  const nomes = await db.from("customers").select("id, nome").in("id", plano.map((p) => p.clienteId));
+  const nome = new Map((nomes.data ?? []).map((c: any) => [c.id, c.nome]));
+  const linhas = plano.filter((p) => nome.has(p.clienteId)).map((p) => ({
+    user_id: usuarioId, estabelecimento_id: estab, contact_id: p.clienteId, contact_name: nome.get(p.clienteId),
+    title: `Ligar: reposição - ${nome.get(p.clienteId)}`, description: p.motivo, date: p.data, status: "pending",
+    origem: "inteligente", origem_sub_item: "ciclo_compra", modo_criacao: "inteligente", motivo: p.motivo,
+  }));
+  if (linhas.length) await db.from("calendario_tarefas").insert(linhas);
+  return linhas.length;
 }
