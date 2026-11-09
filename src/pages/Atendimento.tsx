@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
+import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
 import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
