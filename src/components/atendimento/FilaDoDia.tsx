@@ -368,6 +368,31 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             )}
           </div>
           <div className="flex items-center gap-1.5">
+            <div
+              className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-muted/40 p-0.5"
+              data-tour="fila-navegacao"
+            >
+              <button
+                type="button"
+                onClick={abrirAnterior}
+                disabled={!podeVoltar}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Cliente anterior"
+                title={podeVoltar ? "Cliente anterior (atalho: Alt + seta para cima)" : "Nenhum cliente aberto antes deste"}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={abrirProximo}
+                disabled={!podeAvancar}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Próximo cliente"
+                title={itemPorId(idAvancar) ? "Retoma o cliente seguinte do histórico (atalho: Alt + seta para baixo)" : "Abre o próximo cliente da fila (atalho: Alt + seta para baixo)"}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => setTutorialAberto(true)}
@@ -624,7 +649,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
       </div>
 
-      {(termometro || visiveis.length > 0) && (
+      {termometro && (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border/40 px-3 py-1.5">
           {termometro && (
             <>
@@ -632,12 +657,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <span title="Clientes no ciclo de recompra" className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Reposição: {termometro.reposicao}</span>
               <span title="Orçamentos sem retorno" className="rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">Orçamentos: {termometro.orcamentos}</span>
             </>
-          )}
-          {visiveis.length > 0 && (
-            <Button size="sm" variant="outline" className="ml-auto h-7 gap-1 px-2 text-[11px]" title="Abrir o próximo cliente da fila (atalho: Alt + seta para baixo)"
-              onClick={() => abrirProximo()}>
-              <ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Próximo cliente
-            </Button>
           )}
         </div>
       )}
