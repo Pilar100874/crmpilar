@@ -22,6 +22,8 @@ interface AtendimentoClientCardProps {
   /** Quando informado, mostra o botão que abre o histórico do cliente na tela central. */
   historicoClienteId?: string;
   historicoClienteNome?: string;
+  /** Falso quando o contato ainda não tem nenhum registro: o botão de histórico some. */
+  temHistorico?: boolean;
 }
 
 const AtendimentoCardsDensityContext = createContext({ compact: false, onToggle: () => undefined });
