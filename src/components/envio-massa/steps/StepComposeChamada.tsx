@@ -77,6 +77,9 @@ export function StepComposeChamada({
     onObjetivoChange(montarObjetivo({ ...n, produtoNome: n.produto?.nome }));
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (canal === "ia") mudar({}); }, [canal]);
+
   const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim();
 
   return (

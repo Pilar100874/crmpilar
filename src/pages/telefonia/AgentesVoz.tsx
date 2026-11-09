@@ -24,7 +24,7 @@ const db = supabase as any;
 type Agente = {
   id?: string; nome: string; ativo: boolean; modos: string[]; ramal_ia: string; ramal_transferencia: string; senha_ramal_ia?: string; codigo_escuta?: string;
   saudacao: string; prompt: string; qualidade: "gratuita" | "premium"; stt_provedor: string;
-  llm_provedor: string; llm_modelo: string; tts_provedor: string; voz: string; updated_at?: string;
+  llm_provedor: string; llm_modelo: string; tts_provedor: string; voz: string; updated_at?: string; config?: Record<string, unknown> | null;
 };
 type Chamada = {
   id: string; modo: string; numero: string | null; ramal_monitorado: string | null; status: string;
@@ -292,6 +292,20 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                 <Label>Instruções para a IA</Label>
                 <Textarea rows={6} placeholder="Ex.: Você atende a Pilar. Informe horários, agende visitas e transfira para vendas quando pedirem orçamento."
                   value={atual.prompt} onChange={(e) => setAtual({ ...atual, prompt: e.target.value })} />
+              </div>
+              <div className="space-y-2 rounded-md border p-3 md:col-span-2">
+                <Label>O que o agente pode saber do cliente</Label>
+                {([
+                  ["usar_historico", "Histórico de compras e orçamentos", "Últimos produtos, frequência e data da última compra"],
+                  ["usar_pagamento", "Formas e prazos de pagamento", "Condições habituais usadas nos pedidos do cliente"],
+                  ["sugerir_similares", "Sugerir reposição e produtos similares", "Compara a oferta com o que o cliente já compra"],
+                ] as const).map(([k, l, d]) => (
+                  <label key={k} className="flex items-start gap-2 text-sm">
+                    <Switch checked={(atual.config as any)?.[k] !== false}
+                      onCheckedChange={(v) => setAtual({ ...atual, config: { ...(atual.config ?? {}), [k]: v } })} />
+                    <span className="min-w-0"><span className="block">{l}</span><span className="block text-xs text-muted-foreground">{d}</span></span>
+                  </label>
+                ))}
               </div>
               <div className="space-y-1">
                 <Label>Qualidade da voz</Label>
