@@ -13,6 +13,16 @@ import { CHAVE_PARAR_AO_RECEBER } from "@/components/atendimento/DiscadorModoDia
 import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
+import { ProdutoBusca } from "../ProdutoBusca";
+import { montarObjetivo } from "@/lib/voz/publicoInteligente";
+
+type Oferta = {
+  produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; texto: string;
+  reposicao: boolean; similar: boolean; complementares: boolean; recepcao: boolean;
+};
+const OFERTA_INICIAL: Oferta = { produto: null, condicao: "", descontoMax: 0, texto: "", reposicao: true, similar: true, complementares: false, recepcao: true };
+/** Mantém o formulário ao voltar/avançar etapas. */
+let ultimaOferta: Oferta | null = null;
 
 interface Props {
   canal: CanalEnvio;
@@ -59,6 +69,13 @@ export function StepComposeChamada({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canal]);
+
+  const [oferta, setOferta] = useState<Oferta>(() => ultimaOferta ?? { ...OFERTA_INICIAL, texto: objetivoIa });
+  const mudar = (p: Partial<Oferta>) => {
+    const n = { ...oferta, ...p };
+    setOferta(n); ultimaOferta = n;
+    onObjetivoChange(montarObjetivo({ ...n, produtoNome: n.produto?.nome }));
+  };
 
   const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim();
 
@@ -148,11 +165,40 @@ export function StepComposeChamada({
                 placeholder="Ex.: 2222" className="h-9 text-xs sm:max-w-[10rem]" />
               <p className="text-[10px] text-muted-foreground">Quando o contato responder, a IA transfere a ligação para este ramal.</p>
             </div>
+          </Card>
+
+          <Card className="p-4 space-y-3">
+            <h4 className="font-medium text-sm">O que ofertar</h4>
             <div className="space-y-1.5">
-              <Label htmlFor="objetivo-ia-massa" className="text-xs">Objetivo da ligação</Label>
-              <Textarea id="objetivo-ia-massa" rows={3} value={objetivoIa} onChange={(e) => onObjetivoChange(e.target.value)}
-                className="text-xs"
-                placeholder="Ex.: oferecer a promoção da semana e confirmar o interesse do contato." />
+              <Label className="text-xs">Produto do sistema</Label>
+              <ProdutoBusca valor={oferta.produto} onChange={(p) => mudar({ produto: p })} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-xs">Condição da campanha</Label>
+                <Input value={oferta.condicao} onChange={(e) => mudar({ condicao: e.target.value })} className="h-9 text-xs"
+                  placeholder="Ex.: R$ 89,90 o fardo acima de 5 fardos" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Desconto máx. (%)</Label>
+                <Input type="number" min={0} max={30} value={oferta.descontoMax || ""} className="h-9 text-xs"
+                  onChange={(e) => mudar({ descontoMax: Math.min(30, Math.max(0, Number(e.target.value) || 0)) })} placeholder="0" />
+              </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 text-xs text-muted-foreground">
+              {([
+                ["reposicao", "Abordar reposição (última compra)"],
+                ["similar", "Oferecer similar se recusar"],
+                ["complementares", "Sugerir produto complementar"],
+                ["recepcao", "Pedir pelo comprador se cair na recepção"],
+              ] as const).map(([k, l]) => (
+                <label key={k} className="flex items-center gap-2"><Switch checked={oferta[k]} onCheckedChange={(v) => mudar({ [k]: v })} />{l}</label>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="objetivo-ia-massa" className="text-xs">Observações para a IA</Label>
+              <Textarea id="objetivo-ia-massa" rows={2} value={oferta.texto} onChange={(e) => mudar({ texto: e.target.value })}
+                className="text-xs" placeholder="Ex.: confirmar o interesse e agendar entrega para a próxima semana." />
             </div>
           </Card>
 
