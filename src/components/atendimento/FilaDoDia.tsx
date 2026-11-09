@@ -351,7 +351,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => { setTimeout(() => setTutorialAberto(true), 0); }}>Tutorial: como usar o Atendimento</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { setTimeout(() => setTutorialAberto(true), 0); }}>Guia completo do Atendimento</DropdownMenuItem>
                 {ehAdmin && <DropdownMenuItem onSelect={() => { setTimeout(() => setSimulacoesAberto(true), 0); }}>Simulações do Atendimento (admin)</DropdownMenuItem>}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => { setTimeout(() => setPrazosAberto(true), 0); }}>Datas dos próximos contatos</DropdownMenuItem>
