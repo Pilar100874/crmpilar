@@ -1,5 +1,5 @@
 # Roadmap — Atendimento
-- [ ] Simplificar encaminhamento de recados com seleção/cadastro central e alerta urgente nos Agendados
+- [x] Simplificar encaminhamento de recados com seleção/cadastro central e alerta urgente nos Agendados
 - [x] Atualizar menu radial com atalhos úteis à fila e ao cliente ativo, sem cortes ou ações sem contexto
 - [x] Corrigir busca do cabeçalho em todas as visualizações e manter a pesquisa ao abrir a agenda central
 - [x] Abrir cadastros na área central com os mesmos formulários de Empresas e Contatos do Listas
