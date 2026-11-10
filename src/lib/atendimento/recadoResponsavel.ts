@@ -17,8 +17,11 @@ export function recadoPendente(t: TarefaRecado): boolean {
 export function recadoUrgentePendente(t: TarefaRecado): boolean {
   return recadoPendente(t) && (t.origem_sub_item === "recado_urgente" || /^URGENTE - Recado:/i.test(t.title || ""));
 }
-export function tarefaVisivelNaFila(t: TarefaRecado & { contact_id?: string | null }, vinculados: Set<string>, usuarioId: string): boolean {
-  return !!t.contact_id && (vinculados.has(t.contact_id) || (t.user_id === usuarioId && recadoPendente(t)));
+export function recadoDoEscopo(t: TarefaRecado, usuarios: string | readonly string[]): boolean {
+  return !!t.user_id && (typeof usuarios === "string" ? t.user_id === usuarios : usuarios.includes(t.user_id)) && recadoPendente(t);
+}
+export function tarefaVisivelNaFila(t: TarefaRecado & { contact_id?: string | null }, vinculados: Set<string>, usuarios: string | readonly string[]): boolean {
+  return !!t.contact_id && (vinculados.has(t.contact_id) || recadoDoEscopo(t, usuarios));
 }
 
 export interface DadosRecado {
