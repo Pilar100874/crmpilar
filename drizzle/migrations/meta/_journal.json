@@ -120,6 +120,13 @@
       "when": 1794274342325,
       "tag": "0016_autoria_jornada_e_resultados_disparo",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794274546352,
+      "tag": "0017_resultado_observado_disparo_jornada",
+      "breakpoints": true
     }
   ]
 }

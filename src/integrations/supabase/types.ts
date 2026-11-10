@@ -9539,6 +9539,7 @@ export type Database = {
           envio_id: string
           erro_mensagem: string | null
           id: string
+          resultado_observado: string | null
           status: string | null
         }
         Insert: {
@@ -9548,6 +9549,7 @@ export type Database = {
           envio_id: string
           erro_mensagem?: string | null
           id?: string
+          resultado_observado?: string | null
           status?: string | null
         }
         Update: {
@@ -9557,6 +9559,7 @@ export type Database = {
           envio_id?: string
           erro_mensagem?: string | null
           id?: string
+          resultado_observado?: string | null
           status?: string | null
         }
         Relationships: [
