@@ -570,6 +570,7 @@ export default function Atendimento() {
   const [recadoContato, setRecadoContato] = useState<{ id: string; nome: string } | null>(null);
   const [cadastroParaRecado, setCadastroParaRecado] = useState(false);
   const [recadosRecebidos, setRecadosRecebidos] = useState<any[]>([]);
+  const [usuarioAgendaId, setUsuarioAgendaId] = useState("");
   const contatosNaFilaRef = useRef<Set<string>>(new Set());
   const abrirFichaForaDaFilaRef = useRef<(c: { id: string; nome: string; tel?: string; telefone?: string; email?: string }) => void>(() => {});
   const filtrarESelecionarCartao = (filtro: GlobalFilter | null) => {
@@ -1831,6 +1832,7 @@ export default function Atendimento() {
       }
 
       const dateStr = format(date, 'yyyy-MM-dd');
+      setUsuarioAgendaId(usuarioData.id);
 
       // Regra "Realocação Diária de Tarefas": tarefas atrasadas ficam sempre na data
       // atual — somente datas vencidas voltam para hoje. Retornos futuros são preservados.
@@ -4705,7 +4707,7 @@ ${recentMessages}
 
     // Agendados: tarefas da agenda, somente de contatos vinculados ao(s) usuário(s) visíveis
     if (filtroFila === "agendados") filteredTasks
-      .filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioId))
+      .filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioAgendaId))
       .forEach((task: any) => {
       const r = registrosPorContato.get(task.contact_id);
       const ce = task.customers?.customer_empresas || [];
@@ -4727,7 +4729,7 @@ ${recentMessages}
         id: `task-${task.id}`,
         tipo: "agendado",
         contactId: task.contact_id,
-        recadoUrgente: task.user_id === usuarioId && recadoUrgentePendente(task),
+        recadoUrgente: task.user_id === usuarioAgendaId && recadoUrgentePendente(task),
         temHistorico: possuiHistorico(r),
         temAgenda: possuiAgenda(r),
         temOrcamento: possuiOrcamento(r),
@@ -4739,7 +4741,7 @@ ${recentMessages}
         data: task.data_original ? format(new Date(task.data_original), "dd/MM") : (task.date ? format(new Date(task.date), "dd/MM") : undefined),
         atrasado,
         selecionado: selectedTaskId === task.id,
-        assumido: !!usuarioId && !!task.user_id && task.user_id !== usuarioId,
+        assumido: !!usuarioAgendaId && !!task.user_id && task.user_id !== usuarioAgendaId,
         canais: [
           ...(task.customers?.telefone ? ["whatsapp" as FilaCanal] : []),
           ...(task.customers?.tel ? ["telefone" as FilaCanal] : []),
@@ -4924,7 +4926,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [globalFilter, escopoEmpresaFiltro, contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
+  }, [globalFilter, escopoEmpresaFiltro, contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, usuarioAgendaId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -4988,10 +4990,10 @@ ${recentMessages}
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
-    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioId)).length,
+    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioAgendaId)).length,
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
     potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuarioId, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuarioAgendaId, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
 
   const chaveContatosPotenciais = useMemo(() => contatosVinculados.map((c: any) => c.id).sort().join(","), [contatosVinculados]);
   useEffect(() => {
