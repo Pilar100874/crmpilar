@@ -30,6 +30,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Vendas
   { id: "Vendas", label: "Vendas (Categoria)", category: "Vendas" },
   { id: "Orçamento", label: "Orçamento", category: "Vendas" },
+  { id: "Pedidos Perdidos", label: "Pedidos perdidos", category: "Vendas" },
   { id: "Config Vendas", label: "Configuração de Vendas", category: "Vendas" },
   
   // Assistente

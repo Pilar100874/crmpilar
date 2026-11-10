@@ -676,6 +676,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       return;
     }
 
+    if (!formData.marca?.trim()) {
+      toast.error("Marca é obrigatória (aba Marketplace)");
+      return;
+    }
+
     // Validar unicidade
     const isUnique = await validateUniqueness();
     if (!isUnique) return;
@@ -1905,7 +1910,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">Marca</Label>
+                      <Label className="text-xs sm:text-sm font-medium">Marca *</Label>
                       <Input
                         value={formData.marca}
                         onChange={(e) => setFormData({ ...formData, marca: e.target.value })}

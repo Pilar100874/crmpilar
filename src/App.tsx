@@ -88,6 +88,7 @@ const JornadaEquipe = React.lazy(() => import("./pages/JornadaEquipe"));
 const MeusTextosProntos = React.lazy(() => import("./pages/MeusTextosProntos"));
 const MeusAnexos = React.lazy(() => import("./pages/MeusAnexos"));
 const Orcamentos = React.lazy(() => import("./pages/Orcamentos"));
+const PedidosPerdidos = React.lazy(() => import("./pages/PedidosPerdidos"));
 const OrcamentoPublico = React.lazy(() => import("./pages/OrcamentoPublico"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 import Layout from "./components/Layout";
@@ -663,6 +664,7 @@ const App = () => (
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />
+              <Route path="/pedidos-perdidos" element={<PedidosPerdidos />} />
               <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
               <Route path="/atendimento-config" element={<AtendimentoConfig />} />
               <Route path="/jornada-equipe" element={<JornadaEquipe />} />
