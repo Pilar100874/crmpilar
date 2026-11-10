@@ -563,6 +563,12 @@ export default function Atendimento() {
 
   // Global client filter
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
+  const filtroSelecionarCartaoRef = useRef<GlobalFilter | null>(null);
+  const filtrarESelecionarCartao = (filtro: GlobalFilter | null) => {
+    filtroSelecionarCartaoRef.current = filtro;
+    setGlobalFilter(filtro);
+    if (filtro) setFiltroFila("tudo");
+  };
   const [escopoEmpresaFiltro, setEscopoEmpresaFiltro] = useState<EscopoEmpresa | null>(null);
   useEffect(() => {
     if (globalFilter?.type !== "empresa") { setEscopoEmpresaFiltro(null); return; }
@@ -4915,6 +4921,19 @@ ${recentMessages}
     }, 0);
   }, [filaItems, filtroFila, selecaoContatoTick]);
 
+  useEffect(() => {
+    const filtro = filtroSelecionarCartaoRef.current;
+    if (!filtro || filtroFila !== "tudo" || globalFilter !== filtro) return;
+    const item = cartaoDoFiltro(filaItems, filtro, escopoEmpresaFiltro, selecaoFila?.contactId);
+    if (!item) return;
+    filtroSelecionarCartaoRef.current = null;
+    // Apenas destaque: filtrar não inicia atendimento nem promove uma finalização pendente.
+    setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
+    requestAnimationFrame(() => {
+      if (item.contactId) document.querySelector(`[data-fila-contato="${item.contactId}"]`)?.scrollIntoView({ block: "nearest" });
+    });
+  }, [filaItems, filtroFila, globalFilter, escopoEmpresaFiltro, selecaoFila?.contactId]);
+
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
@@ -4948,7 +4967,7 @@ ${recentMessages}
 
   const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
-    <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+    <GlobalClientFilter activeFilter={globalFilter} onFilterChange={filtrarESelecionarCartao} compact />
   </div>;
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento

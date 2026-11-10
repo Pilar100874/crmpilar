@@ -10,6 +10,15 @@ export interface EscopoEmpresa {
   emails: Set<string>;
 }
 
+export function cartaoDoFiltro<T extends { id: string; contactId?: string | null }>(
+  itens: T[], filtro: FiltroContato, empresa: EscopoEmpresa | null, contatoAtual?: string | null,
+): T | undefined {
+  if (filtro.type === "customer") return itens.find(item => item.contactId === filtro.id);
+  if (empresa?.id !== filtro.id) return undefined;
+  const vinculados = itens.filter(item => !!item.contactId && empresa.contatos.has(item.contactId));
+  return vinculados.find(item => item.contactId === contatoAtual) ?? vinculados[0];
+}
+
 export function correspondeFiltroContato(
   contatoId: string | null | undefined,
   email: string | null | undefined,
