@@ -100,6 +100,7 @@ export interface FilaItem {
   onCredito?: (s: SituacaoCredito) => void;
   /** Itens importantes faltando no cadastro do contato. */
   cadastroFaltando?: string[];
+  recadoUrgente?: boolean;
 }
 
 export type FiltroFila = "tudo" | "agendados" | "recebidos" | "potenciais";
@@ -143,6 +144,7 @@ interface FilaDoDiaProps {
   onConfigurarRegra: () => void;
   vazioTexto?: string;
   headerExtra?: React.ReactNode;
+  totalRecadosUrgentes?: number;
   painelAberto?: boolean;
   onTogglePainel?: () => void;
   filtro?: FiltroFila;
@@ -171,7 +173,7 @@ const ICONE_ABA: Partial<Record<FiltroFila, typeof LayoutList>> = {
   potenciais: Sparkles,
 };
 
-export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados, termometro }: FilaDoDiaProps) {
+export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo, onPararDiscador, onConfigurarRegra, vazioTexto, headerExtra, totalRecadosUrgentes = 0, painelAberto, onTogglePainel, filtro: filtroProp, onFiltroChange, assumirContatos, totais, verSinalizados, onToggleSinalizados, totalSinalizados, termometro }: FilaDoDiaProps) {
   const [filtroInterno, setFiltroInterno] = useState<FiltroFila>("tudo");
   const [acoesExpandidas, setAcoesExpandidas] = useState<Set<string>>(new Set());
   const [orcAberto, setOrcAberto] = useState<string | null>(null);
@@ -258,13 +260,16 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
 
 
     const ordenada = [...lista];
+    const prioridadeRecado = (a: FilaItem, b: FilaItem) => Number(!!b.recadoUrgente) - Number(!!a.recadoUrgente);
     if (ordenacao === "nome") {
-      ordenada.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      ordenada.sort((a, b) => prioridadeRecado(a, b) || a.nome.localeCompare(b.nome, "pt-BR"));
     } else if (ordenacao === "horario") {
-      ordenada.sort((a, b) => (a.horario || "99:99").localeCompare(b.horario || "99:99"));
+      ordenada.sort((a, b) => prioridadeRecado(a, b) || (a.horario || "99:99").localeCompare(b.horario || "99:99"));
     } else {
       // Prioridade: atrasados primeiro, depois com mensagens novas, depois por horário
       ordenada.sort((a, b) => {
+        const recado = prioridadeRecado(a, b);
+        if (recado) return recado;
         const urg = (b.urgencia ? URGENCIA[b.urgencia].peso : 0) - (a.urgencia ? URGENCIA[a.urgencia].peso : 0);
         if (urg !== 0) return urg;
         const atrasoDiff = Number(b.atrasado || false) - Number(a.atrasado || false);
@@ -538,10 +543,11 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 variant="ghost"
                 aria-pressed={ativo}
                 onClick={() => setFiltro(chip.id)}
-                title={chip.label}
+                title={chip.id === "agendados" && totalRecadosUrgentes ? `Agendados — ${totalRecadosUrgentes} recado(s) urgente(s) para retorno` : chip.label}
                 aria-label={chip.label}
                 className={cn(
                   "flex h-9 min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-medium transition-colors",
+                  chip.id === "agendados" && totalRecadosUrgentes > 0 && "recado-urgente-alerta text-destructive",
                   ativo
                     ? "bg-primary/10 text-primary font-semibold"
                     : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -712,6 +718,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                     ? "bg-primary/10 ring-2 ring-primary/60 shadow-sm"
                     : "hover:bg-muted/40",
                   item.contactId && pendencias.includes(item.contactId) && "ring-2 ring-inset ring-destructive/50"
+                  ,item.recadoUrgente && "recado-urgente-alerta border-destructive/60 before:bg-destructive"
                 )}
               >
 
@@ -734,6 +741,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                         </span>
                       ) : null}
                     </p>
+                    {item.recadoUrgente && <span className="mt-1 block text-xs font-semibold text-destructive">Recado urgente · retornar</span>}
                      {item.tipo === "recebido" && (() => {
                        const cfg = CANAL_CONFIG[item.canal];
                        const Ic = cfg.icon;
