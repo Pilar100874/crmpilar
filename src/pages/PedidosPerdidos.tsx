@@ -1,3 +1,4 @@
+import { carregarEquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -25,9 +26,12 @@ export default function PedidosPerdidos() {
       const estab = await getEstabelecimentoId();
       if (!estab) { setCarregando(false); return; }
       const db = supabase as any;
-      const { data } = await db.from("orcamentos")
+      const equipe = await carregarEquipeVisivel(estab);
+      let q = db.from("orcamentos")
         .select("id, created_at, updated_at, valor_total, motivo_perda, cliente:customers!left(nome), empresa:empresas!left(nome_fantasia), vendedor:usuarios!left(nome), orcamento_itens(id, produto_id, quantidade, preco_unitario, subtotal, produtos(nome, marca))")
         .eq("estabelecimento_id", estab).eq("etapa", "perdido").order("updated_at", { ascending: false }).limit(2000);
+      if (equipe && equipe.papel !== "admin") q = q.in("vendedor_id", [equipe.usuarioId, ...equipe.membros.map((m) => m.id)]);
+      const { data } = await q;
       const ids = (data ?? []).map((o: any) => o.id);
       const det = new Map<string, any>();
       for (let i = 0; i < ids.length; i += 200) {
