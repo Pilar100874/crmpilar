@@ -2350,6 +2350,8 @@ export default function Atendimento() {
         return;
       }
 
+      if (!(await exigirCadastroOrcamento(original.cliente_id, original.empresa_id))) return;
+
       // Criar novo orçamento
       const { data: newOrcamento, error: insertError } = await supabase
         .from('orcamentos')
@@ -2639,7 +2641,8 @@ export default function Atendimento() {
     if (type === 'empresa') {
       setInitialEmpresaForOrcamento(data.id);
     } else {
-      setInitialEmpresaForOrcamento(data.empresa_id || null);
+      const cadastro = await carregarCadastroOrcamento(data.id, data.empresa_id);
+      setInitialEmpresaForOrcamento(cadastro.empresa?.id || null);
     }
     setTimeout(() => {
       setActiveTabState('orcamento');
@@ -6523,6 +6526,7 @@ ${recentMessages}
                 estabelecimentoId={estabelecimentoId}
                 setOrcamentoSheetOpen={setOrcamentoSheetOpen}
                 initialEmpresaForOrcamento={initialEmpresaForOrcamento}
+                validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
                 onOrcamentoClose={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
@@ -8096,7 +8100,9 @@ ${recentMessages}
             setCreatingContatoInitialData(null);
           }
         }}
-        onSuccess={() => {
+        onSuccess={(customerId) => {
+          const pendente = orcamentoPendenteCadastroRef.current;
+          if (pendente) orcamentoPendenteCadastroRef.current = { type: 'customer', data: { ...pendente.data, id: customerId } };
           setCreatingContato(false);
           retomarOrcamentoAposCadastro();
           setCreatingContatoInitialData(null);
@@ -9138,6 +9144,7 @@ interface MobileMainContentProps {
   estabelecimentoId: string;
   setOrcamentoSheetOpen: (open: boolean) => void;
   initialEmpresaForOrcamento?: string | null;
+  validarCadastro?: (contatoId: string, empresaId: string) => Promise<boolean>;
   onOrcamentoClose?: () => void;
   onOrcamentoDelete?: () => void;
   onOrcamentoSave?: () => void;
@@ -9195,6 +9202,7 @@ function MobileMainContent({
   estabelecimentoId,
   setOrcamentoSheetOpen,
   initialEmpresaForOrcamento,
+  validarCadastro,
   onOrcamentoClose,
   onOrcamentoDelete,
   onOrcamentoSave,
@@ -9416,7 +9424,7 @@ function MobileMainContent({
           showPanelToggle={false}
           onTogglePanel={() => {}}
           initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
-            validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
+            validarCadastro={validarCadastro}
         />
       </div>
     );
