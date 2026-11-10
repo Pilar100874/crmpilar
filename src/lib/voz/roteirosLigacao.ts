@@ -52,8 +52,9 @@ export const ROTEIROS: Roteiro[] = [
     campos: ["desconto"], obrigatorios: [], produtoPorCliente: true,
     etapas: () => [
       "Diga que está ligando sobre o orçamento enviado (cite os itens principais dos Dados do CRM, sem ler valores).",
-      "Pergunte se ele conseguiu analisar e se ficou alguma dúvida de preço, prazo ou pagamento.",
-      "Só depois que o cliente RESPONDER: se ele disser que tem dúvida ou quer fechar, transfira para o atendente; se disser que não analisou, pergunte quando pode retornar.",
+      "Pergunte só: \"O senhor conseguiu dar uma olhada no orçamento?\" (uma pergunta, espere a resposta).",
+      "Se respondeu sim, pergunte só: \"Ficou alguma dúvida ou já podemos fechar?\". Se respondeu não, pergunte quando pode retornar.",
+      "Se o cliente falar em dúvida, fechar, valor, prazo ou pagamento: NÃO faça outra pergunta; diga \"Vou te passar agora para o atendente, um instante\" e transfira.",
     ],
   },
   {
@@ -112,7 +113,7 @@ const ROTULO_PH: DadosRoteiro = { produtoNome: "{produto}", condicao: "{condicao
 const CONDICOES_PADRAO: Record<RoteiroBaseId, CondicaoRoteiro[]> = {
   reposicao: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
   produto_foco: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
-  orcamento_aberto: [{ gatilho: "já comprou de outro fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele escolher o outro." }, { gatilho: "achou caro", acao: "desconto" }],
+  orcamento_aberto: [{ gatilho: "disse que tem dúvida, quer fechar ou perguntou valor/prazo", acao: "transferir" }, { gatilho: "já comprou de outro fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele escolher o outro." }, { gatilho: "achou caro", acao: "desconto" }],
   reativacao: [{ gatilho: "disse que não precisa agora", acao: "encerrar" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
   lembrete_financeiro: [{ gatilho: "pediu prazo ou forma de pagamento", acao: "transferir" }],
 };

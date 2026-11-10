@@ -68,10 +68,14 @@ Deno.serve(async (req) => {
       const fd = new FormData();
       fd.append("model", "openai/gpt-4o-mini-transcribe");
       fd.append("language", "pt");
+      fd.append("prompt", "Ligação comercial em português do Brasil. Respostas comuns: alô, sim, não, pode falar, recebi, não recebi, analisei, tenho dúvida, quero fechar, pode transferir, quanto fica, qual o valor, prazo, pagamento, boleto, orçamento, pedido, depois, agora não, obrigado.");
       fd.append("file", new Blob([bytes], { type: "audio/wav" }), "fala.wav");
       const s = await fetch(`${GW}/audio/transcriptions`, { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: fd });
       if (!s.ok) return json({ error: "Falha na transcrição", details: await s.text() }, s.status);
       fala = String((await s.json()).text ?? "").trim();
+      // Filtro de ruído/alucinação: caracteres não latinos ou fala curta sem letras úteis.
+      const letras = fala.replace(/[^a-zA-ZÀ-ÿ]/g, "");
+      if (/[^\u0000-\u024F\s.,!?'"-]/.test(fala) || letras.length < 2) fala = "";
     }
     if (!fala && audio_wav_b64) return json({ fala: "", resposta: "", audio_b64: null });
 
@@ -79,11 +83,16 @@ Deno.serve(async (req) => {
     const sistema = modo === "assistir"
       ? `Você ajuda um atendente humano durante uma ligação. Leia a conversa e devolva UMA sugestão curta (até 2 frases) do que o atendente pode dizer agora. Responda em português. ${DIRETIVA}\n\nContexto: ${prompt}`
       : `Você é um agente de voz ao telefone. Fale em português do Brasil como uma pessoa real: no máximo 2 frases curtas por fala, terminando com uma pergunta simples; sem listas, emojis, markdown ou números de pedido. Responda ao que o cliente acabou de dizer antes de seguir o roteiro, uma etapa por fala. Se não entendeu, peça para repetir em poucas palavras. Se ouvir caixa postal ou mensagem de operadora, responda apenas "[DESLIGAR]". Se o cliente pedir uma pessoa, diga uma frase curta e inclua "[TRANSFERIR]". Use "[TRANSFERIR]" só quando a última fala do cliente pedir isso ou mostrar interesse explícito; nunca na mesma fala em que você faz uma pergunta, nunca na sua primeira ou segunda fala sem resposta do cliente. Para encerrar, termine com "[DESLIGAR]". ${DIRETIVA}\n\n${prompt}`;
-    let resposta = await responder(key, sistema, hist);
+    const GATILHO = /(d[uú]vida|fechar|quanto fica|qual (o )?valor|pre[çc]o|prazo|pagamento|transfer|vendedor|atendente|falar com algu[eé]m)/i;
+    const regraOuro = fala && GATILHO.test(fala)
+      ? `\n\nREGRA DE OURO: o cliente acabou de dizer "${fala}". NÃO faça pergunta. Diga uma frase curta de transição (ex.: "Perfeito, vou te passar agora para o atendente, um instante.") e inclua [TRANSFERIR].`
+      : "";
+    let resposta = await responder(key, sistema + regraOuro, hist);
+    if (regraOuro && resposta && !resposta.includes("[TRANSFERIR]")) resposta = "Perfeito, vou te passar agora para o atendente, um instante. [TRANSFERIR]";
     // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
     if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
       const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
-      if (!fala || /\?\s*$/.test(limpa)) resposta = limpa;
+      if (!fala || (!regraOuro && /\?\s*$/.test(limpa))) resposta = limpa;
     }
 
     let audio_b64: string | null = null;
