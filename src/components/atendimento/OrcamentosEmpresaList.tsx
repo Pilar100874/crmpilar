@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Copy, Filter, MoreVertical, Receipt, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight, Copy, Filter, MoreVertical, Receipt, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -19,6 +19,8 @@ interface OrcamentosEmpresaListProps {
   onSelectEmpresa?: (orcamentoReferencia: any) => void;
   onDuplicate?: (orcamentoId: string) => void;
   onDelete?: (orcamentoId: string) => void;
+  /** Muda a etapa (status) do orçamento; "perdido" deve exigir motivo no chamador. */
+  onEtapaChange?: (orcamento: any, etapa: string) => void;
   emailsNaoLidosPerEmail?: Record<string, number>;
   chatsNaoLidosPerPhone?: Record<string, number>;
   indicadoresPorContato?: Map<string, AtendimentoIndicatorData>;
@@ -45,6 +47,8 @@ const ETAPA_LABELS: Record<string, string> = {
   ganho: "Ganho",
 };
 
+const ETAPAS_MOVER = ["orcamento", "negociacao", "aprovacao_gerencia", "finalizado", "perdido"];
+
 const rotuloEtapa = (etapa?: string) => (etapa ? ETAPA_LABELS[etapa] || etapa : "Sem etapa");
 
 const formatarValor = (valor: any) =>
@@ -56,12 +60,14 @@ function OrcamentoRow({
   onSelect,
   onDuplicate,
   onDelete,
+  onEtapaChange,
 }: {
   orcamento: any;
   selecionado: boolean;
   onSelect: (orcamento: any) => void;
   onDuplicate?: (orcamentoId: string) => void;
   onDelete?: (orcamentoId: string) => void;
+  onEtapaChange?: (orcamento: any, etapa: string) => void;
 }) {
   return (
     <div
@@ -84,14 +90,14 @@ function OrcamentoRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-medium">Orçamento {String(orcamento.id).slice(0, 8).toUpperCase()}</p>
-          <Badge variant="outline" className="shrink-0 text-[10px]">{orcamento.etapa || orcamento.status}</Badge>
+          <Badge variant="outline" className="shrink-0 text-[10px]">{rotuloEtapa(orcamento.etapa || orcamento.status)}</Badge>
         </div>
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <span className="text-xs font-semibold text-primary">{formatarValor(orcamento.valor_total)}</span>
           <span className="text-[10px] text-muted-foreground">{format(new Date(orcamento.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
         </div>
       </div>
-      {(onDuplicate || onDelete) && (
+      {(onDuplicate || onDelete || onEtapaChange) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
             <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Ações do orçamento">
@@ -99,6 +105,17 @@ function OrcamentoRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+            {onEtapaChange && (
+              <>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Mudar status para</DropdownMenuLabel>
+                {ETAPAS_MOVER.filter((e) => e !== orcamento.etapa).map((etapa) => (
+                  <DropdownMenuItem key={etapa} onClick={() => onEtapaChange(orcamento, etapa)}>
+                    <ArrowRight className="mr-2 h-4 w-4" /> {rotuloEtapa(etapa)}
+                  </DropdownMenuItem>
+                ))}
+                {(onDuplicate || onDelete) && <DropdownMenuSeparator />}
+              </>
+            )}
             {onDuplicate && (
               <DropdownMenuItem onClick={() => onDuplicate(orcamento.id)}>
                 <Copy className="mr-2 h-4 w-4" /> Duplicar
@@ -124,6 +141,7 @@ export function OrcamentosEmpresaList({
   onSelectEmpresa,
   onDuplicate,
   onDelete,
+  onEtapaChange,
   emailsNaoLidosPerEmail = {},
   chatsNaoLidosPerPhone = {},
   indicadoresPorContato,
@@ -230,6 +248,7 @@ export function OrcamentosEmpresaList({
                 onSelect={onSelectOrcamento}
                 onDuplicate={onDuplicate}
                 onDelete={onDelete}
+                onEtapaChange={onEtapaChange}
               />
             ))}
           </div>
@@ -280,6 +299,7 @@ export function OrcamentosEmpresaList({
                     onSelect={onSelectOrcamento}
                     onDuplicate={onDuplicate}
                     onDelete={onDelete}
+                    onEtapaChange={onEtapaChange}
                   />
                 ))}
               </div>

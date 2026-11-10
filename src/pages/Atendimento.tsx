@@ -50,6 +50,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import POSView from "@/components/orcamento/POSView";
+import MotivoPerdaDialog from "@/components/orcamento/MotivoPerdaDialog";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
@@ -491,6 +492,22 @@ export default function Atendimento() {
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [perdaOrcamento, setPerdaOrcamento] = useState<{ id: string; etapa?: string } | null>(null);
+  const mudarEtapaOrcamento = async (orcamento: any, etapa: string) => {
+    if (etapa === "perdido") { setPerdaOrcamento({ id: orcamento.id, etapa: orcamento.etapa }); return; }
+    const { error } = await supabase.from("orcamentos").update({ etapa } as any).eq("id", orcamento.id);
+    if (error) { toast.error("Erro ao mudar o status do orçamento"); return; }
+    setOrcamentos((prev) => prev.map((o: any) => (o.id === orcamento.id ? { ...o, etapa } : o)));
+    window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
+    toast.success("Status do orçamento alterado");
+  };
+  const mudarEtapaRef = useRef(mudarEtapaOrcamento);
+  mudarEtapaRef.current = mudarEtapaOrcamento;
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent).detail; if (d?.orcamento) void mudarEtapaRef.current(d.orcamento, d.etapa); };
+    window.addEventListener("atendimento:mudar-etapa-orcamento", h);
+    return () => window.removeEventListener("atendimento:mudar-etapa-orcamento", h);
+  }, []);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; nome: string; email: string } | null>(null);
   const [contatoEmailDetalhe, setContatoEmailDetalhe] = useState<any>(null);
@@ -6400,6 +6417,7 @@ ${recentMessages}
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   <OrcamentosEmpresaList
                     modo="direto"
+                  onEtapaChange={mudarEtapaOrcamento}
                     orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
                     tarefasAgenda={filteredTasks}
                     emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
@@ -7102,7 +7120,17 @@ ${recentMessages}
             open={showNovoContatoDialog}
             onOpenChange={setShowNovoContatoDialog}
           />
-          <ComposeEmailDialog
+          <MotivoPerdaDialog
+        orcamentoId={perdaOrcamento?.id ?? null}
+        etapaAnterior={perdaOrcamento?.etapa}
+        onOpenChange={(o) => { if (!o) setPerdaOrcamento(null); }}
+        onSalvo={(id, motivo) => {
+          setOrcamentos((prev) => prev.map((o: any) => (o.id === id ? { ...o, etapa: "perdido", motivo_perda: motivo } : o)));
+          setPerdaOrcamento(null);
+          window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
+        }}
+      />
+      <ComposeEmailDialog
             open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
             onOpenChange={(open) => {
               if (!open && keepComposeEmailOpen) return;
@@ -7303,6 +7331,7 @@ ${recentMessages}
               <div className="flex-1 min-h-0 overflow-y-auto p-2">
                 <OrcamentosEmpresaList
                   modo="direto"
+                  onEtapaChange={mudarEtapaOrcamento}
                   orcamentos={orcamentos.filter((item: any) => item.cliente_id === orcamentosCliente.id && item.status !== "cancelado")}
                   tarefasAgenda={filteredTasks}
                   emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
@@ -9269,6 +9298,7 @@ function MobileListContent({
 
         {activeTab === "orcamento" && (
           <OrcamentosEmpresaList
+            onEtapaChange={(orcamento, etapa) => window.dispatchEvent(new CustomEvent("atendimento:mudar-etapa-orcamento", { detail: { orcamento, etapa } }))}
             orcamentos={filteredOrcamentos
               .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
               .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)}
