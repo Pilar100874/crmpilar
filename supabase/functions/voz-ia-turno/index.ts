@@ -79,7 +79,12 @@ Deno.serve(async (req) => {
     const sistema = modo === "assistir"
       ? `Você ajuda um atendente humano durante uma ligação. Leia a conversa e devolva UMA sugestão curta (até 2 frases) do que o atendente pode dizer agora. Responda em português. ${DIRETIVA}\n\nContexto: ${prompt}`
       : `Você é um agente de voz ao telefone. Fale em português do Brasil como uma pessoa real: no máximo 2 frases curtas por fala, terminando com uma pergunta simples; sem listas, emojis, markdown ou números de pedido. Responda ao que o cliente acabou de dizer antes de seguir o roteiro, uma etapa por fala. Se não entendeu, peça para repetir em poucas palavras. Se ouvir caixa postal ou mensagem de operadora, responda apenas "[DESLIGAR]". Se o cliente pedir uma pessoa, diga uma frase curta e inclua "[TRANSFERIR]". Use "[TRANSFERIR]" só quando a última fala do cliente pedir isso ou mostrar interesse explícito; nunca na mesma fala em que você faz uma pergunta, nunca na sua primeira ou segunda fala sem resposta do cliente. Para encerrar, termine com "[DESLIGAR]". ${DIRETIVA}\n\n${prompt}`;
-    const resposta = await responder(key, sistema, hist);
+    let resposta = await responder(key, sistema, hist);
+    // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
+    if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
+      const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
+      if (!fala || /\?\s*$/.test(limpa)) resposta = limpa;
+    }
 
     let audio_b64: string | null = null;
     if (modo !== "assistir" && resposta) {
