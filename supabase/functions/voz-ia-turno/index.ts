@@ -13,7 +13,7 @@ const json = (b: unknown, s = 200) =>
 const DIRETIVA =
   "Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.";
 
-async function responder(key: string, sistema: string, historico: { papel: string; texto: string }[]) {
+async function responder(key: string, sistema: string, historico: { papel: string; texto: string }[], modelo = "openai/gpt-5-nano") {
   const input = historico.map((h) => ({
     role: h.papel === "agente" ? "assistant" : "user",
     content: h.texto,
@@ -22,7 +22,7 @@ async function responder(key: string, sistema: string, historico: { papel: strin
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({
-      model: "openai/gpt-5-nano",
+      model: modelo,
       instructions: sistema,
       input,
       stream: true,
@@ -101,13 +101,22 @@ Deno.serve(async (req) => {
     const exata = typeof frase_exata === "string" && frase_exata.trim() ? frase_exata.trim() : null;
     let resposta = exata && modo !== "assistir"
       ? exata
-      : silencio && modo !== "assistir"
-        ? progresso.respostaSilencio ?? ""
+      : silencio && modo !== "assistir" && progresso.respostaSilencio
+        ? progresso.respostaSilencio
       : progresso.respostaSaudacao && modo !== "assistir"
         ? progresso.respostaSaudacao
       : regraOuro && modo !== "assistir"
         ? TRANSICAO
         : await responder(key, sistema + regraOuro + notaAvanco, hist);
+    // Resposta vazia do modelo deixava o cliente sem retorno e disparava "consegue me ouvir?".
+    if (modo !== "assistir" && !resposta?.replace(/\[(TRANSFERIR|DESLIGAR)\]/g, "").trim() && (fala || silencio)) {
+      resposta = await responder(key, sistema + regraOuro + notaAvanco, hist, "google/gemini-2.5-flash").catch(() => "");
+      if (!resposta?.trim()) resposta = progresso.respostaOrcamento === "analisou"
+        ? "Que bom! Ficou alguma dúvida ou podemos seguir com o pedido?"
+        : progresso.respostaOrcamento === "nao_analisou"
+          ? "Sem problema. Qual dia fica melhor para eu te retornar?"
+          : "Perfeito. Posso seguir com o motivo da minha ligação?";
+    }
     // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
     if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
       const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
