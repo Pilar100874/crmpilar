@@ -1,4 +1,5 @@
 import { executarAgendaPorCiclo } from "@/lib/voz/publicoInteligente";
+import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
 import { executarReguaOrcamentos } from "@/lib/atendimento/copilotoAtendimento";
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
@@ -454,7 +455,7 @@ const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm"
   }
 };
 
-export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial, tarefaInicialId, tarefaInicialNonce }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean; tarefaInicialId?: string | null; tarefaInicialNonce?: number }) {
+export default function Calendario({ dataInicial, viewModeInicial, contatoSugerido, filtroAtrasadosInicial, tarefaInicialId, tarefaInicialNonce, busca, onBuscaChange }: { dataInicial?: Date; viewModeInicial?: ViewMode; contatoSugerido?: { id: string; nome: string }; filtroAtrasadosInicial?: boolean; tarefaInicialId?: string | null; tarefaInicialNonce?: number; busca?: string; onBuscaChange?: (valor: string) => void }) {
   const agendaAreaRef = useRef<HTMLDivElement>(null);
   const [agendaWidth, setAgendaWidth] = useState(0);
   useEffect(() => {
@@ -536,7 +537,9 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [filterBy, setFilterBy] = useState<"all" | "my">("my");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [buscaLocal, setBuscaLocal] = useState("");
+  const searchQuery = busca ?? buscaLocal;
+  const setSearchQuery = (valor: string) => { setBuscaLocal(valor); onBuscaChange?.(valor); };
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -2586,6 +2589,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
   const getTasksForDay = (date: Date) => {
     return tasks.filter(task => {
       if (!isSameDay(task.date, date)) return false;
+      if (!correspondeBuscaAgenda(task, searchQuery)) return false;
       
       // Aplicar filtro de origem
       if (selectedOrigens.length > 0) {
@@ -3128,17 +3132,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     if (filtroAtrasados && !tarefaAtrasada(task)) return false;
     if (!filtroAtrasados && filtroDiaTabela && !isSameDay(task.date, filtroDiaTabela)) return false;
     // Filtro de busca
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = (
-        task.title.toLowerCase().includes(query) ||
-        task.description?.toLowerCase().includes(query) ||
-        task.assignedTo?.toLowerCase().includes(query) ||
-        task.userName?.toLowerCase().includes(query) ||
-        format(task.date, "dd/MM/yyyy").includes(query)
-      );
-      if (!matchesSearch) return false;
-    }
+    if (!correspondeBuscaAgenda(task, searchQuery)) return false;
     
     // Filtro de origem - converter origens selecionadas para formato completo
     if (selectedOrigens.length > 0) {
@@ -3473,6 +3467,7 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
     const nextWeekEnd = addWeeks(today, 1);
 
     const filterByOrigem = (task: Task) => {
+      if (!correspondeBuscaAgenda(task, searchQuery)) return false;
       if (selectedOrigens.length > 0) {
         const origemCompleta: string[] = [];
         selectedOrigens.forEach(origem => {
