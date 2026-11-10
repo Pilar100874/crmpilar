@@ -98,7 +98,7 @@ export function analisarHabitos(registros: PedidoHabito[], hoje: Date = new Date
   const sugestoes: string[] = [];
   if (orcamentosAbertos[0]) sugestoes.push(`Há ${orcamentosAbertos.length} orçamento(s) em aberto — o mais recente é de ${dataBR(orcamentosAbertos[0].data)} (${moeda(orcamentosAbertos[0].valor)}). Retome antes de oferecer algo novo.`);
   if (!pedidos.length) {
-    sugestoes.push(totalOrcamentos
+    if (!orcamentosAbertos.length) sugestoes.push(totalOrcamentos
       ? `Cliente tem ${totalOrcamentos} orçamento(s) sem fechamento — retome o último e pergunte o que impediu a compra.`
       : "Cliente ainda sem histórico de compras — apresente os produtos de entrada e entenda a necessidade.");
     const perda = motivosPerda[0];
