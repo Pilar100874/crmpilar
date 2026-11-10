@@ -168,6 +168,7 @@ export function OrcamentosEmpresaList({
 
   const [gruposAbertos, setGruposAbertos] = useState<Set<string>>(new Set());
   const [etapaFiltro, setEtapaFiltro] = useState<string>("");
+  const [periodoFiltro, setPeriodoFiltro] = useState<string>("all");
 
   useEffect(() => {
     if (!selectedOrcamentoId) return;
@@ -201,9 +202,12 @@ export function OrcamentosEmpresaList({
   }, [orcamentos]);
 
   const listaDireta = useMemo(() => {
-    const filtrados = orcamentos.filter((orcamento) => !etapaFiltro || String(orcamento.etapa || orcamento.status || "") === etapaFiltro);
+    const limite = periodoFiltro === "all" ? 0 : Date.now() - Number(periodoFiltro) * 86400000;
+    const filtrados = orcamentos.filter((orcamento) =>
+      (!etapaFiltro || String(orcamento.etapa || orcamento.status || "") === etapaFiltro)
+      && (!limite || new Date(orcamento.created_at).getTime() >= limite));
     return filtrados.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [orcamentos, etapaFiltro]);
+  }, [orcamentos, etapaFiltro, periodoFiltro]);
 
   if (modo === "direto") {
     return (
@@ -227,6 +231,18 @@ export function OrcamentosEmpresaList({
                   {rotuloEtapa(etapa)}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={periodoFiltro} onValueChange={setPeriodoFiltro}>
+            <SelectTrigger className="h-9 w-[120px] shrink-0 rounded-xl bg-background/70 text-xs dark:bg-card/70" aria-label="Filtrar orçamentos por data">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo período</SelectItem>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="365">Último ano</SelectItem>
             </SelectContent>
           </Select>
           <span className="shrink-0 text-[11px] text-muted-foreground">
