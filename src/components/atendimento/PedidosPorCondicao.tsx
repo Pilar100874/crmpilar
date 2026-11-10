@@ -45,7 +45,7 @@ export default function PedidosPorCondicao({ usuarioId, inicio, fim }: { usuario
     });
     const ordem = ["Orçamento", "Negociação", "Aprovação Gerência", "Finalizado", "Ganho", "Perdido"];
     const lista = [...m.values()];
-    if (agrupar === "etapa") return lista.sort((a, b) => (ordem.indexOf(a.nome) + 99) % 99 - (ordem.indexOf(b.nome) + 99) % 99 || 0).sort((a, b) => (ordem.indexOf(a.nome) < 0 ? 98 : ordem.indexOf(a.nome)) - (ordem.indexOf(b.nome) < 0 ? 98 : ordem.indexOf(b.nome)));
+    if (agrupar === "etapa") return lista.sort((a, b) => (ordem.indexOf(a.nome) < 0 ? 98 : ordem.indexOf(a.nome)) - (ordem.indexOf(b.nome) < 0 ? 98 : ordem.indexOf(b.nome)));
     return lista.sort((a, b) => b.valor - a.valor);
   }, [linhas, agrupar]);
   const totalValor = grupos.reduce((s, g) => s + g.valor, 0);
