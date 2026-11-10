@@ -19,3 +19,18 @@ describe("auxiliar de vendas", () => {
     expect(a.condicaoPreferida).toBe("30 dias");
   });
 });
+import { contarComprasJuntas } from "./auxiliarVendas";
+describe("venda cruzada", () => {
+  it("sugere produto que outros compram junto pelo menos 2 vezes", () => {
+    const r = contarComprasJuntas([
+      { orcamentoId: "1", produtoId: "A", nome: "A" }, { orcamentoId: "1", produtoId: "C", nome: "C" },
+      { orcamentoId: "2", produtoId: "A", nome: "A" }, { orcamentoId: "2", produtoId: "C", nome: "C" },
+      { orcamentoId: "3", produtoId: "X", nome: "X" }, { orcamentoId: "3", produtoId: "D", nome: "D" },
+    ], new Set(["A"]));
+    expect(r.map((p) => p.produtoId)).toEqual(["C"]);
+  });
+  it("orçamento sem fechamento e sem perda conta como em aberto", () => {
+    const a = analisarHabitos([{ id: "o", data: "2026-01-01", etapa: "orcamento", valor: 500, percentualDesconto: 0, condicao: null, itens: [] }]);
+    expect(a.orcamentosAbertos.map((o) => o.id)).toEqual(["o"]);
+  });
+});
