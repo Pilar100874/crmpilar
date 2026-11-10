@@ -233,6 +233,8 @@ Deno.serve(async (req) => {
       case "turno": {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
+        // Saudação: frase fixa, vai direto para a voz sem esperar CRM nem IA.
+        const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
         const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${corpo.objetivo}\n\n` : "";
         let crm = "";
         const cfgA = (a.config ?? {}) as Record<string, unknown>;
@@ -249,7 +251,10 @@ Deno.serve(async (req) => {
           if (c && Date.now() - c.t < 10 * 60_000) crm = c.v;
           else {
             const opts = vendas ? { historico: cfgA.usar_historico !== false, pagamento: cfgA.usar_pagamento !== false } : undefined;
-            try { crm = await contextoCrm(sb, empresa, numero, opts); cacheCrm.set(chave, { t: Date.now(), v: crm }); } catch (e) { console.error("contexto CRM", e); }
+            const carregar = contextoCrm(sb, empresa, numero, opts).then((v) => { cacheCrm.set(chave, { t: Date.now(), v }); return v; });
+            // Na saudação, aquece o cache em segundo plano para o 1º turno já ter os dados.
+            if (exata) carregar.catch((e) => console.error("contexto CRM", e));
+            else { try { crm = await carregar; } catch (e) { console.error("contexto CRM", e); } }
           }
           if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
           // Ligação de vendas: contexto enxuto para a IA não citar históricos antigos.
@@ -264,6 +269,7 @@ Deno.serve(async (req) => {
             historico: Array.isArray(corpo.historico) ? corpo.historico.slice(-20) : [],
             modo: corpo.modo ?? "receber",
             voz: a.voz || "alloy",
+            frase_exata: exata ? exata[1].trim() : null,
           }),
         });
         return new Response(await r.text(), { status: r.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

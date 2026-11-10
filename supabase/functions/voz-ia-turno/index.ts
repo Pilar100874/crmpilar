@@ -52,6 +52,10 @@ async function responder(key: string, sistema: string, historico: { papel: strin
   return texto.trim();
 }
 
+const TRANSICAO_TXT = "Perfeito, vou te passar agora para o atendente, um instante.";
+const TRANSICAO = `${TRANSICAO_TXT} [TRANSFERIR]`;
+const CACHE_AUDIO = new Map<string, string>();
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const esperado = Deno.env.get("AIP_RUNNER_KEY");
@@ -60,7 +64,7 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
 
   try {
-    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy" } = await req.json();
+    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy", frase_exata = null } = await req.json();
 
     let fala = "";
     if (audio_wav_b64) {
@@ -87,8 +91,13 @@ Deno.serve(async (req) => {
     const regraOuro = fala && GATILHO.test(fala)
       ? `\n\nREGRA DE OURO: o cliente acabou de dizer "${fala}". NÃO faça pergunta. Diga uma frase curta de transição (ex.: "Perfeito, vou te passar agora para o atendente, um instante.") e inclua [TRANSFERIR].`
       : "";
-    let resposta = await responder(key, sistema + regraOuro, hist);
-    if (regraOuro && resposta && !resposta.includes("[TRANSFERIR]")) resposta = "Perfeito, vou te passar agora para o atendente, um instante. [TRANSFERIR]";
+    // Atalhos sem LLM (economizam ~1s): frase exata (saudação) e transferência imediata.
+    const exata = typeof frase_exata === "string" && frase_exata.trim() ? frase_exata.trim() : null;
+    let resposta = exata && modo !== "assistir"
+      ? exata
+      : regraOuro && modo !== "assistir"
+        ? TRANSICAO
+        : await responder(key, sistema + regraOuro, hist);
     // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
     if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
       const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
@@ -98,7 +107,9 @@ Deno.serve(async (req) => {
     let audio_b64: string | null = null;
     if (modo !== "assistir" && resposta) {
       const falar = resposta.replace(/\[(TRANSFERIR|DESLIGAR)\]/g, "").trim();
-      if (falar) {
+      const ck = `${voz}|${falar}`;
+      if (falar && CACHE_AUDIO.has(ck)) audio_b64 = CACHE_AUDIO.get(ck)!;
+      else if (falar) {
         const t = await fetch(`${GW}/audio/speech`, {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -109,6 +120,11 @@ Deno.serve(async (req) => {
           let s = "";
           for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
           audio_b64 = btoa(s);
+          // Guarda falas curtas repetidas (saudação, transição) para tocar na hora nas próximas ligações.
+          if (exata || resposta.startsWith(TRANSICAO_TXT)) {
+            if (CACHE_AUDIO.size > 200) CACHE_AUDIO.clear();
+            CACHE_AUDIO.set(ck, audio_b64);
+          }
         }
       }
     }
