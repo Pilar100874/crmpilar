@@ -53,6 +53,7 @@ import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import { CabecalhoClienteAtendimento } from "@/components/atendimento/CabecalhoClienteAtendimento";
+import { AuxiliarVendasPanel } from "@/components/atendimento/AuxiliarVendasPanel";
 import { AgendaContatoPanel } from "@/components/atendimento/AgendaContatoPanel";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
@@ -226,6 +227,7 @@ export default function Atendimento() {
   });
   const [historicoCliente, setHistoricoClienteState] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [orcamentosCliente, setOrcamentosClienteState] = useState<{ id: string; nome: string } | null>(null);
+  const [vendasCliente, setVendasClienteState] = useState<{ id: string; nome: string } | null>(null);
   // Guarda o cliente dono da lista de orçamentos aberta, para voltar nela ao sair do editor.
   const listaOrcamentosRef = useRef<{ id: string; nome: string } | null>(null);
   // Guarda de onde o disparo em massa foi aberto, para voltar lá ao fechar.
@@ -625,9 +627,10 @@ export default function Atendimento() {
 
   // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
   const [jornadaAberta, setJornadaAberta] = useState(false);
-  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada';
+  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada' | 'vendas';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
     if (destino !== 'jornada') setJornadaAberta(false);
+    if (destino !== 'vendas') setVendasClienteState(null);
     if (destino !== 'recado') { setRecadoContato(null); setCadastroParaRecado(false); }
     if (destino !== 'historico') setHistoricoClienteState(null);
     if (destino !== 'orcamentos' && destino !== 'orcamento') listaOrcamentosRef.current = null;
@@ -658,6 +661,10 @@ export default function Atendimento() {
   function setHistoricoCliente(valor: typeof historicoCliente) {
     if (valor) fecharConteudoCentral('historico');
     setHistoricoClienteState(valor);
+  }
+  function setVendasCliente(valor: typeof vendasCliente) {
+    if (valor) fecharConteudoCentral('vendas');
+    setVendasClienteState(valor);
   }
   function setOrcamentosCliente(valor: typeof orcamentosCliente) {
     if (valor) fecharConteudoCentral('orcamentos');
@@ -4410,12 +4417,13 @@ ${recentMessages}
       return { id: c.id, nome: c.nome, email: c.email, telefone: c.telefone, tel: c.tel };
     }
     // Lista de orçamentos do cliente aberta (ex.: ao voltar do editor): mantém a barra de abas do contato.
-    if (orcamentosCliente?.id) {
-      const c: any = contatosBase.find((contato: any) => contato.id === orcamentosCliente.id) || {};
-      return { id: orcamentosCliente.id, nome: c.nome || orcamentosCliente.nome || "Cliente", empresa: empresaDe(c.companies), telefone: c.telefone || c.whatsapp, tel: c.tel, email: c.email };
+    if (orcamentosCliente?.id || vendasCliente?.id) {
+      const alvo = (orcamentosCliente || vendasCliente)!;
+      const c: any = contatosBase.find((contato: any) => contato.id === alvo.id) || {};
+      return { id: alvo.id, nome: c.nome || alvo.nome || "Cliente", empresa: empresaDe(c.companies), telefone: c.telefone || c.whatsapp, tel: c.tel, email: c.email };
     }
     return null;
-  }, [orcamentosCliente, activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado, agendaViewMode, discadorModo, fluxoCurrentTask, contatosBase]);
+  }, [orcamentosCliente, vendasCliente, activeTab, selectedTaskData, selectedAgendaContato, selectedConv, selectedTelContato, contatoEmailSelecionado, agendaViewMode, discadorModo, fluxoCurrentTask, contatosBase]);
 
   const clienteCabecalho = useMemo(() => {
     const base: any = clienteCabecalhoBase;
@@ -6244,11 +6252,16 @@ ${recentMessages}
                   cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
                   onRecado={() => clienteCabecalho.id && abrirRecado({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
-                  abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
+                  abaAtiva={vendasCliente ? "vendas" : orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
                     setHistoricoCliente(null);
                     setAgendaContato(null);
+                    if (aba === "vendas") {
+                      const id = clienteCabecalho.id;
+                      setVendasCliente(vendasCliente || !id ? null : { id, nome: clienteCabecalho.nome });
+                      return;
+                    }
                     if (aba === "orcamento") {
                       const id = clienteCabecalho.id;
                       setOrcamentosCliente(id ? { id, nome: clienteCabecalho.nome } : null);
@@ -6309,6 +6322,22 @@ ${recentMessages}
               </div>
             )}
 
+{vendasCliente && isMobile && (() => {
+          const empresaIdVendas = orcamentos.find((o: any) => o.cliente_id === vendasCliente.id)?.empresa_id || null;
+          return (
+            <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
+              <AuxiliarVendasPanel
+                key={vendasCliente.id}
+                clienteId={vendasCliente.id}
+                nome={vendasCliente.nome}
+                onClose={() => setVendasCliente(null)}
+                onNovoOrcamento={() => { const c = vendasCliente; setVendasCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaIdVendas }); }}
+                onAgendarRetorno={() => setAgendaContato({ id: vendasCliente.id, nome: vendasCliente.nome })}
+                onAbrirOrcamentos={() => setOrcamentosCliente({ id: vendasCliente.id, nome: vendasCliente.nome })}
+              />
+            </div>
+          );
+        })()}
             {orcamentosCliente && (
               <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
                 <PainelAtendimentoHeader title="Orçamentos do cliente" subtitle={orcamentosCliente.nome} icon={Receipt} onClose={() => setOrcamentosCliente(null)} />
@@ -7131,10 +7160,15 @@ ${recentMessages}
             cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
                   onRecado={() => clienteCabecalho.id && abrirRecado({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
-            abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
+            abaAtiva={vendasCliente ? "vendas" : orcamentosCliente ? "orcamento" : activeTab}
             onTrocarCanal={(aba) => {
               setHistoricoCliente(null);
               setAgendaContato(null);
+              if (aba === "vendas") {
+                const id = (clienteCabecalho as any)?.id;
+                setVendasCliente(vendasCliente || !id ? null : { id, nome: clienteCabecalho?.nome || "Cliente" });
+                return;
+              }
               if (aba === "orcamento") {
                 const id = (clienteCabecalho as any)?.id;
                 setOrcamentosCliente(orcamentosCliente || !id ? null : { id, nome: clienteCabecalho?.nome || "Cliente" });
@@ -7183,6 +7217,22 @@ ${recentMessages}
             top={clienteCabecalho && !isMobile ? alturaCabecalho : 0}
           />
         )}
+{vendasCliente && !isMobile && (() => {
+          const empresaIdVendas = orcamentos.find((o: any) => o.cliente_id === vendasCliente.id)?.empresa_id || null;
+          return (
+            <div data-painel-centro style={{ top: clienteCabecalho ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
+              <AuxiliarVendasPanel
+                key={vendasCliente.id}
+                clienteId={vendasCliente.id}
+                nome={vendasCliente.nome}
+                onClose={() => setVendasCliente(null)}
+                onNovoOrcamento={() => { const c = vendasCliente; setVendasCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaIdVendas }); }}
+                onAgendarRetorno={() => setAgendaContato({ id: vendasCliente.id, nome: vendasCliente.nome })}
+                onAbrirOrcamentos={() => setOrcamentosCliente({ id: vendasCliente.id, nome: vendasCliente.nome })}
+              />
+            </div>
+          );
+        })()}
         {/* Últimos orçamentos do cliente em tela central */}
         {orcamentosCliente && !isMobile && (() => {
           const empresaId = orcamentos.find((o: any) => o.cliente_id === orcamentosCliente.id)?.empresa_id || null;
