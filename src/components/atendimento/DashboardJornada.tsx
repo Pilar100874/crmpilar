@@ -54,8 +54,8 @@ export default function DashboardJornada({ equipe = false, onClose }: { equipe?:
     { id:"valor_vendas",nome:"Valor dos pedidos fechados",icon:TrendingUp,tom:"text-success" },
   ];
   const baixar = () => {
-    const linhas = [["Usuário","Dia","Indicador","Valor"], ...diarios.filter(d=>d.dia>=inicio && d.dia<=fim && (filtrado==="todos" || d.usuario_id===filtrado)).map(d=>[dados?.usuarios.find(u=>u.id===d.usuario_id)?.nome || "Sem nome",d.dia,METRICAS_JORNADA.find(m=>m.id===d.metrica)?.nome || d.metrica.replaceAll("_"," "),String(d.valor)])];
-    const csv = linhas.map(l=>l.map(v=>'"'+v.replaceAll('"','""').replace(/^[=+@-]/,"'")+'"').join(";")).join("\n");
+    const linhas = [["Usuário","Dia","Indicador","Valor"], ...diarios.filter(d=>d.dia>=inicio && d.dia<=fim && (filtrado==="todos" || d.usuario_id===filtrado)).map(d=>[dados?.usuarios.find(u=>u.id===d.usuario_id)?.nome || "Sem nome",d.dia,METRICAS_JORNADA.find(m=>m.id===d.metrica)?.nome || d.metrica.replace(/_/g," "),String(d.valor)])];
+    const csv = linhas.map(l=>l.map(v=>'"'+v.replace(/"/g,'""').replace(/^[=+@-]/,"'")+'"').join(";")).join("\n");
     const url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"})); const a=document.createElement("a");a.href=url;a.download=`jornada-${inicio}-${fim}.csv`;a.click();URL.revokeObjectURL(url);
   };
   return <div data-tour="dashboard-jornada" className="h-full min-w-0 overflow-y-auto overflow-x-hidden bg-background text-foreground">
