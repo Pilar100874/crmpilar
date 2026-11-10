@@ -1,4 +1,5 @@
 import { ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import MeusPedidosPanel from "@/components/atendimento/MeusPedidosPanel";
 import DashboardJornada from "@/components/atendimento/DashboardJornada";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
@@ -645,9 +646,11 @@ export default function Atendimento() {
 
   // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
   const [jornadaAberta, setJornadaAberta] = useState(false);
-  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada' | 'vendas';
+  const [pedidosAberto, setPedidosAberto] = useState(false);
+  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada' | 'vendas' | 'pedidos';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
     if (destino !== 'jornada') setJornadaAberta(false);
+    if (destino !== 'pedidos') setPedidosAberto(false);
     if (destino !== 'vendas') setVendasClienteState(null);
     if (destino !== 'recado') { setRecadoContato(null); setCadastroParaRecado(false); }
     if (destino !== 'historico') setHistoricoClienteState(null);
@@ -4643,6 +4646,26 @@ ${recentMessages}
     openDetailsPanel(setShowClientDetailsAgenda);
     setHistoricoCliente({ customerId: contato.id, nome: contato.nome });
   };
+  const abrirPedidoDoPainel = async (pedido: any) => {
+    setPedidosAberto(false);
+    const contato: any = contatosComIndicadores.find((c: any) => c.id === pedido.cliente_id);
+    if (contato) {
+      abrirItemContato(contato);
+    }
+    let orc: any = orcamentos.find((o: any) => o.id === pedido.id);
+    if (!orc) {
+      const { data } = await supabase.from("orcamentos").select("*, customers(*), itens:orcamento_itens(*)").eq("id", pedido.id).maybeSingle();
+      orc = data;
+    }
+    setTimeout(() => {
+      setHistoricoCliente(null);
+      setActiveTab("orcamento");
+      setSelectedOrcamentoId(pedido.id);
+      if (orc) { setSelectedOrcamentoData(orc); setContatoOrcamentoDetalhe(orc); }
+      setOrcamentoSheetOpen(true);
+      if (isMobile) setMobileView("main");
+    }, 80);
+  };
   const termometro = useMemo(() => termometroCarteira(potenciais), [potenciais]);
 
   // Itens unificados da "Fila do dia" (coluna esquerda desktop)
@@ -5092,6 +5115,7 @@ ${recentMessages}
 
   const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
     <Button size="icon" variant="ghost" className="h-7 w-7 text-info" aria-label="Minha jornada" title="Minha jornada" data-tour="abrir-jornada" onClick={() => { fecharConteudoCentral('jornada'); setJornadaAberta(true); setMobileView('main'); }}><Activity className="h-4 w-4" /></Button>
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Meus pedidos" title="Meus pedidos" onClick={() => { fecharConteudoCentral('pedidos'); setPedidosAberto(true); setMobileView('main'); }}><Receipt className="h-4 w-4" /></Button>
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
     <GlobalClientFilter activeFilter={globalFilter} onFilterChange={filtrarESelecionarCartao} compact />
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Encaminhar recado" title="Encaminhar recado" onClick={() => abrirRecado()}><MessageSquare className="h-4 w-4" /></Button>
@@ -6329,7 +6353,7 @@ ${recentMessages}
       {isMobile ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
 
-          {mobileView === "main" && clienteCabecalho && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
+          {mobileView === "main" && clienteCabecalho && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !pedidosAberto && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <div className="shrink-0 border-b border-border bg-card px-2 py-1">
               <div className="flex items-center justify-center gap-1 overflow-x-auto">
                 <CabecalhoClienteAtendimento
@@ -6573,6 +6597,7 @@ ${recentMessages}
             
             {/* Listas Panel - Mobile Fullscreen - Puxar ou criar cadastro */}
             {jornadaAberta && <div className="absolute inset-0 z-30 flex flex-col bg-background"><DashboardJornada onClose={() => setJornadaAberta(false)} /></div>}
+            {pedidosAberto && <div className="absolute inset-0 z-30 flex flex-col bg-background"><MeusPedidosPanel onClose={() => setPedidosAberto(false)} onAbrirPedido={abrirPedidoDoPainel} /></div>}
             {recadoContato && <div className="absolute inset-0 z-30 flex flex-col bg-background">{cadastroParaRecado ? painelCadastroRecado : painelRecado}</div>}
             {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) && (
               <div className="absolute inset-0 z-30 bg-background">
@@ -7157,7 +7182,7 @@ ${recentMessages}
         /* ========== DESKTOP/TABLET LAYOUT ========== */
         <div className={`atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative transition-opacity duration-200 ${layoutPronto ? "opacity-100" : "opacity-0"}`} style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
-        {(activeTab !== "agenda" || jornadaAberta || recadoContato || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
+        {(activeTab !== "agenda" || jornadaAberta || pedidosAberto || recadoContato || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
             <Suspense fallback={null}><ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
           </div>
@@ -7226,7 +7251,7 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div ref={quadroCentralRef} data-quadro-central style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} data-quadro-central style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !pedidosAberto && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento ? "cabecalho-cliente-ativo" : ""}`}>
         {contatoPendenteBarra && usuarioId && estabelecimentoId && (
           <BarraProximoContato
             contato={contatoPendenteBarra}
@@ -7239,7 +7264,7 @@ ${recentMessages}
             onFinalizado={() => { void loadTodayTasks(); }}
           />
         )}
-        {clienteCabecalho && !isMobile && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && (
+        {clienteCabecalho && !isMobile && !showDisparoMassa && !showEnvioMassaWizard && !(activeTab === "agenda" && agendaViewMode === "massa") && !jornadaAberta && !pedidosAberto && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && (
           <div ref={cabecalhoRef} data-cabecalho-cliente>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
@@ -7473,7 +7498,7 @@ ${recentMessages}
           )}
           </div>
         )}
-        {jornadaAberta ? <DashboardJornada onClose={() => setJornadaAberta(false)} /> : recadoContato ? (cadastroParaRecado ? painelCadastroRecado : painelRecado) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
+        {jornadaAberta ? <DashboardJornada onClose={() => setJornadaAberta(false)} /> : pedidosAberto ? <MeusPedidosPanel onClose={() => setPedidosAberto(false)} onAbrirPedido={abrirPedidoDoPainel} /> : recadoContato ? (cadastroParaRecado ? painelCadastroRecado : painelRecado) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
             onClose={() => {
               setShowCustomerSearchForTask(false);
