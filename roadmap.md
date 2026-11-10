@@ -1,5 +1,5 @@
 # Roadmap — Atendimento
-- [ ] Padronizar cabeçalhos e organização visual dos painéis do Atendimento
+- [x] Padronizar cabeçalhos e organização visual dos painéis do Atendimento
 - [x] Painel comparativo de produtividade no menu Chats com registros reais
 - [x] Minha jornada no Atendimento com evolução diária/mensal e pendências
 - [x] Validar indicadores, autoria, permissões e uso em computador/celular
