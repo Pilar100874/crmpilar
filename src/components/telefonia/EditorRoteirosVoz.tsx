@@ -48,8 +48,8 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
               <TabsTrigger value="tela"><Monitor className="mr-1 h-4 w-4" /> Teste em tela</TabsTrigger>
               <TabsTrigger value="ligacao"><PhoneCall className="mr-1 h-4 w-4" /> Ligação real</TabsTrigger>
             </TabsList>
-            <TabsContent value="tela"><SimuladorTelaVoz roteiro={simulando} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={aprimorar} /></TabsContent>
-            <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} onAprimorar={aprimorar} /></TabsContent>
+            <TabsContent value="tela"><SimuladorTelaVoz roteiro={simulando} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorar(...a)} /></TabsContent>
+            <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} onAprimorar={(...a) => aprimorar(...a)} /></TabsContent>
           </Tabs>
         )}
       </DialogContent>
