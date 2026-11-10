@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Lightbulb, CalendarDays, ClipboardList, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, StickyNote, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AuxiliarVendasBarra } from "./AuxiliarVendasBarra";
 
 export interface ClienteCabecalho {
   id?: string | null;
@@ -51,8 +49,8 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
     { aba: "email", label: "E-mail", icon: Mail, cor: "text-info", ok: !!cliente.email },
     { aba: "visita", label: "Visita", icon: MapPin, cor: "text-accent-foreground", ok: temEnderecoVisita },
     { aba: "orcamento", label: "Orçamento", icon: FileText, cor: "text-muted-foreground", ok: temOrcamento },
+    { aba: "vendas", label: "Auxiliar de vendas", icon: Lightbulb, cor: "text-warning", ok: !!cliente.id },
   ].filter((c) => c.ok);
-  const [auxiliarAberto, setAuxiliarAberto] = useState(false);
 
   return (
     <div className={cn("flex-shrink-0 border-b border-border bg-card", compacto ? "px-2 py-1" : "px-5 pt-4")}>
@@ -151,15 +149,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             </button>
           );
         })}
-        {cliente.id && (
-          <button type="button" onClick={() => setAuxiliarAberto((v) => !v)} title="Auxiliar de vendas" aria-label="Auxiliar de vendas" aria-pressed={auxiliarAberto}
-            className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
-              auxiliarAberto ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40")}>
-            <Lightbulb className="h-4 w-4 text-warning" />
-          </button>
-        )}
       </div>
-      {auxiliarAberto && cliente.id && <AuxiliarVendasBarra clienteId={cliente.id} />}
 
     </div>
   );
