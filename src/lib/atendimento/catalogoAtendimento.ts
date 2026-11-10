@@ -87,6 +87,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "minha-jornada", modulo: "Fila e organização", titulo: "Minha jornada e comparação da equipe",
+    alvo: "abrir-jornada", pratica: { tipo: "clicar", alvo: "abrir-jornada", instrucao: "Clique no ícone Minha jornada ao lado de Contatos para abrir o painel." },
     oQueE: "Minha jornada acompanha atividades, resultados, evolução diária e mensal e pendências; Jornada da equipe no menu Chats compara usuários com acesso autorizado.",
     regraNegocio: "As ações pertencem a quem executou, inclusive ao assumir outro responsável. O painel usa apenas registros salvos: chamadas atendidas exigem horário de atendimento; respostas de e-mail usam Re:/Res: no assunto; visitas finalizadas e presença confirmada ficam separadas. Retorno em massa não comprova envio e encaminhamento não comprova entrega. Vendas seguem autor e data de fechamento no histórico. Pendências são atuais. Só administradores e gestores com papel protegido podem comparar a empresa; demais usuários veem apenas a própria jornada.",
     comoUsar: ["Clique em Minha jornada ao lado de Contatos.", "Escolha Hoje, Este mês, Este ano ou as datas desejadas.", "Abra Evolução e escolha indicador e agrupamento diário ou mensal.", "Confira Dia a dia e Indicadores; exporte os registros se necessário.", "Em Chats → Jornada da equipe, usuários autorizados podem comparar os resultados e selecionar um usuário."],
