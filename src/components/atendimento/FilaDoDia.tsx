@@ -369,7 +369,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
       />
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
-        <div className="flex items-center justify-between gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-1">
           <div className="flex min-w-0 items-center gap-1">
             <h2 className="text-base font-bold text-foreground">Contatos</h2>
             {headerExtra}
