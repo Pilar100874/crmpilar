@@ -30,3 +30,11 @@ describe("avanço do diálogo de orçamento", () => {
     expect(progressoVoz(abertura, "Não", false).respostaSaudacao).toBeNull();
   });
 });
+
+describe("silêncio depois de resposta do cliente", () => {
+  it("não pergunta se está ouvindo quando o cliente já respondeu", async () => {
+    const { progressoVoz } = await import("../../../supabase/functions/_shared/progressoVoz");
+    const r = progressoVoz([{ papel: "agente", texto: "O senhor conseguiu dar uma olhada no orçamento?" }, { papel: "cliente", texto: "Sim." }], "", true);
+    expect(r.respostaSilencio).toBeNull();
+  });
+});
