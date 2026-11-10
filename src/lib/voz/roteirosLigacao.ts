@@ -95,6 +95,9 @@ export const GATILHOS_PRONTOS = [
   "já comprou de outro fornecedor", "demonstrou interesse", "pediu para falar com uma pessoa",
   "disse que não precisa agora", "pediu amostra ou catálogo",
   "respondeu sim", "respondeu não", "não entendeu o que foi dito", "pediu para repetir",
+  "sim, já olhei, vi, confirmo, pode ser", "não, ainda não, não deu tempo, não vi",
+  "qual orçamento, quem é, do que se trata, não lembro",
+  "não respondeu ou ficou em silêncio", "respondeu outra coisa que não está nas regras",
 ];
 export const ACOES: { id: AcaoCondicao; rotulo: string }[] = [
   { id: "responder", rotulo: "Responder com a fala" },
@@ -111,12 +114,43 @@ export const roteirosSalvos = () => salvos;
 const salvoAtivo = (id: string) => salvos.find((s) => s.chave === id && s.ativo);
 
 const ROTULO_PH: DadosRoteiro = { produtoNome: "{produto}", condicao: "{condicao}", aviso: "{aviso}" };
-const CONDICOES_PADRAO: Record<RoteiroBaseId, CondicaoRoteiro[]> = {
-  reposicao: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
-  produto_foco: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
-  orcamento_aberto: [{ gatilho: "disse que tem dúvida, quer fechar ou perguntou valor/prazo", acao: "transferir" }, { gatilho: "já comprou de outro fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele escolher o outro." }, { gatilho: "achou caro", acao: "desconto" }],
-  reativacao: [{ gatilho: "disse que não precisa agora", acao: "encerrar" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
-  lembrete_financeiro: [{ gatilho: "pediu prazo ou forma de pagamento", acao: "transferir" }],
+type C = CondicaoRoteiro;
+const SIM = "sim, já olhei, vi, confirmo, pode ser";
+const NAO = "não, ainda não, não deu tempo, não vi";
+const QUEM = "qual orçamento, quem é, do que se trata, não lembro";
+const SILENCIO: C = { gatilho: "não respondeu ou ficou em silêncio", acao: "responder", texto: "Repita só a pergunta atual, mais curta. Se calar de novo, agradeça e inclua [DESLIGAR]." };
+const OUTRA: C = { gatilho: "respondeu outra coisa que não está nas regras", acao: "responder", texto: "Responda em uma frase e volte à pergunta desta etapa, sem repetir etapas já respondidas. Se não der para ajudar, transfira." };
+const OUTRO_DIA: C = { gatilho: "pediu para ligar outro dia, agora não posso, liga depois", acao: "responder", texto: "Pergunte o melhor dia; ao ouvir, confirme (\"Combinado, retorno na sexta\") e inclua [DESLIGAR]." };
+const TRANSF_FECHAR: C = { gatilho: "dúvida, quero fechar, valor, preço, prazo, pagamento", acao: "transferir" };
+const CARO: C = { gatilho: "achou caro", acao: "desconto" };
+/** Regras de fábrica por etapa (índice = etapa). Toda etapa tem caminho para sim, não, silêncio e outra resposta. */
+const CONDICOES_PADRAO: Record<RoteiroBaseId, C[][]> = {
+  reposicao: [
+    [{ gatilho: QUEM, acao: "responder", texto: "Diga que é da empresa, sobre a reposição do produto que ele costuma comprar, e siga." }, OUTRO_DIA, SILENCIO, OUTRA],
+    [{ gatilho: "sim, está acabando, preciso, quero repor", acao: "avancar" }, { gatilho: "não, tenho estoque, não preciso agora", acao: "encerrar", texto: "Diga que fica à disposição." }, SILENCIO, OUTRA],
+    [{ gatilho: "sim, quero, pode mandar, fechado", acao: "transferir" }, CARO, { gatilho: "não, depois vejo", acao: "encerrar" }, SILENCIO, OUTRA],
+  ],
+  produto_foco: [
+    [{ gatilho: QUEM, acao: "responder", texto: "Diga que é da empresa, com uma oferta especial, e siga." }, OUTRO_DIA, SILENCIO, OUTRA],
+    [SILENCIO, OUTRA],
+    [{ gatilho: "sim, quero, tenho interesse, pode mandar", acao: "transferir" }, CARO, { gatilho: "não, não preciso, não quero", acao: "encerrar" }, SILENCIO, OUTRA],
+  ],
+  orcamento_aberto: [
+    [{ gatilho: QUEM, acao: "transferir", texto: "Diga que o atendente passa os detalhes da proposta." }, OUTRO_DIA, SILENCIO, OUTRA],
+    [{ gatilho: SIM, acao: "avancar", texto: "Não repita a pergunta." }, { gatilho: NAO, acao: "responder", texto: "Diga \"Sem problema\" e pergunte qual dia pode retornar; ao ouvir o dia, confirme e inclua [DESLIGAR]." }, TRANSF_FECHAR, SILENCIO, OUTRA],
+    [TRANSF_FECHAR, CARO, { gatilho: "já comprou de outro fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele escolher o outro." }, OUTRO_DIA, SILENCIO, OUTRA],
+    [TRANSF_FECHAR, SILENCIO, OUTRA],
+  ],
+  reativacao: [
+    [{ gatilho: QUEM, acao: "responder", texto: "Diga que é da empresa e que sentiram falta dele como cliente." }, OUTRO_DIA, SILENCIO, OUTRA],
+    [{ gatilho: "problema, reclamação, atendimento ruim, atraso", acao: "transferir", texto: "Peça desculpas e diga que o atendente resolve." }, { gatilho: "não preciso mais, fechou, mudou de ramo", acao: "encerrar" }, SILENCIO, OUTRA],
+    [{ gatilho: "sim, quero, tenho interesse, pode ser", acao: "transferir" }, { gatilho: "não, agora não", acao: "encerrar" }, SILENCIO, OUTRA],
+  ],
+  lembrete_financeiro: [
+    [{ gatilho: "sim, sou eu, pode falar", acao: "avancar" }, { gatilho: "não, não sou, não está", acao: "responder", texto: "Pergunte com quem pode falar ou o melhor horário; ao ouvir, agradeça e inclua [DESLIGAR]." }, SILENCIO, OUTRA],
+    [{ gatilho: "já paguei, já está pago, paguei ontem", acao: "encerrar", texto: "Agradeça e diga que vão conferir a baixa." }, { gatilho: "prazo, parcelar, negociar, forma de pagamento", acao: "transferir" }, SILENCIO, OUTRA],
+    [{ gatilho: "reenvia, manda de novo, WhatsApp, e-mail", acao: "encerrar", texto: "Confirme que vão reenviar pelo canal pedido." }, { gatilho: "já recebi, recebi sim", acao: "encerrar" }, { gatilho: "prazo, parcelar, negociar", acao: "transferir" }, SILENCIO, OUTRA],
+  ],
 };
 
 /** Versão editável de um roteiro de fábrica (ponto de partida do editor e "restaurar original"). */
@@ -127,7 +161,7 @@ export function roteiroDeFabrica(id: RoteiroBaseId): RoteiroSalvo {
   return {
     chave: id, nome: r.rotulo, descricao: r.desc, campos: r.campos, ativo: true,
     departamento: id === "lembrete_financeiro" ? "financeiro" : "comercial",
-    etapas: etapas.map((fala, i) => ({ titulo: `Etapa ${i + 1}`, fala, condicoes: i === etapas.length - 1 ? conds : [] })),
+    etapas: etapas.map((fala, i) => ({ titulo: `Etapa ${i + 1}`, fala, condicoes: conds[i] ?? [SILENCIO, OUTRA] })),
   };
 }
 export const ehDeFabrica = (chave: string) => ROTEIROS.some((r) => r.id === chave);
