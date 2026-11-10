@@ -36,5 +36,5 @@
 - Validate new quotes against fresh saved contact/company links through cadastroOrcamento before insert, including duplication and repeat-order entry points; reuse existing registration forms for missing data so stale screen data cannot bypass completeness checks.
 - Resolve Visit shortcut visibility through useEnderecosVisita and the shared possuiEnderecoVisita predicate; query saved linked-company addresses instead of relying on partial channel data, and refresh after registration saves.
 - Apply Atendimento queue entity filtering through the shared filtroContato predicate using saved company-contact links and exact sender emails; never infer membership from display names.
-- ListasPanel is a centered cadastro search dialog that reuses the existing full contact/company forms with opt-in centered positioning, rather than embedding administrative list pages.
+- ListasPanel embeds the same Empresas and Contatos pages used by Listas in the Atendimento central area; direct-create props open their real forms without popup alternatives.
 - Shared vinculoCriador helpers resolve the internal user before inserts and add creator links idempotently after contact/company creation; temporary contacts remain owned by the existing company trigger.

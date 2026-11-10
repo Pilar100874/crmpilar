@@ -1,4 +1,5 @@
 # Roadmap — Atendimento
+- [ ] Abrir cadastros na área central com os mesmos formulários de Empresas e Contatos do Listas
 - [x] Preservar regras do módulo Empresas e vincular automaticamente cadastros ao criador
 - [x] Ajustar janela de puxar/criar cadastro no Atendimento
 - [x] Corrigir filtro por contato/empresa em todas as abas da fila
