@@ -13,6 +13,7 @@ import { Loader2, Save, X, Building2, Phone, Mail, MapPin, FileText, Plus, Trash
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
+import { exigirUsuarioCriador, vincularEmpresaAoCriador } from "@/lib/atendimento/vinculoCriador";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { validateCpfCnpjField } from "@/lib/docValidation";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
@@ -345,6 +346,8 @@ export function EmpresaFormSheet({ centralizado = false, open, onOpenChange, onS
         return;
       }
 
+      const criadorId = await exigirUsuarioCriador();
+
       // Validar duplicidade de CNPJ/CPF
       if (formData.cpf_cnpj?.trim()) {
         const cleanDoc = formData.cpf_cnpj.replace(/\D/g, '');
@@ -456,14 +459,16 @@ export function EmpresaFormSheet({ centralizado = false, open, onOpenChange, onS
           .select()
           .single();
 
-        if (!contatoError && newContato) {
+        if (contatoError) throw contatoError;
+        if (newContato) {
           // Vincular automaticamente
-          await supabase.from("customer_empresas").insert({
+          const { error: vinculoErro } = await supabase.from("customer_empresas").insert({
             customer_id: newContato.id,
             empresa_id: newEmpresa.id,
             is_primary: true,
             cargo: novoContatoData.cargo || null,
           });
+          if (vinculoErro) throw vinculoErro;
         }
       }
 
@@ -474,8 +479,11 @@ export function EmpresaFormSheet({ centralizado = false, open, onOpenChange, onS
           empresa_id: newEmpresa.id,
           is_primary: idx === 0,
         }));
-        await supabase.from("customer_empresas").insert(vinculos);
+        const { error: vinculosErro } = await supabase.from("customer_empresas").insert(vinculos);
+        if (vinculosErro) throw vinculosErro;
       }
+
+      await vincularEmpresaAoCriador(newEmpresa.id, estabelecimentoId, criadorId);
 
       toast.success("Empresa criada com sucesso!");
       onSuccess?.(newEmpresa.id);

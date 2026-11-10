@@ -37,6 +37,7 @@ import { upperField, upperObject, isUppercaseExemptField } from "@/lib/cadastros
 import { buscarCEP } from "@/lib/cadastros/cepService";
 import { LookupStatusMessage, type LookupStatus } from "@/components/cadastros/LookupStatusMessage";
 import { supabase } from "@/integrations/supabase/client";
+import { exigirUsuarioCriador, vincularContatoAoCriador, vincularEmpresaAoCriador } from "@/lib/atendimento/vinculoCriador";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
@@ -1294,6 +1295,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
         toast.success("Empresa atualizada!");
       } else {
+        await exigirUsuarioCriador();
         const { data: inserted, error } = await supabase
           .from('empresas')
           .insert([empresaPayload])
@@ -1301,7 +1303,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           .maybeSingle();
 
         if (error) throw error;
-        empresaId = inserted!.id;
+        if (!inserted) throw new Error("Empresa não retornada após o cadastro");
+        empresaId = inserted.id;
 
         // Geocodificar e salvar coordenadas automaticamente
         geocodeAndSaveEmpresa(
@@ -1398,23 +1401,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
         if (contatoErr) throw contatoErr;
 
-        // Vincular automaticamente o contato ao usuário que criou
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && novoContato) {
-          await supabase.from('customer_vinculos').insert({
-            customer_id: novoContato.id,
-            estabelecimento_id: estabId,
-            usuario_id: user.id
-          });
-        }
+        // Resolver o usuário interno antes de registrar o vínculo.
+        if (!novoContato) throw new Error("Contato não retornado após o cadastro");
+        await vincularContatoAoCriador(novoContato.id, estabId, await exigirUsuarioCriador());
 
         await supabase
           .from('customer_empresas')
           .insert([{
-            customer_id: novoContato!.id,
+            customer_id: novoContato.id,
             empresa_id: empresaId,
             is_primary: contatosVinculados.length === 0
           }]);
+      }
+
+      if (!editingEmpresa && empresaId) {
+        await vincularEmpresaAoCriador(empresaId, estabId, await exigirUsuarioCriador());
       }
 
       clearDraft();

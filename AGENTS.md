@@ -37,3 +37,4 @@
 - Resolve Visit shortcut visibility through useEnderecosVisita and the shared possuiEnderecoVisita predicate; query saved linked-company addresses instead of relying on partial channel data, and refresh after registration saves.
 - Apply Atendimento queue entity filtering through the shared filtroContato predicate using saved company-contact links and exact sender emails; never infer membership from display names.
 - ListasPanel is a centered cadastro search dialog that reuses the existing full contact/company forms with opt-in centered positioning, rather than embedding administrative list pages.
+- Shared vinculoCriador helpers resolve the internal user before inserts and add creator links idempotently after contact/company creation; temporary contacts remain owned by the existing company trigger.
