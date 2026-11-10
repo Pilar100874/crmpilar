@@ -1,4 +1,7 @@
 # Roadmap — Atendimento
+- [ ] Painel comparativo de produtividade no menu Chats com registros reais
+- [ ] Minha jornada no Atendimento com evolução diária/mensal e pendências
+- [ ] Validar indicadores, autoria, permissões e uso em computador/celular
 - [x] Aplicar prioridade e alerta de recados também aos responsáveis assumidos
 - [x] Simplificar encaminhamento de recados com seleção/cadastro central e alerta urgente nos Agendados
 - [x] Atualizar menu radial com atalhos úteis à fila e ao cliente ativo, sem cortes ou ações sem contexto
