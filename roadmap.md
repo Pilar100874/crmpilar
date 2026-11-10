@@ -28,3 +28,4 @@
 - [ ] Robô IA diário ligando para Potenciais — aguarda decisão de horário/quantidade
 - [ ] Plantão fora do horário no WhatsApp — aguarda definir horário e texto da resposta
 - [ ] Tela de Orçamentos: recurso para repetir último pedido (removido do menu do cartão)
+- [x] Pedidos em aberto diários nos Agendados + motivo obrigatório na perda
