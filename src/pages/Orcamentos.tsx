@@ -21,6 +21,7 @@ import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
 import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
 import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
 import POSView from "@/components/orcamento/POSView";
+import MotivoPerdaDialog from "@/components/orcamento/MotivoPerdaDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type ViewMode = 'kanban' | 'list' | 'pos';
@@ -49,6 +50,7 @@ export default function Orcamentos() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [orcamentoToDelete, setOrcamentoToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [perdaAlvo, setPerdaAlvo] = useState<{ id: string; etapa?: string } | null>(null);
 
   // Carregar ID do usuário logado
   useEffect(() => {
@@ -157,6 +159,11 @@ export default function Orcamentos() {
   }, [columns]);
 
   const handleOrcamentoMove = async (orcamentoId: string, newEtapa: OrcamentoEtapa) => {
+    if (newEtapa === 'perdido') {
+      // Cancelamento exige motivo estruturado
+      setPerdaAlvo({ id: orcamentoId, etapa: orcamentos.find(o => o.id === orcamentoId)?.etapa });
+      return;
+    }
     try {
       const { error } = await supabase
         .from('orcamentos')
@@ -417,6 +424,16 @@ export default function Orcamentos() {
           </Pagination>
         </div>
       )}
+      <MotivoPerdaDialog
+        orcamentoId={perdaAlvo?.id ?? null}
+        etapaAnterior={perdaAlvo?.etapa}
+        onOpenChange={(o) => { if (!o) setPerdaAlvo(null); }}
+        onSalvo={(id, motivo) => {
+          setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, etapa: 'perdido' as OrcamentoEtapa, motivo_perda: motivo } : o));
+          setPerdaAlvo(null);
+          window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
+        }}
+      />
       <DeleteConfirmDialog
         open={Boolean(orcamentoToDelete)}
         onOpenChange={(open) => !open && setOrcamentoToDelete(null)}
