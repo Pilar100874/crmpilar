@@ -4651,7 +4651,6 @@ ${recentMessages}
     const contato: any = contatosComIndicadores.find((c: any) => c.id === pedido.cliente_id);
     if (contato) {
       abrirItemContato(contato);
-      setSelecaoFila?.(contato.id);
     }
     let orc: any = orcamentos.find((o: any) => o.id === pedido.id);
     if (!orc) {
