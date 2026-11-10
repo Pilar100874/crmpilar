@@ -176,7 +176,7 @@ def sessao_gratuita(call, agente, reg, modo, objetivo=None, ramal=None):
             trecho += quadro
             silencio += 1
             if silencio > 20:  # ~400 ms de silêncio = fim da fala
-                if len(trecho) > 4000:
+                if len(trecho) >= 1600:
                     try:
                         r = turno_gratuito(agente, modo, reg.falas, pcm8u_para_wav(trecho))
                         if r.get("fala"):

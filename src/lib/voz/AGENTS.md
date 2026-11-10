@@ -1,1 +1,2 @@
 - Voice call scripts are editable per company in voz_roteiros (factory key = edited version, custom_* = new); roteirosLigacao compiles steps + "Se X, faça Y" rules into the call objective, so the device protocol stays unchanged.
+- Interpret short replies against the last agent question and bound silence retries in the shared progressoVoz helper; never restart completed steps or infer an answer from silence.

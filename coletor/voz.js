@@ -435,7 +435,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       const calado = !falando && modo !== 'assistir' && ++mudo >= 200;
       if (!falando && !calado) continue;
       if (!calado) { trecho.push(...q); if (++silencio <= 20) continue; }
-      if (calado || trecho.length > 4000) {
+      if (calado || trecho.length >= 1600) {
         mudo = 0;
         const r = await turno(calado ? null : wav8k(trecho).toString('base64'), hist, modo, objetivo, calado ? '[SILENCIO]' : null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });
         if (r) {
