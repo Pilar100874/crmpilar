@@ -86,12 +86,10 @@ Deno.serve(async (req) => {
     }
     if (!fala && audio_wav_b64) return json({ fala: "", resposta: "", audio_b64: null });
 
-    const silencios = silencio ? historico.slice().reverse().findIndex((h: { papel: string }) => h.papel === "cliente") : -1;
     const hist = [...historico, ...(fala ? [{ papel: "cliente", texto: fala }] : silencio ? [{ papel: "cliente", texto: "(o cliente ficou em silêncio, não disse nada)" }] : [])];
     const notaSilencio = silencio
       ? `\n\nO cliente ficou em SILÊNCIO. Não diga que não entendeu. Se é o começo da ligação, diga "Alô, consegue me ouvir?" e, em seguida, a primeira etapa do roteiro em uma frase. Se já houve conversa, repita a última pergunta de forma mais simples. Se ele já ficou calado duas vezes seguidas, agradeça, diga que retornará depois e termine com [DESLIGAR].`
       : "";
-    void silencios;
     const sistema = modo === "assistir"
       ? `Você ajuda um atendente humano durante uma ligação. Leia a conversa e devolva UMA sugestão curta (até 2 frases) do que o atendente pode dizer agora. Responda em português. ${DIRETIVA}\n\nContexto: ${prompt}`
       : `Você é um agente de voz ao telefone. Fale em português do Brasil como uma pessoa real: no máximo 2 frases curtas por fala, terminando com uma pergunta simples; sem listas, emojis, markdown ou números de pedido. Responda ao que o cliente acabou de dizer antes de seguir o roteiro, uma etapa por fala. Se não entendeu, peça para repetir em poucas palavras. Se ouvir caixa postal ou mensagem de operadora, responda apenas "[DESLIGAR]". Se o cliente pedir uma pessoa, diga uma frase curta e inclua "[TRANSFERIR]". Use "[TRANSFERIR]" só quando a última fala do cliente pedir isso ou mostrar interesse explícito; nunca na mesma fala em que você faz uma pergunta, nunca na sua primeira ou segunda fala sem resposta do cliente. Para encerrar, termine com "[DESLIGAR]". ${DIRETIVA}\n\n${prompt}`;
