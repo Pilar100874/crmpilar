@@ -80,7 +80,7 @@ export function StepComposeChamada({
   const [valores, setValores] = useState<Record<string, ValorCampo>>(() => ultimosValores);
   const roteiro = roteiroPorId(oferta.roteiro);
   const dadosDe = (n: Oferta): DadosRoteiro => ({
-    produtoNome: roteiro.campos.includes("produto") || n.roteiro === "produto_foco" ? n.produto?.nome : undefined,
+    produtoNome: roteiroPorId(n.roteiro).campos.includes("produto") ? n.produto?.nome : undefined,
     condicao: n.condicao, descontoMax: n.descontoMax, aviso: n.aviso, observacoes: n.texto,
   });
   const emitir = (n: Oferta, v: Record<string, ValorCampo>) =>
