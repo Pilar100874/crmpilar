@@ -234,6 +234,8 @@ Deno.serve(async (req) => {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
         // Saudação: frase fixa, vai direto para a voz sem esperar CRM nem IA.
+        const silencio = corpo.prompt_extra === "[SILENCIO]";
+        if (silencio) corpo.prompt_extra = null;
         const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
         const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${corpo.objetivo}\n\n` : "";
         let crm = "";
@@ -270,6 +272,7 @@ Deno.serve(async (req) => {
             modo: corpo.modo ?? "receber",
             voz: a.voz || "alloy",
             frase_exata: exata ? exata[1].trim() : null,
+            silencio,
           }),
         });
         return new Response(await r.text(), { status: r.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
