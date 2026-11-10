@@ -5735,6 +5735,7 @@ ${recentMessages}
 
   return (
     <>
+    {recadoContato && <RecadoResponsavelDialog open onOpenChange={(v) => { if (!v) setRecadoContato(null); }} contatoId={recadoContato.id} contatoNome={recadoContato.nome} />}
 
     {/* Dialog de Chat Privado com Agente */}
     <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
