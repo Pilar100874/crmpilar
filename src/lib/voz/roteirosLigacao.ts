@@ -188,6 +188,8 @@ export function pendenciasRoteiro(id: RoteiroId, d: DadosRoteiro): CampoRoteiro[
 
 /** Objetivo enviado ao agente: etapas numeradas do roteiro + limites da negociação. */
 export function montarObjetivoRoteiro(id: RoteiroId, d: DadosRoteiro): string {
+  const s = salvoAtivo(id);
+  if (s) return compilarRoteiro(s, d);
   const r = roteiroPorId(id);
   const etapas = r.etapas(d).map((e, i) => `${i + 1}) ${e}`).join(" ");
   const p = [`ROTEIRO: ${r.rotulo}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas}`];
@@ -258,7 +260,21 @@ export function lerDepartamento(config: unknown): Departamento {
   return d === "financeiro" ? "financeiro" : "comercial";
 }
 export const roteirosDoDepartamento = (d: Departamento) =>
-  ROTEIROS.filter((r) => DEPARTAMENTOS.find((x) => x.id === d)!.roteiros.includes(r.id));
+  todosRoteiros().filter((r) => {
+    const s = salvos.find((x) => x.chave === r.id);
+    return s ? s.departamento === d : DEPARTAMENTOS.find((x) => x.id === d)!.roteiros.includes(r.id);
+  });
+
+/** Carrega os roteiros salvos da empresa e os aplica à montagem das ligações. */
+export async function carregarRoteirosSalvos(db: any, estabelecimentoId: string | null): Promise<RoteiroSalvo[]> {
+  if (!estabelecimentoId) return salvos;
+  const { data } = await db.from("voz_roteiros").select("*").eq("estabelecimento_id", estabelecimentoId).order("created_at");
+  definirRoteirosSalvos((data ?? []).map((x: any) => ({
+    id: x.id, chave: x.chave, departamento: x.departamento === "financeiro" ? "financeiro" : "comercial",
+    nome: x.nome, descricao: x.descricao ?? "", campos: x.campos ?? [], etapas: Array.isArray(x.etapas) ? x.etapas : [], ativo: x.ativo !== false,
+  })));
+  return salvos;
+}
 
 const DIA_MS = 86_400_000;
 const ETAPAS_ABERTAS_VOZ = ["orcamento", "negociacao", "aprovacao_gerencia"];
