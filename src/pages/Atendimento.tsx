@@ -65,6 +65,7 @@ import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatu
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
 import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
+import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -565,10 +566,30 @@ export default function Atendimento() {
   // Global client filter
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
   const filtroSelecionarCartaoRef = useRef<GlobalFilter | null>(null);
+  const [recadoContato, setRecadoContato] = useState<{ id: string; nome: string } | null>(null);
+  const contatosNaFilaRef = useRef<Set<string>>(new Set());
+  const abrirFichaForaDaFilaRef = useRef<(c: { id: string; nome: string; tel?: string; telefone?: string; email?: string }) => void>(() => {});
   const filtrarESelecionarCartao = (filtro: GlobalFilter | null) => {
     filtroSelecionarCartaoRef.current = filtro;
     setGlobalFilter(filtro);
-    if (filtro) setFiltroFila("tudo");
+    if (!filtro) return;
+    setFiltroFila("tudo");
+    // Opção A: cadastro sem cartão na fila do dia abre a ficha direto na área central.
+    void (async () => {
+      let contatoId: string | null = filtro.type === "customer" ? filtro.id : null;
+      if (filtro.type === "empresa") {
+        const { data } = await supabase.from("customer_empresas").select("customer_id").eq("empresa_id", filtro.id);
+        const ids = (data ?? []).map((r: any) => r.customer_id).filter(Boolean);
+        if (ids.some((id: string) => contatosNaFilaRef.current.has(id))) return;
+        contatoId = ids[0] ?? null;
+        if (!contatoId) { toast.info("Esta empresa ainda não tem contato cadastrado"); return; }
+      } else if (contatosNaFilaRef.current.has(filtro.id)) return;
+      const { data: c } = await supabase.from("customers").select("id, nome, tel, telefone, email").eq("id", contatoId!).maybeSingle();
+      if (!c) return;
+      filtroSelecionarCartaoRef.current = null;
+      abrirFichaForaDaFilaRef.current(c as any);
+      toast.info(`${(c as any).nome} não está na sua fila de hoje — ficha aberta para consulta`);
+    })();
   };
   const [escopoEmpresaFiltro, setEscopoEmpresaFiltro] = useState<EscopoEmpresa | null>(null);
   useEffect(() => {
@@ -4935,6 +4956,8 @@ ${recentMessages}
     });
   }, [filaItems, filtroFila, globalFilter, escopoEmpresaFiltro, selecaoFila?.contactId]);
 
+  contatosNaFilaRef.current = new Set(contatosBase.map((c: any) => c.id));
+
   // Totais fixos das abas, calculados com as mesmas regras de cada aba (não mudam ao trocar de aba)
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
@@ -5365,6 +5388,8 @@ ${recentMessages}
     setMobileView('main');
   };
 
+  abrirFichaForaDaFilaRef.current = (c) => abrirContatoBinado({ id: c.id, nome: c.nome, tel: c.tel ?? "", telefone: c.telefone ?? "", email: c.email ?? "" } as any, false);
+
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
     if (typeof item.id === "string" && item.id.startsWith("fila-")) {
       setFiltroFila(item.id.replace("fila-", "") as typeof filtroFila);
@@ -5710,6 +5735,7 @@ ${recentMessages}
 
   return (
     <>
+    {recadoContato && <RecadoResponsavelDialog open onOpenChange={(v) => { if (!v) setRecadoContato(null); }} contatoId={recadoContato.id} contatoNome={recadoContato.nome} />}
 
     {/* Dialog de Chat Privado com Agente */}
     <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
@@ -6186,6 +6212,7 @@ ${recentMessages}
                 <CabecalhoClienteAtendimento
                   cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
+                  onRecado={() => clienteCabecalho.id && setRecadoContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
                   abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
@@ -7080,6 +7107,7 @@ ${recentMessages}
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
+                  onRecado={() => clienteCabecalho.id && setRecadoContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
             onTrocarCanal={(aba) => {
               setHistoricoCliente(null);
