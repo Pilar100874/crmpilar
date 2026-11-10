@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { ROTEIROS, lerConduta, type CondutaAgente } from "@/lib/voz/roteirosLigacao";
+import { DEPARTAMENTOS, lerConduta, lerDepartamento, roteirosDoDepartamento, type CondutaAgente, type Departamento } from "@/lib/voz/roteirosLigacao";
+/** Função do agente; ligações têm um agente por departamento. */
+const vaga = (a: { modos?: string[]; config?: unknown }) => { const m = a.modos?.[0] ?? "receber"; return m === "ligar" ? `ligar:${lerDepartamento(a.config)}` : m; };
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,9 +100,9 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
     const ramalUsuario = await meuRamal();
     if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
-    const tipo = dados.modos?.[0] ?? "receber";
-    if (agentes.some((x) => x.id !== id && (x.modos?.[0] ?? "receber") === tipo))
-      return toast.error("Já existe um agente para esta função. Edite o agente existente.");
+    const tipo = vaga(dados);
+    if (agentes.some((x) => x.id !== id && vaga(x) === tipo))
+      return toast.error("Já existe um agente para esta função/departamento. Edite o agente existente.");
     const corpo = { ...dados, modos: dados.modos?.length ? dados.modos : ["receber"], ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
     const r = id ? await db.from("voz_agentes").update(corpo).eq("id", id).select().single()
       : await db.from("voz_agentes").insert(corpo).select().single();
@@ -130,9 +132,11 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
     void carregar();
   };
 
-  const novoDoTipo = (m: string) => {
+  const novoDoTipo = (m: string, dep?: Departamento) => {
     const t = MODOS.find((x) => x.id === m);
-    setAtual({ ...NOVO, modos: [m], nome: t?.rotulo ?? NOVO.nome });
+    const nomeDep = DEPARTAMENTOS.find((x) => x.id === dep)?.rotulo;
+    setAtual({ ...NOVO, modos: [m], nome: nomeDep ? `${t?.rotulo} · ${nomeDep}` : t?.rotulo ?? NOVO.nome,
+      ...(dep ? { config: { departamento: dep, conduta: dep === "financeiro" ? { tom: "formal", roteiroPadrao: "lembrete_financeiro" } : {} } } : {}) });
     setEscolherTipo(false);
     setEditando(true);
   };
@@ -186,12 +190,14 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                 </div>
               )}
 
-              {!carregando && MODOS.map((m) => {
-                const doTipo = agentes.filter((a) => (a.modos[0] ?? "receber") === m.id);
+              {!carregando && MODOS.flatMap((m) => m.id === "ligar"
+                ? DEPARTAMENTOS.map((d) => ({ ...m, chave: `ligar:${d.id}`, dep: d.id as Departamento, rotulo: `${m.rotulo} · ${d.rotulo}`, desc: d.desc }))
+                : [{ ...m, chave: m.id, dep: undefined as Departamento | undefined }]).map((m) => {
+                const doTipo = agentes.filter((a) => vaga(a) === m.chave);
                 if (doTipo.length === 0) return (
-                  <div key={m.id} className="space-y-3 sm:space-y-4">
+                  <div key={m.chave} className="space-y-3 sm:space-y-4">
                     <h2 className="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"><m.icone className="h-4 w-4 text-primary" />{m.rotulo}</h2>
-                    <Card className="cursor-pointer border-2 border-dashed border-primary/30 transition-all hover:shadow-lg" onClick={() => novoDoTipo(m.id)}>
+                    <Card className="cursor-pointer border-2 border-dashed border-primary/30 transition-all hover:shadow-lg" onClick={() => novoDoTipo(m.id, m.dep)}>
                       <CardHeader className="p-3 sm:p-4">
                         <CardDescription className="text-xs sm:text-sm">{m.desc}</CardDescription>
                         <Button size="sm" className="mt-2 w-fit"><Plus className="mr-1 h-4 w-4" /> Configurar agente</Button>
@@ -200,7 +206,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                   </div>
                 );
                 return (
-                  <div key={m.id} className="space-y-3 sm:space-y-4">
+                  <div key={m.chave} className="space-y-3 sm:space-y-4">
                     <h2 className="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg">
                       <m.icone className="h-4 w-4 text-primary" />{m.rotulo}
                     </h2>
@@ -301,10 +307,17 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                       <p className="text-xs text-muted-foreground">Regras fixas sempre valem: no máximo 2 frases por fala, pergunta simples, desliga em caixa postal e transfere ao primeiro interesse.</p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Roteiro padrão no disparo</Label>
-                      <Select value={c.roteiroPadrao ?? "reposicao"} onValueChange={(v: any) => set({ roteiroPadrao: v })}>
+                      <Label className="text-xs">Departamento</Label>
+                      <Select value={lerDepartamento(atual.config)} onValueChange={(v: Departamento) => setAtual({ ...atual, config: { ...(atual.config ?? {}), departamento: v, conduta: { ...c, roteiroPadrao: roteirosDoDepartamento(v)[0].id } } })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>{ROTEIROS.map((r) => <SelectItem key={r.id} value={r.id}>{r.rotulo}</SelectItem>)}</SelectContent>
+                        <SelectContent>{DEPARTAMENTOS.map((d) => <SelectItem key={d.id} value={d.id}>{d.rotulo}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Roteiro padrão no modo fixo</Label>
+                      <Select value={c.roteiroPadrao ?? roteirosDoDepartamento(lerDepartamento(atual.config))[0].id} onValueChange={(v: any) => set({ roteiroPadrao: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{roteirosDoDepartamento(lerDepartamento(atual.config)).map((r) => <SelectItem key={r.id} value={r.id}>{r.rotulo}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1">
