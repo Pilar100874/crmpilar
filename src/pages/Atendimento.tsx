@@ -4563,8 +4563,13 @@ ${recentMessages}
           menuItems: [
             { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
             ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: async () => {
-              if (!(await exigirCadastroOrcamento(contato.id, null))) return;
-              void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
+              let cadastroBloqueado = false;
+              void repetirUltimoPedido(contato.id, usuarioId, async (clienteId, empresaId) => {
+                const liberado = await exigirCadastroOrcamento(clienteId, empresaId);
+                cadastroBloqueado = !liberado;
+                return liberado;
+              }).then((id) => {
+                if (cadastroBloqueado) return;
                 if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
                 toast.success("Orçamento criado com os itens do último pedido");
                 setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contato.id, nome: contato.nome });
