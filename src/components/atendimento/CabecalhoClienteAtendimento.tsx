@@ -28,19 +28,24 @@ interface Props {
   onTogglePainel?: () => void;
   filaAberta?: boolean;
   onToggleFila?: () => void;
+  /** Registros do contato — o atalho sem registro some, porque só abriria uma lista vazia. */
+  temHistorico?: boolean;
+  temTarefa?: boolean;
+  temAgenda?: boolean;
+  temOrcamento?: boolean;
 }
 
 const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila, temHistorico = true, temTarefa = true, temAgenda = true, temOrcamento = true }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
     { aba: "email", label: "E-mail", icon: Mail, cor: "text-info", ok: !!cliente.email },
     { aba: "visita", label: "Visita", icon: MapPin, cor: "text-accent-foreground", ok: true },
-    { aba: "orcamento", label: "Orçamento", icon: FileText, cor: "text-muted-foreground", ok: true },
+    { aba: "orcamento", label: "Orçamento", icon: FileText, cor: "text-muted-foreground", ok: temOrcamento },
   ].filter((c) => c.ok);
 
   return (
@@ -86,7 +91,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
       </div>}
 
       <div className={cn("flex items-center gap-2", compacto ? "overflow-x-auto" : "mt-4 flex-wrap")}>
-        {onHistorico && (
+        {onHistorico && temHistorico && (
           <button
             type="button"
             onClick={onHistorico}
@@ -100,7 +105,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             <History className="h-4 w-4 text-orange-600" />
           </button>
         )}
-        {onTarefa && (
+        {onTarefa && temTarefa && (
           <button
             type="button"
             onClick={onTarefa}
@@ -114,7 +119,7 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             <ClipboardList className="h-4 w-4 text-emerald-600" />
           </button>
         )}
-        {onAgenda && (
+        {onAgenda && temAgenda && (
           <button type="button" onClick={onAgenda} title="Agenda" aria-label="Agenda"
             className={cn("flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
               agendaAtiva ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40")}>

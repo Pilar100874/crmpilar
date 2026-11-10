@@ -12,6 +12,7 @@ import { pendenciasCadastro } from "./pendenciasCadastro";
 import { ehEmailAutomatico, emailIgnorado } from "./remetentesIgnorados";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import { montarRegistrosPorContato, possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa } from "./registrosContato";
 
 const DIA = 86_400_000;
 
@@ -125,6 +126,36 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
         passo("Voltar atrás não duplica o cliente", voltou.lista.join(" → ") === "joao → maria → pedro", `Histórico: ${voltou.lista.join(" → ")}`),
         passo("Abrir um cliente novo depois de voltar descarta o futuro", novo.lista.join(" → ") === "joao → ana", `Histórico: ${novo.lista.join(" → ")}`),
         passo("Sem cliente aberto antes, não há para onde voltar", vizinhoDoHistorico({ lista: ["joao"], i: 0 } as HistoricoFila, -1) === null),
+      ];
+    },
+  },
+  {
+    id: "atalhos-so-com-registro",
+    modulo: "Fila e organização",
+    titulo: "Atalhos que só aparecem quando existe o que abrir",
+    oQueE: "Os botões Histórico, Tarefa, Agenda e Orçamentos aparecem no cartão e no cabeçalho do cliente somente quando aquele contato já tem o registro correspondente.",
+    regraNegocio: "Contato recém-cadastrado ou importado ainda não tem histórico, agenda nem orçamento. Mostrar um botão que só abriria uma lista vazia faz o atendente perder tempo e parecer que o sistema está com defeito — então o atalho some e volta sozinho assim que o primeiro registro é criado.",
+    comoUsar: [
+      "Olhe os cartões da fila: cada contato mostra apenas os atalhos que têm conteúdo.",
+      "Crie a primeira tarefa de um contato novo: o atalho Agenda passa a aparecer.",
+      "Registre o primeiro orçamento: o botão de orçamentos volta a aparecer no cartão e no cabeçalho.",
+      "Nada fica escondido para sempre — assim que existe registro, o atalho reaparece.",
+    ],
+    simular: () => {
+      const registros = montarRegistrosPorContato({
+        contatos: [{ id: "novo", email: "" }, { id: "conversa", email: "" }, { id: "orcamento", email: "" }],
+        tarefas: [],
+        conversas: [{ customer_id: "conversa" }],
+        emails: [],
+        orcamentos: [{ cliente_id: "orcamento" }],
+      });
+      return [
+        passo("Contato recém-cadastrado não mostra nenhum atalho",
+          !possuiHistorico(registros.get("novo")) && !possuiTarefa(registros.get("novo")) && !possuiAgenda(registros.get("novo")) && !possuiOrcamento(registros.get("novo"))),
+        passo("Quem já trocou mensagem tem histórico, mas ainda não tem agenda",
+          possuiHistorico(registros.get("conversa")) && !possuiAgenda(registros.get("conversa"))),
+        passo("Quem tem orçamento mostra o atalho de orçamentos",
+          possuiOrcamento(registros.get("orcamento")) && !possuiTarefa(registros.get("orcamento"))),
       ];
     },
   },

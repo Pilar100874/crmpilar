@@ -83,6 +83,8 @@ import { useModoSimultaneo, lerModoSimultaneo } from "@/hooks/usePendenciasAtend
 import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendimento/BarraProximoContato";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
+import { useRegistrosContato } from "@/hooks/useRegistrosContato";
+import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa, type RegistrosContato } from "@/lib/atendimento/registrosContato";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
 import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
@@ -3949,6 +3951,16 @@ ${recentMessages}
     return ordenarPendentesPrimeiro([...extras, ...contatosBaseSemPendentes], (c) => c.id, pendenciasAtendimento);
   }, [contatosBaseSemPendentes, contatosPendentes, pendenciasAtendimento]);
 
+  // Registros de cada contato: os atalhos (histórico, tarefa, agenda, orçamentos) só
+  // aparecem quando existe o que abrir — contato recém-cadastrado não tem lista vazia.
+  const registrosPorContato = useRegistrosContato({
+    contatos: contatosBase,
+    tarefas: todayTasks,
+    conversas: conversations,
+    emails: userEmails,
+    orcamentos,
+  });
+
   // Contatos com WhatsApp que ainda não possuem conversa aberta
   const contatosSemConversa = useMemo(() => {
     const comConversa = new Set(filteredConversations.map((c) => c.customer_id));
@@ -4314,6 +4326,9 @@ ${recentMessages}
     };
   }, [clienteCabecalhoBase, contatosBase]);
 
+  // Atalhos do cabeçalho do cliente: sem registro, o botão que só abriria lista vazia some.
+  const registrosDoCabecalho = registrosPorContato.get(clienteCabecalho?.id || "");
+
   // Sem lista agregada nem fallback: a barra pertence ao cartão aberto.
   const contatoPendenteBarra = useMemo(() => {
     const id = contatoDaBarraFinalizacao(contatoFinalizarId, clienteCabecalho?.id, pendenciasAtendimento);
@@ -4489,6 +4504,7 @@ ${recentMessages}
       contatosComIndicadores.forEach((contato) => {
         const pot = filtroFila === "potenciais" ? potenciaisPorCliente.get(contato.id) : undefined;
         if (filtroFila === "potenciais" && !pot) return;
+        const r = registrosPorContato.get(contato.id);
         const ce = contato.companies || [];
         const principal = ce.find((c: any) => c.is_primary) || ce[0];
         const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4511,13 +4527,13 @@ ${recentMessages}
           } : undefined,
           menuItems: [
             { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
-            { label: "Repetir último pedido (novo orçamento)", onClick: () => {
+            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: () => {
               void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
                 if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
                 toast.success("Orçamento criado com os itens do último pedido");
                 setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contato.id, nome: contato.nome });
               }).catch(() => toast.error("Não foi possível repetir o pedido"));
-            } },
+            } }] : []),
             ...(pot ? [
             { label: "Copiar mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).then(() => toast.success("Mensagem copiada")); } },
             ...(contato.telefone ? [{ label: "Enviar WhatsApp com mensagem sugerida", onClick: () => { void navigator.clipboard.writeText(mensagemSugerida(pot, contato.nome)).catch(() => {}); toast.success("Mensagem sugerida copiada — cole no chat"); abrirCanalDoContato(contato.id, "chat"); } }] : []),
@@ -4527,6 +4543,9 @@ ${recentMessages}
           ] : []),
           ],
           contactId: contato.id,
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: contato.nome,
           empresa: empresaNome,
           motivo: pot ? pot.motivo : contato.referencia || "Meu contato",
@@ -4579,6 +4598,7 @@ ${recentMessages}
     if (filtroFila === "agendados") filteredTasks
       .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
       .forEach((task: any) => {
+      const r = registrosPorContato.get(task.contact_id);
       const ce = task.customers?.customer_empresas || [];
       const principal = ce.find((c: any) => c.is_primary) || ce[0];
       const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined;
@@ -4598,6 +4618,9 @@ ${recentMessages}
         id: `task-${task.id}`,
         tipo: "agendado",
         contactId: task.contact_id,
+        temHistorico: possuiHistorico(r),
+        temAgenda: possuiAgenda(r),
+        temOrcamento: possuiOrcamento(r),
         nome,
         empresa: empresaNome,
         motivo,
@@ -4660,12 +4683,16 @@ ${recentMessages}
       // Inclui conversas em andamento (em_atendimento, aguardando_cliente, transferido, reaberto) para poder reabri-las.
       .forEach((grupo) => {
         const conv = grupo.conv;
+        const r = conv.customer_id ? registrosPorContato.get(conv.customer_id) : undefined;
         const phone = normalizePhone(conv.customer?.telefone);
         const empresaNome = conv.customerCompanies?.[0]?.empresas?.nome_fantasia || conv.customerCompanies?.[0]?.empresas?.nome || undefined;
         lista.push({
           id: `conv-${conv.id}`,
           tipo: "recebido",
           contactId: conv.customer_id,
+          temHistorico: true,
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: conv.customer?.nome || "Sem nome",
           empresa: empresaNome,
           motivo: "Mensagem recebida",
@@ -4702,10 +4729,14 @@ ${recentMessages}
     // Recebidos: e-mails recebidos e não respondidos, um por contato
     (filtroFila === "recebidos" ? emailsRecebidosAgrupados : [])
       .forEach((email) => {
+        const r = (email as any).customer_id ? registrosPorContato.get((email as any).customer_id) : undefined;
         lista.push({
           id: `email-${email.id}`,
           tipo: "recebido",
           contactId: (email as any).customer_id || undefined,
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: possuiOrcamento(r),
           nome: (email as any).from_name || email.from_email || "Sem nome",
           motivo: "E-mail recebido",
           urgencia: classificarUrgencia(`${email.subject || ""} ${String((email as any).body || "").replace(/<[^>]+>/g, " ").slice(0, 600)}`) ?? undefined,
@@ -6061,6 +6092,10 @@ ${recentMessages}
                   tarefaAtiva={activeTab === "agenda" && !!selectedTaskId && !historicoCliente && !agendaContato && !orcamentosCliente}
                   onAgenda={() => { setHistoricoCliente(null); if (clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome }); }}
                   agendaAtiva={!!agendaContato}
+                  temHistorico={possuiHistorico(registrosDoCabecalho)}
+                  temTarefa={possuiTarefa(registrosDoCabecalho)}
+                  temAgenda={possuiAgenda(registrosDoCabecalho)}
+                  temOrcamento={possuiOrcamento(registrosDoCabecalho)}
                 />
               </div>
             </div>
@@ -6991,6 +7026,10 @@ ${recentMessages}
             onTogglePainel={alternarPainelDetalhes}
             filaAberta={showConversationsList}
             onToggleFila={() => setShowConversationsList((valor) => !valor)}
+            temHistorico={possuiHistorico(registrosDoCabecalho)}
+            temTarefa={possuiTarefa(registrosDoCabecalho)}
+            temAgenda={possuiAgenda(registrosDoCabecalho)}
+            temOrcamento={possuiOrcamento(registrosDoCabecalho)}
           />
           </div>
         )}
@@ -8445,6 +8484,7 @@ interface MobileListContentProps {
   emailsNaoLidosPerEmail: Record<string, number>;
   chatsNaoLidosPerPhone: Record<string, number>;
   indicadoresPorContato: Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>;
+  registrosPorContato: Map<string, RegistrosContato>;
   agendaViewMode: 'default' | 'fluxo' | 'massa';
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
   setDiscadorModo: (modo: 'previa' | 'sequencial' | null) => void;
@@ -8511,6 +8551,7 @@ function MobileListContent({
   emailsNaoLidosPerEmail,
   chatsNaoLidosPerPhone,
   indicadoresPorContato,
+  registrosPorContato,
   agendaViewMode,
   setAgendaViewMode,
   setDiscadorModo,
@@ -8772,6 +8813,7 @@ function MobileListContent({
             selecionadoId={contatoTelefoneSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
         {activeTab === "tel" && (
@@ -8783,6 +8825,7 @@ function MobileListContent({
             selecionadoId={contatoTelefoneSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
 
@@ -8828,6 +8871,7 @@ function MobileListContent({
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     historicoClienteId={contact.contactId}
                     historicoClienteNome={contact.nome}
+                    temHistorico={possuiHistorico(registrosPorContato.get(contact.contactId))}
                   />
                 ))}
               </>
@@ -8972,6 +9016,7 @@ function MobileListContent({
             selecionadoId={contatoEmailSelecionadoId}
             colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoEmail}
+            temHistorico={(contato) => possuiHistorico(registrosPorContato.get(contato.id))}
           />
         )}
 

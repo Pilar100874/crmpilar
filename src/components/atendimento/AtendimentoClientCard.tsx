@@ -22,6 +22,8 @@ interface AtendimentoClientCardProps {
   /** Quando informado, mostra o botão que abre o histórico do cliente na tela central. */
   historicoClienteId?: string;
   historicoClienteNome?: string;
+  /** Falso quando o contato ainda não tem nenhum registro: o botão de histórico some. */
+  temHistorico?: boolean;
 }
 
 const AtendimentoCardsDensityContext = createContext({ compact: false, onToggle: () => undefined });
@@ -72,6 +74,7 @@ export function AtendimentoClientCard({
   className,
   historicoClienteId,
   historicoClienteNome,
+  temHistorico = true,
 }: AtendimentoClientCardProps) {
   const compacto = useAtendimentoCardsCompactos();
   const nomeCartao = parseTituloCartao(title).nome;
@@ -137,6 +140,7 @@ export function AtendimentoClientCard({
       </div>
       {historicoClienteId && (
         <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
+          {temHistorico && (
           <button
             type="button"
             title="Ver histórico do cliente"
@@ -149,6 +153,7 @@ export function AtendimentoClientCard({
           >
             <History className="h-3.5 w-3.5" />
           </button>
+          )}
           <button
             type="button"
             disabled={!pendente}

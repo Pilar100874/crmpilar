@@ -80,6 +80,10 @@ export interface FilaItem {
   onOrcamentosCentro?: (contactId: string, nome: string) => void;
   onAgendaCentro?: (contactId: string, nome: string) => void;
   onHistorico?: () => void;
+  /** Registros do contato — sem registro o atalho que só abriria lista vazia some do cartão. */
+  temHistorico?: boolean;
+  temAgenda?: boolean;
+  temOrcamento?: boolean;
   onClick: () => void;
   menuItems?: { label: string; onClick: () => void }[];
   /** Recebidos: item sinalizado como tratado sem resposta. */
@@ -809,22 +813,24 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                             </button>
                           );
                         })}
-                        {item.onHistorico && (
+                        {item.onHistorico && item.temHistorico !== false && (
                           <button type="button" title="Histórico" onClick={(e) => { e.stopPropagation(); item.onHistorico?.(); }}
                             className="h-7 w-7 md:h-5 md:w-5 rounded-full flex items-center justify-center bg-muted text-orange-600 hover:ring-1 hover:ring-current">
                             <History className="h-3.5 w-3.5 md:h-2.5 md:w-2.5" />
                           </button>
                         )}
-                        {item.onAgendaCentro && (
+                        {item.onAgendaCentro && item.temAgenda !== false && (
                           <button type="button" title="Agenda" onClick={(e) => { e.stopPropagation(); item.onAgendaCentro?.(item.contactId!, item.nome); }}
                             className="h-7 w-7 md:h-5 md:w-5 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:ring-1 hover:ring-current">
                             <CalendarDays className="h-3.5 w-3.5 md:h-2.5 md:w-2.5" />
                           </button>
                         )}
-                        <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); item.onOrcamentosCentro?.(item.contactId, item.nome); }}
-                          className={cn("h-7 w-7 md:h-5 md:w-5 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
-                          <FileText className="h-3.5 w-3.5 md:h-2.5 md:w-2.5" />
-                        </button>
+                        {item.temOrcamento !== false && (
+                          <button type="button" title="Últimos orçamentos" onClick={(e) => { e.stopPropagation(); void alternarOrcamentos(item.contactId!); item.onOrcamentosCentro?.(item.contactId, item.nome); }}
+                            className={cn("h-7 w-7 md:h-5 md:w-5 rounded-full flex items-center justify-center bg-warning/10 text-warning hover:ring-1 hover:ring-current", orcAberto === item.contactId && "ring-1 ring-current")}>
+                            <FileText className="h-3.5 w-3.5 md:h-2.5 md:w-2.5" />
+                          </button>
+                        )}
                       </div>
                     )}
                       {item.potencial && (

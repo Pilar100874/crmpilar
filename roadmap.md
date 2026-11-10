@@ -8,6 +8,7 @@
 - [x] Termômetro da carteira
 - [x] Reconquista de orçamento perdido (15 dias)
 - [x] Resumo pós-ligação (Pilar Fone com gravação)
+- [x] Atalhos (Histórico, Tarefa, Agenda, Orçamentos) só aparecem quando o contato tem registro
 - [x] Selo de crédito no cartão
 - [ ] Robô IA diário ligando para Potenciais — aguarda decisão de horário/quantidade
 - [ ] Plantão fora do horário no WhatsApp — aguarda definir horário e texto da resposta
