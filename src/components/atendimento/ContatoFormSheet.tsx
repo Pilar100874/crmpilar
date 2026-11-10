@@ -12,6 +12,7 @@ import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2, MapPin } 
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp, maskCEP } from "@/lib/masks";
+import { exigirUsuarioCriador, vincularContatoAoCriador } from "@/lib/atendimento/vinculoCriador";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { validateCpfCnpjField } from "@/lib/docValidation";
 import { CpfField } from "@/components/cadastros/CpfField";
@@ -239,6 +240,8 @@ export function ContatoFormSheet({ centralizado = false, open, onOpenChange, onS
         return;
       }
 
+      const criadorId = await exigirUsuarioCriador();
+
       // Validar duplicidade de email
       if (formData.email?.trim()) {
         const { data: existingEmail } = await supabase
@@ -329,19 +332,11 @@ export function ContatoFormSheet({ centralizado = false, open, onOpenChange, onS
         await supabase.from("customer_segmentos").insert(segVinculos);
       }
 
-      // Vincular usuários e gerente
-      const usuariosParaVincular = Array.from(new Set([
+      // O criador é sempre incluído; os responsáveis escolhidos são preservados.
+      await vincularContatoAoCriador(newCustomer.id, estabelecimentoId, criadorId, [
         ...usuariosVinculados,
         ...(gerenteSelecionado ? [gerenteSelecionado] : []),
-      ]));
-      if (usuariosParaVincular.length > 0) {
-        const usrVinculos = usuariosParaVincular.map(usrId => ({
-          customer_id: newCustomer.id,
-          usuario_id: usrId,
-          estabelecimento_id: estabelecimentoId,
-        }));
-        await supabase.from("customer_vinculos").insert(usrVinculos);
-      }
+      ]);
 
       toast.success("Contato criado com sucesso!");
       onSuccess?.(newCustomer.id);
