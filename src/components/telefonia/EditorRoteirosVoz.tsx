@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { removerEtapa } from "@/lib/voz/roteirosLigacao";
 import { SimuladorLigacaoVoz, type AgenteSim } from "./SimuladorLigacaoVoz";
 import {
   ACOES, DEPARTAMENTOS, GATILHOS_PRONTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, palavrasGatilho, roteiroDeFabrica,
@@ -234,7 +235,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
           <div className="flex items-center gap-2">
             <Badge>{i + 1}</Badge>
             <Input className="h-8" value={e.titulo} onChange={(x) => setEtapa(i, { titulo: x.target.value })} placeholder="Título da etapa" />
-            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Remover etapa" onClick={() => set({ etapas: atual.etapas.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Remover etapa" onClick={() => set({ etapas: removerEtapa(atual.etapas, i) })}><Trash2 className="h-4 w-4" /></Button>
           </div>
           <div className="space-y-1"><Label>O que a IA diz/faz</Label>
             <Textarea rows={2} value={e.fala} maxLength={400} onChange={(x) => setEtapa(i, { fala: x.target.value })} />
@@ -279,10 +280,16 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">ENTÃO</span>
                   <div className="space-y-1">
-                    <Select value={c.acao} onValueChange={(v) => setC({ acao: v as typeof c.acao })}>
+                    <Select value={c.acao} onValueChange={(v) => setC({ acao: v as typeof c.acao, ...(v === "ir_etapa" && c.etapa == null ? { etapa: Math.min(i + 1, atual.etapas.length - 1) } : {}) })}>
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>{ACOES.map((a) => <SelectItem key={a.id} value={a.id}>{a.rotulo}</SelectItem>)}</SelectContent>
                     </Select>
+                    {c.acao === "ir_etapa" && (
+                      <Select value={c.etapa != null ? String(c.etapa) : ""} onValueChange={(v) => setC({ etapa: Number(v) })}>
+                        <SelectTrigger className="h-8"><SelectValue placeholder="Escolha a etapa de destino" /></SelectTrigger>
+                        <SelectContent>{atual.etapas.map((x, z) => <SelectItem key={z} value={String(z)} disabled={z === i}>Etapa {z + 1}{x.titulo.trim() ? ` · ${x.titulo.trim()}` : ""}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )}
                     <Input className="h-8" value={c.texto ?? ""} onChange={(x) => setC({ texto: x.target.value })} placeholder={c.acao === "responder" ? "O que responder" : "Complemento (opcional)"} />
                   </div>
                   <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Remover regra" onClick={() => setEtapa(i, { condicoes: e.condicoes.filter((_, z) => z !== k) })}><Trash2 className="h-4 w-4" /></Button>

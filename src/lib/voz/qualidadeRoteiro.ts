@@ -24,6 +24,10 @@ export function diagnosticarRoteiro(r: RoteiroSalvo): DiagnosticoRoteiro {
       if (!tem(e.condicoes, SIL)) a.push({ nivel: "aviso", etapa: i, texto: "Sem regra para silêncio do cliente." });
     }
     e.condicoes.forEach((c) => { if (!c.gatilho.trim()) a.push({ nivel: "erro", etapa: i, texto: "Regra com o campo SE vazio." }); });
+    e.condicoes.forEach((c) => {
+      if (c.acao === "ir_etapa" && (c.etapa == null || !r.etapas[c.etapa])) a.push({ nivel: "erro", etapa: i, texto: "Regra \"Ir para a etapa\" sem etapa de destino." });
+      else if (c.acao === "ir_etapa" && c.etapa === i) a.push({ nivel: "aviso", etapa: i, texto: "Regra manda ir para a própria etapa (pode repetir a pergunta)." });
+    });
     if (e.condicoes.some((c) => c.acao === "avancar") && i === r.etapas.length - 1)
       a.push({ nivel: "aviso", etapa: i, texto: "Última etapa manda avançar, mas não há próxima etapa." });
   });
@@ -92,12 +96,12 @@ export function roteiroDoModelo(m: ModeloRoteiro, agora = Date.now()): RoteiroSa
 }
 
 /** Converte a resposta da IA ("Criar com IA") em roteiro válido, descartando ações desconhecidas. */
-const ACOES_OK: AcaoCondicao[] = ["responder", "desconto", "transferir", "encerrar", "avancar"];
-export function roteiroGerado(g: { nome?: string; descricao?: string; departamento?: string; etapas?: { titulo?: string; fala?: string; condicoes?: { gatilho?: string; acao?: string; texto?: string | null }[] }[] }, agora = Date.now()): RoteiroSalvo {
+const ACOES_OK: AcaoCondicao[] = ["responder", "desconto", "transferir", "encerrar", "avancar", "ir_etapa"];
+export function roteiroGerado(g: { nome?: string; descricao?: string; departamento?: string; etapas?: { titulo?: string; fala?: string; condicoes?: { gatilho?: string; acao?: string; texto?: string | null; etapa?: number | null }[] }[] }, agora = Date.now()): RoteiroSalvo {
   const etapas = (g.etapas ?? []).filter((e) => e.fala?.trim()).slice(0, 8).map((e, i) => ({
     titulo: e.titulo?.trim() || `Etapa ${i + 1}`, fala: e.fala!.trim().slice(0, 400),
     condicoes: (e.condicoes ?? []).filter((c) => c.gatilho?.trim() && ACOES_OK.includes(c.acao as AcaoCondicao))
-      .map((c) => ({ gatilho: c.gatilho!.trim(), acao: c.acao as AcaoCondicao, ...(c.texto?.trim() ? { texto: c.texto.trim() } : {}) })),
+      .map((c) => ({ gatilho: c.gatilho!.trim(), acao: c.acao as AcaoCondicao, ...(c.texto?.trim() ? { texto: c.texto.trim() } : {}), ...(c.acao === "ir_etapa" && typeof c.etapa === "number" ? { etapa: c.etapa } : {}) })),
   }));
   const texto = etapas.map((e) => e.fala).join(" ");
   const campos = (["produto", "condicao", "desconto", "aviso"] as const).filter((c) => texto.includes(`{${c}}`) || (c === "desconto" && etapas.some((e) => e.condicoes.some((x) => x.acao === "desconto"))));
@@ -112,8 +116,10 @@ export function mapaRoteiro(r: RoteiroSalvo): NoMapa[] {
   return r.etapas.map((e, i) => {
     const ultima = i === r.etapas.length - 1;
     const ramos = e.condicoes.map((c) => {
-      const semSaida = c.acao === "avancar" && ultima;
-      const destino = c.acao === "avancar" ? (ultima ? "Sem próxima etapa" : `Etapa ${i + 2}`)
+      const alvo = c.acao === "ir_etapa" && c.etapa != null ? r.etapas[c.etapa] : undefined;
+      const semSaida = (c.acao === "avancar" && ultima) || (c.acao === "ir_etapa" && !alvo);
+      const destino = c.acao === "ir_etapa" ? (alvo ? `Etapa ${c.etapa! + 1}${alvo.titulo.trim() ? ` · ${alvo.titulo.trim()}` : ""}` : "Etapa não definida")
+        : c.acao === "avancar" ? (ultima ? "Sem próxima etapa" : `Etapa ${i + 2}`)
         : c.acao === "transferir" ? "Transferir para atendente" : c.acao === "encerrar" ? "Encerrar ligação"
         : c.acao === "desconto" ? "Oferecer desconto" : /\[DESLIGAR\]/.test(c.texto ?? "") ? "Responder e encerrar" : "Responder e continuar";
       return { gatilho: c.gatilho, acao: c.acao, destino, semSaida };
