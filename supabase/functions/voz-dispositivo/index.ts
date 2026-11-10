@@ -94,10 +94,11 @@ async function contextoCrm(sb: SB, empresa: string, numero: string, opts = { his
 }
 
 /** Resumo para o atendente que recebe a transferência saber como continuar. */
-async function resumir(falas: { papel: string; texto: string }[], objetivo: string | null): Promise<string | null> {
+async function resumir(falas: { papel: string; texto: string }[], objetivo: string | null, instrucoes?: string): Promise<string | null> {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
   const conversa = falas.map((f) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n").slice(0, 8000);
+  const instructions = instrucoes ?? "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.";
   const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
     headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
@@ -106,7 +107,7 @@ async function resumir(falas: { papel: string; texto: string }[], objetivo: stri
       stream: true,
       store: false,
       reasoning: { effort: "low" },
-      instructions: "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.",
+      instructions,
       input: `${objetivo ? `Objetivo da ligação: ${objetivo.slice(0, 500)}\n\n` : ""}Conversa:\n${conversa}`,
     }),
   });
@@ -125,6 +126,57 @@ async function resumir(falas: { papel: string; texto: string }[], objetivo: stri
     }
   }
   return texto.trim() || null;
+}
+
+/** Data local de São Paulo (YYYY-MM-DD) e dia da semana, para a IA entender "amanhã", "sexta". */
+function hojeSP() {
+  const d = new Date(Date.now() - 3 * 3600_000);
+  const dias = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+  return { iso: d.toISOString().slice(0, 10), dia: dias[d.getUTCDay()] };
+}
+
+/** Pede à IA a data de retorno combinada e cria a tarefa na agenda de quem disparou a ligação. */
+async function reagendar(sb: SB, empresa: string, chamadaId: string, falas: { papel: string; texto: string }[], objetivo: string | null) {
+  const h = hojeSP();
+  const txt = await resumir(falas, objetivo,
+    `Hoje é ${h.dia}, ${h.iso} (horário de Brasília). Leia a ligação e diga se o cliente pediu ou aceitou um retorno/nova ligação em outra data. ` +
+    `Responda SOMENTE um JSON: {"retorno": true|false, "data": "YYYY-MM-DD", "hora": "HH:MM" ou null, "motivo": "frase curta do que foi combinado"}. ` +
+    `"amanhã" = dia seguinte; "semana que vem" sem dia = próxima segunda; sábado/domingo passam para segunda. Não invente: se não houve pedido de retorno, retorno=false.`);
+  const m = txt?.match(/\{[\s\S]*\}/);
+  if (!m) return;
+  let r: { retorno?: boolean; data?: string; hora?: string | null; motivo?: string };
+  try { r = JSON.parse(m[0]); } catch { return; }
+  if (!r.retorno || !/^\d{4}-\d{2}-\d{2}$/.test(r.data ?? "") || r.data! < h.iso) return;
+  const hora = /^\d{2}:\d{2}$/.test(r.hora ?? "") ? r.hora! : null;
+
+  const ch = (await sb.from("voz_chamadas").select("numero, agente_id, iniciada_em").eq("id", chamadaId).maybeSingle()).data;
+  const fim = dig(ch?.numero).slice(-8);
+  if (fim.length < 8) return;
+  // Dono da tarefa: quem criou o comando de ligação (campanha ou simulador).
+  const desde = new Date(new Date(ch.iniciada_em ?? Date.now()).getTime() - 30 * 60_000).toISOString();
+  const cmds = (await sb.from("voz_comandos").select("numero, criado_por").eq("estabelecimento_id", empresa)
+    .eq("tipo", "ligar").gte("created_at", desde).order("created_at", { ascending: false }).limit(30)).data ?? [];
+  const cmd = cmds.find((x: SB) => dig(x.numero).endsWith(fim) && x.criado_por);
+  if (!cmd) return;
+  const u = (await sb.from("usuarios").select("id").eq("auth_user_id", cmd.criado_por).maybeSingle()).data;
+  if (!u) return;
+  const like = `%${fim.slice(0, 4)}%${fim.slice(4)}%`;
+  const clis = (await sb.from("customers").select("id,nome,telefone,tel").eq("estabelecimento_id", empresa)
+    .or(`telefone.ilike.${like},tel.ilike.${like}`).limit(3)).data ?? [];
+  const cli = clis.find((c: SB) => dig(c.telefone).endsWith(fim) || dig(c.tel).endsWith(fim)) ?? clis[0];
+  const nome = cli?.nome ?? ch.numero;
+  const motivo = `Retorno pedido pelo cliente na ligação com IA: ${String(r.motivo ?? "").slice(0, 200)}`;
+  // Evita duplicar se já houver tarefa aberta igual na mesma data.
+  if (cli) {
+    const ja = (await sb.from("calendario_tarefas").select("id").eq("contact_id", cli.id).eq("date", r.data)
+      .eq("origem_sub_item", "retorno_ligacao_ia").limit(1)).data;
+    if (ja?.length) return;
+  }
+  await sb.from("calendario_tarefas").insert({
+    user_id: u.id, estabelecimento_id: empresa, contact_id: cli?.id ?? null, contact_name: nome,
+    title: `Retornar ligação - ${nome}`, description: motivo, date: r.data, time: hora, status: "pending",
+    origem: "inteligente", origem_sub_item: "retorno_ligacao_ia", modo_criacao: "automatico", motivo,
+  });
 }
 
 Deno.serve(async (req) => {
@@ -260,7 +312,7 @@ Deno.serve(async (req) => {
           }
           if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
           // Ligação de vendas: contexto enxuto para a IA não citar históricos antigos.
-          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o produto e o gancho; cite no máximo um produto e nunca leia a lista.";
+          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o gancho. NUNCA cite itens, produtos, quantidades ou valores de orçamentos (podem ser muitos e de vários orçamentos): fale só \"a proposta que nossa equipe enviou\". Nunca leia listas.";
         }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",
@@ -318,6 +370,10 @@ Deno.serve(async (req) => {
           finalizada_em: new Date().toISOString(),
           duracao_seg: Math.round((Date.now() - new Date(c.iniciada_em as string).getTime()) / 1000),
         }).eq("id", c.id);
+        // Reagendamento: se o cliente pediu retorno, cria a tarefa na agenda de quem disparou.
+        if (!transferido && cc?.modo === "ligar" && falas.some((f) => f.papel === "cliente")) {
+          try { await reagendar(sb, empresa, c.id, falas, cc?.objetivo ?? null); } catch (e) { console.error("reagendar", e); }
+        }
         return json({ ok: true });
       }
       case "comandos": {
