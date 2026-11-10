@@ -3720,17 +3720,6 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               </div>
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
-              {isAdmin && (
-                <Button
-                  size="sm"
-                  variant={modoValidacao ? "default" : "outline"}
-                  className="h-9 shrink-0 text-xs"
-                  title="Mostra todas as regras que serão executadas antes de cada ação na agenda"
-                  onClick={() => { const v = !modoValidacao; setModoValidacao(v); localStorage.setItem("agenda_modo_validacao", v ? "1" : "0"); toast.info(v ? "Modo validação ligado: as regras aparecerão antes de cada ação" : "Modo validação desligado"); }}
-                >
-                  {modoValidacao ? "Validação: ligada" : "Validação"}
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="icon"
