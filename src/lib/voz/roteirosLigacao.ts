@@ -51,9 +51,9 @@ export const ROTEIROS: Roteiro[] = [
     desc: "Pergunta se o cliente analisou a proposta enviada e o que falta para fechar.",
     campos: ["desconto"], obrigatorios: [], produtoPorCliente: true,
     etapas: () => [
-      "Diga que está ligando sobre o orçamento enviado (cite os itens principais dos Dados do CRM, sem ler valores).",
+      "Diga só que está ligando sobre a proposta que a equipe enviou recentemente. NUNCA cite itens, produtos, quantidades nem valores (podem ser muitos e de vários orçamentos). Se perguntarem qual, diga que o atendente passa os detalhes e transfira.",
       "Pergunte só: \"O senhor conseguiu dar uma olhada no orçamento?\" (uma pergunta, espere a resposta).",
-      "Se respondeu sim, pergunte só: \"Ficou alguma dúvida ou já podemos fechar?\". Se respondeu não, pergunte quando pode retornar.",
+      "Se respondeu sim, pergunte só: \"Ficou alguma dúvida ou já podemos fechar?\". Se respondeu não, pergunte qual dia pode retornar; ao ouvir o dia, confirme (\"Combinado, retorno na sexta\") e encerre — a agenda é marcada sozinha.",
       "Se o cliente falar em dúvida, fechar, valor, prazo ou pagamento: NÃO faça outra pergunta; diga \"Vou te passar agora para o atendente, um instante\" e transfira.",
     ],
   },
