@@ -83,6 +83,7 @@ import { useModoSimultaneo, lerModoSimultaneo } from "@/hooks/usePendenciasAtend
 import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendimento/BarraProximoContato";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
+import { useEnderecosVisita } from "@/hooks/useEnderecosVisita";
 import { useRegistrosContato } from "@/hooks/useRegistrosContato";
 import { carregarCadastroOrcamento, pendenciasOrcamento } from "@/lib/atendimento/cadastroOrcamento";
 import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa, type RegistrosContato } from "@/lib/atendimento/registrosContato";
@@ -4361,6 +4362,11 @@ ${recentMessages}
     };
   }, [clienteCabecalhoBase, contatosBase]);
 
+  const { comEndereco: contatosComEnderecoVisita, recarregar: recarregarEnderecosVisita } = useEnderecosVisita([
+    ...contatosBase.map((contato) => contato.id),
+    ...(clienteCabecalho?.id ? [clienteCabecalho.id] : []),
+  ]);
+
   // Atalhos do cabeçalho do cliente: sem registro, o botão que só abriria lista vazia some.
   const registrosDoCabecalho = registrosPorContato.get(clienteCabecalho?.id || "");
 
@@ -4600,7 +4606,7 @@ ${recentMessages}
             ...(contato.telefone ? ["whatsapp" as FilaCanal] : []),
             ...(contato.tel ? ["telefone" as FilaCanal] : []),
             ...(contato.email ? ["email" as FilaCanal] : []),
-            "visita" as FilaCanal,
+            ...(contatosComEnderecoVisita.has(contato.id) ? ["visita" as FilaCanal] : []),
           ],
           onCanal: (c: FilaCanal) => {
             abrirCanalDoContato(contato.id, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c);
@@ -4675,7 +4681,7 @@ ${recentMessages}
           ...(task.customers?.telefone ? ["whatsapp" as FilaCanal] : []),
           ...(task.customers?.tel ? ["telefone" as FilaCanal] : []),
           ...(task.customers?.email ? ["email" as FilaCanal] : []),
-          "visita" as FilaCanal,
+          ...(contatosComEnderecoVisita.has(task.contact_id) ? ["visita" as FilaCanal] : []),
         ],
         onCanal: (c: FilaCanal) => {
           setSelectedTaskId(task.id);
@@ -4848,7 +4854,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
+  }, [contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -6114,6 +6120,7 @@ ${recentMessages}
               <div className="flex items-center justify-center gap-1 overflow-x-auto">
                 <CabecalhoClienteAtendimento
                   cliente={clienteCabecalho}
+                  temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
                   abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
@@ -7033,6 +7040,7 @@ ${recentMessages}
           <div ref={cabecalhoRef} data-cabecalho-cliente>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
+                  temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
             onTrocarCanal={(aba) => {
               setHistoricoCliente(null);
@@ -8109,6 +8117,7 @@ ${recentMessages}
           const pendente = orcamentoPendenteCadastroRef.current;
           if (pendente) orcamentoPendenteCadastroRef.current = { type: 'customer', data: { ...pendente.data, id: customerId } };
           setCreatingContato(false);
+          recarregarEnderecosVisita();
           retomarOrcamentoAposCadastro();
           setCreatingContatoInitialData(null);
           if (activeTab === "agenda") loadTodayTasks();
@@ -8124,6 +8133,7 @@ ${recentMessages}
         customerId={editingContatoId || ""}
         onSuccess={() => {
           setEditingContatoId(null);
+          recarregarEnderecosVisita();
           retomarOrcamentoAposCadastro();
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
@@ -8142,6 +8152,7 @@ ${recentMessages}
         onSuccess={() => {
           setCreatingEmpresa(false);
           setCreatingEmpresaForCustomerId(null);
+          recarregarEnderecosVisita();
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
           else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
@@ -8159,6 +8170,7 @@ ${recentMessages}
         empresaId={editingEmpresaId || ""}
         onSuccess={() => {
           setEditingEmpresaId(null);
+          recarregarEnderecosVisita();
           retomarOrcamentoAposCadastro();
           setEditingCustomerEmpresaId(null);
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
