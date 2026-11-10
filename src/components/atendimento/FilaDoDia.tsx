@@ -21,6 +21,7 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -561,44 +562,49 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         </div>
 
         {/* Filtro por canal */}
-        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+        <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-1" data-filtros-canais>
           {(Object.keys(CANAL_CONFIG) as FilaCanal[]).map((canal) => {
             const cfg = CANAL_CONFIG[canal];
             const Icone = cfg.icon;
             const ativo = canaisAtivos.has(canal);
             const total = baseAba.filter((item) => temCanalItem(item, new Set([canal]))).length;
             return (
-              <button
+              <Button
                 key={canal}
                 type="button"
+                variant="ghost"
                 onClick={() => alternarCanal(canal)}
                 title={`${cfg.label} (${total})`}
                 aria-label={`Filtrar por ${cfg.label}`}
                 aria-pressed={ativo}
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                  "flex h-8 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-md border px-0.5 text-[10px] font-semibold transition-colors",
                   ativo
                     ? "border-primary/50 bg-primary/10 text-primary"
                     : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 )}
               >
-                <Icone className={cn("h-4 w-4", ativo ? cfg.cor : "")} />
-                <span className="tabular-nums">{total}</span>
-              </button>
+                <Icone className={cn("h-3.5 w-3.5 shrink-0", ativo ? cfg.cor : "")} />
+                <span className="tabular-nums">{total > 99 ? "99+" : total}</span>
+              </Button>
             );
           })}
           {canaisAtivos.size > 0 && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setCanaisAtivos(new Set())}
-              className="h-8 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              title="Limpar filtros de canal"
+              aria-label="Limpar filtros de canal"
+              className="h-8 w-5 shrink-0 rounded-md p-0 text-muted-foreground hover:text-foreground"
             >
-              Limpar
-            </button>
+              <X className="h-3.5 w-3.5" />
+            </Button>
           )}
-          <div className="ml-auto flex items-center gap-1.5">
-            <button
+          <div className="flex min-w-0 flex-1 items-center gap-1">
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setSomenteNaoFinalizados((v) => !v)}
               data-tour="fila-nao-finalizados"
               aria-pressed={somenteNaoFinalizados}
@@ -606,29 +612,30 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               title={`Não finalizados (${totalNaoFinalizados})`}
 
               className={cn(
-                "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                "flex h-8 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-md border px-0.5 text-[10px] font-semibold transition-colors",
                 somenteNaoFinalizados ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
-              <CalendarCheck className={cn("h-4 w-4", somenteNaoFinalizados && "text-destructive")} />
+              <CalendarCheck className={cn("h-3.5 w-3.5 shrink-0", somenteNaoFinalizados && "text-destructive")} />
 
-              <span className="tabular-nums">{totalNaoFinalizados}</span>
-            </button>
+              <span className="tabular-nums">{totalNaoFinalizados > 99 ? "99+" : totalNaoFinalizados}</span>
+            </Button>
             {filtro === "recebidos" && onToggleSinalizados && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={onToggleSinalizados}
                 aria-pressed={!!verSinalizados}
                 title="Ver itens sinalizados"
+                aria-label="Ver itens sinalizados"
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-semibold transition-colors",
+                  "flex h-8 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-md border px-0.5 text-[10px] font-semibold transition-colors",
                   verSinalizados ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 )}
               >
-                <Flag className="h-4 w-4" />
-                <span>Sinalizados</span>
-                <span className="tabular-nums">{totalSinalizados ?? 0}</span>
-              </button>
+                <Flag className="h-3.5 w-3.5 shrink-0" />
+                <span className="tabular-nums">{(totalSinalizados ?? 0) > 99 ? "99+" : totalSinalizados ?? 0}</span>
+              </Button>
             )}
           </div>
         </div>
