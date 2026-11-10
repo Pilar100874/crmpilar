@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ContactForBulkSend, CanalEnvio } from '../types';
 import { executarSequencial, ItemEnvio, ResultadoEnvio } from './execucaoSequencial';
+import { iniciarRegistroResultados, registrarResultadoObservado, concluirRegistroResultados } from './registrarResultados';
+import { toast } from '@/lib/toast-config';
 
 export function useExecucaoEnvio() {
   const [itensEnvio, setItens] = useState<ItemEnvio[]>([]);
@@ -30,13 +32,27 @@ export function useExecucaoEnvio() {
     setCancelamento(false);
     setEnviando(true);
     setItens(contatos.map(c => ({ id: c.id, nome: c.nome, destino: (canal === 'email' ? c.email : c.telefone) || undefined, status: 'aguardando' })));
+    let envioId: string | null = null;
+    let falhaRegistro = false;
+    const resultados: ResultadoEnvio[] = [];
+    const registros: Promise<boolean>[] = [];
     try {
+      try { envioId = await iniciarRegistroResultados(canal, contatos.length); } catch { /* reporting must not block or repeat sends */ }
+      if (!envioId) falhaRegistro = true;
       await executarSequencial(contatos, () => cancelarRef.current, processar, (indice, resultado) => {
         setItens(anteriores => anteriores.map((item, i) => i === indice ? { ...item, ...resultado } : item));
+        if (!['processando', 'aguardando'].includes(resultado.status)) {
+          resultados[indice] = resultado;
+          if (envioId) registros.push(registrarResultadoObservado(envioId, contatos[indice], resultado).catch(() => false));
+        }
       });
+      const salvos = await Promise.all(registros);
+      if (salvos.some(ok => !ok)) falhaRegistro = true;
+      if (envioId) { try { await concluirRegistroResultados(envioId, resultados); } catch { falhaRegistro = true; } }
     } finally {
       ativo.current = false;
       setEnviando(false);
+      if (falhaRegistro) toast.warning('O acompanhamento da jornada pode estar incompleto. Os contatos processados não serão reenviados.');
     }
   };
   const finalizados = itensEnvio.filter(i => !['aguardando', 'processando'].includes(i.status)).length;
