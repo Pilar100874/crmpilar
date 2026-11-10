@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Send } from "lucide-react";
+import { PainelAtendimentoHeader } from "@/components/atendimento/PainelAtendimentoHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -257,24 +258,11 @@ export function EnvioMassaWizardContent({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b bg-card shrink-0">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold">Envio em Massa</h2>
-          {state.canal && (
-            <Badge variant="secondary" className="text-xs">
-              {ROTULO_CANAL[state.canal]}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
+      <PainelAtendimentoHeader title="Envio em massa" icon={Send} subtitle={state.canal ? ROTULO_CANAL[state.canal] : undefined} onClose={() => { if (isSending) { cancelarEnvio(); return; } onClose(); }} closeLabel="Fechar envio em massa" actions={
           <Badge variant="outline" className="text-xs">
             {currentStepIndex + 1}/{passosVisiveis.length}
           </Badge>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { if (isSending) { cancelarEnvio(); return; } onClose(); }}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      } />
 
       {/* Progress Steps - Compact */}
       <div className="flex items-center justify-center py-2 px-2 gap-1 border-b bg-muted/30 shrink-0 overflow-x-hidden">

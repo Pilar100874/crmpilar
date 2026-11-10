@@ -44,3 +44,4 @@
 - Both work-journey dashboards share DashboardJornada and pure jornada aggregation; secured read-only RPCs resolve internal users, restrict comparison to protected admin/gestor roles, and distinguish logged actions, handoff, delivery and current backlog to prevent false performance claims.
 - Capture message authorship and order closure at database triggers and bulk outcomes through the shared sequential runner; never infer historical actors from current ownership or treat scheduled returns as sends.
 - Insert newly introduced menu programs into their existing origin category in effective customization, preserving explicitly placed programs and saved settings, so new screens remain discoverable in their intended menu.
+- Use PainelAtendimentoHeader for attendance panels and shared task details to keep title, icon, spacing and close actions consistent.
