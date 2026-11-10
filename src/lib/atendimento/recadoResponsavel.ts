@@ -9,6 +9,10 @@ export type UrgenciaRecado = "normal" | "urgente";
 export const PRAZO_RECADO_MIN: Record<UrgenciaRecado, number> = { normal: 120, urgente: 30 };
 
 export interface Responsavel { id: string; nome: string }
+export function selecaoResponsavelRecado(responsaveis: Responsavel[], usuarioId: string) {
+  const vinculadoASi = responsaveis.some(r => r.id === usuarioId);
+  return { bloqueado: vinculadoASi, responsavelId: vinculadoASi ? "" : responsaveis[0]?.id || "" };
+}
 
 export interface TarefaRecado { origem_sub_item?: string | null; title?: string | null; status?: string | null; user_id?: string | null }
 export function recadoPendente(t: TarefaRecado): boolean {
@@ -66,18 +70,21 @@ export function montarTarefaRecado(d: DadosRecado) {
 /** Usuários vinculados ao contato (diretamente ou pela empresa). */
 export async function carregarResponsaveis(contatoId: string): Promise<Responsavel[]> {
   const db = supabase as any;
-  const [{ data: diretos }, { data: emp }] = await Promise.all([
+  const [{ data: diretos, error: erroDiretos }, { data: emp, error: erroEmp }] = await Promise.all([
     db.from("customer_vinculos").select("usuario_id").eq("customer_id", contatoId),
     db.from("customer_empresas").select("empresa_id").eq("customer_id", contatoId),
   ]);
+  if (erroDiretos || erroEmp) throw erroDiretos || erroEmp;
   const ids = new Set<string>((diretos ?? []).map((v: any) => v.usuario_id).filter(Boolean));
   const empresas = (emp ?? []).map((e: any) => e.empresa_id).filter(Boolean);
   if (empresas.length) {
-    const { data: ev } = await db.from("empresa_vinculos").select("usuario_id").in("empresa_id", empresas);
+    const { data: ev, error } = await db.from("empresa_vinculos").select("usuario_id").in("empresa_id", empresas);
+    if (error) throw error;
     (ev ?? []).forEach((v: any) => v.usuario_id && ids.add(v.usuario_id));
   }
   if (!ids.size) return [];
-  const { data: us } = await db.from("usuarios").select("id, nome").in("id", [...ids]);
+  const { data: us, error } = await db.from("usuarios").select("id, nome").in("id", [...ids]);
+  if (error) throw error;
   return ((us ?? []) as Responsavel[]).sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 }
 
@@ -90,6 +97,8 @@ export async function listarUsuarios(): Promise<Responsavel[]> {
 export async function registrarRecado(p: { contatoId: string; contatoNome: string; responsavelId: string; recado: string; urgencia: UrgenciaRecado }) {
   const [autorId, estab] = await Promise.all([getUserIdFromAuth(), getEstabelecimentoId()]);
   if (!autorId || !estab) throw new Error("Usuário não identificado");
+  const responsaveis = await carregarResponsaveis(p.contatoId);
+  if (selecaoResponsavelRecado(responsaveis, autorId).bloqueado) throw new Error("Este cliente está vinculado a você. Não é permitido encaminhar recado para sua própria carteira.");
   const { data: destinatario, error: erroDestinatario } = await supabase.from("usuarios").select("id").eq("id", p.responsavelId).eq("estabelecimento_id", estab).maybeSingle();
   if (erroDestinatario || !destinatario) throw new Error("Escolha um usuário da sua empresa");
   const { data: autor } = await (supabase as any).from("usuarios").select("nome").eq("id", autorId).maybeSingle();

@@ -2,11 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/estabelecimentoUtils", () => ({ getEstabelecimentoId: vi.fn(), getUserIdFromAuth: vi.fn() }));
 vi.mock("@/lib/calendario/eventos", () => ({ notificarTarefasAlteradas: vi.fn() }));
-import { montarTarefaRecado, recadoUrgentePendente, tarefaVisivelNaFila, recadoDoEscopo } from "./recadoResponsavel";
+import { montarTarefaRecado, recadoUrgentePendente, tarefaVisivelNaFila, recadoDoEscopo, selecaoResponsavelRecado } from "./recadoResponsavel";
 
 const base = { contatoId: "c1", contatoNome: "Ana", responsavelId: "u2", autorId: "u1", autorNome: "Bia", recado: "Quer cotação", estabelecimentoId: "e1", agora: new Date(2026, 10, 9, 10, 0) };
 
 describe("recado para o responsável", () => {
+  it("bloqueia cliente vinculado ao próprio usuário mesmo com outro responsável", () => {
+    expect(selecaoResponsavelRecado([{id:"u2",nome:"Ana"},{id:"u1",nome:"Bia"}],"u1")).toEqual({bloqueado:true,responsavelId:""});
+  });
+  it("preenche automaticamente o responsável cadastrado de outro cliente", () => {
+    expect(selecaoResponsavelRecado([{id:"u2",nome:"Ana"}],"u1")).toEqual({bloqueado:false,responsavelId:"u2"});
+  });
+  it("cliente sem responsável aguarda seleção explícita", () => {
+    expect(selecaoResponsavelRecado([],"u1")).toEqual({bloqueado:false,responsavelId:""});
+  });
   it("cria a tarefa na agenda do responsável, não de quem anotou", () => {
     expect(montarTarefaRecado({ ...base, urgencia: "normal" }).user_id).toBe("u2");
   });

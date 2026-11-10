@@ -12,7 +12,7 @@ export function origemFluxo(regra: RegraCatalogo): string {
 
 // Documentação de comportamentos já implementados. Não cria automações nem altera estados salvos.
 const existentes = [
-  ["recado_responsavel", "Encaminhar recado e destacar retorno urgente", "recado_enviado", "criar_tarefa", "Ao enviar um recado, cria retorno para o usuário escolhido; urgente pisca em Agendados até concluir ou cancelar, mesmo sem vínculo de carteira, inclusive para quem estiver assumindo o responsável."],
+  ["recado_responsavel", "Encaminhar recado e destacar retorno urgente", "recado_enviado", "criar_tarefa", "Clientes vinculados ao autor não permitem recado; o responsável cadastrado é preenchido ao selecionar o cliente. Ao enviar, cria retorno para o usuário escolhido; urgente pisca em Agendados até concluir ou cancelar, inclusive para quem estiver assumindo o responsável."],
   ["movimento_sem_conflito", "Movimentação sem conflito", "tarefa_arrastada", "remarcar_tarefa", "Sem impedimentos, a tarefa vai diretamente para a data solicitada, sem janela de conflito."],
   ["atrasada_nao_move", "Tarefa atrasada não pode ser movida", "tarefa_arrastada", "nenhuma", "Tarefas atrasadas não podem ser selecionadas nem arrastadas manualmente."],
   ["mesma_data_nao_move", "Não mover para a mesma data", "tarefa_arrastada", "nenhuma", "Mover fica indisponível quando todas as tarefas selecionadas já estão na data de destino."],
