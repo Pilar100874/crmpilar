@@ -117,14 +117,15 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
             <Button
               variant="outline"
               size="sm"
-              className="h-10 w-10 p-0 rounded-xl bg-primary/10 border-primary/30 hover:bg-primary/20 relative flex-shrink-0"
+              aria-label="Filtrar por contato ou empresa" title={`Filtrando: ${activeFilter.nome}`}
+              className="h-7 w-7 p-0 rounded-md bg-primary/10 border-primary/30 hover:bg-primary/20 relative flex-shrink-0"
             >
               {activeFilter.type === 'customer' ? (
                 <User className="h-5 w-5 text-primary" />
               ) : (
                 <Building2 className="h-5 w-5 text-emerald-600" />
               )}
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full border border-background" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[calc(100vw-32px)] sm:w-80 p-0 shadow-xl border-border/50 rounded-xl" align="end" sideOffset={8}>
@@ -149,6 +150,7 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors flex-shrink-0"
+                aria-label="Limpar filtro de contatos"
                 onClick={(e) => { e.stopPropagation(); clearFilter(); setOpen(false); }}
               >
                 <X className="h-4 w-4" />
@@ -177,9 +179,10 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
           <Button
             variant="outline"
             size="sm"
-            className="h-10 w-10 p-0 rounded-xl bg-card/80 dark:bg-card/80 hover:bg-card dark:hover:bg-card border-border/50 hover:border-primary/30 transition-all flex-shrink-0"
+            aria-label="Filtrar por contato ou empresa" title="Filtrar por contato ou empresa"
+            className="h-7 w-7 p-0 rounded-md bg-background hover:bg-muted border-border/50 hover:border-primary/30 transition-all flex-shrink-0"
           >
-            <UserSearch className="h-5 w-5 text-muted-foreground" />
+            <UserSearch className="h-4 w-4 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[calc(100vw-32px)] sm:w-80 p-0 shadow-xl border-border/50 rounded-xl" align="end" sideOffset={8}>
@@ -189,7 +192,7 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
                 <Search className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Filtrar por Contato</p>
+                <p className="text-sm font-semibold text-foreground">Filtrar por contato ou empresa</p>
                 <p className="text-[10px] text-muted-foreground">Filtre todas as abas</p>
               </div>
             </div>
