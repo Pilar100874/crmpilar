@@ -501,6 +501,13 @@ export default function Atendimento() {
     window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
     toast.success("Status do orçamento alterado");
   };
+  const mudarEtapaRef = useRef(mudarEtapaOrcamento);
+  mudarEtapaRef.current = mudarEtapaOrcamento;
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent).detail; if (d?.orcamento) void mudarEtapaRef.current(d.orcamento, d.etapa); };
+    window.addEventListener("atendimento:mudar-etapa-orcamento", h);
+    return () => window.removeEventListener("atendimento:mudar-etapa-orcamento", h);
+  }, []);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; nome: string; email: string } | null>(null);
   const [contatoEmailDetalhe, setContatoEmailDetalhe] = useState<any>(null);
@@ -9291,7 +9298,7 @@ function MobileListContent({
 
         {activeTab === "orcamento" && (
           <OrcamentosEmpresaList
-            onEtapaChange={mudarEtapaOrcamento}
+            onEtapaChange={(orcamento, etapa) => window.dispatchEvent(new CustomEvent("atendimento:mudar-etapa-orcamento", { detail: { orcamento, etapa } }))}
             orcamentos={filteredOrcamentos
               .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
               .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)}

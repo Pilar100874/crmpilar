@@ -300,7 +300,6 @@ export function OrcamentosEmpresaList({
                     onDuplicate={onDuplicate}
                     onDelete={onDelete}
                     onEtapaChange={onEtapaChange}
-                onEtapaChange={onEtapaChange}
                   />
                 ))}
               </div>
