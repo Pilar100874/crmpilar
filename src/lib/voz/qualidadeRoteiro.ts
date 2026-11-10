@@ -18,7 +18,7 @@ export function diagnosticarRoteiro(r: RoteiroSalvo): DiagnosticoRoteiro {
     const n = palavras(e.fala);
     if (!n) a.push({ nivel: "erro", etapa: i, texto: "Etapa sem fala: a IA não sabe o que dizer." });
     else if (n > LIMITE_PALAVRAS) a.push({ nivel: "aviso", etapa: i, texto: `Fala com ${n} palavras. Ao telefone, prefira até ${LIMITE_PALAVRAS}.` });
-    if ((e.fala.match(/\?/g) ?? []).length > 1) a.push({ nivel: "aviso", etapa: i, texto: "Mais de uma pergunta na mesma fala. Faça uma por vez." });
+    if ((e.fala.replace(/tudo bem\?/gi, "").match(/\?/g) ?? []).length > 1) a.push({ nivel: "aviso", etapa: i, texto: "Mais de uma pergunta na mesma fala. Faça uma por vez." });
     if (e.fala.includes("?")) {
       if (!tem(e.condicoes, NEG)) a.push({ nivel: "aviso", etapa: i, texto: "Pergunta sem regra para resposta negativa (\"não\")." });
       if (!tem(e.condicoes, SIL)) a.push({ nivel: "aviso", etapa: i, texto: "Sem regra para silêncio do cliente." });
