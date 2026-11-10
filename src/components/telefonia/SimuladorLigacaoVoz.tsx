@@ -14,6 +14,8 @@ import {
   compilarRoteiro, lerConduta, lerDepartamento, regrasConduta, regrasConversa,
   type RoteiroSalvo,
 } from "@/lib/voz/roteirosLigacao";
+import { etapaDaFala, falaNaoEntendida } from "@/lib/voz/aprimorarRoteiro";
+import { AprimorarFala, type Aprimorar } from "./AprimorarFala";
 
 const db = supabase as any;
 export type AgenteSim = { id?: string; nome: string; modos: string[]; ativo: boolean; config?: Record<string, unknown> | null };
@@ -25,7 +27,7 @@ const ROTULO: Record<string, string> = {
 };
 
 /** Liga para um número escolhido usando o agente e o roteiro reais, para validar a conversa. */
-export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecionado }: { estabelecimentoId: string | null; agentes: AgenteSim[]; roteiroSelecionado: RoteiroSalvo }) {
+export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecionado, onAprimorar }: { estabelecimentoId: string | null; agentes: AgenteSim[]; roteiroSelecionado: RoteiroSalvo; onAprimorar?: Aprimorar }) {
   const ligadores = agentes.filter((a) => a.id && a.ativo && a.modos?.includes("ligar") && lerDepartamento(a.config) === roteiroSelecionado.departamento);
   const [agenteId, setAgenteId] = useState("");
   const [numero, setNumero] = useState("");
@@ -139,7 +141,12 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecio
               <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3">
                 <p className="text-xs font-medium text-muted-foreground">Conversa ao vivo</p>
                 {!falas.length ? <p className="text-sm text-muted-foreground">Aguardando falas…</p> : falas.map((f, i) => (
-                  <p key={i} className="text-sm"><span className="font-semibold text-foreground">{f.papel === "agente" ? "IA" : "Cliente"}:</span> <span className="text-foreground">{f.texto}</span></p>
+                  <div key={i}>
+                    <p className="text-sm"><span className="font-semibold text-foreground">{f.papel === "agente" ? "IA" : "Cliente"}:</span> <span className="text-foreground">{f.texto}</span></p>
+                    {onAprimorar && f.papel === "cliente" && !f.texto.startsWith("(") && (
+                      <AprimorarFala roteiro={roteiroSelecionado} etapa={etapaDaFala(falas, i, roteiroSelecionado.etapas.length)} resposta={f.texto} naoEntendida={falaNaoEntendida(falas, i)} onAprimorar={onAprimorar} />
+                    )}
+                  </div>
                 ))}
               </div>
             )}

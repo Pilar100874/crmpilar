@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Copy, GitBranch, PhoneCall, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, GitBranch, Lightbulb, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Save, Sparkles, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
+import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
+import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -38,10 +42,59 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
           <DialogTitle>Simular roteiro</DialogTitle>
           <DialogDescription>Ligação de teste · {simulando?.nome || "Novo roteiro"}</DialogDescription>
         </DialogHeader>
-        {simulando && <SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} />}
+        {simulando && (
+          <Tabs defaultValue="tela">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="tela"><Monitor className="mr-1 h-4 w-4" /> Teste em tela</TabsTrigger>
+              <TabsTrigger value="ligacao"><PhoneCall className="mr-1 h-4 w-4" /> Ligação real</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tela"><SimuladorTelaVoz roteiro={simulando} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={aprimorar} /></TabsContent>
+            <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} onAprimorar={aprimorar} /></TabsContent>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );
+
+  const [ajustes, setAjustes] = useState<AjusteSugerido[]>([]);
+  const [sugestoes, setSugestoes] = useState<Record<string, string[]>>({});
+  const [sugerindo, setSugerindo] = useState<string | null>(null);
+
+  /** Grava a resposta na regra da etapa e salva o roteiro na hora (vale para disparo e Simulador). */
+  const gravar = async (r: RoteiroSalvo) => {
+    if (!estabelecimentoId) return null;
+    const corpo = { estabelecimento_id: estabelecimentoId, chave: r.chave, departamento: r.departamento, nome: r.nome.trim() || "Novo roteiro",
+      descricao: r.descricao, campos: r.campos, etapas: r.etapas, ativo: r.ativo, updated_at: new Date().toISOString() };
+    const x = await db.from("voz_roteiros").upsert(corpo, { onConflict: "estabelecimento_id,chave" }).select().single();
+    if (x.error) { toast.error(x.error.message); return null; }
+    return { ...r, id: x.data.id } as RoteiroSalvo;
+  };
+  const aprimorar = async (etapa: number, resposta: string, acao: AcaoCondicao, texto?: string) => {
+    if (!simulando) return;
+    const novo = adicionarResposta(simulando, etapa, resposta, acao, texto);
+    if (novo === simulando) return void toast.info("Essa resposta já está no roteiro");
+    const salvo = await gravar(novo);
+    if (!salvo) return;
+    setSimulando(salvo);
+    setAtual((a) => (a && a.chave === salvo.chave ? { ...a, id: salvo.id, etapas: salvo.etapas } : a));
+    toast.success(`"${resposta}" adicionado à etapa ${etapa + 1}`); void carregar();
+  };
+  const sugerirVariacoes = async (chaveRegra: string, pergunta: string, gatilho: string) => {
+    setSugerindo(chaveRegra);
+    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "sinonimos", pergunta, gatilho } });
+    setSugerindo(null);
+    if (error || data?.error) return toast.error(data?.error ?? "Falha ao sugerir");
+    const ja = new Set(palavrasGatilho(gatilho).map((p) => p.toLowerCase()));
+    const v = (data.variacoes as string[]).filter((p) => !ja.has(p.toLowerCase()));
+    if (!v.length) return toast.info("Nenhuma variação nova");
+    setSugestoes((s) => ({ ...s, [chaveRegra]: v }));
+  };
+
+  useEffect(() => {
+    if (!estabelecimentoId) return;
+    void db.from("voz_chamadas").select("transcricao").eq("estabelecimento_id", estabelecimentoId).order("iniciada_em", { ascending: false }).limit(60)
+      .then(({ data }: { data: { transcricao: unknown }[] | null }) => setAjustes(ajustesSugeridos((data ?? []).map((c) => (Array.isArray(c.transcricao) ? c.transcricao as Fala[] : []))).slice(0, 8)));
+  }, [estabelecimentoId]);
 
   const carregar = useCallback(async () => {
     const salvos = await carregarRoteirosSalvos(db, estabelecimentoId);
@@ -78,6 +131,15 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
         <p className="text-sm text-muted-foreground">Edite as falas e as regras "Se o cliente..., faça..." de cada roteiro, ou crie novos.</p>
         <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
       </div>
+      {ajustes.length > 0 && (
+        <Card className="space-y-2 p-3">
+          <p className="flex items-center gap-1 text-sm font-semibold text-foreground"><Lightbulb className="h-4 w-4 text-primary" /> Ajustes sugeridos pelas ligações reais</p>
+          <p className="text-xs text-muted-foreground">Respostas de clientes que a IA não entendeu de primeira. Abra o roteiro e inclua a resposta na regra certa, ou use "Simular" para testar.</p>
+          <div className="flex flex-wrap gap-1">
+            {ajustes.map((a) => <Badge key={a.resposta} variant="secondary" className="max-w-full break-words">"{a.resposta}" · {a.vezes}x em {a.chamadas} {a.chamadas === 1 ? "ligação" : "ligações"}</Badge>)}
+          </div>
+        </Card>
+      )}
       {DEPARTAMENTOS.map((dep) => (
         <div key={dep.id} className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">{dep.rotulo}</h4>
@@ -175,6 +237,21 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
                       <SelectContent>{GATILHOS_PRONTOS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}<SelectItem value={LIVRE}>Outro (escrever)</SelectItem></SelectContent>
                     </Select>
                     <Input className="h-8" value={c.gatilho} onChange={(x) => setC({ gatilho: x.target.value })} placeholder="Ex.: sim, tenho dúvida, quero fechar" />
+                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[11px]" disabled={!c.gatilho.trim() || sugerindo === `${i}-${k}`}
+                      onClick={() => void sugerirVariacoes(`${i}-${k}`, e.fala, c.gatilho)}>
+                      {sugerindo === `${i}-${k}` ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Sugerir variações
+                    </Button>
+                    {sugestoes[`${i}-${k}`]?.length ? (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground">clique para incluir:</span>
+                        {sugestoes[`${i}-${k}`].map((p) => (
+                          <Badge key={p} variant="outline" className="cursor-pointer text-[10px]" onClick={() => {
+                            setC({ gatilho: [...palavrasGatilho(c.gatilho), p].join(", ") });
+                            setSugestoes((s) => ({ ...s, [`${i}-${k}`]: s[`${i}-${k}`].filter((x) => x !== p) }));
+                          }}>+ {p}</Badge>
+                        ))}
+                      </div>
+                    ) : null}
                     {palavras.length > 1 && (
                       <div className="flex flex-wrap items-center gap-1">
                         <span className="text-[10px] text-muted-foreground">qualquer uma:</span>
