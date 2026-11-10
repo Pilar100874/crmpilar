@@ -98,6 +98,9 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
     const ramalUsuario = await meuRamal();
     if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
+    const tipo = dados.modos?.[0] ?? "receber";
+    if (agentes.some((x) => x.id !== id && (x.modos?.[0] ?? "receber") === tipo))
+      return toast.error("Já existe um agente para esta função. Edite o agente existente.");
     const corpo = { ...dados, modos: dados.modos?.length ? dados.modos : ["receber"], ramal_transferencia: ramalUsuario, estabelecimento_id: empresa, updated_at: new Date().toISOString() };
     const r = id ? await db.from("voz_agentes").update(corpo).eq("id", id).select().single()
       : await db.from("voz_agentes").insert(corpo).select().single();
@@ -168,25 +171,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
         <TabsContent value="agente" className="space-y-4 sm:space-y-6 md:space-y-8">
           {!editando && (
             <>
-              <Card className="cursor-pointer border-2 border-dashed border-primary/30 transition-all hover:shadow-lg" onClick={() => setEscolherTipo(true)}>
-                <CardHeader className="p-3 sm:p-4">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 sm:mb-4 sm:h-12 sm:w-12">
-                    <Bot className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                  </div>
-                  <CardTitle className="text-base sm:text-lg">Novo Agente de Voz</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">
-                    Crie um agente para atender quem liga, fazer ligações ou ajudar o atendente.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                  <Button className="h-9 w-full text-sm sm:h-10 sm:text-base">
-                    <Plus className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                    Criar Novo Agente
-                    <ArrowRight className="ml-1 h-3 w-3 sm:ml-2 sm:h-4 sm:w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-
+              <p className="text-xs text-muted-foreground sm:text-sm">Um agente para cada função. O roteiro de cada ligação é escolhido no disparo em massa.</p>
               {carregando && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:gap-8">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -201,25 +186,23 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                 </div>
               )}
 
-              {!carregando && agentes.length === 0 && (
-                <div className="py-8 text-center sm:py-12">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted sm:mb-4 sm:h-20 sm:w-20">
-                    <Bot className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
-                  </div>
-                  <p className="px-4 text-sm text-muted-foreground sm:text-base">
-                    Você ainda não tem agentes de voz. Clique no card acima para criar o primeiro!
-                  </p>
-                </div>
-              )}
-
               {!carregando && MODOS.map((m) => {
                 const doTipo = agentes.filter((a) => (a.modos[0] ?? "receber") === m.id);
-                if (doTipo.length === 0) return null;
+                if (doTipo.length === 0) return (
+                  <div key={m.id} className="space-y-3 sm:space-y-4">
+                    <h2 className="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"><m.icone className="h-4 w-4 text-primary" />{m.rotulo}</h2>
+                    <Card className="cursor-pointer border-2 border-dashed border-primary/30 transition-all hover:shadow-lg" onClick={() => novoDoTipo(m.id)}>
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardDescription className="text-xs sm:text-sm">{m.desc}</CardDescription>
+                        <Button size="sm" className="mt-2 w-fit"><Plus className="mr-1 h-4 w-4" /> Configurar agente</Button>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                );
                 return (
                   <div key={m.id} className="space-y-3 sm:space-y-4">
                     <h2 className="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg">
-                      {m.rotulo}
-                      <Badge variant="outline" className="text-xs">{doTipo.length}</Badge>
+                      <m.icone className="h-4 w-4 text-primary" />{m.rotulo}
                     </h2>
                     <WorkflowCardGrid>
                       {doTipo.map((a) => (
@@ -227,7 +210,6 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                           isActive={a.ativo}
                           menuOpen={menuAberto === a.id} onMenuOpenChange={(o) => setMenuAberto(o ? a.id! : null)}
                           onEdit={() => abrir(a)} onOpenEditor={() => abrir(a)}
-                          onDuplicate={() => void duplicar(a)}
                           onToggleActive={() => void alternarAtivo(a)}
                           onDelete={() => { setAtual(a); setExcluir(true); }}
                           customContent={
