@@ -1,4 +1,5 @@
-import { ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import { ganchoPotencial, ganchosPotenciais, carregarDadosPublico } from "@/lib/voz/publicoInteligente";
+import { campanhaInteligente, objetivoDoCliente, roteiroDoCliente, rotuloEscolha } from "@/lib/voz/roteirosLigacao";
 import MeusPedidosPanel from "@/components/atendimento/MeusPedidosPanel";
 import DashboardJornada from "@/components/atendimento/DashboardJornada";
 import { createPortal } from "react-dom";
@@ -5479,17 +5480,31 @@ ${recentMessages}
     // Flag do agente: adapta a abertura ao motivo de cliente potencial.
     const cfgAg = ((await (supabase as any).from("voz_agentes").select("config").eq("id", config.agenteId).maybeSingle()).data?.config ?? {}) as Record<string, unknown>;
     const usarGancho = cfgAg.usar_gancho_potencial !== false;
+    // Modo inteligente: o CRM escolhe o roteiro de cada cliente antes de discar.
+    const escolhas = new Map<string, string>();
+    const contagem = new Map<string, number>();
+    if (campanhaInteligente.ativo) {
+      const { orcs } = await carregarDadosPublico(est, config.contatos);
+      const porCli = new Map<string, { etapa: string; criado: string }[]>();
+      for (const o of orcs) { const l = porCli.get(o.clienteId) ?? []; l.push({ etapa: o.etapa, criado: o.criado }); porCli.set(o.clienteId, l); }
+      for (const c of config.contatos) {
+        const e = roteiroDoCliente(porCli.get(c.id) ?? [], Date.now());
+        escolhas.set(c.id, objetivoDoCliente(e, campanhaInteligente.dados));
+        contagem.set(rotuloEscolha(e), (contagem.get(rotuloEscolha(e)) ?? 0) + 1);
+      }
+    }
     const itens = config.contatos
       .filter((c) => numeroParaChamada(c))
       .map((c) => ({ id: c.id, nome: c.nome, empresa: c.empresa || "", numero: (numeroParaChamada(c) || "").replace(/\D/g, ""),
-        gancho: usarGancho ? ganchoPotencial(ganchosPotenciais.get(c.id)) || undefined : undefined }));
+        gancho: [escolhas.get(c.id), usarGancho ? ganchoPotencial(ganchosPotenciais.get(c.id)) : ""].filter(Boolean).join("\n") || undefined }));
     if (itens.length === 0) return toast.error("Nenhum contato selecionado tem telefone");
     const ok = iniciarCampanhaIa({
       estabelecimentoId: est, agenteId: config.agenteId, objetivo: config.objetivo,
       ramalAtendente: config.ramal, itens,
     });
     if (!ok) return toast.error("Já existe uma sequência de ligações com IA em andamento");
-    toast.success(`A IA começou a ligar para ${itens.length} contato(s)`);
+    toast.success(`A IA começou a ligar para ${itens.length} contato(s)`,
+      contagem.size ? { description: [...contagem].map(([r, n]) => `${r}: ${n}`).join(" · ") } : undefined);
     setShowEnvioMassaWizard(false);
     setIdsEnvioMassa([]);
     setCanalEnvioMassa(undefined);
