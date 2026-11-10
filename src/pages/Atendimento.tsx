@@ -66,6 +66,7 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
+import { recadoPendente, recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -567,6 +568,8 @@ export default function Atendimento() {
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
   const filtroSelecionarCartaoRef = useRef<GlobalFilter | null>(null);
   const [recadoContato, setRecadoContato] = useState<{ id: string; nome: string } | null>(null);
+  const [cadastroParaRecado, setCadastroParaRecado] = useState(false);
+  const [recadosRecebidos, setRecadosRecebidos] = useState<any[]>([]);
   const contatosNaFilaRef = useRef<Set<string>>(new Set());
   const abrirFichaForaDaFilaRef = useRef<(c: { id: string; nome: string; tel?: string; telefone?: string; email?: string }) => void>(() => {});
   const filtrarESelecionarCartao = (filtro: GlobalFilter | null) => {
@@ -584,7 +587,8 @@ export default function Atendimento() {
         contatoId = ids[0] ?? null;
         if (!contatoId) { toast.info("Esta empresa ainda não tem contato cadastrado"); return; }
       } else if (contatosNaFilaRef.current.has(filtro.id)) return;
-      const { data: c } = await supabase.from("customers").select("id, nome, tel, telefone, email").eq("id", contatoId!).maybeSingle();
+      if (!contatoId) return;
+      const { data: c } = await supabase.from("customers").select("id, nome, tel, telefone, email").eq("id", contatoId).maybeSingle();
       if (!c) return;
       filtroSelecionarCartaoRef.current = null;
       abrirFichaForaDaFilaRef.current(c as any);
@@ -615,8 +619,9 @@ export default function Atendimento() {
   const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamentoState] = useState(false);
 
   // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
-  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento';
+  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
+    if (destino !== 'recado') { setRecadoContato(null); setCadastroParaRecado(false); }
     if (destino !== 'historico') setHistoricoClienteState(null);
     if (destino !== 'orcamentos' && destino !== 'orcamento') listaOrcamentosRef.current = null;
     if (destino !== 'orcamentos') setOrcamentosClienteState(null);
@@ -694,6 +699,11 @@ export default function Atendimento() {
   function setOrcamentoSheetOpen(valor: boolean) {
     if (valor) fecharConteudoCentral('orcamento');
     setOrcamentoSheetOpenState(valor);
+  }
+  function abrirRecado(contato: { id: string; nome: string } = { id: "", nome: "" }) {
+    fecharConteudoCentral('recado');
+    setRecadoContato(contato);
+    setMobileView('main');
   }
 
   // Estados para edição inline de contato/empresa
@@ -1865,10 +1875,18 @@ export default function Atendimento() {
           // já estão na lista do dia (remarcadas para hoje) — não duplicar
           !(tasksData || []).some((td: any) => td.id === t.id)
       );
+      // Recados destinados ao usuário entram mesmo sem vínculo de carteira ou na virada do dia.
+      const { data: recadosData, error: erroRecados } = await supabase.from('calendario_tarefas').select('*')
+        .eq('user_id', usuarioData.id)
+        .or('origem_sub_item.in.(recado_urgente,recado_normal),title.ilike.Recado: retornar %,title.ilike.URGENTE - Recado: retornar %')
+        .not('status', 'in', '("concluido","cancelado","completed","cancelled")');
+      if (erroRecados) throw erroRecados;
+      setRecadosRecebidos(recadosData || []);
+      const tarefasCarregadas = [...new Map([...(tasksData || []), ...tarefasAtrasadasLista, ...(recadosData || [])].map(t => [t.id, t])).values()];
 
       // Get unique contact_ids that are not null
       const contactIds = [...new Set(
-        [...(tasksData || []), ...tarefasAtrasadasLista]
+        tarefasCarregadas
           .map(t => t.contact_id)
           .filter(Boolean)
       )];
@@ -1926,7 +1944,7 @@ export default function Atendimento() {
       }
 
       // Merge customers and vinculos into tasks (inclui as tarefas atrasadas)
-      const tasksWithCustomers = [...(tasksData || []), ...tarefasAtrasadasLista].map(task => ({
+      const tasksWithCustomers = tarefasCarregadas.map(task => ({
         ...task,
         customers: task.contact_id ? customersMap[task.contact_id] || null : null,
         linkedUsers: task.contact_id ? vinculosMap[task.contact_id] || [] : []
@@ -1975,7 +1993,7 @@ export default function Atendimento() {
   // Reload tasks when date or sort order changes
   useEffect(() => {
     // Com a flag "Usar agenda" ligada as demais abas também usam os contatos da agenda
-    if (activeTab === 'agenda' || usarAgenda) {
+    {
       loadTodayTasks(agendaDate);
       loadAvailableOrigens();
     }
@@ -1986,7 +2004,6 @@ export default function Atendimento() {
   loadTodayTasksRef.current = loadTodayTasks;
 
   useEffect(() => {
-    if (activeTab !== 'agenda' && !usarAgenda) return;
 
     let timeout: ReturnType<typeof setTimeout> | null = null;
     const recarregar = () => {
@@ -2007,10 +2024,14 @@ export default function Atendimento() {
 
     // Atualização imediata quando a alteração vem do próprio calendário aberto na tela
     const pararDeOuvir = ouvirTarefasAlteradas(recarregar);
+    const polling = window.setInterval(recarregar, 30000);
+    window.addEventListener('focus', recarregar);
 
     return () => {
       if (timeout) clearTimeout(timeout);
       pararDeOuvir();
+      window.clearInterval(polling);
+      window.removeEventListener('focus', recarregar);
       void supabase.removeChannel(canal);
     };
   }, [agendaDate, activeTab, usarAgenda]);
@@ -4684,7 +4705,7 @@ ${recentMessages}
 
     // Agendados: tarefas da agenda, somente de contatos vinculados ao(s) usuário(s) visíveis
     if (filtroFila === "agendados") filteredTasks
-      .filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id))
+      .filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioId))
       .forEach((task: any) => {
       const r = registrosPorContato.get(task.contact_id);
       const ce = task.customers?.customer_empresas || [];
@@ -4706,6 +4727,7 @@ ${recentMessages}
         id: `task-${task.id}`,
         tipo: "agendado",
         contactId: task.contact_id,
+        recadoUrgente: task.user_id === usuarioId && recadoUrgentePendente(task),
         temHistorico: possuiHistorico(r),
         temAgenda: possuiAgenda(r),
         temOrcamento: possuiOrcamento(r),
@@ -4962,10 +4984,10 @@ ${recentMessages}
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
-    agendados: filteredTasks.filter((task: any) => !!task.contact_id && idsContatosVinculados.has(task.contact_id)).length,
+    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioId)).length,
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
     potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuarioId, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
 
   const chaveContatosPotenciais = useMemo(() => contatosVinculados.map((c: any) => c.id).sort().join(","), [contatosVinculados]);
   useEffect(() => {
@@ -4992,7 +5014,18 @@ ${recentMessages}
   const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
     <GlobalClientFilter activeFilter={globalFilter} onFilterChange={filtrarESelecionarCartao} compact />
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Encaminhar recado" title="Encaminhar recado" onClick={() => abrirRecado()}><MessageSquare className="h-4 w-4" /></Button>
   </div>;
+  const painelRecado = recadoContato && <RecadoResponsavelDialog embedded open contatoId={recadoContato.id} contatoNome={recadoContato.nome}
+    onOpenChange={v => { if (!v) { setRecadoContato(null); setCadastroParaRecado(false); } }}
+    onSelecionar={(id, nome) => setRecadoContato({ id, nome })} onCadastrar={() => setCadastroParaRecado(true)} />;
+  const selecionarCadastroRecado = (id: string) => {
+    void supabase.from('customers').select('id,nome').eq('id', id).single().then(({ data, error }) => {
+      if (error || !data) { toast.error('Não foi possível selecionar o cadastro'); return; }
+      setRecadoContato(data); setCadastroParaRecado(false);
+    });
+  };
+  const painelCadastroRecado = <ListasPanel title="Cliente do recado" onClose={() => setCadastroParaRecado(false)} onSelect={selecionarCadastroRecado} onContatoSalvo={selecionarCadastroRecado} />;
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
@@ -5735,7 +5768,6 @@ ${recentMessages}
 
   return (
     <>
-    {recadoContato && <RecadoResponsavelDialog open onOpenChange={(v) => { if (!v) setRecadoContato(null); }} contatoId={recadoContato.id} contatoNome={recadoContato.nome} />}
 
     {/* Dialog de Chat Privado com Agente */}
     <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
@@ -6212,7 +6244,7 @@ ${recentMessages}
                 <CabecalhoClienteAtendimento
                   cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
-                  onRecado={() => clienteCabecalho.id && setRecadoContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
+                  onRecado={() => clienteCabecalho.id && abrirRecado({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
                   abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
                   compacto
                   onTrocarCanal={(aba) => {
@@ -6439,6 +6471,7 @@ ${recentMessages}
             )}
             
             {/* Listas Panel - Mobile Fullscreen - Puxar ou criar cadastro */}
+            {recadoContato && <div className="absolute inset-0 z-30 flex flex-col bg-background">{cadastroParaRecado ? painelCadastroRecado : painelRecado}</div>}
             {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) && (
               <div className="absolute inset-0 z-30 bg-background">
                 <ListasPanel
@@ -6471,6 +6504,7 @@ ${recentMessages}
               <div className="flex-1 min-h-0 flex flex-col">
                 <FilaDoDia
                   items={filaItemsMobile}
+                  totalRecadosUrgentes={recadosRecebidos.filter(recadoUrgentePendente).length}
                   headerExtra={acoesContatos}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                                     discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
@@ -7021,7 +7055,7 @@ ${recentMessages}
         /* ========== DESKTOP/TABLET LAYOUT ========== */
         <div className={`atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative transition-opacity duration-200 ${layoutPronto ? "opacity-100" : "opacity-0"}`} style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
-        {(activeTab !== "agenda" || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
+        {(activeTab !== "agenda" || recadoContato || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
             <Suspense fallback={null}><ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
           </div>
@@ -7056,6 +7090,7 @@ ${recentMessages}
         <DispensarPotencialDialog alvo={dispensarAlvo} usuarioId={usuarioId || null} onClose={() => setDispensarAlvo(null)} />
         <FilaDoDia
           items={filaItems}
+          totalRecadosUrgentes={recadosRecebidos.filter(recadoUrgentePendente).length}
           headerExtra={acoesContatos}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
@@ -7107,7 +7142,7 @@ ${recentMessages}
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
                   temEnderecoVisita={!!clienteCabecalho.id && contatosComEnderecoVisita.has(clienteCabecalho.id)}
-                  onRecado={() => clienteCabecalho.id && setRecadoContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
+                  onRecado={() => clienteCabecalho.id && abrirRecado({ id: clienteCabecalho.id, nome: clienteCabecalho.nome })}
             abaAtiva={orcamentosCliente ? "orcamento" : activeTab}
             onTrocarCanal={(aba) => {
               setHistoricoCliente(null);
@@ -7325,7 +7360,7 @@ ${recentMessages}
           )}
           </div>
         )}
-        {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
+        {recadoContato ? (cadastroParaRecado ? painelCadastroRecado : painelRecado) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
             onClose={() => {
               setShowCustomerSearchForTask(false);

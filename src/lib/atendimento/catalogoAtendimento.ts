@@ -5,7 +5,7 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
-import { PRAZO_RECADO_MIN } from "./recadoResponsavel";
+import { PRAZO_RECADO_MIN, recadoUrgentePendente, tarefaVisivelNaFila } from "./recadoResponsavel";
 import { montarMenuRadial } from "./menuRadial";
 import { correspondeFiltroContato } from "./filtroContato";
 import { usuariosComCriador } from "./vinculoCriador";
@@ -79,10 +79,10 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "recado-responsavel", modulo: "Fila e organização", titulo: "Recado para o responsável",
-    oQueE: "Quando você atende um contato de outro colega que não está disponível, o ícone de recado no cabeçalho do cliente anota o pedido para ele.",
-    regraNegocio: "O recado vira uma tarefa de retorno na agenda do responsável (vínculo do contato ou da empresa), com o texto e o nome de quem anotou. Normal vence em 2 horas e Urgente em 30 minutos. Sem responsável vinculado, escolha qualquer usuário.",
-    comoUsar: ["Abra o cliente e clique no ícone de recado no cabeçalho.", "Confira o responsável já escolhido, escreva o recado e defina a urgência.", "Clique em Enviar recado: a tarefa aparece na agenda do responsável."],
-    simular: () => [passo("Recado urgente vence em 30 minutos", PRAZO_RECADO_MIN.urgente === 30), passo("Recado normal vence em 2 horas", PRAZO_RECADO_MIN.normal === 120)],
+    oQueE: "O botão de recado ao lado de Contatos abre o encaminhamento na tela central, mesmo sem cliente aberto.",
+    regraNegocio: "Escolha ou cadastre o cliente e envie uma mensagem interna ao usuário selecionado, sem alterar a carteira. O recado vira tarefa manual na agenda dele, com autor e mensagem: urgente em 30 minutos, normal em 2 horas. Recados urgentes pendentes ficam no início de Agendados; cartão e aba piscam até concluir ou cancelar, mesmo sem vínculo com o cliente e em outra data. O alerta permanece ao abrir o cartão. Nenhuma mensagem externa é enviada automaticamente.",
+    comoUsar: ["Clique em Encaminhar recado ao lado de Contatos ou no cabeçalho do cliente.", "Pesquise o cliente ou clique em Cadastrar cliente; após salvar o cadastro, ele fica selecionado no recado.", "Escolha Enviar para, escreva a mensagem e confirme Enviar recado.", "O destinatário abre Agendados e o cartão urgente para consultar a mensagem e providenciar o retorno."],
+    simular: () => [passo("Recado urgente vence em 30 minutos", PRAZO_RECADO_MIN.urgente === 30), passo("Recado normal vence em 2 horas", PRAZO_RECADO_MIN.normal === 120), passo("Destinatário vê recado sem carteira", tarefaVisivelNaFila({ contact_id: "c", user_id: "u", origem_sub_item: "recado_urgente", status: "pending" }, new Set(), "u")), passo("Concluído não alerta", !recadoUrgentePendente({ origem_sub_item: "recado_urgente", status: "completed" }))],
   },
   {
     id: "cadastro-filtro-contatos",
