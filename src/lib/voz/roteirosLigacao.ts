@@ -94,6 +94,7 @@ export const GATILHOS_PRONTOS = [
   "é recepção ou portaria", "não pode falar agora", "achou caro", "pediu prazo ou forma de pagamento",
   "já comprou de outro fornecedor", "demonstrou interesse", "pediu para falar com uma pessoa",
   "disse que não precisa agora", "pediu amostra ou catálogo",
+  "respondeu sim", "respondeu não", "não entendeu o que foi dito", "pediu para repetir",
 ];
 export const ACOES: { id: AcaoCondicao; rotulo: string }[] = [
   { id: "responder", rotulo: "Responder com a fala" },
@@ -148,10 +149,27 @@ function textoAcao(c: CondicaoRoteiro, d: DadosRoteiro) {
   }
 }
 
+/**
+ * Respostas aceitas por um gatilho. O campo aceita várias, separadas por vírgula
+ * (ex.: "sim, tenho dúvida, quero fechar"); cada pedaço vira uma resposta possível.
+ * Pura: testável.
+ */
+export function palavrasGatilho(g: string): string[] {
+  return g.split(",").map((p) => p.trim().replace(/^["'«»]+|["'»]+$/g, "")).filter(Boolean);
+}
+
+/** Regra "Se o cliente ..." para a IA: uma frase só, ou lista de respostas possíveis. Pura. */
+export function gatilhoParaIA(g: string): string {
+  const p = palavrasGatilho(g);
+  if (p.length < 2) return `Se o cliente ${p[0] ?? g.trim()}`;
+  const lista = p.map((x) => `"${x}"`);
+  return `Se a última fala do cliente contiver ${lista.slice(0, -1).join(", ")} ou ${lista[lista.length - 1]}`;
+}
+
 /** Texto do roteiro editável para a IA: etapas numeradas + regras "Se X, faça Y". Pura: testável. */
 export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
   const etapas = r.etapas.filter((e) => e.fala.trim()).map((e, i) => {
-    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `Se o cliente ${c.gatilho.trim()}: ${textoAcao(c, d)}`);
+    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d)}`);
     return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];

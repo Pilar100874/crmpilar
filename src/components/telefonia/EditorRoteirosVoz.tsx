@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
-  ACOES, DEPARTAMENTOS, GATILHOS_PRONTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, roteiroDeFabrica,
+  ACOES, DEPARTAMENTOS, GATILHOS_PRONTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, palavrasGatilho, roteiroDeFabrica,
   type CampoRoteiro, type RoteiroBaseId, type RoteiroSalvo,
 } from "@/lib/voz/roteirosLigacao";
 
@@ -143,8 +143,10 @@ export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: st
           </div>
           <div className="space-y-2">
             <Label>Regras desta etapa</Label>
+            <p className="text-xs text-muted-foreground">No campo SE, escreva várias respostas possíveis separadas por vírgula (ex.: sim, tenho dúvida, quero fechar) — a regra vale para qualquer uma delas.</p>
             {e.condicoes.map((c, k) => {
               const livre = !GATILHOS_PRONTOS.includes(c.gatilho);
+              const palavras = palavrasGatilho(c.gatilho);
               const setC = (p: Partial<typeof c>) => setEtapa(i, { condicoes: e.condicoes.map((y, z) => (z === k ? { ...y, ...p } : y)) });
               return (
                 <div key={k} className="grid gap-2 rounded-lg border border-border/60 p-2 sm:grid-cols-[auto_1fr_auto_1fr_auto] sm:items-center">
@@ -154,7 +156,13 @@ export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: st
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>{GATILHOS_PRONTOS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}<SelectItem value={LIVRE}>Outro (escrever)</SelectItem></SelectContent>
                     </Select>
-                    {livre && <Input className="h-8" value={c.gatilho} onChange={(x) => setC({ gatilho: x.target.value })} placeholder="Ex.: perguntou sobre entrega" />}
+                    <Input className="h-8" value={c.gatilho} onChange={(x) => setC({ gatilho: x.target.value })} placeholder="Ex.: sim, tenho dúvida, quero fechar" />
+                    {palavras.length > 1 && (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground">qualquer uma:</span>
+                        {palavras.map((p) => <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>)}
+                      </div>
+                    )}
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">ENTÃO</span>
                   <div className="space-y-1">

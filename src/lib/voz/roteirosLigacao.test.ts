@@ -50,3 +50,21 @@ describe("roteiros editáveis", () => {
     definirRoteirosSalvos([]);
   });
 });
+
+import { gatilhoParaIA as gi, palavrasGatilho as pg } from "./roteirosLigacao";
+describe("gatilho com várias respostas separadas por vírgula", () => {
+  it("cada pedaço vira uma resposta possível", () => {
+    expect(pg("sim, tenho dúvida, quero fechar")).toEqual(["sim", "tenho dúvida", "quero fechar"]);
+    expect(pg("sim")).toEqual(["sim"]);
+    expect(pg("  ,  ")).toEqual([]);
+  });
+  it("regra com vírgula passa cada resposta para a IA", () => {
+    const r = { ...roteiroDeFabrica("reposicao"), etapas: [{ titulo: "Pergunta", fala: "Pergunte se quer fechar", condicoes: [{ gatilho: "sim, tenho dúvida, quero fechar", acao: "transferir" as const }] }] };
+    const t = compilarRoteiro(r, {});
+    expect(t).toContain('contiver "sim", "tenho dúvida" ou "quero fechar"');
+    expect(t).toContain("[TRANSFERIR]");
+  });
+  it("gatilho de uma frase continua igual", () => {
+    expect(gi("achou caro")).toBe("Se o cliente achou caro");
+  });
+});
