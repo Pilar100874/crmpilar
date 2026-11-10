@@ -14,7 +14,7 @@ import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
-import { DEPARTAMENTOS, campanhaInteligente, lerDepartamento, roteirosDoDepartamento, lerConduta, regrasConduta, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
+import { DEPARTAMENTOS, campanhaInteligente, lerDepartamento, roteirosDoDepartamento, lerConduta, regrasConduta, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, carregarRoteirosSalvos, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
 import { camposPendentes, camposUsaveis, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
@@ -60,6 +60,7 @@ export function StepComposeChamada({
     if (canal !== "ia") return;
     void (async () => {
       const est = await getEstabelecimentoId();
+      await carregarRoteirosSalvos(supabase, est);
       const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos, config")
         .eq("estabelecimento_id", est).eq("ativo", true).order("created_at");
       const lista = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
+import { EditorRoteirosVoz } from "@/components/telefonia/EditorRoteirosVoz";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { formatDistanceToNow } from "date-fns";
@@ -167,6 +168,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
       <Tabs defaultValue="agente" className={embedded ? "" : "mt-4 sm:mt-6"}>
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="agente">Agente</TabsTrigger>
+          <TabsTrigger value="roteiros">Roteiros</TabsTrigger>
           <TabsTrigger value="chaves">Chaves</TabsTrigger>
           <TabsTrigger value="chamadas">Chamadas</TabsTrigger>
           <TabsTrigger value="servidor">Servidor</TabsTrigger>
@@ -394,6 +396,10 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
             </CardContent>
           </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="roteiros">
+          <EditorRoteirosVoz estabelecimentoId={empresa ?? null} />
         </TabsContent>
 
         <TabsContent value="chaves">
