@@ -14,11 +14,11 @@ import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
-import { ROTEIROS, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
+import { ROTEIROS, lerConduta, regrasConduta, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
 import { camposPendentes, camposUsaveis, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
-  roteiro: RoteiroId; produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; aviso: string; texto: string;
+  roteiro: RoteiroId; roteiroEscolhido?: boolean; produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; aviso: string; texto: string;
 };
 const OFERTA_INICIAL: Oferta = { roteiro: "reposicao", produto: null, condicao: "", descontoMax: 0, aviso: "", texto: "" };
 /** Mantém o formulário ao voltar/avançar etapas. */
@@ -84,14 +84,22 @@ export function StepComposeChamada({
     condicao: n.condicao, descontoMax: n.descontoMax, aviso: n.aviso, observacoes: n.texto,
   });
   const emitir = (n: Oferta, v: Record<string, ValorCampo>) =>
-    onObjetivoChange([montarObjetivoRoteiro(n.roteiro, dadosDe(n)), textoCampos(campos, v)].filter(Boolean).join(" "));
+    onObjetivoChange([regrasConduta(lerConduta(configAgente)), montarObjetivoRoteiro(n.roteiro, dadosDe(n)), textoCampos(campos, v)].filter(Boolean).join(" "));
   const mudarCampo = (id: string, valor: ValorCampo) => {
     const v = { ...valores, [id]: valor }; setValores(v); ultimosValores = v; emitir(oferta, v);
   };
   // Campos de produto do agente duplicariam o produto do roteiro: o roteiro decide o produto.
-  const campos = camposUsaveis(agentes.find((a) => a.id === agenteIaId)?.config).filter((c) => c.tipo !== "produto");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (canal === "ia") emitir(oferta, valores); }, [agenteIaId, agentes.length]);
+  const configAgente = agentes.find((a) => a.id === agenteIaId)?.config;
+  // Campos antigos do agente só valem se forem fixos (o roteiro decide o resto).
+  const campos = camposUsaveis(configAgente).filter((c) => c.tipo !== "produto" && c.fixo);
+  // Roteiro padrão do agente, quando o usuário ainda não escolheu outro nesta sessão.
+  useEffect(() => {
+    if (canal !== "ia") return;
+    const padrao = lerConduta(configAgente).roteiroPadrao;
+    if (padrao && !ultimaOferta?.roteiroEscolhido) { mudar({ roteiro: padrao }); return; }
+    emitir(oferta, valores);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agenteIaId, agentes.length]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (canal === "ia") mudar({}); }, [canal]);
@@ -220,7 +228,7 @@ export function StepComposeChamada({
               {ROTEIROS.map((r) => {
                 const ativo = oferta.roteiro === r.id;
                 return (
-                  <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id })}
+                  <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id, roteiroEscolhido: true })}
                     className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors",
                       ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
                     <span className="min-w-0">

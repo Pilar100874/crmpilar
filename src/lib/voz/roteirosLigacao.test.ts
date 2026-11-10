@@ -20,3 +20,12 @@ describe("roteiros de ligação", () => {
     expect(r).toContain("ramal 2222");
   });
 });
+
+import { regrasConduta as rc, lerConduta as lc } from "./roteirosLigacao";
+describe("conduta do agente", () => {
+  it("encerra na primeira recusa quando configurado", () => {
+    expect(rc({ recusasParaEncerrar: 1 })).toContain("primeira recusa");
+    expect(rc({})).not.toContain("primeira recusa");
+  });
+  it("lê conduta vazia sem quebrar", () => { expect(lc(null)).toEqual({}); });
+});

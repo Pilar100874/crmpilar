@@ -111,3 +111,33 @@ export function regrasConversa(ramal: string): string {
     "Se o cliente pedir para ligar outro dia, confirme o dia e agradeça com [DESLIGAR]. Se recusar de forma clara duas vezes, agradeça e inclua [DESLIGAR].",
   ].join(" ");
 }
+
+/** Conduta telefônica salva no cadastro do agente (voz_agentes.config.conduta). */
+export interface CondutaAgente {
+  roteiroPadrao?: RoteiroId;
+  tom?: "cordial" | "descontraido" | "formal";
+  nomeApresentacao?: string;
+  tratarRecepcao?: boolean;
+  recusasParaEncerrar?: 1 | 2;
+}
+
+export function lerConduta(config: unknown): CondutaAgente {
+  const c = (config as { conduta?: CondutaAgente } | null)?.conduta;
+  return c && typeof c === "object" ? c : {};
+}
+
+const TONS: Record<NonNullable<CondutaAgente["tom"]>, string> = {
+  cordial: "Tom cordial e próximo, sem gírias.",
+  descontraido: "Tom leve e descontraído, como um vendedor conhecido do cliente.",
+  formal: "Tom formal e objetivo, tratando o cliente por senhor/senhora.",
+};
+
+/** Ajustes de conduta do agente que complementam as regras fixas de conversa. */
+export function regrasConduta(c: CondutaAgente): string {
+  const p: string[] = [];
+  if (c.nomeApresentacao?.trim()) p.push(`Apresente-se como ${c.nomeApresentacao.trim()}.`);
+  p.push(TONS[c.tom ?? "cordial"]);
+  if (c.tratarRecepcao === false) p.push("Se atender recepção/portaria, apenas pergunte o melhor horário para falar com o contato e encerre com [DESLIGAR].");
+  if (c.recusasParaEncerrar === 1) p.push("Na primeira recusa clara, agradeça e inclua [DESLIGAR].");
+  return `CONDUTA: ${p.join(" ")}`;
+}
