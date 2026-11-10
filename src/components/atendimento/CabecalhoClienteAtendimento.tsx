@@ -33,18 +33,19 @@ interface Props {
   temTarefa?: boolean;
   temAgenda?: boolean;
   temOrcamento?: boolean;
+  temEnderecoVisita?: boolean;
 }
 
 const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila, temHistorico = true, temTarefa = true, temAgenda = true, temOrcamento = true }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila, temHistorico = true, temTarefa = true, temAgenda = true, temOrcamento = true, temEnderecoVisita = false }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
     { aba: "email", label: "E-mail", icon: Mail, cor: "text-info", ok: !!cliente.email },
-    { aba: "visita", label: "Visita", icon: MapPin, cor: "text-accent-foreground", ok: true },
+    { aba: "visita", label: "Visita", icon: MapPin, cor: "text-accent-foreground", ok: temEnderecoVisita },
     { aba: "orcamento", label: "Orçamento", icon: FileText, cor: "text-muted-foreground", ok: temOrcamento },
   ].filter((c) => c.ok);
 
