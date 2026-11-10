@@ -3,7 +3,9 @@
  * poucos dados; o roteiro monta as etapas curtas que a IA segue ao telefone.
  * Pura: testável.
  */
-export type RoteiroId = "reposicao" | "produto_foco" | "orcamento_aberto" | "reativacao" | "lembrete_financeiro";
+export type RoteiroBaseId = "reposicao" | "produto_foco" | "orcamento_aberto" | "reativacao" | "lembrete_financeiro";
+/** Roteiro de fábrica ou criado pelo usuário (chave livre). */
+export type RoteiroId = RoteiroBaseId | (string & {});
 export type CampoRoteiro = "produto" | "condicao" | "desconto" | "aviso";
 
 export interface Roteiro {
@@ -76,7 +78,106 @@ export const ROTEIROS: Roteiro[] = [
   },
 ];
 
-export const roteiroPorId = (id: string) => ROTEIROS.find((r) => r.id === id) ?? ROTEIROS[0];
+/* ---------------- Roteiros editáveis (Se X, faça Y) ---------------- */
+
+export type AcaoCondicao = "responder" | "desconto" | "transferir" | "encerrar" | "avancar";
+export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string }
+export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[] }
+/** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
+export interface RoteiroSalvo {
+  id?: string; chave: string; departamento: Departamento; nome: string; descricao: string;
+  campos: CampoRoteiro[]; etapas: EtapaEditavel[]; ativo: boolean;
+}
+
+export const GATILHOS_PRONTOS = [
+  "é recepção ou portaria", "não pode falar agora", "achou caro", "pediu prazo ou forma de pagamento",
+  "já comprou de outro fornecedor", "demonstrou interesse", "pediu para falar com uma pessoa",
+  "disse que não precisa agora", "pediu amostra ou catálogo",
+];
+export const ACOES: { id: AcaoCondicao; rotulo: string }[] = [
+  { id: "responder", rotulo: "Responder com a fala" },
+  { id: "desconto", rotulo: "Oferecer desconto (até o limite)" },
+  { id: "transferir", rotulo: "Transferir para o atendente" },
+  { id: "encerrar", rotulo: "Agradecer e encerrar" },
+  { id: "avancar", rotulo: "Ir para a próxima etapa" },
+];
+
+let salvos: RoteiroSalvo[] = [];
+/** Define os roteiros salvos da empresa usados em toda a montagem do objetivo. */
+export function definirRoteirosSalvos(lista: RoteiroSalvo[]) { salvos = lista; }
+export const roteirosSalvos = () => salvos;
+const salvoAtivo = (id: string) => salvos.find((s) => s.chave === id && s.ativo);
+
+const ROTULO_PH: DadosRoteiro = { produtoNome: "{produto}", condicao: "{condicao}", aviso: "{aviso}" };
+const CONDICOES_PADRAO: Record<RoteiroBaseId, CondicaoRoteiro[]> = {
+  reposicao: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
+  produto_foco: [{ gatilho: "achou caro", acao: "desconto" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
+  orcamento_aberto: [{ gatilho: "já comprou de outro fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele escolher o outro." }, { gatilho: "achou caro", acao: "desconto" }],
+  reativacao: [{ gatilho: "disse que não precisa agora", acao: "encerrar" }, { gatilho: "demonstrou interesse", acao: "transferir" }],
+  lembrete_financeiro: [{ gatilho: "pediu prazo ou forma de pagamento", acao: "transferir" }],
+};
+
+/** Versão editável de um roteiro de fábrica (ponto de partida do editor e "restaurar original"). */
+export function roteiroDeFabrica(id: RoteiroBaseId): RoteiroSalvo {
+  const r = ROTEIROS.find((x) => x.id === id)!;
+  const etapas = r.etapas(ROTULO_PH);
+  const conds = CONDICOES_PADRAO[id];
+  return {
+    chave: id, nome: r.rotulo, descricao: r.desc, campos: r.campos, ativo: true,
+    departamento: id === "lembrete_financeiro" ? "financeiro" : "comercial",
+    etapas: etapas.map((fala, i) => ({ titulo: `Etapa ${i + 1}`, fala, condicoes: i === etapas.length - 1 ? conds : [] })),
+  };
+}
+export const ehDeFabrica = (chave: string) => ROTEIROS.some((r) => r.id === chave);
+
+function preencher(t: string, d: DadosRoteiro) {
+  return t.replace(/\{produto\}/g, d.produtoNome?.trim() || "o produto que o cliente mais compra (veja os Dados do CRM)")
+    .replace(/\{condicao\}/g, d.condicao?.trim() || "a condição que o atendente confirmar")
+    .replace(/\{aviso\}/g, d.aviso?.trim() || "há uma pendência em aberto")
+    .replace(/\{desconto\}/g, d.descontoMax ? `${d.descontoMax}%` : "nenhum desconto");
+}
+function textoAcao(c: CondicaoRoteiro, d: DadosRoteiro) {
+  const extra = c.texto?.trim() ? ` ${preencher(c.texto.trim(), d)}` : "";
+  switch (c.acao) {
+    case "desconto": return d.descontoMax ? `ofereça até ${d.descontoMax}% de desconto, nunca mais.${extra}` : `diga que o atendente vê uma condição especial e inclua [TRANSFERIR].${extra}`;
+    case "transferir": return `diga em uma frase que vai passar para o atendente e inclua [TRANSFERIR].${extra}`;
+    case "encerrar": return `agradeça com simpatia e inclua [DESLIGAR].${extra}`;
+    case "avancar": return `siga para a próxima etapa.${extra}`;
+    default: return extra.trim() || "responda em uma frase curta.";
+  }
+}
+
+/** Texto do roteiro editável para a IA: etapas numeradas + regras "Se X, faça Y". Pura: testável. */
+export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
+  const etapas = r.etapas.filter((e) => e.fala.trim()).map((e, i) => {
+    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `Se o cliente ${c.gatilho.trim()}: ${textoAcao(c, d)}`);
+    return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
+  });
+  const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
+  if (!r.etapas.some((e) => e.condicoes.some((c) => c.acao === "desconto")) && r.departamento !== "financeiro")
+    p.push(d.descontoMax ? `Se acharem caro, pode oferecer até ${d.descontoMax}% de desconto, nunca mais que isso.` : "Não ofereça desconto nem invente preço; o atendente confirma valores.");
+  if (d.observacoes?.trim()) p.push(`Observação do usuário: ${d.observacoes.trim()}.`);
+  return p.join(" ");
+}
+
+function comoRoteiro(s: RoteiroSalvo): Roteiro {
+  const base = ROTEIROS.find((r) => r.id === s.chave);
+  return {
+    id: s.chave, rotulo: s.nome, desc: s.descricao || base?.desc || "", campos: s.campos,
+    obrigatorios: base ? base.obrigatorios.filter((c) => s.campos.includes(c)) : s.campos.filter((c) => c === "produto" || c === "aviso"),
+    produtoPorCliente: !s.campos.includes("produto"),
+    etapas: (d) => s.etapas.map((e) => preencher(e.fala, d)),
+  };
+}
+
+/** Fábrica (ou versão editada) + roteiros novos ativos. */
+export function todosRoteiros(): Roteiro[] {
+  const fab = ROTEIROS.map((r) => { const s = salvoAtivo(r.id); return s ? comoRoteiro(s) : r; })
+    .filter((r) => !salvos.some((s) => s.chave === r.id && !s.ativo));
+  return [...fab, ...salvos.filter((s) => s.ativo && !ehDeFabrica(s.chave)).map(comoRoteiro)];
+}
+
+export const roteiroPorId = (id: string) => todosRoteiros().find((r) => r.id === id) ?? ROTEIROS.find((r) => r.id === id) ?? ROTEIROS[0];
 
 /** Campos obrigatórios do roteiro que ainda faltam. */
 export function pendenciasRoteiro(id: RoteiroId, d: DadosRoteiro): CampoRoteiro[] {
