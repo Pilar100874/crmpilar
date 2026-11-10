@@ -296,9 +296,6 @@ export default function Atendimento() {
   const [buscaAgenda, setBuscaAgenda] = useState("");
   const pesquisarAgenda = (valor: string) => {
     setBuscaAgenda(valor);
-    if (valor.trim() && activeTab !== "agenda") {
-      window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "table" } }));
-    }
   };
   const [atrasadosAgendaCentral, setAtrasadosAgendaCentral] = useState(false);
   const contatoSelecionarPendenteRef = useRef<string | null>(null);
@@ -330,7 +327,8 @@ export default function Atendimento() {
       if (!detail?.data) return;
       setActiveTab("agenda");
       if (!discadorRodandoRef.current) setAgendaViewMode("default");
-      setSelectedTaskId(null);
+      setSelectedTaskId(detail.tarefaId || null);
+      if (detail.tarefaId) setTarefaCentralNonce(n => n + 1);
       setSelectedTaskData(null);
       setSelectedAgendaContato(null);
       setMobileView("main");
