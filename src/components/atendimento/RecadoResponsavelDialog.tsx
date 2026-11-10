@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { carregarResponsaveis, listarUsuarios, registrarRecado, selecaoResponsavelRecado, type Responsavel, type UrgenciaRecado } from "@/lib/atendimento/recadoResponsavel";
 import { getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
+import { PainelAtendimentoHeader } from "./PainelAtendimentoHeader";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; contatoId: string; contatoNome: string; embedded?: boolean; onSelecionar?: (id: string, nome: string) => void; onCadastrar?: () => void }
 
@@ -54,14 +55,14 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
   };
 
   const conteudo = <>
-        <div className="flex items-start justify-between gap-3 border-b pb-5">
+        {embedded ? <PainelAtendimentoHeader title="Encaminhar recado" icon={MessageSquare} onClose={() => onOpenChange(false)} closeLabel="Fechar recado" /> : <div className="flex items-start justify-between gap-3 border-b pb-5">
         <DialogHeader className="min-w-0 text-left">
           {embedded ? <h2 className="flex items-center gap-3 text-xl font-semibold"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><MessageSquare className="h-5 w-5" /></span>Encaminhar recado</h2> : <DialogTitle>Encaminhar recado</DialogTitle>}
           {!embedded && <DialogDescription>{contatoNome}</DialogDescription>}
         </DialogHeader>
         {embedded && <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" title="Fechar recado" aria-label="Fechar recado" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>}
-        </div>
-        <div className="space-y-6">
+        </div>}
+        <div className="space-y-6 px-4 sm:px-6">
           {embedded && <div className="space-y-2"><Label className="text-sm font-semibold">Cliente</Label><div className="flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-3"><User className="h-5 w-5 shrink-0 text-muted-foreground" /><span className={`min-w-0 flex-1 break-words text-sm ${contatoNome ? "font-medium" : "text-muted-foreground"}`}>{contatoNome || "Nenhum cliente selecionado"}</span><div className="flex shrink-0 items-center gap-1"><GlobalClientFilter compact activeFilter={contatoId ? { type: "customer", id: contatoId, nome: contatoNome } : null} onFilterChange={filtro => {
             if (!filtro) { onSelecionar?.("", ""); return; }
             if (filtro.type === "customer") { onSelecionar?.(filtro.id, filtro.nome); return; }
@@ -96,11 +97,11 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
             </div>
           </div>
         </div>
-        <DialogFooter className="gap-2 border-t pt-5 sm:gap-2">
+        <DialogFooter className="gap-2 border-t px-4 py-4 sm:gap-2 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button className="gap-2" onClick={salvar} disabled={salvando || bloqueado || carregando || erroSelecao || !contatoId || !recado.trim() || !responsavelId}>{salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{salvando ? "Enviando..." : "Enviar recado"}</Button>
         </DialogFooter>
   </>;
-  if (embedded) return <section data-recado-central className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6"><div className="mx-auto w-full max-w-xl space-y-6">{conteudo}</div></section>;
+  if (embedded) return <section data-recado-central className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background"><div className="w-full space-y-6">{conteudo}</div></section>;
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">{conteudo}</DialogContent></Dialog>;
 }
