@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { montarObjetivoRoteiro, pendenciasRoteiro, regrasConversa } from "./roteirosLigacao";
+import { ROTEIROS } from "./roteirosLigacao";
 
 describe("roteiros de ligação", () => {
   it("promoção exige produto", () => {
@@ -66,5 +67,21 @@ describe("gatilho com várias respostas separadas por vírgula", () => {
   });
   it("gatilho de uma frase continua igual", () => {
     expect(gi("achou caro")).toBe("Se o cliente achou caro");
+  });
+});
+
+describe("bifurcações de fábrica", () => {
+  it("toda etapa de todo roteiro de fábrica tem regra de silêncio e de outra resposta", () => {
+    for (const r of ROTEIROS) for (const e of roteiroDeFabrica(r.id as never).etapas) {
+      const g = e.condicoes.map((c) => c.gatilho);
+      expect(g).toContain("não respondeu ou ficou em silêncio");
+      expect(g).toContain("respondeu outra coisa que não está nas regras");
+    }
+  });
+  it("orçamento: sim avança e não pergunta dia de retorno", () => {
+    const t = montarObjetivoRoteiro("orcamento_aberto", {});
+    expect(t).toContain('"já olhei"');
+    expect(t).toContain("siga para a próxima etapa");
+    expect(t).toContain("qual dia pode retornar");
   });
 });
