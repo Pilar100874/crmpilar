@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { X, ChevronLeft, type LucideIcon } from "lucide-react";
+import { X, ChevronLeft, LayoutGrid, type LucideIcon } from "lucide-react";
 
 export interface RadialMenuItem {
   id: string | number;
@@ -345,11 +345,11 @@ export function RadialMenu({
           </>
         )}
       </AnimatePresence>, document.body)}
-      <Button variant="outline" size="icon" aria-label="Abrir atalhos do Atendimento" title="Atalhos do Atendimento"
-        className="fixed bottom-4 right-16 z-[650] h-9 w-9 rounded-full border-border bg-card shadow-md"
+      {createPortal(<Button variant="outline" size="icon" aria-label="Abrir atalhos do Atendimento" title="Atalhos do Atendimento"
+        className="fixed bottom-4 right-16 z-[800] h-9 w-9 rounded-full border-border bg-card shadow-md"
         onClick={() => { setPosition({ x: Math.max(size / 2 + 8, window.innerWidth - size / 2 - 16), y: Math.max(size / 2 + 8, window.innerHeight - size / 2 - 52) }); setActiveSubMenu(null); setIsOpen(true); }}>
-        <span aria-hidden className="text-lg">⌘</span>
-      </Button>
+        <LayoutGrid className="h-4 w-4" />
+      </Button>, document.body)}
     </div>
   );
 }
