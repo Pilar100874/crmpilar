@@ -81,8 +81,9 @@ export const ROTEIROS: Roteiro[] = [
 
 /* ---------------- Roteiros editáveis (Se X, faça Y) ---------------- */
 
-export type AcaoCondicao = "responder" | "desconto" | "transferir" | "encerrar" | "avancar";
-export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string }
+export type AcaoCondicao = "responder" | "desconto" | "transferir" | "encerrar" | "avancar" | "ir_etapa";
+/** `etapa` = índice (0-based) da etapa de destino quando acao = "ir_etapa". */
+export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string; etapa?: number }
 export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[] }
 /** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
 export interface RoteiroSalvo {
@@ -105,6 +106,7 @@ export const ACOES: { id: AcaoCondicao; rotulo: string }[] = [
   { id: "transferir", rotulo: "Transferir para o atendente" },
   { id: "encerrar", rotulo: "Agradecer e encerrar" },
   { id: "avancar", rotulo: "Ir para a próxima etapa" },
+  { id: "ir_etapa", rotulo: "Ir para a etapa…" },
 ];
 
 let salvos: RoteiroSalvo[] = [];
@@ -172,13 +174,14 @@ function preencher(t: string, d: DadosRoteiro) {
     .replace(/\{aviso\}/g, d.aviso?.trim() || "há uma pendência em aberto")
     .replace(/\{desconto\}/g, d.descontoMax ? `${d.descontoMax}%` : "nenhum desconto");
 }
-function textoAcao(c: CondicaoRoteiro, d: DadosRoteiro) {
+function textoAcao(c: CondicaoRoteiro, d: DadosRoteiro, destino?: string) {
   const extra = c.texto?.trim() ? ` ${preencher(c.texto.trim(), d)}` : "";
   switch (c.acao) {
     case "desconto": return d.descontoMax ? `ofereça até ${d.descontoMax}% de desconto, nunca mais.${extra}` : `diga que o atendente vê uma condição especial e inclua [TRANSFERIR].${extra}`;
     case "transferir": return `diga em uma frase que vai passar para o atendente e inclua [TRANSFERIR].${extra}`;
     case "encerrar": return `agradeça com simpatia e inclua [DESLIGAR].${extra}`;
     case "avancar": return `siga para a próxima etapa.${extra}`;
+    case "ir_etapa": return destino ? `vá direto para a etapa ${destino} e faça a fala dela (pule as etapas no meio).${extra}` : `siga para a próxima etapa.${extra}`;
     default: return extra.trim() || "responda em uma frase curta.";
   }
 }
@@ -202,8 +205,10 @@ export function gatilhoParaIA(g: string): string {
 
 /** Texto do roteiro editável para a IA: etapas numeradas + regras "Se X, faça Y". Pura: testável. */
 export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
-  const etapas = r.etapas.filter((e) => e.fala.trim()).map((e, i) => {
-    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d)}`);
+  const validas = r.etapas.map((e, i) => ({ e, i })).filter((x) => x.e.fala.trim());
+  const numero = (orig?: number) => { const k = validas.findIndex((x) => x.i === orig); return k < 0 ? undefined : `${k + 1}${validas[k].e.titulo.trim() ? ` (${validas[k].e.titulo.trim()})` : ""}`; };
+  const etapas = validas.map(({ e }, i) => {
+    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d, c.acao === "ir_etapa" ? numero(c.etapa) : undefined)}`);
     return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
