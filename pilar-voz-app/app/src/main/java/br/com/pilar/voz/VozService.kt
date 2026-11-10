@@ -130,17 +130,21 @@ class VozService : Service() {
                 }
                 registrar("agente", saudacao)
             }
-            val trecho = ArrayList<Short>(); var silencio = 0; var falando = false
+            val trecho = ArrayList<Short>(); var silencio = 0; var falando = false; var mudo = 0
             while (c.ativa) {
                 val q = c.rtp.entrada.poll(300, TimeUnit.MILLISECONDS) ?: continue
-                if (modo != "assistir" && c.rtp.tocando()) { trecho.clear(); falando = false; continue }
+                if (modo != "assistir" && c.rtp.tocando()) { trecho.clear(); falando = false; mudo = 0; continue }
                 val e = Audio.energia(q)
-                if (e > LIMIAR_FALA) { falando = true; silencio = 0; q.forEach { trecho.add(it) } }
-                else if (falando) {
-                    q.forEach { trecho.add(it) }
-                    if (++silencio > 20) {
-                        if (trecho.size > 4000) {
-                            val r = runCatching { Api.turno(Audio.paraBase64(Audio.wav8k(trecho.toShortArray())), hist, modo, objetivo, null, chamadaId, numero) }
+                // Cliente calado ~4s depois da fala da IA: a IA segue o roteiro sozinha.
+                val calado = e <= LIMIAR_FALA && !falando && modo != "assistir" && ++mudo >= 200
+                if (e > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; q.forEach { trecho.add(it) } }
+                else if (falando || calado) {
+                    if (!calado) q.forEach { trecho.add(it) }
+                    if (calado || ++silencio > 20) {
+                        mudo = 0
+                        if (calado || trecho.size > 4000) {
+                            val wav = if (calado) null else Audio.paraBase64(Audio.wav8k(trecho.toShortArray()))
+                            val r = runCatching { Api.turno(wav, hist, modo, objetivo, if (calado) "[SILENCIO]" else null, chamadaId, numero) }
                                 .onFailure { log("IA: ${it.message}") }.getOrNull()
                             if (r != null) {
                                 registrar("cliente", r.optString("fala"))

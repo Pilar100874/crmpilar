@@ -426,16 +426,18 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       if (r?.audio_b64) c.rtp.tocar(wavPara8k(r.audio_b64));
       registrar('agente', cfg.saudacao);
     }
-    let trecho = []; let silencio = 0; let falando = false;
+    let trecho = []; let silencio = 0; let falando = false; let mudo = 0;
     while (c.ativa) {
       const q = await c.rtp.entrada.pop(300); if (!q) continue;
-      if (modo !== 'assistir' && c.rtp.tocando()) { trecho = []; falando = false; continue; }
-      if (energia(q) > LIMIAR_FALA) { falando = true; silencio = 0; trecho.push(...q); continue; }
-      if (!falando) continue;
-      trecho.push(...q);
-      if (++silencio <= 20) continue;
-      if (trecho.length > 4000) {
-        const r = await turno(wav8k(trecho).toString('base64'), hist, modo, objetivo, null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });
+      if (modo !== 'assistir' && c.rtp.tocando()) { trecho = []; falando = false; mudo = 0; continue; }
+      if (energia(q) > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; trecho.push(...q); continue; }
+      // Cliente calado ~4s depois da fala da IA: a IA segue o roteiro sozinha.
+      const calado = !falando && modo !== 'assistir' && ++mudo >= 200;
+      if (!falando && !calado) continue;
+      if (!calado) { trecho.push(...q); if (++silencio <= 20) continue; }
+      if (calado || trecho.length > 4000) {
+        mudo = 0;
+        const r = await turno(calado ? null : wav8k(trecho).toString('base64'), hist, modo, objetivo, calado ? '[SILENCIO]' : null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });
         if (r) {
           registrar('cliente', r.fala);
           const resp = String(r.resposta || '').trim();
