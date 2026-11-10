@@ -60,9 +60,9 @@ const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   {
     id: "busca-agenda", modulo: "Fila e organização", titulo: "Buscar contatos ou tarefas na agenda",
-    oQueE: "A busca no cabeçalho filtra os compromissos pelo contato, título, descrição, responsável ou data.",
-    regraNegocio: "A busca vale para Dia, Semana, Mês e Tabela, respeita o período e os demais filtros escolhidos e não altera os registros. Quando outra tela está aberta no Atendimento, digitar abre a agenda na área central e mantém o texto pesquisado.",
-    comoUsar: ["Digite o nome do contato ou parte da tarefa no campo do cabeçalho.", "Confira os compromissos encontrados no período selecionado; troque o período se necessário.", "Apague o texto para restaurar os compromissos."],
+    oQueE: "A busca mostra os itens encontrados logo abaixo do campo, com contato, tarefa e data.",
+    regraNegocio: "Os resultados pesquisam as tarefas carregadas, inclusive de outras datas, sem alterar registros. Escolher um resultado abre a tarefa na sua data e destaca o cartão do contato correspondente na fila. Digitar não troca a tela central antes da escolha.",
+    comoUsar: ["Digite o nome do contato ou parte da tarefa no campo do cabeçalho.", "Clique no resultado abaixo do campo, ou use as setas e Enter.", "Confira a tarefa aberta e o cartão correspondente selecionado na fila."],
     simular: () => {
       const tarefa = { title: "Retorno", contactName: "João", date: new Date(2026, 10, 10) };
       return [passo("Nome sem acento encontra o contato", correspondeBuscaAgenda(tarefa, "joao")), passo("Contato diferente não aparece", !correspondeBuscaAgenda(tarefa, "Ana")), passo("Limpar restaura a tarefa", correspondeBuscaAgenda(tarefa, ""))];

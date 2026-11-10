@@ -1,5 +1,6 @@
 import { executarAgendaPorCiclo } from "@/lib/voz/publicoInteligente";
 import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
+import { BuscaAgenda } from "@/components/calendario/BuscaAgenda";
 import { executarReguaOrcamentos } from "@/lib/atendimento/copilotoAtendimento";
 import { TarefasDoDiaResumo } from "@/components/calendario/TarefasDoDiaResumo";
 import { AnaliseDestinoResumo } from "@/components/calendario/AnaliseDestinoResumo";
@@ -3704,15 +3705,13 @@ export default function Calendario({ dataInicial, viewModeInicial, contatoSugeri
               </p>
             </div>
             <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none">
-              <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Buscar contatos ou tarefas..."
-                  className="h-9 border-border/60 bg-muted/30 pl-9 text-xs sm:h-10 sm:text-sm"
-                />
-              </div>
+              <BuscaAgenda valor={searchQuery} onChange={setSearchQuery} tarefas={tasks} onSelect={tarefa => {
+                setCurrentDate(tarefa.date);
+                setViewMode("day");
+                setSelectedTaskId(tarefa.id);
+                window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: tarefa.date.toISOString(), modo: "day", tarefaId: tarefa.id } }));
+                if (tarefa.contactId) window.dispatchEvent(new CustomEvent("calendario:selecionar-contato", { detail: { contactId: tarefa.contactId } }));
+              }} />
               {/* Slot: ações da tela de Atendimento (Usar agenda, assumir contatos, adicionar, filtrar) */}
               <div id="barra-acoes-atendimento" className="flex items-center gap-2" />
               <Button
