@@ -228,7 +228,7 @@ export function StepComposeChamada({
               {ROTEIROS.map((r) => {
                 const ativo = oferta.roteiro === r.id;
                 return (
-                  <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id })}
+                  <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id, roteiroEscolhido: true })}
                     className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors",
                       ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
                     <span className="min-w-0">
