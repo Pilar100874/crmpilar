@@ -9,6 +9,7 @@ import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGE
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
 import { pendenciasCadastro } from "./pendenciasCadastro";
+import { possuiEnderecoVisita } from "./enderecoVisita";
 import { pendenciasOrcamento } from "./cadastroOrcamento";
 import { ehEmailAutomatico, emailIgnorado } from "./remetentesIgnorados";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
@@ -54,6 +55,18 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "visita-endereco",
+    modulo: "Atendimento e finalização",
+    titulo: "Visita exige endereço cadastrado",
+    oQueE: "A opção Visita aparece nos cartões e no menu do cliente apenas quando uma empresa vinculada tem endereço cadastrado.",
+    regraNegocio: "Sem endereço cadastrado, não existe um destino para a visita. O menu fica oculto até o endereço ser preenchido e salvo.",
+    comoUsar: ["Abra o cadastro do cliente e confira a empresa vinculada.", "Preencha e salve o endereço da empresa.", "A opção Visita passa a aparecer nos menus do contato."],
+    simular: () => [
+      passo("Sem endereço, Visita fica oculta", !possuiEnderecoVisita([{ id: "empresa", endereco: "" }])),
+      passo("Com endereço cadastrado, Visita aparece", possuiEnderecoVisita([{ id: "empresa", endereco: "Rua Central, 100" }])),
+    ],
+  },
   {
     id: "cadastro-obrigatorio-orcamento",
     modulo: "Atendimento e finalização",

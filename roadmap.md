@@ -1,4 +1,5 @@
 # Roadmap — Atendimento
+- [x] Ocultar menu Visita nos cartões e cabeçalho até existir endereço na empresa vinculada
 - [x] Bloquear novos orçamentos sem empresa e contato completos e abrir cadastro para correção
 - [x] Copiloto de respostas (3 sugestões no chat)
 - [x] Próximo cliente (botão + Alt+↓)
