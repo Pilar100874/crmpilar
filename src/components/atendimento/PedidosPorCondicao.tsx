@@ -1,5 +1,5 @@
 import { carregarEquipeVisivel } from "@/lib/atendimento/equipeVisivel";
-import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
