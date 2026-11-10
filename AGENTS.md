@@ -46,3 +46,4 @@
 - Insert newly introduced menu programs into their existing origin category in effective customization, preserving explicitly placed programs and saved settings, so new screens remain discoverable in their intended menu.
 - Use PainelAtendimentoHeader for attendance panels and shared task details to keep title, icon, spacing and close actions consistent.
 - One voice agent per function/dept; per-client scripts.
+- Voice call scripts are editable per company in voz_roteiros (factory key = edited version, custom_* = new); roteirosLigacao compiles steps + "Se X, faça Y" rules into the call objective, so the device protocol stays unchanged.
