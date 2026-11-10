@@ -52,8 +52,8 @@ export const ROTEIROS: Roteiro[] = [
     campos: ["desconto"], obrigatorios: [], produtoPorCliente: true,
     etapas: () => [
       "Diga só que está ligando sobre a proposta que a equipe enviou recentemente. NUNCA cite itens, produtos, quantidades nem valores (podem ser muitos e de vários orçamentos). Se perguntarem qual, diga que o atendente passa os detalhes e transfira.",
-      "Pergunte só: \"O senhor conseguiu dar uma olhada no orçamento?\" (uma pergunta, espere a resposta).",
-      "Se respondeu sim, pergunte só: \"Ficou alguma dúvida ou já podemos fechar?\". Se respondeu não, pergunte qual dia pode retornar; ao ouvir o dia, confirme (\"Combinado, retorno na sexta\") e encerre — a agenda é marcada sozinha.",
+      "Pergunte só: \"O senhor conseguiu dar uma olhada no orçamento?\". Aguarde a resposta entre turnos. Ao ouvir sim, já olhei ou já analisei, esta etapa acabou: vá à etapa 3, SEM repetir a pergunta. Ao ouvir não ou ainda não, pergunte qual dia pode retornar.",
+      "Se já analisou, pergunte só: \"O que falta para fecharmos?\". Se ainda não analisou, pergunte qual dia pode retornar; ao ouvir o dia, confirme (\"Combinado, retorno na sexta\") e encerre — a agenda é marcada sozinha. Nunca volte a perguntar se olhou o orçamento.",
       "Se o cliente falar em dúvida, fechar, valor, prazo ou pagamento: NÃO faça outra pergunta; diga \"Vou te passar agora para o atendente, um instante\" e transfira.",
     ],
   },
@@ -229,7 +229,7 @@ export function regrasConversa(ramal: string): string {
     "Se ouvir caixa postal, mensagem de operadora ou ninguém responder, responda só [DESLIGAR].",
     "Fale valores como se fala (\"mil e quinhentos reais\"), sem ler códigos, CNPJ, números de pedido ou históricos antigos. Cite no máximo um produto por vez.",
     "Não invente preço, prazo, estoque ou condição que não esteja neste roteiro.",
-    "O roteiro é um diálogo: faça uma etapa, PARE e espere o cliente responder antes da próxima. Nunca avance etapas sozinha nem responda pelo cliente.",
+    "O roteiro é um diálogo: faça uma etapa, PARE e espere o cliente responder antes da próxima. Quando ele responder, a etapa foi cumprida: aplique suas regras e avance sem repetir a pergunta. Sim e não são respostas completas à última pergunta; nunca responda pelo cliente nem reinicie etapas já respondidas.",
     `Só transfira quando a ÚLTIMA fala do CLIENTE pedir algo explícito (quero fechar, qual o valor, tenho uma dúvida, quero falar com alguém, sim quero): então diga em uma frase que vai passar para o atendente e inclua [TRANSFERIR] (ramal ${ramal}). Nunca use [TRANSFERIR] na mesma fala em que faz uma pergunta, nem antes de o cliente responder ao roteiro.`,
     "Se o cliente pedir para ligar outro dia, confirme o dia e agradeça com [DESLIGAR]. Se recusar de forma clara duas vezes, agradeça e inclua [DESLIGAR].",
   ].join(" ");

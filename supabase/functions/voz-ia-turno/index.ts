@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { progressoVoz } from "../_shared/progressoVoz.ts";
 
 /**
  * Modo "gratuito" dos Agentes de Voz: o servidor de voz envia o trecho de fala
@@ -87,9 +88,8 @@ Deno.serve(async (req) => {
     if (!fala && audio_wav_b64) return json({ fala: "", resposta: "", audio_b64: null });
 
     const hist = [...historico, ...(fala ? [{ papel: "cliente", texto: fala }] : silencio ? [{ papel: "cliente", texto: "(o cliente ficou em silêncio, não disse nada)" }] : [])];
-    const notaSilencio = silencio
-      ? `\n\nO cliente ficou em SILÊNCIO. Não diga que não entendeu. Se é o começo da ligação, diga "Alô, consegue me ouvir?" e, em seguida, a primeira etapa do roteiro em uma frase. Se já houve conversa, repita a última pergunta de forma mais simples. Se ele já ficou calado duas vezes seguidas, agradeça, diga que retornará depois e termine com [DESLIGAR].`
-      : "";
+    const progresso = progressoVoz(historico, fala, silencio);
+    const notaAvanco = `\n\nCONTROLE DE PROGRESSO: "espere a resposta" significa aguardar ENTRE turnos. Quando o cliente responde à última pergunta, essa etapa já foi cumprida: aplique suas condições e avance, sem repetir a pergunta nem reiniciar o roteiro. "Sim" e "não" valem como respostas completas à última pergunta; não são automaticamente pedido de transferência. Alô não é resposta ao orçamento. Não leia instruções como "uma pergunta, espere a resposta" em voz alta.${progresso.respostaOrcamento === "analisou" ? " O cliente CONFIRMOU que analisou o orçamento. NÃO pergunte novamente se olhou; siga as regras desta etapa ou pergunte apenas o que falta para fechar." : progresso.respostaOrcamento === "nao_analisou" ? " O cliente disse que NÃO analisou o orçamento. NÃO repita a pergunta; siga as regras desta etapa ou pergunte qual dia pode retornar." : ""}`;
     const sistema = modo === "assistir"
       ? `Você ajuda um atendente humano durante uma ligação. Leia a conversa e devolva UMA sugestão curta (até 2 frases) do que o atendente pode dizer agora. Responda em português. ${DIRETIVA}\n\nContexto: ${prompt}`
       : `Você é um agente de voz ao telefone. Fale em português do Brasil como uma pessoa real: no máximo 2 frases curtas por fala, terminando com uma pergunta simples; sem listas, emojis, markdown ou números de pedido. Responda ao que o cliente acabou de dizer antes de seguir o roteiro, uma etapa por fala. Se não entendeu, peça para repetir em poucas palavras. Se ouvir caixa postal ou mensagem de operadora, responda apenas "[DESLIGAR]". Se o cliente pedir uma pessoa, diga uma frase curta e inclua "[TRANSFERIR]". Use "[TRANSFERIR]" só quando a última fala do cliente pedir isso ou mostrar interesse explícito; nunca na mesma fala em que você faz uma pergunta, nunca na sua primeira ou segunda fala sem resposta do cliente. Para encerrar, termine com "[DESLIGAR]". ${DIRETIVA}\n\n${prompt}`;
@@ -101,9 +101,11 @@ Deno.serve(async (req) => {
     const exata = typeof frase_exata === "string" && frase_exata.trim() ? frase_exata.trim() : null;
     let resposta = exata && modo !== "assistir"
       ? exata
+      : silencio && modo !== "assistir"
+        ? progresso.respostaSilencio ?? ""
       : regraOuro && modo !== "assistir"
         ? TRANSICAO
-        : await responder(key, sistema + regraOuro + notaSilencio, hist);
+        : await responder(key, sistema + regraOuro + notaAvanco, hist);
     // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
     if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
       const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
@@ -114,7 +116,8 @@ Deno.serve(async (req) => {
     if (modo !== "assistir" && resposta) {
       const falar = resposta.replace(/\[(TRANSFERIR|DESLIGAR)\]/g, "").trim();
       const ck = `${voz}|${falar}`;
-      if (falar && CACHE_AUDIO.has(ck)) audio_b64 = CACHE_AUDIO.get(ck)!;
+      const audioSalvo = CACHE_AUDIO.get(ck);
+      if (falar && audioSalvo) audio_b64 = audioSalvo;
       else if (falar) {
         const t = await fetch(`${GW}/audio/speech`, {
           method: "POST",

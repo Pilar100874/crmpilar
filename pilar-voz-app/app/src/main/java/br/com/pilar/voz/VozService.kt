@@ -142,7 +142,7 @@ class VozService : Service() {
                     if (!calado) q.forEach { trecho.add(it) }
                     if (calado || ++silencio > 20) {
                         mudo = 0
-                        if (calado || trecho.size > 4000) {
+                        if (calado || trecho.size >= 1600) {
                             val wav = if (calado) null else Audio.paraBase64(Audio.wav8k(trecho.toShortArray()))
                             val r = runCatching { Api.turno(wav, hist, modo, objetivo, if (calado) "[SILENCIO]" else null, chamadaId, numero) }
                                 .onFailure { log("IA: ${it.message}") }.getOrNull()

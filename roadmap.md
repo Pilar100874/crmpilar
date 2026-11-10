@@ -1,4 +1,6 @@
 # Roadmap — Atendimento
+- [x] Corrigir avanço após respostas curtas no roteiro de orçamento e limitar repetição por silêncio
+- [ ] Validar captura de respostas curtas em ligação real — depende de instalar novos aparelhos compilados e atender o teste
 - [x] Padronizar cabeçalhos e organização visual dos painéis do Atendimento
 - [x] Painel comparativo de produtividade no menu Chats com registros reais
 - [x] Minha jornada no Atendimento com evolução diária/mensal e pendências
