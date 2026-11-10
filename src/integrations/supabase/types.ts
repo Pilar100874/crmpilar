@@ -31732,6 +31732,10 @@ export type Database = {
         Returns: number
       }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
+      dashboard_jornada_atendimento: {
+        Args: { p_equipe?: boolean; p_fim: string; p_inicio: string }
+        Returns: Json
+      }
       delete_customer_cascade: {
         Args: { p_customer_id: string }
         Returns: boolean
