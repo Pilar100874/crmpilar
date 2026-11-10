@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Copy, GitBranch, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, GitBranch, PhoneCall, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SimuladorLigacaoVoz, type AgenteSim } from "./SimuladorLigacaoVoz";
 import {
   ACOES, DEPARTAMENTOS, GATILHOS_PRONTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, palavrasGatilho, roteiroDeFabrica,
   type CampoRoteiro, type RoteiroBaseId, type RoteiroSalvo,
@@ -24,10 +26,22 @@ const CAMPOS: { id: CampoRoteiro; rotulo: string }[] = [
 const LIVRE = "__livre__";
 
 /** Lista e editor dos roteiros de ligação da empresa: fábrica editável + novos, com regras "Se X, faça Y". */
-export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: string | null }) {
+export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecimentoId: string | null; agentes: AgenteSim[] }) {
   const [lista, setLista] = useState<RoteiroSalvo[]>([]);
   const [atual, setAtual] = useState<RoteiroSalvo | null>(null);
   const [excluir, setExcluir] = useState(false);
+  const [simulando, setSimulando] = useState<RoteiroSalvo | null>(null);
+  const simulador = (
+    <Dialog open={!!simulando} onOpenChange={(aberto) => { if (!aberto) setSimulando(null); }}>
+      <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Simular roteiro</DialogTitle>
+          <DialogDescription>Ligação de teste · {simulando?.nome || "Novo roteiro"}</DialogDescription>
+        </DialogHeader>
+        {simulando && <SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} />}
+      </DialogContent>
+    </Dialog>
+  );
 
   const carregar = useCallback(async () => {
     const salvos = await carregarRoteirosSalvos(db, estabelecimentoId);
@@ -59,6 +73,7 @@ export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: st
 
   if (!atual) return (
     <div className="space-y-3">
+      {simulador}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Edite as falas e as regras "Se o cliente..., faça..." de cada roteiro, ou crie novos.</p>
         <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
@@ -80,8 +95,9 @@ export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: st
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground"><GitBranch className="mr-1 inline h-3 w-3" />{r.etapas.length} etapas · {r.etapas.reduce((n, e) => n + e.condicoes.length, 0)} regras</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" className="h-8" onClick={() => setAtual(structuredClone(r))}>Editar</Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={() => setSimulando(structuredClone(r))}><PhoneCall className="mr-1 h-3.5 w-3.5" /> Simular</Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicar(r)}><Copy className="mr-1 h-3.5 w-3.5" /> Duplicar</Button>
                 </div>
               </Card>
@@ -98,9 +114,11 @@ export function EditorRoteirosVoz({ estabelecimentoId }: { estabelecimentoId: st
 
   return (
     <div className="space-y-4">
+      {simulador}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button size="sm" variant="ghost" onClick={() => setAtual(null)}><ArrowLeft className="mr-1 h-4 w-4" /> Roteiros</Button>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => setSimulando(structuredClone(atual))}><PhoneCall className="mr-1 h-4 w-4" /> Simular</Button>
           {atual.id && <Button size="sm" variant="outline" onClick={() => setExcluir(true)}>
             {fabrica ? <><RotateCcw className="mr-1 h-4 w-4" /> Restaurar original</> : <><Trash2 className="mr-1 h-4 w-4" /> Excluir</>}</Button>}
           <Button size="sm" onClick={() => void salvar()}><Save className="mr-1 h-4 w-4" /> Salvar</Button>

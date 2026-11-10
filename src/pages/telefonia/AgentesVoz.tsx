@@ -18,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { EditorRoteirosVoz } from "@/components/telefonia/EditorRoteirosVoz";
-import { SimuladorLigacaoVoz } from "@/components/telefonia/SimuladorLigacaoVoz";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { formatDistanceToNow } from "date-fns";
@@ -170,7 +169,6 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="agente">Agente</TabsTrigger>
           <TabsTrigger value="roteiros">Roteiros</TabsTrigger>
-          <TabsTrigger value="simulador">Simulador</TabsTrigger>
           <TabsTrigger value="chaves">Chaves</TabsTrigger>
           <TabsTrigger value="chamadas">Chamadas</TabsTrigger>
           <TabsTrigger value="servidor">Servidor</TabsTrigger>
@@ -401,11 +399,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
         </TabsContent>
 
         <TabsContent value="roteiros">
-          <EditorRoteirosVoz estabelecimentoId={empresa ?? null} />
-        </TabsContent>
-
-        <TabsContent value="simulador">
-          <SimuladorLigacaoVoz estabelecimentoId={empresa ?? null} agentes={agentes} />
+          <EditorRoteirosVoz estabelecimentoId={empresa ?? null} agentes={agentes} />
         </TabsContent>
 
         <TabsContent value="chaves">

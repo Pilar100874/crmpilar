@@ -11,12 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import {
-  carregarRoteirosSalvos, lerConduta, lerDepartamento, montarObjetivoRoteiro, regrasConduta, regrasConversa,
-  roteiroPorId, roteirosDoDepartamento, type RoteiroId,
+  compilarRoteiro, lerConduta, lerDepartamento, regrasConduta, regrasConversa,
+  type RoteiroSalvo,
 } from "@/lib/voz/roteirosLigacao";
 
 const db = supabase as any;
-type AgenteSim = { id?: string; nome: string; modos: string[]; ativo: boolean; config?: Record<string, unknown> | null };
+export type AgenteSim = { id?: string; nome: string; modos: string[]; ativo: boolean; config?: Record<string, unknown> | null };
 type Fala = { papel: string; texto: string };
 
 const ROTULO: Record<string, string> = {
@@ -25,27 +25,22 @@ const ROTULO: Record<string, string> = {
 };
 
 /** Liga para um número escolhido usando o agente e o roteiro reais, para validar a conversa. */
-export function SimuladorLigacaoVoz({ estabelecimentoId, agentes }: { estabelecimentoId: string | null; agentes: AgenteSim[] }) {
-  const ligadores = agentes.filter((a) => a.id && a.ativo && a.modos?.includes("ligar"));
+export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecionado }: { estabelecimentoId: string | null; agentes: AgenteSim[]; roteiroSelecionado: RoteiroSalvo }) {
+  const ligadores = agentes.filter((a) => a.id && a.ativo && a.modos?.includes("ligar") && lerDepartamento(a.config) === roteiroSelecionado.departamento);
   const [agenteId, setAgenteId] = useState("");
   const [numero, setNumero] = useState("");
-  const [roteiro, setRoteiro] = useState<RoteiroId | "">("");
   const [produto, setProduto] = useState("");
   const [aviso, setAviso] = useState("");
   const [obs, setObs] = useState("");
-  const [, setVersao] = useState(0);
   const [cmd, setCmd] = useState<{ id: string; inicio: string; numero: string } | null>(null);
   const [status, setStatus] = useState("");
   const [falas, setFalas] = useState<Fala[]>([]);
   const [transferido, setTransferido] = useState<string | null>(null);
 
-  useEffect(() => { void carregarRoteirosSalvos(db, estabelecimentoId).then(() => setVersao((v) => v + 1)); }, [estabelecimentoId]);
   useEffect(() => { if (!agenteId && ligadores[0]?.id) setAgenteId(ligadores[0].id); }, [ligadores, agenteId]);
 
   const agente = ligadores.find((a) => a.id === agenteId);
-  const roteiros = agente ? roteirosDoDepartamento(lerDepartamento(agente.config)) : [];
-  useEffect(() => { if (roteiros.length && !roteiros.some((r) => r.id === roteiro)) setRoteiro(roteiros[0].id); }, [roteiros, roteiro]);
-  const campos = roteiro ? roteiroPorId(roteiro).campos : [];
+  const campos = roteiroSelecionado.campos;
 
   // Acompanha o comando e a transcrição da chamada ao vivo.
   useEffect(() => {
@@ -66,7 +61,7 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes }: { estabeleci
   }, [cmd, estabelecimentoId]);
 
   const ligar = async () => {
-    if (!estabelecimentoId || !agente || !roteiro) return toast.error("Escolha o agente e o roteiro");
+    if (!estabelecimentoId || !agente) return toast.error("Escolha o agente");
     const num = numero.replace(/\D/g, "");
     if (num.length < 8) return toast.error("Informe um número válido");
     if (campos.includes("produto") && !produto.trim()) return toast.error("Informe o produto do roteiro");
@@ -76,7 +71,7 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes }: { estabeleci
     const objetivo = [
       regrasConversa(ramal),
       regrasConduta(lerConduta(agente.config)),
-      montarObjetivoRoteiro(roteiro, { produtoNome: produto || undefined, aviso: aviso || undefined, observacoes: obs }),
+      compilarRoteiro(roteiroSelecionado, { produtoNome: produto || undefined, aviso: aviso || undefined, observacoes: obs }),
       "LIGAÇÃO DE TESTE do simulador: siga o roteiro normalmente.",
     ].join("\n");
     const { data: u } = await supabase.auth.getUser();
@@ -102,26 +97,19 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes }: { estabeleci
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base"><PhoneCall className="h-4 w-4 text-primary" /> Simulador de ligação</CardTitle>
-        <CardDescription>Liga para um número seu com o agente e o roteiro reais, para validar a conversa antes de usar com clientes.</CardDescription>
+        <CardDescription>{roteiroSelecionado.nome || "Novo roteiro"}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!ligadores.length ? (
-          <p className="text-sm text-muted-foreground">Cadastre e ative um agente "Fazer ligações" para usar o simulador.</p>
+          <p className="text-sm text-muted-foreground">Cadastre e ative um agente "Fazer ligações" deste departamento para usar o simulador.</p>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>Agente</Label>
                 <Select value={agenteId} onValueChange={setAgenteId}>
                   <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
-                  <SelectContent>{ligadores.map((a) => <SelectItem key={a.id} value={a.id!}>{a.nome}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Roteiro</Label>
-                <Select value={roteiro} onValueChange={(v) => setRoteiro(v as RoteiroId)}>
-                  <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
-                  <SelectContent>{roteiros.map((r) => <SelectItem key={r.id} value={r.id}>{r.rotulo}</SelectItem>)}</SelectContent>
+                  <SelectContent>{ligadores.map((a) => a.id ? <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem> : null)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
