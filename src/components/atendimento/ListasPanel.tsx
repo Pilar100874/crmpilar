@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { Search, UserPlus, Building2, User, Phone, Mail, Loader2, Pencil } from "lucide-react";
+import { Search, UserPlus, Building2, User, Phone, Mail, Loader2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import Empresas from "@/pages/Empresas";
+import Contatos from "@/pages/Contatos";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { ContatoFormSheet } from "./ContatoFormSheet";
-import { ContatoFormSheetEdit } from "./ContatoFormSheetEdit";
-import { EmpresaFormSheet } from "./EmpresaFormSheet";
-import { EmpresaFormSheetEdit } from "./EmpresaFormSheetEdit";
 import { toast } from "@/lib/toast-config";
 
 interface ListasPanelProps {
@@ -64,14 +61,17 @@ export function ListasPanel({ onClose, onSelect, onSaved, title = "Puxar ou cria
     else setForm({ tipo: "empresa", id: result.id });
   };
 
-  return <>
-    <Dialog open={!form} onOpenChange={open => { if (!open) onClose(); }}>
-      <DialogContent className="flex max-h-[85dvh] w-[calc(100%-24px)] max-w-xl flex-col gap-0 overflow-hidden rounded-lg border border-border p-0 sm:rounded-lg">
-        <DialogHeader className="border-b border-border px-5 py-5 pr-16 text-left">
-          <DialogTitle className="flex items-center gap-2 text-base tracking-normal"><UserPlus className="h-5 w-5 text-primary" />{title}</DialogTitle>
-          <DialogDescription>Contatos e empresas</DialogDescription>
-        </DialogHeader>
-        <div className="flex min-h-0 flex-col gap-4 p-5">
+  if (form) return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-cadastro-central>
+    {form.tipo === "empresa" ? <Empresas hideAdminButtons criarInicial={!form.id} empresaIdInicial={form.id} onFecharEmbutido={saved} /> : <Contatos hideAdminButtons criarInicial={!form.id} contatoIdInicial={form.id} onFecharEmbutido={saved} />}
+  </div>;
+
+  return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-cadastro-central>
+    <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="flex items-center gap-2 text-base font-semibold"><UserPlus className="h-5 w-5 text-primary" />{title}</h2>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar cadastros" title="Fechar cadastros"><X className="h-4 w-4" /></Button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
           <div className="flex gap-2">
             <Button className="flex-1 gap-2" onClick={() => setForm({ tipo: "contato" })}><UserPlus className="h-4 w-4" />Novo contato</Button>
             <Button variant="outline" className="flex-1 gap-2" onClick={() => setForm({ tipo: "empresa" })}><Building2 className="h-4 w-4" />Nova empresa</Button>
@@ -80,7 +80,7 @@ export function ListasPanel({ onClose, onSelect, onSaved, title = "Puxar ou cria
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input autoFocus aria-label="Pesquisar cadastro" placeholder="Nome, telefone, e-mail ou CNPJ" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
           </div>
-          <div className="min-h-[120px] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {loading ? <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div> : results.length ? <div className="divide-y divide-border">
               {results.map(result => <div key={`${result.tipo}-${result.id}`} className="flex items-center gap-2 py-2">
                 <Button variant="ghost" className="h-auto min-w-0 flex-1 justify-start gap-3 px-2 py-2 text-left" onClick={() => void select(result)}>
@@ -92,11 +92,6 @@ export function ListasPanel({ onClose, onSelect, onSaved, title = "Puxar ou cria
             </div> : <p className="py-10 text-center text-sm text-muted-foreground">{error ? "Não foi possível pesquisar. Tente novamente." : searchTerm.trim().length >= 2 ? "Nenhum cadastro encontrado." : "Buscar cadastro existente"}</p>}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
-    <ContatoFormSheet centralizado open={form?.tipo === "contato" && !form.id} onOpenChange={open => { if (!open) setForm(null); }} onSuccess={saved} />
-    <EmpresaFormSheet centralizado open={form?.tipo === "empresa" && !form.id} onOpenChange={open => { if (!open) setForm(null); }} onSuccess={saved} />
-    {form?.tipo === "contato" && form.id && <ContatoFormSheetEdit centralizado open customerId={form.id} onOpenChange={open => { if (!open) setForm(null); }} onSuccess={saved} />}
-    {form?.tipo === "empresa" && form.id && <EmpresaFormSheetEdit centralizado open empresaId={form.id} onOpenChange={open => { if (!open) setForm(null); }} onSuccess={saved} />}
-  </>;
+    </div>
+  </div>;
 }

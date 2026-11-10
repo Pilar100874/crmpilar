@@ -31,6 +31,7 @@ import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask, maskW
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
+import { exigirUsuarioCriador, vincularContatoAoCriador } from "@/lib/atendimento/vinculoCriador";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { isEmailField, normalizeEmail } from "@/lib/cadastros/uppercase";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
@@ -110,12 +111,20 @@ interface SearchFilters {
 
 interface ContatosProps {
   hideAdminButtons?: boolean;
+  criarInicial?: boolean;
+  contatoIdInicial?: string;
+  onFecharEmbutido?: () => void;
 }
 
-export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
+export default function Contatos({ hideAdminButtons = false, criarInicial = false, contatoIdInicial, onFecharEmbutido }: ContatosProps) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(criarInicial);
+  const formularioAnterior = useRef(criarInicial);
+  useEffect(() => {
+    if ((criarInicial || contatoIdInicial) && formularioAnterior.current && !showForm) onFecharEmbutido?.();
+    formularioAnterior.current = showForm;
+  }, [showForm, criarInicial, contatoIdInicial, onFecharEmbutido]);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [substituicao, setSubstituicao] = useState<{ contato: { id: string; name: string }; empresas: EmpresaSubstituicao[]; modo: 'inativar' | 'excluir' } | null>(null);
@@ -512,7 +521,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   useEffect(() => {
     const state = location.state as { editContactId?: string };
     const idFromUrl = searchParams.get('id');
-    const contactIdToEdit = state?.editContactId || idFromUrl;
+    const contactIdToEdit = contatoIdInicial || state?.editContactId || idFromUrl;
     
     if (contactIdToEdit && contacts.length > 0) {
       const contactToEdit = contacts.find(c => c.id === contactIdToEdit);
@@ -522,7 +531,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location.state, searchParams, contacts]);
+  }, [location.state, searchParams, contacts, contatoIdInicial]);
 
   // Carregar contatos do backend
     const loadContacts = async () => {
@@ -1589,6 +1598,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         }
       } else {
         // Criar novo contato
+        const criadorId = await exigirUsuarioCriador();
         const { data: inserted, error: insErr } = await supabase
           .from('customers')
           .insert([contatoPayload])
@@ -1597,22 +1607,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         
         if (insErr) throw insErr;
 
-        contatoId = inserted!.id;
+        if (!inserted) throw new Error("Contato não retornado após o cadastro");
+        contatoId = inserted.id;
         if (segmentosSelecionados.length > 0) {
           await supabase.from('customer_segmentos').insert(
             segmentosSelecionados.map((sid) => ({ customer_id: contatoId, segmento_id: sid }))
           );
         }
 
-        // Vincular automaticamente o contato ao usuário que criou
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from('customer_vinculos').insert({
-            customer_id: contatoId,
-            estabelecimento_id: estabId,
-            usuario_id: user.id
-          });
-        }
+        await vincularContatoAoCriador(contatoId, estabId, criadorId);
       }
 
       // Se criou uma nova empresa, adicionar ao vínculo

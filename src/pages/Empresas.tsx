@@ -90,6 +90,7 @@ interface Contato {
 
 interface EmpresasProps {
   hideAdminButtons?: boolean;
+  criarInicial?: boolean;
   variant?: "empresa" | "vendedor" | "transportadora";
   /** Modo embutido: abre direto o cadastro desta empresa na aba indicada */
   empresaIdInicial?: string;
@@ -97,7 +98,7 @@ interface EmpresasProps {
   onFecharEmbutido?: () => void;
 }
 
-export default function Empresas({ hideAdminButtons = false, variant = "empresa", empresaIdInicial, abaInicial, onFecharEmbutido }: EmpresasProps) {
+export default function Empresas({ criarInicial = false, hideAdminButtons = false, variant = "empresa", empresaIdInicial, abaInicial, onFecharEmbutido }: EmpresasProps) {
   const entityConfig = {
     empresa: { singular: "Empresa", plural: "Empresas", tipo_cliente: "B2B", subtitle: "Gerencie sua carteira de clientes", showSegmento: true, showTipoCliente: true },
     vendedor: { singular: "Vendedor", plural: "Vendedores", tipo_cliente: "vendedor", subtitle: "Gerencie seus vendedores", showSegmento: true, showTipoCliente: false },
@@ -105,7 +106,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   }[variant];
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(criarInicial);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -704,7 +705,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   }, [empresaIdInicial]);
   const showFormAnteriorRef = useRef(false);
   useEffect(() => {
-    if (empresaIdInicial && showFormAnteriorRef.current && !showForm) onFecharEmbutido?.();
+    if ((empresaIdInicial || criarInicial) && showFormAnteriorRef.current && !showForm) onFecharEmbutido?.();
     showFormAnteriorRef.current = showForm;
   }, [showForm]);
 
