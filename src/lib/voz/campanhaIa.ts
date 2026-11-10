@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { consultarRamalOcupado } from "@/lib/voz/ramaisUsuario";
+import { regrasConversa } from "@/lib/voz/roteirosLigacao";
 
 const db = supabase as any;
 
@@ -33,14 +34,8 @@ const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let rodando = false;
 
 function objetivoCom(ramal: string, objetivo: string) {
-  const oferta = (objetivo || "").trim() || "Apresentar a empresa e entender o interesse do contato.";
-  return `VOCÊ ESTÁ FAZENDO UMA LIGAÇÃO DE VENDAS. Objetivo informado pelo usuário: ${oferta}\n` +
-    `Logo depois de se apresentar, ofereça exatamente isso ao cliente, com entusiasmo e em frases curtas. ` +
-    `Destaque benefícios, responda dúvidas e contorne objeções com educação, sempre trazendo a conversa de volta para a oferta. ` +
-    `Não invente preços, prazos ou condições: se perguntarem, diga que o atendente confirma. ` +
-    `Quando o cliente demonstrar interesse em comprar, pedir preço/orçamento ou pedir para falar com uma pessoa, ` +
-    `diga em uma frase que vai passar para um atendente e inclua [TRANSFERIR] (ramal ${ramal}). ` +
-    `Se o cliente recusar de forma clara duas vezes, agradeça e inclua [DESLIGAR]. Se for caixa postal ou ninguém falar, inclua [DESLIGAR].`;
+  const roteiro = (objetivo || "").trim() || "Apresentar a empresa e entender se o contato precisa de algo.";
+  return `${regrasConversa(ramal)}\n${roteiro}`;
 }
 
 async function executar() {

@@ -14,14 +14,13 @@ import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
-import { montarObjetivo } from "@/lib/voz/publicoInteligente";
+import { ROTEIROS, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
 import { camposPendentes, camposUsaveis, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
-  produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; texto: string;
-  reposicao: boolean; similar: boolean; complementares: boolean; recepcao: boolean;
+  roteiro: RoteiroId; produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; aviso: string; texto: string;
 };
-const OFERTA_INICIAL: Oferta = { produto: null, condicao: "", descontoMax: 0, texto: "", reposicao: true, similar: true, complementares: false, recepcao: true };
+const OFERTA_INICIAL: Oferta = { roteiro: "reposicao", produto: null, condicao: "", descontoMax: 0, aviso: "", texto: "" };
 /** Mantém o formulário ao voltar/avançar etapas. */
 let ultimaOferta: Oferta | null = null;
 let ultimosValores: Record<string, ValorCampo> = {};
@@ -79,19 +78,26 @@ export function StepComposeChamada({
     emitir(n, valores);
   };
   const [valores, setValores] = useState<Record<string, ValorCampo>>(() => ultimosValores);
+  const roteiro = roteiroPorId(oferta.roteiro);
+  const dadosDe = (n: Oferta): DadosRoteiro => ({
+    produtoNome: roteiroPorId(n.roteiro).campos.includes("produto") ? n.produto?.nome : undefined,
+    condicao: n.condicao, descontoMax: n.descontoMax, aviso: n.aviso, observacoes: n.texto,
+  });
   const emitir = (n: Oferta, v: Record<string, ValorCampo>) =>
-    onObjetivoChange([textoCampos(campos, v), montarObjetivo({ ...n, produtoNome: n.produto?.nome })].filter(Boolean).join(" "));
+    onObjetivoChange([montarObjetivoRoteiro(n.roteiro, dadosDe(n)), textoCampos(campos, v)].filter(Boolean).join(" "));
   const mudarCampo = (id: string, valor: ValorCampo) => {
     const v = { ...valores, [id]: valor }; setValores(v); ultimosValores = v; emitir(oferta, v);
   };
-  const campos = camposUsaveis(agentes.find((a) => a.id === agenteIaId)?.config);
+  // Campos de produto do agente duplicariam o produto do roteiro: o roteiro decide o produto.
+  const campos = camposUsaveis(agentes.find((a) => a.id === agenteIaId)?.config).filter((c) => c.tipo !== "produto");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (canal === "ia") emitir(oferta, valores); }, [agenteIaId, agentes.length]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (canal === "ia") mudar({}); }, [canal]);
 
-  const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim() && camposPendentes(campos, valores).length === 0;
+  const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim() && camposPendentes(campos, valores).length === 0
+    && pendenciasRoteiro(oferta.roteiro, dadosDe(oferta)).length === 0;
 
   return (
     <div className="flex flex-col min-w-0 space-y-4">
@@ -209,33 +215,67 @@ export function StepComposeChamada({
           )}
 
           <Card className="p-4 space-y-3">
-            <h4 className="font-medium text-sm">O que ofertar</h4>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Produto do sistema</Label>
-              <ProdutoBusca valor={oferta.produto} onChange={(p) => mudar({ produto: p })} />
+            <h4 className="font-medium text-sm">Roteiro da ligação</h4>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {ROTEIROS.map((r) => {
+                const ativo = oferta.roteiro === r.id;
+                return (
+                  <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id })}
+                    className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                      ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold text-foreground">{r.rotulo}</span>
+                      <span className="block text-[10px] text-muted-foreground">{r.desc}</span>
+                    </span>
+                    {ativo && <Check className="ml-auto h-4 w-4 shrink-0 text-primary" />}
+                  </button>
+                );
+              })}
             </div>
-            <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
-              <div className="space-y-1.5 min-w-0">
-                <Label className="text-xs">Condição da campanha</Label>
-                <Input value={oferta.condicao} onChange={(e) => mudar({ condicao: e.target.value })} className="h-9 text-xs"
-                  placeholder="Ex.: R$ 89,90 o fardo acima de 5 fardos" />
-              </div>
+            {roteiro.produtoPorCliente && (
+              <p className="rounded-md bg-muted/50 px-3 py-2 text-[11px] text-muted-foreground">
+                O produto é escolhido para cada cliente pelo histórico de compras dele.
+              </p>
+            )}
+            {roteiro.campos.includes("produto") && (
               <div className="space-y-1.5">
-                <Label className="text-xs">Desconto máx. (%)</Label>
-                <Input type="number" min={0} max={30} value={oferta.descontoMax || ""} className="h-9 text-xs"
-                  onChange={(e) => mudar({ descontoMax: Math.min(30, Math.max(0, Number(e.target.value) || 0)) })} placeholder="0" />
+                <Label className="text-xs">Produto <span className="text-destructive">*</span></Label>
+                <ProdutoBusca valor={oferta.produto} onChange={(p) => mudar({ produto: p })} />
               </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 text-xs text-muted-foreground">
-              {([
-                ["reposicao", "Abordar reposição (última compra)"],
-                ["similar", "Oferecer similar se recusar"],
-                ["complementares", "Sugerir produto complementar"],
-                ["recepcao", "Pedir pelo comprador se cair na recepção"],
-              ] as const).map(([k, l]) => (
-                <label key={k} className="flex items-center gap-2"><Switch checked={oferta[k]} onCheckedChange={(v) => mudar({ [k]: v })} />{l}</label>
-              ))}
-            </div>
+            )}
+            {(roteiro.campos.includes("condicao") || roteiro.campos.includes("desconto")) && (
+              <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+                {roteiro.campos.includes("condicao") && (
+                  <div className="space-y-1.5 min-w-0">
+                    <Label className="text-xs">Condição especial (opcional)</Label>
+                    <Input value={oferta.condicao} onChange={(e) => mudar({ condicao: e.target.value })} className="h-9 text-xs"
+                      placeholder="Ex.: frete grátis acima de 5 fardos" />
+                  </div>
+                )}
+                {roteiro.campos.includes("desconto") && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Desconto máx. (%)</Label>
+                    <Input type="number" min={0} max={30} value={oferta.descontoMax || ""} className="h-9 text-xs"
+                      onChange={(e) => mudar({ descontoMax: Math.min(30, Math.max(0, Number(e.target.value) || 0)) })} placeholder="0" />
+                  </div>
+                )}
+              </div>
+            )}
+            {roteiro.campos.includes("aviso") && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">O que avisar <span className="text-destructive">*</span></Label>
+                <Input value={oferta.aviso} onChange={(e) => mudar({ aviso: e.target.value })} className="h-9 text-xs"
+                  placeholder="Ex.: boleto com vencimento dia 15" />
+              </div>
+            )}
+            <details className="rounded-md border border-dashed px-3 py-2 text-[11px] text-muted-foreground">
+              <summary className="cursor-pointer font-medium">Como a IA vai conduzir</summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>Cumprimenta e confirma se fala com o contato (na recepção, pede por ele).</li>
+                {roteiro.etapas({ produtoNome: oferta.produto?.nome, condicao: oferta.condicao, aviso: oferta.aviso }).map((e) => <li key={e}>{e}</li>)}
+                <li>Com interesse, transfere para o seu ramal com o resumo na tela.</li>
+              </ol>
+            </details>
             <div className="space-y-1.5">
               <Label htmlFor="objetivo-ia-massa" className="text-xs">Observações para a IA</Label>
               <Textarea id="objetivo-ia-massa" rows={2} value={oferta.texto} onChange={(e) => mudar({ texto: e.target.value })}

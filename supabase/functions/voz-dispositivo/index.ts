@@ -252,7 +252,8 @@ Deno.serve(async (req) => {
             try { crm = await contextoCrm(sb, empresa, numero, opts); cacheCrm.set(chave, { t: Date.now(), v: crm }); } catch (e) { console.error("contexto CRM", e); }
           }
           if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
-          if (vendas && crm) crm = crm.slice(0, 2500);
+          // Ligação de vendas: contexto enxuto para a IA não citar históricos antigos.
+          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o produto e o gancho; cite no máximo um produto e nunca leia a lista.";
         }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",
