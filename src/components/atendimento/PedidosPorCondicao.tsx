@@ -14,18 +14,18 @@ export default function PedidosPorCondicao({ usuarioId, inicio, fim }: { usuario
   const [agrupar, setAgrupar] = useState<"etapa" | "pagamento">("etapa");
 
   useEffect(() => {
-    if (!inicio || !fim) return;
+    if (!usuarioId || !inicio || !fim) return;
     setCarregando(true);
     supabase.from("orcamentos")
       .select("id, etapa, valor_total, created_at, condicoes_pagamento:condicao_pagamento_id(nome)")
-      .or(`vendedor_id.eq.${usuarioId},vendedor_id.is.null`)
+      .eq("vendedor_id", usuarioId)
       .gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`)
       .limit(5000)
       .then(({ data, error }) => {
         if (error) {
           // fallback sem relação de condição
           supabase.from("orcamentos").select("id, etapa, valor_total, created_at, condicao_pagamento_id")
-            .or(`vendedor_id.eq.${usuarioId},vendedor_id.is.null`).gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`).limit(5000)
+            .eq("vendedor_id", usuarioId).gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`).limit(5000)
             .then(({ data: d2 }) => { setLinhas(d2 || []); setCarregando(false); });
           return;
         }
