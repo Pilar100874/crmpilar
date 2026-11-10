@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardList, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, UserRound } from "lucide-react";
+import { CalendarDays, ClipboardList, History, FileText, Mail, MapPin, MessageCircle, PanelLeftClose, PanelLeftOpen, Phone, StickyNote, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -34,13 +34,15 @@ interface Props {
   temAgenda?: boolean;
   temOrcamento?: boolean;
   temEnderecoVisita?: boolean;
+  /** Anota um recado que vira tarefa de retorno na agenda do responsável. */
+  onRecado?: () => void;
 }
 
 const iniciais = (nome: string) =>
   nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 
 /** Cabeçalho do cliente selecionado: os canais aparecem conforme os dados do cartão. */
-export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila, temHistorico = true, temTarefa = true, temAgenda = true, temOrcamento = true, temEnderecoVisita = false }: Props) {
+export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, compacto = false, onHistorico, historicoAtivo, onTarefa, tarefaAtiva, onAgenda, agendaAtiva, painelAberto, onTogglePainel, filaAberta, onToggleFila, temHistorico = true, temTarefa = true, temAgenda = true, temOrcamento = true, temEnderecoVisita = false, onRecado }: Props) {
   const canais = [
     { aba: "chat", label: "WhatsApp", icon: MessageCircle, cor: "text-success", ok: !!cliente.telefone },
     { aba: "tel", label: "Telefone", icon: Phone, cor: "text-primary", ok: !!cliente.tel },
@@ -125,6 +127,12 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             className={cn("flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
               agendaAtiva ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-foreground hover:border-primary/40")}>
             <CalendarDays className="h-4 w-4 text-primary" />
+          </button>
+        )}
+        {onRecado && cliente.id && (
+          <button type="button" onClick={onRecado} title="Anotar recado para o responsável" aria-label="Anotar recado para o responsável"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:border-primary/40">
+            <StickyNote className="h-4 w-4 text-warning" />
           </button>
         )}
         {canais.map((c) => {
