@@ -243,6 +243,7 @@ export function pendenciasRoteiro(id: RoteiroId, d: DadosRoteiro): CampoRoteiro[
 export function montarObjetivoRoteiro(id: RoteiroId, d: DadosRoteiro): string {
   const s = salvoAtivo(id);
   if (s) return compilarRoteiro(s, d);
+  if (ehDeFabrica(id)) return compilarRoteiro(roteiroDeFabrica(id as RoteiroBaseId), d);
   const r = roteiroPorId(id);
   const etapas = r.etapas(d).map((e, i) => `${i + 1}) ${e}`).join(" ");
   const p = [`ROTEIRO: ${r.rotulo}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas}`];
