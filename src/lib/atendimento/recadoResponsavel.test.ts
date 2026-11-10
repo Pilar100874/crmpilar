@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/estabelecimentoUtils", () => ({ getEstabelecimentoId: vi.fn(), getUserIdFromAuth: vi.fn() }));
 vi.mock("@/lib/calendario/eventos", () => ({ notificarTarefasAlteradas: vi.fn() }));
-import { montarTarefaRecado } from "./recadoResponsavel";
+import { montarTarefaRecado, recadoUrgentePendente, tarefaVisivelNaFila } from "./recadoResponsavel";
 
 const base = { contatoId: "c1", contatoNome: "Ana", responsavelId: "u2", autorId: "u1", autorNome: "Bia", recado: "Quer cotação", estabelecimentoId: "e1", agora: new Date(2026, 10, 9, 10, 0) };
 
@@ -20,5 +20,25 @@ describe("recado para o responsável", () => {
   });
   it("exige texto do recado", () => {
     expect(() => montarTarefaRecado({ ...base, recado: "  ", urgencia: "normal" })).toThrow();
+  });
+  it("encaminhamento urgente fica pendente e elegível ao alerta", () => {
+    const tarefa = montarTarefaRecado({ ...base, urgencia: "urgente" });
+    expect(tarefa.origem_sub_item).toBe("recado_urgente");
+    expect(recadoUrgentePendente(tarefa)).toBe(true);
+  });
+  it("recado concluído deixa de alertar", () => {
+    expect(recadoUrgentePendente({ origem_sub_item: "recado_urgente", status: "completed" })).toBe(false);
+  });
+  it("recado normal não pisca", () => {
+    expect(recadoUrgentePendente(montarTarefaRecado({ ...base, urgencia: "normal" }))).toBe(false);
+  });
+  it("destinatário vê recado sem vínculo de carteira", () => {
+    expect(tarefaVisivelNaFila({ contact_id: "c1", user_id: "u2", origem_sub_item: "recado_urgente", status: "pending" }, new Set(), "u2")).toBe(true);
+  });
+  it("outro usuário não ganha cartão sem vínculo", () => {
+    expect(tarefaVisivelNaFila({ contact_id: "c1", user_id: "u2", origem_sub_item: "recado_urgente", status: "pending" }, new Set(), "u3")).toBe(false);
+  });
+  it("exige selecionar ou cadastrar cliente", () => {
+    expect(() => montarTarefaRecado({ ...base, contatoId: "", urgencia: "urgente" })).toThrow();
   });
 });

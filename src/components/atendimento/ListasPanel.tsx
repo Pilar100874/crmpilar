@@ -12,13 +12,14 @@ interface ListasPanelProps {
   onClose: () => void;
   onSelect?: (customerId: string) => void;
   onSaved?: () => void;
+  onContatoSalvo?: (id: string) => void;
   title?: string;
   description?: string;
   defaultTab?: "contatos" | "empresas";
 }
 interface SearchResult { id: string; tipo: "contato" | "empresa"; nome: string; telefone?: string | null; email?: string | null }
 
-export function ListasPanel({ onClose, onSelect, onSaved, title = "Puxar ou criar cadastro" }: ListasPanelProps) {
+export function ListasPanel({ onClose, onSelect, onSaved, onContatoSalvo, title = "Puxar ou criar cadastro" }: ListasPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ export function ListasPanel({ onClose, onSelect, onSaved, title = "Puxar ou cria
   };
 
   if (form) return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-cadastro-central>
-    {form.tipo === "empresa" ? <Empresas hideAdminButtons criarInicial={!form.id} empresaIdInicial={form.id} onFecharEmbutido={saved} /> : <Contatos hideAdminButtons criarInicial={!form.id} contatoIdInicial={form.id} onFecharEmbutido={saved} />}
+    {form.tipo === "empresa" ? <Empresas hideAdminButtons criarInicial={!form.id} empresaIdInicial={form.id} onFecharEmbutido={saved} /> : <Contatos hideAdminButtons criarInicial={!form.id} contatoIdInicial={form.id} onFecharEmbutido={saved} onContatoSalvo={onContatoSalvo} />}
   </div>;
 
   return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-cadastro-central>
