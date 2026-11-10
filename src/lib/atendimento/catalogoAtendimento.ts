@@ -88,9 +88,9 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
   },
   {
     id: "auxiliar-vendas", modulo: "Fila e organização", titulo: "Auxiliar de vendas",
-    oQueE: "O botão de lâmpada na barra do cliente abre uma faixa com os hábitos de compra e sugestões do que oferecer.",
-    regraNegocio: "A análise usa somente orçamentos e pedidos salvos do contato: pedidos são os finalizados. Mostra ticket médio, intervalo médio entre compras (exige 2 pedidos), próxima compra prevista com alerta quando o ciclo passou, prazo/condição mais usado, desconto médio, conversão, produtos mais comprados e produtos recorrentes que faltaram no último pedido. É somente leitura: nada é criado nem enviado.",
-    comoUsar: ["Abra o cliente.", "Clique na lâmpada na barra do cliente.", "Use as sugestões para montar a oferta; clique de novo para recolher."],
+    oQueE: "O item Auxiliar de vendas (lâmpada) na barra do cliente, ao lado de WhatsApp, E-mail e Orçamento, abre na tela central os hábitos de compra, oportunidades e um roteiro de abordagem.",
+    regraNegocio: "A análise usa somente orçamentos e pedidos salvos do contato: pedidos são os finalizados. Mostra ticket médio, intervalo médio entre compras (exige 2 pedidos), próxima compra prevista com alerta quando o ciclo passou, prazo/condição mais usado, desconto médio, conversão, produtos mais comprados, itens recorrentes que faltaram no último pedido, itens que outros clientes compram junto (mínimo 2 ocorrências), compras dos últimos 12 meses e meses mais fortes, orçamentos em aberto e motivos de perda. É somente leitura: orçamento e agendamento só acontecem pelos botões.",
+    comoUsar: ["Abra o cliente.", "Clique em Auxiliar de vendas (lâmpada) na barra do cliente.", "Leia O que oferecer agora e copie o roteiro.", "Use Novo orçamento ou Agendar direto do painel."],
     simular: () => [passo("Ciclo de 30 dias atrasado gera alerta", analisarHabitos([{ id: "1", data: "2026-01-01", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }, { id: "2", data: "2026-01-31", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }], new Date("2026-03-15")).compraAtrasada)],
   },
   {
