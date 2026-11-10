@@ -335,7 +335,7 @@ export function ContatoFormSheetEdit({ centralizado = false, open, onOpenChange,
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" overlayClassName={centralizado ? "z-[10000] bg-background/70" : undefined} className={centralizado ? "left-1/2 top-1/2 right-auto bottom-auto z-[10001] h-[min(780px,90dvh)] w-[calc(100%-24px)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border overflow-hidden flex flex-col p-0 data-[state=open]:animate-none data-[state=closed]:animate-none" : "w-full sm:max-w-2xl overflow-hidden flex flex-col p-0"}>
+      <SheetContent side="right" overlayClassName={centralizado ? "z-[10000] bg-background/70" : undefined} className={centralizado ? "left-1/2 top-1/2 right-auto bottom-auto z-[10001] h-[min(780px,90dvh)] w-[calc(100%-24px)] max-w-2xl sm:max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border overflow-hidden flex flex-col p-0 data-[state=open]:animate-none data-[state=closed]:animate-none" : "w-full sm:max-w-2xl overflow-hidden flex flex-col p-0"}>
         {/* Header - tema laranja do Atendimento */}
         <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
           <div className="flex items-center gap-3">
