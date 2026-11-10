@@ -30,6 +30,7 @@ interface CustomField {
 
 interface ContatoFormSheetProps {
   open: boolean;
+  centralizado?: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (customerId: string) => void;
   initialData?: {
@@ -39,7 +40,7 @@ interface ContatoFormSheetProps {
   };
 }
 
-export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }: ContatoFormSheetProps) {
+export function ContatoFormSheet({ centralizado = false, open, onOpenChange, onSuccess, initialData }: ContatoFormSheetProps) {
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("contato");
@@ -400,7 +401,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
+      <SheetContent side="right" overlayClassName={centralizado ? "z-[10000] bg-background/70" : undefined} className={centralizado ? "left-1/2 top-1/2 right-auto bottom-auto z-[10001] h-[min(780px,90dvh)] w-[calc(100%-24px)] max-w-2xl sm:max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border overflow-hidden flex flex-col p-0 data-[state=open]:animate-none data-[state=closed]:animate-none" : "w-full sm:max-w-2xl overflow-hidden flex flex-col p-0"}>
         <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">

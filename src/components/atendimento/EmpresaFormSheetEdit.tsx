@@ -24,12 +24,13 @@ import { ptBR } from "date-fns/locale";
 
 interface EmpresaFormSheetEditProps {
   open: boolean;
+  centralizado?: boolean;
   onOpenChange: (open: boolean) => void;
   empresaId: string;
   onSuccess?: () => void;
 }
 
-export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess }: EmpresaFormSheetEditProps) {
+export function EmpresaFormSheetEdit({ centralizado = false, open, onOpenChange, empresaId, onSuccess }: EmpresaFormSheetEditProps) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -359,7 +360,7 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
+      <SheetContent side="right" overlayClassName={centralizado ? "z-[10000] bg-background/70" : undefined} className={centralizado ? "left-1/2 top-1/2 right-auto bottom-auto z-[10001] h-[min(780px,90dvh)] w-[calc(100%-24px)] max-w-2xl sm:max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border overflow-hidden flex flex-col p-0 data-[state=open]:animate-none data-[state=closed]:animate-none" : "w-full sm:max-w-2xl overflow-hidden flex flex-col p-0"}>
         {/* Header - tema laranja do Atendimento */}
         <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
           <div className="flex items-center gap-3">

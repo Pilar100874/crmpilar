@@ -62,6 +62,7 @@ import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager"
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
+import { correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
@@ -557,6 +558,22 @@ export default function Atendimento() {
 
   // Global client filter
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
+  const [escopoEmpresaFiltro, setEscopoEmpresaFiltro] = useState<EscopoEmpresa | null>(null);
+  useEffect(() => {
+    if (globalFilter?.type !== "empresa") { setEscopoEmpresaFiltro(null); return; }
+    let ativo = true;
+    const id = globalFilter.id;
+    void supabase.from("customer_empresas").select("customer_id, customers:customer_id(email)").eq("empresa_id", id)
+      .then(({ data, error }) => {
+        if (!ativo) return;
+        if (error) { toast.error("Não foi possível carregar os contatos da empresa"); return; }
+        setEscopoEmpresaFiltro({ id, contatos: new Set((data ?? []).map(r => r.customer_id)), emails: new Set([
+          ...(globalFilter.email ? [globalFilter.email.trim().toLowerCase()] : []),
+          ...(data ?? []).flatMap(r => r.customers?.email ? [r.customers.email.trim().toLowerCase()] : []),
+        ]) });
+      });
+    return () => { ativo = false; };
+  }, [globalFilter]);
 
   // Customer search/create dialogs
   const [showCustomerSearchForTask, setShowCustomerSearchForTaskState] = useState(false);
@@ -4032,18 +4049,9 @@ ${recentMessages}
       return { ...task, diasAtraso };
     });
     
-    // Apply global filter
-    if (globalFilter) {
-      tasks = tasks.filter((task) => {
-        if (globalFilter.type === 'customer') {
-          return task.contact_id === globalFilter.id;
-        }
-        // For empresa, we'd need to check if customer is linked to empresa
-        // This would require additional data - for now, filter by contact_name matching
-        return task.contact_name?.toLowerCase().includes(globalFilter.nome.toLowerCase());
-      });
-    }
-    
+    // Empresa é resolvida pelos vínculos salvos, nunca pelo nome do contato.
+    tasks = tasks.filter(task => correspondeFiltroContato(task.contact_id, task.customers?.email, globalFilter, escopoEmpresaFiltro));
+
     // Apply contact filters (OR logic - show tasks that match ANY active filter)
     const hasAnyContactFilter = agendaFilterPossuiTel || agendaFilterPossuiWhatsapp || agendaFilterPossuiEmail;
     
@@ -4094,7 +4102,7 @@ ${recentMessages}
     });
     
     return ordenarPendentesPrimeiro(tasks, (t: any) => t.contact_id, pendenciasAtendimento);
-  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
+  }, [todayTasks, globalFilter, escopoEmpresaFiltro, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
 
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
@@ -4812,7 +4820,10 @@ ${recentMessages}
       });
 
     // Qualquer ação num cartão deixa aquele contato como o selecionado da fila.
-    let comSelecao = lista.map((item) => {
+    const emailsDaFila = new Map(emailsRecebidosAgrupados.map(e => [`email-${e.id}`, e.from_email]));
+    const emailsDosContatos = new Map(contatosComIndicadores.map(c => [c.id, c.email]));
+    const listaFiltrada = lista.filter(item => correspondeFiltroContato(item.contactId, emailsDaFila.get(item.id) || emailsDosContatos.get(item.contactId || ""), globalFilter, escopoEmpresaFiltro));
+    let comSelecao = listaFiltrada.map((item) => {
       const marcar = () => {
         setSelecaoFila({ itemId: item.id, contactId: item.contactId ?? null });
         setContatoFinalizarId(item.contactId ?? null);
@@ -4854,7 +4865,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
+  }, [globalFilter, escopoEmpresaFiltro, contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -4929,6 +4940,11 @@ ${recentMessages}
     recebidosEmails: emailsRecebidosAgrupados.map((e: any) => e.from_email).filter(Boolean),
     potenciais: potenciais.map((p) => ({ id: p.clienteId, tipo: p.tipo, rotulo: ROTULO_TIPO[p.tipo], motivo: p.motivos.join("; ") || p.motivo, produto: p.produto })),
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciais]);
+
+  const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
+    <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+  </div>;
 
   // Versão mobile da Fila do dia: mesmo visual do desktop; ao tocar num card, abre o atendimento
   const filaItemsMobile = useMemo<FilaItem[]>(() =>
@@ -6357,6 +6373,8 @@ ${recentMessages}
                     setShowCustomerSearchForOrcamento(false);
                   }}
                   title="Puxar ou criar cadastro"
+                  onSelect={id => { const c = contatosBase.find(c => c.id === id); if (c) abrirItemContato(c); else { setSelectedTelContato({ id, nome: "Contato" } as any); setActiveTab("tel"); } }}
+                  onSaved={() => { void loadTodayTasks(); recarregarEnderecosVisita(); window.dispatchEvent(new CustomEvent(EVENTO_TAREFAS_ALTERADAS)); }}
                   description={
                     showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
                     showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :
@@ -6377,6 +6395,7 @@ ${recentMessages}
               <div className="flex-1 min-h-0 flex flex-col">
                 <FilaDoDia
                   items={filaItemsMobile}
+                  headerExtra={acoesContatos}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                                     discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
                   onPararDiscador={pararDiscador}
@@ -6957,40 +6976,11 @@ ${recentMessages}
       }`}>
         {showConversationsList && (
           <>
-            {/* Ações na barra superior ("Minha agenda") via portal */}
-            {barraSlot && createPortal(
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => {
-                        if (activeTab === "agenda") setShowCustomerSearchForTask(true);
-                        else if (activeTab === "chat") setShowCustomerSearchForChat(true);
-                        else if (activeTab === "email") setShowCustomerSearchForEmail(true);
-                        else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
-                      }}
-                      className="h-9 w-9 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-                    >
-                      <Plus className="h-4 w-4 text-primary" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Puxar ou criar cadastro</TooltipContent>
-                </Tooltip>
-                <GlobalClientFilter
-                  activeFilter={globalFilter}
-                  onFilterChange={setGlobalFilter}
-                  compact
-                />
-              </>,
-              barraSlot
-            )}
-
         {/* Fila do dia - lista unificada (visual da referência) */}
         <DispensarPotencialDialog alvo={dispensarAlvo} usuarioId={usuarioId || null} onClose={() => setDispensarAlvo(null)} />
         <FilaDoDia
           items={filaItems}
+          headerExtra={acoesContatos}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                             discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
@@ -7267,6 +7257,8 @@ ${recentMessages}
               setShowCustomerSearchForOrcamento(false);
             }}
             title="Puxar ou criar cadastro"
+            onSelect={id => { const c = contatosBase.find(c => c.id === id); if (c) abrirItemContato(c); else { void supabase.from("customers").select("id,nome,telefone,tel,email,customer_empresas(empresa_id,is_primary,empresas:empresa_id(id,nome,nome_fantasia))").eq("id", id).single().then(({ data }) => { if (data) abrirItemContato({ ...data, companies: data.customer_empresas }); }); } }}
+            onSaved={() => { void loadTodayTasks(); recarregarEnderecosVisita(); window.dispatchEvent(new CustomEvent(EVENTO_TAREFAS_ALTERADAS)); }}
             description={
               showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
               showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :

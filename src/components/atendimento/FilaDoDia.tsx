@@ -364,9 +364,10 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
       />
       {/* Cabeçalho */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <h2 className="text-lg font-bold text-foreground">Contatos</h2>
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <h2 className="text-base font-bold text-foreground">Contatos</h2>
+            {headerExtra}
             {botUsuario.botAtual && (
               <label
                 className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground"
@@ -382,7 +383,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               </label>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-0.5">
             <div
               className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-muted/40 p-0.5"
               data-tour="fila-navegacao"
@@ -391,7 +392,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 type="button"
                 onClick={abrirAnterior}
                 disabled={!podeVoltar}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                 aria-label="Cliente anterior"
                 title={podeVoltar ? "Cliente anterior (atalho: Alt + seta para cima)" : "Nenhum cliente aberto antes deste"}
               >
@@ -401,7 +402,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 type="button"
                 onClick={abrirProximo}
                 disabled={!podeAvancar}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
                 aria-label="Próximo cliente"
                 title={itemPorId(idAvancar) ? "Retoma o cliente seguinte do histórico (atalho: Alt + seta para baixo)" : "Abre o próximo cliente da fila (atalho: Alt + seta para baixo)"}
               >
@@ -523,7 +524,6 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                 {painelAberto ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
               </button>
             )}
-            {headerExtra}
           </div>
         </div>
 

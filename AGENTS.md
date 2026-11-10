@@ -35,3 +35,5 @@
 - Every Atendimento feature must have an entry (business rule, how-to steps, in-memory simulation) in src/lib/atendimento/catalogoAtendimento.ts; the attendant tutorial and the admin simulations both read only that catalog, so new features appear in both automatically.
 - Validate new quotes against fresh saved contact/company links through cadastroOrcamento before insert, including duplication and repeat-order entry points; reuse existing registration forms for missing data so stale screen data cannot bypass completeness checks.
 - Resolve Visit shortcut visibility through useEnderecosVisita and the shared possuiEnderecoVisita predicate; query saved linked-company addresses instead of relying on partial channel data, and refresh after registration saves.
+- Apply Atendimento queue entity filtering through the shared filtroContato predicate using saved company-contact links and exact sender emails; never infer membership from display names.
+- ListasPanel is a centered cadastro search dialog that reuses the existing full contact/company forms with opt-in centered positioning, rather than embedding administrative list pages.
