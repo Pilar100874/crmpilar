@@ -310,10 +310,51 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                   </label>
                 ))}
               </div>
-              {atual.modos?.includes("ligar") && (
-                <CamposAgenteEditor campos={lerCampos(atual.config)}
-                  onChange={(campos) => setAtual({ ...atual, config: { ...(atual.config ?? {}), campos } })} />
-              )}
+              {atual.modos?.includes("ligar") && (() => {
+                const c = lerConduta(atual.config);
+                const set = (p: Partial<CondutaAgente>) => setAtual({ ...atual, config: { ...(atual.config ?? {}), conduta: { ...c, ...p } } });
+                return (
+                  <div className="grid gap-3 rounded-md border p-3 md:col-span-2 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <Label>Conduta ao telefone</Label>
+                      <p className="text-xs text-muted-foreground">Regras fixas sempre valem: no máximo 2 frases por fala, pergunta simples, desliga em caixa postal e transfere ao primeiro interesse.</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Roteiro padrão no disparo</Label>
+                      <Select value={c.roteiroPadrao ?? "reposicao"} onValueChange={(v: any) => set({ roteiroPadrao: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{ROTEIROS.map((r) => <SelectItem key={r.id} value={r.id}>{r.rotulo}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tom de voz</Label>
+                      <Select value={c.tom ?? "cordial"} onValueChange={(v: any) => set({ tom: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cordial">Cordial</SelectItem>
+                          <SelectItem value="descontraido">Descontraído</SelectItem>
+                          <SelectItem value="formal">Formal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nome com que se apresenta</Label>
+                      <Input placeholder="ex.: Ana, da Pilar" value={c.nomeApresentacao ?? ""} onChange={(e) => set({ nomeApresentacao: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Encerrar após recusas</Label>
+                      <Select value={String(c.recusasParaEncerrar ?? 2)} onValueChange={(v) => set({ recusasParaEncerrar: Number(v) as 1 | 2 })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="1">Na 1ª recusa</SelectItem><SelectItem value="2">Na 2ª recusa</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                    <label className="flex items-start gap-2 text-sm md:col-span-2">
+                      <Switch checked={c.tratarRecepcao !== false} onCheckedChange={(v) => set({ tratarRecepcao: v })} />
+                      <span><span className="block">Pedir à recepção para falar com o comprador</span><span className="block text-xs text-muted-foreground">Desligado: só pergunta o melhor horário e encerra.</span></span>
+                    </label>
+                  </div>
+                );
+              })()}
               <div className="space-y-1">
                 <Label>Qualidade da voz</Label>
                 <Select value={atual.qualidade} onValueChange={(v: any) => setAtual({ ...atual, qualidade: v })}>
