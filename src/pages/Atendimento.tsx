@@ -7113,7 +7113,17 @@ ${recentMessages}
             open={showNovoContatoDialog}
             onOpenChange={setShowNovoContatoDialog}
           />
-          <ComposeEmailDialog
+          <MotivoPerdaDialog
+        orcamentoId={perdaOrcamento?.id ?? null}
+        etapaAnterior={perdaOrcamento?.etapa}
+        onOpenChange={(o) => { if (!o) setPerdaOrcamento(null); }}
+        onSalvo={(id, motivo) => {
+          setOrcamentos((prev) => prev.map((o: any) => (o.id === id ? { ...o, etapa: "perdido", motivo_perda: motivo } : o)));
+          setPerdaOrcamento(null);
+          window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
+        }}
+      />
+      <ComposeEmailDialog
             open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
             onOpenChange={(open) => {
               if (!open && keepComposeEmailOpen) return;
