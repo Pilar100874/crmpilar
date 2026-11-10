@@ -279,14 +279,14 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">ENTÃO</span>
                   <div className="space-y-1">
-                    <Select value={c.acao} onValueChange={(v) => setC({ acao: v as typeof c.acao, ...(v === "ir_etapa" && c.etapa == null ? { etapa: Math.min(i + 1, e2.length - 1) } : {}) })}>
+                    <Select value={c.acao} onValueChange={(v) => setC({ acao: v as typeof c.acao, ...(v === "ir_etapa" && c.etapa == null ? { etapa: Math.min(i + 1, atual.etapas.length - 1) } : {}) })}>
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>{ACOES.map((a) => <SelectItem key={a.id} value={a.id}>{a.rotulo}</SelectItem>)}</SelectContent>
                     </Select>
                     {c.acao === "ir_etapa" && (
                       <Select value={c.etapa != null ? String(c.etapa) : ""} onValueChange={(v) => setC({ etapa: Number(v) })}>
                         <SelectTrigger className="h-8"><SelectValue placeholder="Escolha a etapa de destino" /></SelectTrigger>
-                        <SelectContent>{e2.map((x, z) => <SelectItem key={z} value={String(z)} disabled={z === i}>Etapa {z + 1}{x.titulo.trim() ? ` · ${x.titulo.trim()}` : ""}</SelectItem>)}</SelectContent>
+                        <SelectContent>{atual.etapas.map((x, z) => <SelectItem key={z} value={String(z)} disabled={z === i}>Etapa {z + 1}{x.titulo.trim() ? ` · ${x.titulo.trim()}` : ""}</SelectItem>)}</SelectContent>
                       </Select>
                     )}
                     <Input className="h-8" value={c.texto ?? ""} onChange={(x) => setC({ texto: x.target.value })} placeholder={c.acao === "responder" ? "O que responder" : "Complemento (opcional)"} />
