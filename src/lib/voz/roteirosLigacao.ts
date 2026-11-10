@@ -141,3 +141,68 @@ export function regrasConduta(c: CondutaAgente): string {
   if (c.recusasParaEncerrar === 1) p.push("Na primeira recusa clara, agradeça e inclua [DESLIGAR].");
   return `CONDUTA: ${p.join(" ")}`;
 }
+
+/* ---------------- Departamentos e roteiro inteligente por cliente ---------------- */
+
+/** Departamento do agente de ligações (voz_agentes.config.departamento). */
+export type Departamento = "comercial" | "financeiro";
+export const DEPARTAMENTOS: { id: Departamento; rotulo: string; desc: string; roteiros: RoteiroId[] }[] = [
+  { id: "comercial", rotulo: "Comercial", desc: "Reposição, orçamentos, reativação e promoções.",
+    roteiros: ["reposicao", "orcamento_aberto", "reativacao", "produto_foco"] },
+  { id: "financeiro", rotulo: "Financeiro", desc: "Lembretes de vencimento e pendências, em tom discreto.",
+    roteiros: ["lembrete_financeiro"] },
+];
+export function lerDepartamento(config: unknown): Departamento {
+  const d = (config as { departamento?: string } | null)?.departamento;
+  return d === "financeiro" ? "financeiro" : "comercial";
+}
+export const roteirosDoDepartamento = (d: Departamento) =>
+  ROTEIROS.filter((r) => DEPARTAMENTOS.find((x) => x.id === d)!.roteiros.includes(r.id));
+
+const DIA_MS = 86_400_000;
+const ETAPAS_ABERTAS_VOZ = ["orcamento", "negociacao", "aprovacao_gerencia"];
+
+/** Orçamento resumido usado para decidir o roteiro de cada cliente. */
+export interface OrcCliente { etapa: string; criado: string }
+/** Resultado da escolha: roteiro aplicado ou null quando o cliente não deve receber a ligação. */
+export interface EscolhaRoteiro { roteiro: RoteiroId | "apresentacao"; motivo: string }
+
+/**
+ * Decide o roteiro do cliente pelo CRM, antes de discar (modo inteligente, Comercial).
+ * Ordem: orçamento aberto há mais de 3 dias → reposição (ciclo vencido) →
+ * reativação (mais de 60 dias sem comprar) → apresentação (sem histórico).
+ * Nunca escolhe "orçamento aberto" para quem não tem orçamento aberto. Pura: testável.
+ */
+export function roteiroDoCliente(orcs: OrcCliente[], hoje: number): EscolhaRoteiro {
+  const abertos = orcs.filter((o) => ETAPAS_ABERTAS_VOZ.includes(o.etapa) && hoje - Date.parse(o.criado) > 3 * DIA_MS);
+  if (abertos.length) {
+    const dias = Math.floor((hoje - Math.max(...abertos.map((o) => Date.parse(o.criado)))) / DIA_MS);
+    return { roteiro: "orcamento_aberto", motivo: `Orçamento aberto há ${dias} dias` };
+  }
+  const compras = orcs.filter((o) => o.etapa === "finalizado").map((o) => Date.parse(o.criado)).filter(Number.isFinite).sort((a, b) => a - b);
+  if (!compras.length) return { roteiro: "apresentacao", motivo: "Sem compras registradas" };
+  const dias = Math.floor((hoje - compras[compras.length - 1]) / DIA_MS);
+  if (dias > 60) return { roteiro: "reativacao", motivo: `Sem comprar há ${dias} dias` };
+  const ciclo = compras.length > 1 ? (compras[compras.length - 1] - compras[0]) / (compras.length - 1) / DIA_MS : null;
+  if (ciclo && dias >= ciclo - 5) return { roteiro: "reposicao", motivo: `Último pedido há ${dias} dias (ciclo ~${Math.round(ciclo)})` };
+  return { roteiro: "reposicao", motivo: `Cliente ativo, último pedido há ${dias} dias` };
+}
+
+const ETAPAS_APRESENTACAO = [
+  "Apresente a empresa em uma frase.",
+  "Pergunte quem cuida das compras e se pode enviar uma cotação.",
+  "Com interesse, transfira para o atendente.",
+];
+
+/** Roteiro individual do cliente, anexado ao comando da ligação (modo inteligente). */
+export function objetivoDoCliente(e: EscolhaRoteiro, d: DadosRoteiro): string {
+  const base = e.roteiro === "apresentacao"
+    ? `ROTEIRO: Apresentação. Siga as etapas, uma por fala: ${ETAPAS_APRESENTACAO.map((x, i) => `${i + 1}) ${x}`).join(" ")}`
+    : montarObjetivoRoteiro(e.roteiro, d);
+  return `ROTEIRO DESTE CLIENTE (escolhido pelo CRM: ${e.motivo}). ${base}`;
+}
+
+export const rotuloEscolha = (e: EscolhaRoteiro) => e.roteiro === "apresentacao" ? "Apresentação" : roteiroPorId(e.roteiro).rotulo;
+
+/** Configuração da campanha no modo inteligente, lida ao iniciar as ligações. */
+export const campanhaInteligente: { ativo: boolean; dados: DadosRoteiro } = { ativo: false, dados: {} };
