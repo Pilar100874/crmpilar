@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { carregarResponsaveis, listarUsuarios, registrarRecado, type Responsavel, type UrgenciaRecado } from "@/lib/atendimento/recadoResponsavel";
+import { carregarResponsaveis, listarUsuarios, registrarRecado, selecaoResponsavelRecado, type Responsavel, type UrgenciaRecado } from "@/lib/atendimento/recadoResponsavel";
+import { getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; contatoId: string; contatoNome: string; embedded?: boolean; onSelecionar?: (id: string, nome: string) => void; onCadastrar?: () => void }
 
@@ -18,21 +19,29 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
   const [recado, setRecado] = useState("");
   const [urgencia, setUrgencia] = useState<UrgenciaRecado>("urgente");
   const [salvando, setSalvando] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [erroSelecao, setErroSelecao] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     let ativo = true;
-    void Promise.all([contatoId ? carregarResponsaveis(contatoId) : Promise.resolve([]), listarUsuarios()]).then(([r, todos]) => {
+    setCarregando(true); setResponsavelId(""); setBloqueado(false); setErroSelecao(false);
+    void Promise.all([contatoId ? carregarResponsaveis(contatoId) : Promise.resolve([]), listarUsuarios(), getUserIdFromAuth()]).then(([r, todos, usuarioId]) => {
       if (!ativo) return;
+      if (!usuarioId) throw new Error("Usuário não identificado");
+      const selecao = selecaoResponsavelRecado(r, usuarioId);
+      setBloqueado(selecao.bloqueado);
       setResponsaveis(r);
       const ids = new Set(r.map(x => x.id));
       setOutros(todos.filter(u => !ids.has(u.id)));
-      setResponsavelId(r[0]?.id ?? "");
-    }).catch(() => toast.error("Não foi possível carregar os usuários"));
+      setResponsavelId(selecao.responsavelId);
+    }).catch(() => { if (ativo) { setErroSelecao(true); toast.error("Não foi possível conferir os responsáveis do cliente"); } }).finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
   }, [open, contatoId]);
 
   const salvar = async () => {
+    if (bloqueado || carregando || erroSelecao) return;
     setSalvando(true);
     try {
       await registrarRecado({ contatoId, contatoNome, responsavelId, recado, urgencia });
@@ -61,7 +70,10 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
           }} /><Button variant="outline" size="icon" title="Cadastrar cliente" aria-label="Cadastrar cliente" onClick={onCadastrar}><UserPlus className="h-4 w-4" /></Button></div></div>}
           <div className="space-y-1">
             <Label>Enviar para</Label>
-            <Select value={responsavelId} onValueChange={setResponsavelId}>
+            {bloqueado && <p role="alert" className="text-sm text-destructive">Este cliente está vinculado a você. Não é permitido encaminhar recado para sua própria carteira.</p>}
+            {carregando && contatoId && <p role="status" className="text-xs text-muted-foreground">Conferindo responsável…</p>}
+            {erroSelecao && <p role="alert" className="text-sm text-destructive">Não foi possível conferir o responsável. Selecione o cliente novamente.</p>}
+            <Select value={responsavelId} onValueChange={setResponsavelId} disabled={bloqueado || carregando || erroSelecao}>
               <SelectTrigger><SelectValue placeholder="Escolha quem deve retornar" /></SelectTrigger>
               <SelectContent>
                 {responsaveis.map(u => <SelectItem key={u.id} value={u.id}>{u.nome} (responsável)</SelectItem>)}
@@ -83,7 +95,7 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={salvar} disabled={salvando || !contatoId || !recado.trim() || !responsavelId}>{salvando ? "Enviando..." : "Enviar recado"}</Button>
+          <Button onClick={salvar} disabled={salvando || bloqueado || carregando || erroSelecao || !contatoId || !recado.trim() || !responsavelId}>{salvando ? "Enviando..." : "Enviar recado"}</Button>
         </DialogFooter>
   </>;
   if (embedded) return <section data-recado-central className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6"><div className="mb-4 flex justify-end"><Button variant="ghost" size="icon" aria-label="Fechar recado" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button></div><div className="mx-auto w-full max-w-xl space-y-5">{conteudo}</div></section>;
