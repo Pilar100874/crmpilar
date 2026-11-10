@@ -1,4 +1,7 @@
 # Roadmap — Atendimento
+- [ ] Ajustar janela de puxar/criar cadastro no Atendimento
+- [ ] Corrigir filtro por contato/empresa em todas as abas da fila
+- [ ] Colocar filtro e criação ao lado do título Contatos
 - [x] Ocultar menu Visita nos cartões e cabeçalho até existir endereço na empresa vinculada
 - [x] Bloquear novos orçamentos sem empresa e contato completos e abrir cadastro para correção
 - [x] Copiloto de respostas (3 sugestões no chat)
