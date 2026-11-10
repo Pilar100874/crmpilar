@@ -129,12 +129,6 @@ export function CabecalhoClienteAtendimento({ cliente, abaAtiva, onTrocarCanal, 
             <CalendarDays className="h-4 w-4 text-primary" />
           </button>
         )}
-        {onRecado && cliente.id && (
-          <button type="button" onClick={onRecado} title="Anotar recado para o responsável" aria-label="Anotar recado para o responsável"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:border-primary/40">
-            <StickyNote className="h-4 w-4 text-warning" />
-          </button>
-        )}
         {canais.map((c) => {
           const Icon = c.icon;
           const ativo = !historicoAtivo && !tarefaAtiva && !agendaAtiva && abaAtiva === c.aba;
