@@ -94,10 +94,11 @@ async function contextoCrm(sb: SB, empresa: string, numero: string, opts = { his
 }
 
 /** Resumo para o atendente que recebe a transferência saber como continuar. */
-async function resumir(falas: { papel: string; texto: string }[], objetivo: string | null): Promise<string | null> {
+async function resumir(falas: { papel: string; texto: string }[], objetivo: string | null, instrucoes?: string): Promise<string | null> {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
   const conversa = falas.map((f) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n").slice(0, 8000);
+  const instructions = instrucoes ?? "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.";
   const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
     headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
@@ -106,7 +107,7 @@ async function resumir(falas: { papel: string; texto: string }[], objetivo: stri
       stream: true,
       store: false,
       reasoning: { effort: "low" },
-      instructions: "Você resume ligações em português para o atendente humano que vai assumir a ligação agora. Seja direto, em tópicos curtos: **Quem é / o que quer**, **O que já foi dito**, **Objeções ou dúvidas**, **Como continuar** (1-2 frases sugeridas). Não invente dados. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.",
+      instructions,
       input: `${objetivo ? `Objetivo da ligação: ${objetivo.slice(0, 500)}\n\n` : ""}Conversa:\n${conversa}`,
     }),
   });
@@ -260,7 +261,7 @@ Deno.serve(async (req) => {
           }
           if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
           // Ligação de vendas: contexto enxuto para a IA não citar históricos antigos.
-          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o produto e o gancho; cite no máximo um produto e nunca leia a lista.";
+          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o gancho. NUNCA cite itens, produtos, quantidades ou valores de orçamentos (podem ser muitos e de vários orçamentos): fale só \"a proposta que nossa equipe enviou\". Nunca leia listas.";
         }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",
@@ -318,6 +319,10 @@ Deno.serve(async (req) => {
           finalizada_em: new Date().toISOString(),
           duracao_seg: Math.round((Date.now() - new Date(c.iniciada_em as string).getTime()) / 1000),
         }).eq("id", c.id);
+        // Reagendamento: se o cliente pediu retorno, cria a tarefa na agenda de quem disparou.
+        if (!transferido && cc?.modo === "ligar" && falas.some((f) => f.papel === "cliente")) {
+          try { await reagendar(sb, empresa, c.id, falas, cc?.objetivo ?? null); } catch (e) { console.error("reagendar", e); }
+        }
         return json({ ok: true });
       }
       case "comandos": {
