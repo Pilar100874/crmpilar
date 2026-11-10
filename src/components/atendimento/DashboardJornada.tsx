@@ -20,6 +20,7 @@ export default function DashboardJornada({ equipe = false, onClose }: { equipe?:
   const [mensal, setMensal] = useState(false);
   const [aba, setAba] = useState(equipe ? "equipe" : "evolucao");
   const [erro, setErro] = useState(""); const [carregando, setCarregando] = useState(true); const [versao, setVersao] = useState(0);
+  const periodoValido = !!inicio && !!fim && inicio <= fim && (new Date(fim).getTime() - new Date(inicio).getTime()) / 86400000 <= 366;
   useEffect(() => {
     let ativo = true;
     if (!inicio || !fim || inicio > fim || (new Date(fim).getTime() - new Date(inicio).getTime()) / 86400000 > 366) { setErro("Escolha um período válido de até um ano."); setCarregando(false); return; }
@@ -38,11 +39,11 @@ export default function DashboardJornada({ equipe = false, onClose }: { equipe?:
   useEffect(() => { const t = window.setInterval(() => setVersao(v => v + 1), 60000); return () => clearInterval(t); }, []);
   const filtrado = equipe ? usuario : dados?.usuario_id || "todos";
   const diarios = dados?.diarios || [];
-  const anterior = inicio && fim && inicio <= fim ? periodoAnterior(inicio, fim) : { inicio: "", fim: "" };
+  const anterior = periodoValido ? periodoAnterior(inicio, fim) : { inicio: "", fim: "" };
   const total = (m: string, u = filtrado) => totalJornada(diarios, m, inicio, fim, u);
   const variacao = (m: string) => { const v = variacaoJornada(total(m), totalJornada(diarios,m,anterior.inicio,anterior.fim,filtrado)); return v === null ? "Sem base anterior" : `${v > 0 ? "+" : ""}${v.toFixed(1)}% no período`; };
   const pendencias = dados?.pendencias.filter(p => filtrado === "todos" || p.usuario_id === filtrado) || [];
-  const serie = useMemo(() => !inicio || !fim || inicio > fim ? [] : serieJornada(diarios,metrica,inicio,fim,filtrado,mensal), [dados,metrica,inicio,fim,filtrado,mensal]);
+  const serie = useMemo(() => !periodoValido ? [] : serieJornada(diarios,metrica,inicio,fim,filtrado,mensal), [dados,metrica,inicio,fim,filtrado,mensal,periodoValido]);
   const usuarios = dados?.usuarios.filter(u => filtrado === "todos" || u.id === filtrado) || [];
   const resumo = [
     { id:"atendimentos",nome:"Atendimentos finalizados",icon:Activity,tom:"text-primary" },

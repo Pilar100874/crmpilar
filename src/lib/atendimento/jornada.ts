@@ -11,7 +11,7 @@ export interface DadosJornada {
 export const METRICAS_JORNADA = [
   { id: "atendimentos", nome: "Atendimentos finalizados", grupo: "Atendimento" },
   { id: "ligacoes_atendidas", nome: "Ligações atendidas", grupo: "Telefonia" },
-  { id: "ligacoes_realizadas", nome: "Ligações realizadas", grupo: "Telefonia" },
+  { id: "ligacoes_realizadas", nome: "Tentativas de ligação", grupo: "Telefonia" },
   { id: "atendimento_telefone", nome: "Atendimentos por telefone", grupo: "Telefonia" },
   { id: "whatsapp_registrados", nome: "Mensagens WhatsApp registradas", grupo: "WhatsApp" },
   { id: "atendimento_whatsapp", nome: "Atendimentos WhatsApp", grupo: "WhatsApp" },
