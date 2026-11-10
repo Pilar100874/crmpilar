@@ -6251,7 +6251,7 @@ ${recentMessages}
       {isMobile ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
 
-          {mobileView === "main" && clienteCabecalho && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
+          {mobileView === "main" && clienteCabecalho && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <div className="shrink-0 border-b border-border bg-card px-2 py-1">
               <div className="flex items-center justify-center gap-1 overflow-x-auto">
                 <CabecalhoClienteAtendimento
@@ -7126,7 +7126,7 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div ref={quadroCentralRef} data-quadro-central style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento ? "cabecalho-cliente-ativo" : ""}`}>
+      <div ref={quadroCentralRef} data-quadro-central style={{ ["--barra-proximo" as any]: contatoPendenteBarra ? `${ALTURA_BARRA_PROXIMO}px` : "0px", paddingBottom: contatoPendenteBarra ? ALTURA_BARRA_PROXIMO : undefined }} className={`relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border ${clienteCabecalho && !isMobile && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento ? "cabecalho-cliente-ativo" : ""}`}>
         {contatoPendenteBarra && usuarioId && estabelecimentoId && (
           <BarraProximoContato
             contato={contatoPendenteBarra}
@@ -7139,7 +7139,7 @@ ${recentMessages}
             onFinalizado={() => { void loadTodayTasks(); }}
           />
         )}
-        {clienteCabecalho && !isMobile && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && (
+        {clienteCabecalho && !isMobile && !jornadaAberta && !recadoContato && !showCustomerSearchForTask && !showCustomerSearchForChat && !showCustomerSearchForEmail && !showCustomerSearchForOrcamento && (
           <div ref={cabecalhoRef} data-cabecalho-cliente>
           <CabecalhoClienteAtendimento
             cliente={clienteCabecalho}
