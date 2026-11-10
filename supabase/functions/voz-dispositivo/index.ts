@@ -346,10 +346,16 @@ Deno.serve(async (req) => {
         if (!c) return json({ error: "chamada não encontrada" }, 404);
         const em = new Date().toISOString();
         const texto = String(corpo.texto ?? "").slice(0, 2000);
-        const upd = acao === "fala"
-          ? { transcricao: [...(c.transcricao as unknown[] ?? []), { papel: corpo.papel === "agente" ? "agente" : "cliente", texto, em }] }
-          : { sugestoes: [...(c.sugestoes as unknown[] ?? []), { texto, em }] };
-        await sb.from("voz_chamadas").update(upd).eq("id", c.id);
+        const campo = acao === "fala" ? "transcricao" : "sugestoes";
+        const item = acao === "fala" ? { papel: corpo.papel === "agente" ? "agente" : "cliente", texto, em } : { texto, em };
+        // Falas do cliente e da IA chegam quase juntas: relê e confere, para uma não apagar a outra.
+        for (let t = 0; t < 4; t++) {
+          const atual = (await sb.from("voz_chamadas").select(campo).eq("id", c.id).maybeSingle()).data as Record<string, unknown> | null;
+          const lista = (atual?.[campo] as { em?: string; texto?: string }[] | null) ?? [];
+          if (lista.some((x) => x.em === em && x.texto === texto)) break;
+          await sb.from("voz_chamadas").update({ [campo]: [...lista, item].sort((a, b) => String(a.em).localeCompare(String(b.em))) }).eq("id", c.id);
+          await new Promise((r) => setTimeout(r, 150 + Math.random() * 250));
+        }
         return json({ ok: true });
       }
       case "finalizar": {
