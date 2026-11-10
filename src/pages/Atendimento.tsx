@@ -84,6 +84,7 @@ import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendime
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { useRegistrosContato } from "@/hooks/useRegistrosContato";
+import { carregarCadastroOrcamento, pendenciasOrcamento } from "@/lib/atendimento/cadastroOrcamento";
 import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa, type RegistrosContato } from "@/lib/atendimento/registrosContato";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
@@ -2601,7 +2602,38 @@ export default function Atendimento() {
   }, [orcamentoSheetOpen]);
 
   // Criar orçamento a partir de um contato selecionado
+  const orcamentoPendenteCadastroRef = useRef<{ type: 'customer' | 'empresa'; data: any } | null>(null);
+  const exigirCadastroOrcamento = async (contatoId?: string | null, empresaId?: string | null, retomar?: { type: 'customer' | 'empresa'; data: any }) => {
+    try {
+      const cadastro = await carregarCadastroOrcamento(contatoId, empresaId);
+      const faltas = pendenciasOrcamento(cadastro);
+      if (!faltas.length) return true;
+      orcamentoPendenteCadastroRef.current = retomar || null;
+      toast.error("Complete o cadastro antes de criar o orçamento", { description: `Falta: ${faltas.join(", ")}.` });
+      if (!cadastro.contato) {
+        setCreatingContatoInitialData(null);
+        setCreatingContato(true);
+      } else if (cadastro.empresa && faltas.length === 1 && faltas[0] === "CNPJ/CPF da empresa") {
+        setEditingEmpresaId(cadastro.empresa.id);
+      } else {
+        setEditingContatoId(cadastro.contato.id);
+      }
+      return false;
+    } catch (error) {
+      console.error("Erro ao validar cadastro do orçamento:", error);
+      toast.error("Não foi possível conferir o cadastro do cliente");
+      return false;
+    }
+  };
+  const retomarOrcamentoAposCadastro = () => {
+    const pendente = orcamentoPendenteCadastroRef.current;
+    orcamentoPendenteCadastroRef.current = null;
+    if (pendente) window.setTimeout(() => void handleCreateOrcamentoFromContact(pendente.type, pendente.data), 300);
+  };
+
   const handleCreateOrcamentoFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    const liberado = await exigirCadastroOrcamento(type === 'customer' ? data.id : null, type === 'empresa' ? data.id : data.empresa_id, { type, data });
+    if (!liberado) return;
     setOrcamentoSheetOpen(false);
     setSelectedOrcamentoId(null);
     if (type === 'empresa') {
@@ -4527,7 +4559,8 @@ ${recentMessages}
           } : undefined,
           menuItems: [
             { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
-            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: () => {
+            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: async () => {
+              if (!(await exigirCadastroOrcamento(contato.id, null))) return;
               void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
                 if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
                 toast.success("Orçamento criado com os itens do último pedido");
@@ -8065,6 +8098,7 @@ ${recentMessages}
         }}
         onSuccess={() => {
           setCreatingContato(false);
+          retomarOrcamentoAposCadastro();
           setCreatingContatoInitialData(null);
           if (activeTab === "agenda") loadTodayTasks();
           else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
@@ -8075,10 +8109,11 @@ ${recentMessages}
 
       <ContatoFormSheetEdit
         open={!!editingContatoId}
-        onOpenChange={(open) => !open && setEditingContatoId(null)}
+        onOpenChange={(open) => { if (!open) { setEditingContatoId(null); window.setTimeout(() => { orcamentoPendenteCadastroRef.current = null; }, 500); } }}
         customerId={editingContatoId || ""}
         onSuccess={() => {
           setEditingContatoId(null);
+          retomarOrcamentoAposCadastro();
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
           else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
@@ -8113,6 +8148,7 @@ ${recentMessages}
         empresaId={editingEmpresaId || ""}
         onSuccess={() => {
           setEditingEmpresaId(null);
+          retomarOrcamentoAposCadastro();
           setEditingCustomerEmpresaId(null);
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
@@ -8163,6 +8199,7 @@ ${recentMessages}
             showPanelToggle={!showConversationsList}
             onTogglePanel={() => setShowConversationsList(true)}
             initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
+            validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
           />
         </div>
       ) : null}
@@ -9379,6 +9416,7 @@ function MobileMainContent({
           showPanelToggle={false}
           onTogglePanel={() => {}}
           initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
+            validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
         />
       </div>
     );

@@ -99,6 +99,8 @@ interface POSViewProps {
   showPanelToggle?: boolean;
   onTogglePanel?: () => void;
   initialEmpresaId?: string | null;
+  /** Confere o cadastro antes de criar orçamento novo; pode abrir o formulário para completar. */
+  validarCadastro?: (contatoId: string, empresaId: string) => Promise<boolean>;
 }
 
 export default function POSView({ 
@@ -111,7 +113,8 @@ export default function POSView({
   onToggleClientDetails,
   showPanelToggle = false,
   onTogglePanel,
-  initialEmpresaId
+  initialEmpresaId,
+  validarCadastro
 }: POSViewProps) {
   const isMobile = useIsMobile();
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -971,6 +974,8 @@ export default function POSView({
       toast.error('Adicione itens ao carrinho');
       return;
     }
+
+    if (validarCadastro && !(await validarCadastro(selectedCliente, selectedEmpresa))) return;
 
     setLoading(true);
     try {
