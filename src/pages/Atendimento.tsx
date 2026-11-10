@@ -67,6 +67,7 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
+import { PainelAtendimentoHeader } from "@/components/atendimento/PainelAtendimentoHeader";
 import { recadoDoEscopo, recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
@@ -6289,13 +6290,7 @@ ${recentMessages}
           <div className="flex-1 overflow-hidden relative">
             {historicoCliente && estabelecimentoId && (
               <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
-                <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">Histórico do cliente</p>
-                    <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
-                  </div>
-
-                </div>
+                <PainelAtendimentoHeader title="Histórico do cliente" subtitle={historicoCliente.nome || "Cliente"} icon={Clock} onClose={() => setHistoricoCliente(null)} />
                 <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
                   <CustomerHistoryTimeline
                     contactId={historicoCliente.customerId}
@@ -6330,13 +6325,7 @@ ${recentMessages}
 
             {orcamentosCliente && (
               <div data-painel-centro className="absolute inset-0 z-40 flex flex-col bg-background">
-                <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">Orçamentos do cliente</p>
-                    <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
-                  </div>
-
-                </div>
+                <PainelAtendimentoHeader title="Orçamentos do cliente" subtitle={orcamentosCliente.nome} icon={Receipt} onClose={() => setOrcamentosCliente(null)} />
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   <OrcamentosEmpresaList
                     modo="direto"
@@ -7213,18 +7202,12 @@ ${recentMessages}
           const empresaId = orcamentos.find((o: any) => o.cliente_id === orcamentosCliente.id)?.empresa_id || null;
           return (
             <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
-              <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">Orçamentos do cliente</p>
-                  <p className="truncate text-xs text-muted-foreground">{orcamentosCliente.nome}</p>
-                </div>
-                <div className="flex items-center gap-2">
+              <PainelAtendimentoHeader title="Orçamentos do cliente" subtitle={orcamentosCliente.nome} icon={Receipt} onClose={() => setOrcamentosCliente(null)} actions={
                   <Button size="sm" onClick={() => { const c = orcamentosCliente; setOrcamentosCliente(null); void handleCreateOrcamentoFromContact('customer', { id: c.id, nome: c.nome, empresa_id: empresaId }); listaOrcamentosRef.current = c; }}>
                     <Plus className="h-4 w-4 mr-1" /> Novo orçamento
                   </Button>
 
-                </div>
-              </div>
+              } />
               <div className="flex-1 min-h-0 overflow-y-auto p-2">
                 <OrcamentosEmpresaList
                   modo="direto"
@@ -7255,12 +7238,7 @@ ${recentMessages}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
           <div data-painel-centro style={{ top: clienteCabecalho && !isMobile ? alturaCabecalho : 0 }} className="absolute inset-x-0 bottom-[var(--barra-proximo,0px)] z-[110] flex flex-col bg-background">
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold">Histórico do cliente</p>
-                <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
-              </div>
-            </div>
+            <PainelAtendimentoHeader title="Histórico do cliente" subtitle={historicoCliente.nome || "Cliente"} icon={Clock} onClose={() => setHistoricoCliente(null)} />
             <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
               <CustomerHistoryTimeline
                 contactId={historicoCliente.customerId}
