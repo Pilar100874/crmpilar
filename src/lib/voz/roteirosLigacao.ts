@@ -53,7 +53,7 @@ export const ROTEIROS: Roteiro[] = [
     etapas: () => [
       "Diga que está ligando sobre o orçamento enviado (cite os itens principais dos Dados do CRM, sem ler valores).",
       "Pergunte se ele conseguiu analisar e se ficou alguma dúvida de preço, prazo ou pagamento.",
-      "Se houver dúvida ou interesse em fechar, transfira para o atendente.",
+      "Só depois que o cliente RESPONDER: se ele disser que tem dúvida ou quer fechar, transfira para o atendente; se disser que não analisou, pergunte quando pode retornar.",
     ],
   },
   {
@@ -210,7 +210,8 @@ export function regrasConversa(ramal: string): string {
     "Se ouvir caixa postal, mensagem de operadora ou ninguém responder, responda só [DESLIGAR].",
     "Fale valores como se fala (\"mil e quinhentos reais\"), sem ler códigos, CNPJ, números de pedido ou históricos antigos. Cite no máximo um produto por vez.",
     "Não invente preço, prazo, estoque ou condição que não esteja neste roteiro.",
-    `Ao primeiro sinal de interesse, pedido de preço/prazo/orçamento ou pedido para falar com alguém, diga em uma frase que vai passar para o atendente e inclua [TRANSFERIR] (ramal ${ramal}).`,
+    "O roteiro é um diálogo: faça uma etapa, PARE e espere o cliente responder antes da próxima. Nunca avance etapas sozinha nem responda pelo cliente.",
+    `Só transfira quando a ÚLTIMA fala do CLIENTE pedir algo explícito (quero fechar, qual o valor, tenho uma dúvida, quero falar com alguém, sim quero): então diga em uma frase que vai passar para o atendente e inclua [TRANSFERIR] (ramal ${ramal}). Nunca use [TRANSFERIR] na mesma fala em que faz uma pergunta, nem antes de o cliente responder ao roteiro.`,
     "Se o cliente pedir para ligar outro dia, confirme o dia e agradeça com [DESLIGAR]. Se recusar de forma clara duas vezes, agradeça e inclua [DESLIGAR].",
   ].join(" ");
 }
