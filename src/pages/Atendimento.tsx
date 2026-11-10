@@ -19,7 +19,7 @@ import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/com
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
 import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
 import { ehEmailAutomatico, emailIgnorado, telefoneIgnorado, extrairEmail, dominioDe, normalizarTelefone, type RemetenteIgnorado, type TipoIgnorado } from "@/lib/atendimento/remetentesIgnorados";
-import { classificarUrgencia, repetirUltimoPedido, termometroCarteira, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
+import { classificarUrgencia, termometroCarteira, SELO_CREDITO, salvarSituacaoCredito, type SituacaoCredito } from "@/lib/atendimento/copilotoAtendimento";
 import { carregarPotenciais, mensagemSugerida, ROTULO_TIPO, type Potencial } from "@/lib/atendimento/potenciais";
 import TelConversaPanel from "@/components/atendimento/TelConversaPanel";
 import { VisitaFormularioPanel } from "@/components/atendimento/VisitaFormularioPanel";
