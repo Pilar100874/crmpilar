@@ -66,7 +66,7 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
-import { recadoPendente, recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
+import { recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -4778,6 +4778,10 @@ ${recentMessages}
           if (isMobile) setMobileView("main");
         },
         onClick: () => {
+          if (recadoUrgentePendente(task) || task.origem_sub_item === 'recado_normal') {
+            window.dispatchEvent(new CustomEvent('calendario:abrir-data', { detail: { data: task.date, tarefaId: task.id, modo: 'day' } }));
+            return;
+          }
           setActiveTab("agenda");
           setSelectedTaskId(task.id);
           setSelectedTaskData(task);
