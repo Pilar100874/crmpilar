@@ -702,6 +702,24 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Tabela"
     }
   ],
+  "Pedidos Perdidos": [
+    {
+      "id": "marca",
+      "label": "Por marca"
+    },
+    {
+      "id": "produto",
+      "label": "Por produto"
+    },
+    {
+      "id": "concorrentes",
+      "label": "Concorrentes"
+    },
+    {
+      "id": "pedidos",
+      "label": "Pedidos"
+    }
+  ],
   "Config Notificacoes Sistema": [
     {
       "id": "cadastro-unidades",
