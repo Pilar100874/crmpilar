@@ -26,7 +26,7 @@ export function ConversationSummaryPanel({
   };
 
   return (
-    <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl overflow-hidden">
+    <Card className="max-h-[85dvh] min-h-0 flex flex-col bg-card shadow-2xl border-primary/20 rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-3 border-b border-primary/20 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
