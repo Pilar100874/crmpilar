@@ -1,4 +1,5 @@
 # Roadmap — Atendimento
+- [x] Preservar regras do módulo Empresas e vincular automaticamente cadastros ao criador
 - [x] Ajustar janela de puxar/criar cadastro no Atendimento
 - [x] Corrigir filtro por contato/empresa em todas as abas da fila
 - [x] Colocar filtro e criação ao lado do título Contatos

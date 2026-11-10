@@ -5,6 +5,7 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { correspondeFiltroContato } from "./filtroContato";
+import { usuariosComCriador } from "./vinculoCriador";
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
 import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGEM_REGUA, planejarRegua, proximoDaFila, registrarVisita, salvarSugestaoLigacao, SELO_CREDITO, termometroCarteira, vizinhoDoHistorico, HISTORICO_VAZIO, type HistoricoFila } from "./copilotoAtendimento";
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
@@ -61,13 +62,14 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     modulo: "Fila e organização",
     titulo: "Pesquisar cadastros e filtrar contatos",
     oQueE: "Ao lado de Contatos, os ícones abrem a pesquisa/criação de cadastros e o filtro por contato ou empresa.",
-    regraNegocio: "O filtro restringe os cartões de todas as abas ao contato selecionado ou aos contatos vinculados à empresa, sem alterar cadastros ou compromissos. Buscar ou criar cadastro abre uma janela central; os formulários completos preservam os vínculos existentes.",
+    regraNegocio: "O filtro restringe os cartões de todas as abas ao contato selecionado ou aos contatos vinculados à empresa, sem alterar cadastros ou compromissos. Buscar ou criar cadastro abre uma janela central. Criar empresa segue as regras do módulo Empresas: contato temporário automático, substituição pelo contato real e vínculo da empresa e seus contatos com quem criou. Criar contato também inclui automaticamente o criador, preservando outros responsáveis selecionados.",
     comoUsar: ["Clique no ícone de cadastro ao lado de Contatos para pesquisar um cadastro existente ou criar contato/empresa.", "Clique no resultado para abrir o contato, ou no lápis para editar o cadastro.", "Clique no filtro ao lado de Contatos, pesquise e selecione contato ou empresa.", "Troque de aba: o filtro permanece. Para restaurar a fila, abra o filtro e clique em Limpar."],
     alvo: "fila-cadastro-filtro",
     simular: () => [
       passo("Selecionar contato mostra apenas seus cartões", correspondeFiltroContato("ana", null, { type: "customer", id: "ana" }, null) && !correspondeFiltroContato("joao", null, { type: "customer", id: "ana" }, null)),
       passo("Empresa filtra por vínculo, não por nome", correspondeFiltroContato("ana", null, { type: "empresa", id: "empresa" }, { id: "empresa", contatos: new Set(["ana"]), emails: new Set() })),
       passo("Limpar restaura a fila", correspondeFiltroContato("joao", null, null, null)),
+      passo("Criador é vinculado mesmo sem seleção manual", usuariosComCriador("criador", []).includes("criador")),
     ],
   },
   {
