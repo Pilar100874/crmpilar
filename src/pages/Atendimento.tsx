@@ -494,7 +494,7 @@ export default function Atendimento() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [perdaOrcamento, setPerdaOrcamento] = useState<{ id: string; etapa?: string } | null>(null);
   const mudarEtapaOrcamento = async (orcamento: any, etapa: string) => {
-    if (etapa === "perdido") { setPerdaOrcamento({ id: orcamento.id, etapa: orcamento.etapa }); return; }
+    if (etapa === "perdido") { setTimeout(() => setPerdaOrcamento({ id: orcamento.id, etapa: orcamento.etapa }), 50); return; }
     const { error } = await supabase.from("orcamentos").update({ etapa } as any).eq("id", orcamento.id);
     if (error) { toast.error("Erro ao mudar o status do orçamento"); return; }
     setOrcamentos((prev) => prev.map((o: any) => (o.id === orcamento.id ? { ...o, etapa } : o)));
@@ -6318,10 +6318,11 @@ ${recentMessages}
           <MotivoPerdaDialog
         orcamentoId={perdaOrcamento?.id ?? null}
         etapaAnterior={perdaOrcamento?.etapa}
-        onOpenChange={(o) => { if (!o) setPerdaOrcamento(null); }}
+        onOpenChange={(o) => { if (!o) { setPerdaOrcamento(null); setTimeout(() => { document.body.style.pointerEvents = ""; }, 50); } }}
         onSalvo={(id, motivo) => {
           setOrcamentos((prev) => prev.map((o: any) => (o.id === id ? { ...o, etapa: "perdido", motivo_perda: motivo } : o)));
           setPerdaOrcamento(null);
+          setTimeout(() => { document.body.style.pointerEvents = ""; }, 50);
           window.dispatchEvent(new Event("atendimento:pedidos-abertos-alterados"));
         }}
       />
