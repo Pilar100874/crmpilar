@@ -61,10 +61,10 @@ export function StepComposeChamada({
     void (async () => {
       const est = await getEstabelecimentoId();
       const { data } = await (supabase as any).from("voz_agentes").select("id, nome, modos, config")
-        .eq("estabelecimento_id", est).eq("ativo", true);
+        .eq("estabelecimento_id", est).eq("ativo", true).order("created_at");
       const lista = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));
       setAgentes(lista);
-      if (!agenteIaId && lista[0]) onAgenteChange(lista[0].id, lista[0].nome);
+      if (lista[0] && agenteIaId !== lista[0].id) onAgenteChange(lista[0].id, lista[0].nome);
       const r = await meuRamal();
       if (r && !ramalIa) onRamalChange(r);
     })();
@@ -165,23 +165,11 @@ export function StepComposeChamada({
                 Nenhum agente com "Fazer ligações" ativo. Crie um em Configurações de atendimento → Agentes de voz.
               </p>
             ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {agentes.map((a) => {
-                  const ativo = agenteIaId === a.id;
-                  return (
-                    <button key={a.id} type="button" onClick={() => onAgenteChange(a.id, a.nome)}
-                      className={cn("flex items-center gap-2 rounded-xl border px-3 py-3 text-left transition-colors",
-                        ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
-                      <Bot className={cn("h-4 w-4 shrink-0", ativo ? "text-primary" : "text-muted-foreground")} />
-                      <span className="min-w-0">
-                        <span className="block truncate text-xs font-semibold text-foreground">{a.nome}</span>
-                        <span className="block text-[10px] text-muted-foreground">Faz ligações e transfere para você</span>
-                      </span>
-                      {ativo && <Check className="ml-auto h-4 w-4 shrink-0 text-primary" />}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-xs">
+                <Check className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0"><span className="font-semibold text-foreground">Ligando com {agentes[0].nome}</span>
+                  <span className="block text-[10px] text-muted-foreground">Agente único de ligações · faz a ligação e transfere para você</span></span>
+              </p>
             )}
           </Card>
 
