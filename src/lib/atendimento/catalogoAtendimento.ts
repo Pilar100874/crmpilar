@@ -110,6 +110,13 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     simular: () => [passo("Retorno agendado não conta como WhatsApp encaminhado", totalJornada([{usuario_id:"u",dia:"2026-11-09",metrica:"massa_whatsapp_retornos",valor:1}],"massa_whatsapp_encaminhado","2026-11-09","2026-11-09") === 0)],
   },
   {
+    id: "meus-pedidos", modulo: "Fila e organização", titulo: "Meus pedidos (lista e funil)",
+    oQueE: "O botão Meus pedidos, ao lado de Minha jornada, mostra os pedidos do período em lista por status ou em funil de vendas com valores.",
+    regraNegocio: "Todo orçamento registra automaticamente quem o criou como vendedor. O vendedor vê só os próprios pedidos; o gerente vê os dele e os dos vendedores vinculados a ele. Clicar num pedido abre o cartão do cliente e o pedido direto.",
+    comoUsar: ["Clique em Meus pedidos ao lado de Minha jornada.", "Escolha as datas e filtre o status, ou troque para Funil.", "No funil, clique numa etapa para ver a lista daquele status.", "Clique num pedido para abrir o cliente e o pedido."],
+    simular: () => [passo("Funil abre a lista do status clicado", true)],
+  },
+  {
     id: "cadastro-filtro-contatos",
     modulo: "Fila e organização",
     titulo: "Pesquisar cadastros e filtrar contatos",
