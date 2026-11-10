@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { montarObjetivoRoteiro, pendenciasRoteiro, regrasConversa } from "./roteirosLigacao";
-import { ROTEIROS, roteiroDeFabrica } from "./roteirosLigacao";
+import { ROTEIROS } from "./roteirosLigacao";
 
 describe("roteiros de ligação", () => {
   it("promoção exige produto", () => {
