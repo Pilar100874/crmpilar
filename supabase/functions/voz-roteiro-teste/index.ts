@@ -14,6 +14,13 @@ const SCH_TURNO = { type: "object", additionalProperties: false, required: ["res
   resposta: { type: "string" }, etapa: { type: "integer" }, regra: { type: ["string", "null"] },
   acao: { type: ["string", "null"], enum: ["transferir", "encerrar", null] } } };
 
+const COND = { type: "object", additionalProperties: false, required: ["gatilho", "acao", "texto"], properties: {
+  gatilho: { type: "string" }, acao: { type: "string", enum: ["responder", "desconto", "transferir", "encerrar", "avancar"] }, texto: { type: ["string", "null"] } } };
+const SCH_GERAR = { type: "object", additionalProperties: false, required: ["nome", "descricao", "departamento", "etapas"], properties: {
+  nome: { type: "string" }, descricao: { type: "string" }, departamento: { type: "string", enum: ["comercial", "financeiro"] },
+  etapas: { type: "array", items: { type: "object", additionalProperties: false, required: ["titulo", "fala", "condicoes"], properties: {
+    titulo: { type: "string" }, fala: { type: "string" }, condicoes: { type: "array", items: COND } } } } } };
+
 async function ia(key: string, system: string, user: string, nome: string, schema: unknown) {
   const r = await fetch(GW, {
     method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
@@ -44,6 +51,11 @@ Deno.serve(async (req) => {
       const r = await ia(key, `Você sugere como brasileiros respondem ao telefone. Devolva JSON {"variacoes": string[]} com até 12 respostas curtas (1 a 4 palavras), coloquiais, em minúsculas, com o MESMO sentido das respostas dadas, sem repetir as dadas. ${DIRETIVA}`,
         `Pergunta da IA: ${String(b.pergunta ?? "").slice(0, 300)}\nRespostas já cadastradas: ${String(b.gatilho ?? "").slice(0, 300)}`, "variacoes", SCH_SIN);
       return json({ variacoes: Array.isArray(r.variacoes) ? r.variacoes.map(String).slice(0, 12) : [] });
+    }
+    if (b.acao === "gerar") {
+      const r = await ia(key, `Você cria roteiros de ligação telefônica B2B em português do Brasil para um agente de voz com IA. Devolva JSON com nome, descricao, departamento e de 2 a 4 etapas. Cada fala: no máximo 25 palavras e UMA única pergunta. Use {produto}, {condicao}, {desconto} ou {aviso} quando a fala depender de dados da campanha. Cada etapa com pergunta precisa de regras: resposta positiva (acao avancar, ou transferir na última), resposta negativa (encerrar ou responder perguntando melhor dia e incluindo [DESLIGAR] no texto), "não respondeu ou ficou em silêncio" (responder: repita só a pergunta, se calar de novo inclua [DESLIGAR]) e dúvida/valor/prazo (transferir). Gatilhos: várias respostas coloquiais separadas por vírgula. Use "achou caro" com acao desconto só se houver desconto. texto null quando não precisar. ${DIRETIVA}`,
+        String(b.descricao ?? "").slice(0, 2000), "roteiro", SCH_GERAR);
+      return json({ roteiro: r });
     }
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-20)
       .map((f: { papel: string; texto: string }) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n");

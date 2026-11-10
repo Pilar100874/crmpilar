@@ -1,3 +1,4 @@
 - Voice call scripts are editable per company in voz_roteiros (factory key = edited version, custom_* = new); roteirosLigacao compiles steps + "Se X, faça Y" rules into the call objective, so the device protocol stays unchanged.
 - Interpret short replies against the last agent question and bound silence retries in the shared progressoVoz helper; never restart completed steps or infer an answer from silence.
 - Test voice scripts in-browser via voz-roteiro-teste and add misunderstood replies to step rules through the pure aprimorarRoteiro helpers, saving immediately, so call tests and real-call suggestions feed the same saved scripts.
+- Script quality score, escape-rule auto-fix, extra templates, AI-generated drafts and the conversation map come from the pure qualidadeRoteiro helpers; AI drafts and templates open in the editor unsaved, so nothing changes until the user saves.

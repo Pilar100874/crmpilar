@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Copy, GitBranch, Lightbulb, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Save, Sparkles, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
+import { CriarComIaDialog, DiagnosticoRoteiroCard, MapaConversa, ModelosProntosDialog } from "./AjudantesRoteiro";
 import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
 import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
 import { toast } from "sonner";
@@ -35,6 +36,9 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   const [atual, setAtual] = useState<RoteiroSalvo | null>(null);
   const [excluir, setExcluir] = useState(false);
   const [simulando, setSimulando] = useState<RoteiroSalvo | null>(null);
+  const [criarIa, setCriarIa] = useState(false);
+  const [modelos, setModelos] = useState(false);
+  const [visao, setVisao] = useState<"lista" | "mapa">("lista");
   const simulador = (
     <Dialog open={!!simulando} onOpenChange={(aberto) => { if (!aberto) setSimulando(null); }}>
       <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto">
@@ -129,8 +133,14 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
       {simulador}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Edite as falas e as regras "Se o cliente..., faça..." de cada roteiro, ou crie novos.</p>
-        <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => setModelos(true)}><Copy className="mr-1 h-4 w-4" /> Modelos prontos</Button>
+          <Button size="sm" variant="outline" onClick={() => setCriarIa(true)}><Sparkles className="mr-1 h-4 w-4" /> Criar com IA</Button>
+          <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
+        </div>
       </div>
+      <CriarComIaDialog aberto={criarIa} onFechar={() => setCriarIa(false)} onCriado={(r) => { setCriarIa(false); setVisao("lista"); setAtual(r); }} />
+      <ModelosProntosDialog aberto={modelos} onFechar={() => setModelos(false)} onEscolher={(r) => { setModelos(false); setVisao("lista"); setAtual(r); }} />
       {ajustes.length > 0 && (
         <Card className="space-y-2 p-3">
           <p className="flex items-center gap-1 text-sm font-semibold text-foreground"><Lightbulb className="h-4 w-4 text-primary" /> Ajustes sugeridos pelas ligações reais</p>
@@ -211,7 +221,15 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
         <label className="flex items-center gap-2 text-sm"><Switch checked={atual.ativo} onCheckedChange={(v) => set({ ativo: v })} /> Disponível no disparo</label>
       </Card>
 
-      {atual.etapas.map((e, i) => (
+      <DiagnosticoRoteiroCard roteiro={atual} onCorrigir={(r) => { setAtual(r); toast.success("Regras de escape adicionadas"); }} />
+      <Tabs value={visao} onValueChange={(v) => setVisao(v as "lista" | "mapa")}>
+        <TabsList className="grid w-full max-w-xs grid-cols-2">
+          <TabsTrigger value="lista">Etapas</TabsTrigger>
+          <TabsTrigger value="mapa"><GitBranch className="mr-1 h-4 w-4" /> Mapa da conversa</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {visao === "mapa" && <MapaConversa roteiro={atual} />}
+      {visao === "lista" && atual.etapas.map((e, i) => (
         <Card key={i} className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <Badge>{i + 1}</Badge>
@@ -275,7 +293,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
           </div>
         </Card>
       ))}
-      <Button variant="outline" onClick={() => set({ etapas: [...atual.etapas, { titulo: `Etapa ${atual.etapas.length + 1}`, fala: "", condicoes: [] }] })}><Plus className="mr-1 h-4 w-4" /> Etapa</Button>
+      {visao === "lista" && <Button variant="outline" onClick={() => set({ etapas: [...atual.etapas, { titulo: `Etapa ${atual.etapas.length + 1}`, fala: "", condicoes: [] }] })}><Plus className="mr-1 h-4 w-4" /> Etapa</Button>}
 
       <Card className="p-4">
         <p className="mb-1 text-xs font-semibold text-foreground">Como a IA vai receber</p>
