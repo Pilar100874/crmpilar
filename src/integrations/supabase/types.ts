@@ -31069,6 +31069,48 @@ export type Database = {
         }
         Relationships: []
       }
+      voz_roteiros: {
+        Row: {
+          ativo: boolean
+          campos: string[]
+          chave: string
+          created_at: string
+          departamento: string
+          descricao: string
+          estabelecimento_id: string
+          etapas: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          campos?: string[]
+          chave: string
+          created_at?: string
+          departamento?: string
+          descricao?: string
+          estabelecimento_id: string
+          etapas?: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          campos?: string[]
+          chave?: string
+          created_at?: string
+          departamento?: string
+          descricao?: string
+          estabelecimento_id?: string
+          etapas?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_chat_messages: {
         Row: {
           content: string

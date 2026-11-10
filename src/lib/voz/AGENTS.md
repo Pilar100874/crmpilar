@@ -1,0 +1,1 @@
+- Voice call scripts are editable per company in voz_roteiros (factory key = edited version, custom_* = new); roteirosLigacao compiles steps + "Se X, faça Y" rules into the call objective, so the device protocol stays unchanged.
