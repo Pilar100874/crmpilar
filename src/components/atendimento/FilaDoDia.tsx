@@ -890,10 +890,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {(item.menuItems && item.menuItems.length > 0
-                        ? item.menuItems
-                        : [{ label: "Abrir atendimento", onClick: item.onClick }]
-                      ).map((menuItem) => (
+                      {(item.menuItems ?? []).map((menuItem) => (
                         <DropdownMenuItem key={menuItem.label} onClick={menuItem.onClick}>
                           {menuItem.label}
                         </DropdownMenuItem>
