@@ -45,4 +45,4 @@
 - Capture message authorship and order closure at database triggers and bulk outcomes through the shared sequential runner; never infer historical actors from current ownership or treat scheduled returns as sends.
 - Insert newly introduced menu programs into their existing origin category in effective customization, preserving explicitly placed programs and saved settings, so new screens remain discoverable in their intended menu.
 - Use PainelAtendimentoHeader for attendance panels and shared task details to keep title, icon, spacing and close actions consistent.
-- One voice agent per function (calling: one per department); scripts fixed per campaign or chosen per client by roteiroDoCliente.
+- One voice agent per function+department; script per campaign or roteiroDoCliente.
