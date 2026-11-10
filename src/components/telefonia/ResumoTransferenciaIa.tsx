@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bot, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,8 +35,9 @@ export default function ResumoTransferenciaIa() {
   }, [atual]);
 
   if (!atual) return null;
-  return (
-    <div className="fixed right-4 top-20 z-50 w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card shadow-2xl animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm" onClick={() => setAtual(null)}>
+    <div className="flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2">
         <Bot className="h-4 w-4 text-primary" />
         <div className="min-w-0 flex-1">
@@ -44,10 +46,15 @@ export default function ResumoTransferenciaIa() {
         </div>
         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setAtual(null)} aria-label="Fechar"><X className="h-4 w-4" /></Button>
       </div>
-      <div className="max-h-[60vh] overflow-y-auto p-3 space-y-2">
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
         {atual.objetivo && <p className="text-[11px] text-muted-foreground line-clamp-3">Objetivo: {atual.objetivo.replace(/^VOCÊ ESTÁ FAZENDO UMA LIGAÇÃO DE VENDAS\. Objetivo informado pelo usuário: /, "").split("\n")[0]}</p>}
         <p className="whitespace-pre-wrap break-words text-sm text-foreground">{atual.resumo ?? "Gerando o resumo da conversa…"}</p>
       </div>
+      <div className="border-t border-border/50 p-3">
+        <Button className="w-full" onClick={() => setAtual(null)}>Entendi</Button>
+      </div>
     </div>
+    </div>,
+    document.body
   );
 }
