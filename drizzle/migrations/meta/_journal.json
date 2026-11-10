@@ -113,6 +113,13 @@
       "when": 1794274293944,
       "tag": "0015_painel_jornada_atendimento",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794274342325,
+      "tag": "0016_autoria_jornada_e_resultados_disparo",
+      "breakpoints": true
     }
   ]
 }

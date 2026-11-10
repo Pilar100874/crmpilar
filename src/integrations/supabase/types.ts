@@ -31736,6 +31736,10 @@ export type Database = {
         Args: { p_equipe?: boolean; p_fim: string; p_inicio: string }
         Returns: Json
       }
+      dashboard_resultados_disparo: {
+        Args: { p_equipe?: boolean; p_fim: string; p_inicio: string }
+        Returns: Json
+      }
       delete_customer_cascade: {
         Args: { p_customer_id: string }
         Returns: boolean
