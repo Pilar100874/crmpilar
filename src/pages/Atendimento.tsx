@@ -1,4 +1,5 @@
 import { ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import DashboardJornada from "@/components/atendimento/DashboardJornada";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -622,8 +623,10 @@ export default function Atendimento() {
   const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamentoState] = useState(false);
 
   // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
-  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado';
+  const [jornadaAberta, setJornadaAberta] = useState(false);
+  type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
+    if (destino !== 'jornada') setJornadaAberta(false);
     if (destino !== 'recado') { setRecadoContato(null); setCadastroParaRecado(false); }
     if (destino !== 'historico') setHistoricoClienteState(null);
     if (destino !== 'orcamentos' && destino !== 'orcamento') listaOrcamentosRef.current = null;
@@ -5020,6 +5023,7 @@ ${recentMessages}
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciais]);
 
   const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-info" aria-label="Minha jornada" title="Minha jornada" data-tour="abrir-jornada" onClick={() => { fecharConteudoCentral('jornada'); setJornadaAberta(true); setMobileView('main'); }}><Activity className="h-4 w-4" /></Button>
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
     <GlobalClientFilter activeFilter={globalFilter} onFilterChange={filtrarESelecionarCartao} compact />
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Encaminhar recado" title="Encaminhar recado" onClick={() => abrirRecado()}><MessageSquare className="h-4 w-4" /></Button>
@@ -6479,6 +6483,7 @@ ${recentMessages}
             )}
             
             {/* Listas Panel - Mobile Fullscreen - Puxar ou criar cadastro */}
+            {jornadaAberta && <div className="absolute inset-0 z-30 flex flex-col bg-background"><DashboardJornada onClose={() => setJornadaAberta(false)} /></div>}
             {recadoContato && <div className="absolute inset-0 z-30 flex flex-col bg-background">{cadastroParaRecado ? painelCadastroRecado : painelRecado}</div>}
             {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) && (
               <div className="absolute inset-0 z-30 bg-background">
@@ -7063,7 +7068,7 @@ ${recentMessages}
         /* ========== DESKTOP/TABLET LAYOUT ========== */
         <div className={`atendimento-com-barra h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative transition-opacity duration-200 ${layoutPronto ? "opacity-100" : "opacity-0"}`} style={{ paddingTop: "var(--calendario-barra, 0px)" }}>
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
-        {(activeTab !== "agenda" || recadoContato || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
+        {(activeTab !== "agenda" || jornadaAberta || recadoContato || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
             <Suspense fallback={null}><ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
           </div>
@@ -7368,7 +7373,7 @@ ${recentMessages}
           )}
           </div>
         )}
-        {recadoContato ? (cadastroParaRecado ? painelCadastroRecado : painelRecado) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
+        {jornadaAberta ? <DashboardJornada onClose={() => setJornadaAberta(false)} /> : recadoContato ? (cadastroParaRecado ? painelCadastroRecado : painelRecado) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
             onClose={() => {
               setShowCustomerSearchForTask(false);

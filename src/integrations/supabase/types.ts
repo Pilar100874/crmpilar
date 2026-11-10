@@ -9539,6 +9539,7 @@ export type Database = {
           envio_id: string
           erro_mensagem: string | null
           id: string
+          resultado_observado: string | null
           status: string | null
         }
         Insert: {
@@ -9548,6 +9549,7 @@ export type Database = {
           envio_id: string
           erro_mensagem?: string | null
           id?: string
+          resultado_observado?: string | null
           status?: string | null
         }
         Update: {
@@ -9557,6 +9559,7 @@ export type Database = {
           envio_id?: string
           erro_mensagem?: string | null
           id?: string
+          resultado_observado?: string | null
           status?: string | null
         }
         Relationships: [
@@ -31732,6 +31735,14 @@ export type Database = {
         Returns: number
       }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
+      dashboard_jornada_atendimento: {
+        Args: { p_equipe?: boolean; p_fim: string; p_inicio: string }
+        Returns: Json
+      }
+      dashboard_resultados_disparo: {
+        Args: { p_equipe?: boolean; p_fim: string; p_inicio: string }
+        Returns: Json
+      }
       delete_customer_cascade: {
         Args: { p_customer_id: string }
         Returns: boolean

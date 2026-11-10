@@ -4,6 +4,7 @@
 import type { ModuloInternoGerado } from "./modulosInternos.gerado";
 
 export const MODULOS_INTERNOS_EXTRAS: Record<string, ModuloInternoGerado[]> = {
+  "Painel Chats": [{ id: "minha-jornada", label: "Minha jornada" }],
   "Config Atendimento": [
     { id: "agentes-voz", label: "Agentes de Voz" },
   ],

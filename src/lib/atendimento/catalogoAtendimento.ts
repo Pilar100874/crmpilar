@@ -4,6 +4,7 @@
  * todo recurso novo do Atendimento deve ganhar uma entrada aqui.
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
+import { totalJornada } from "./jornada";
 import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
 import { PRAZO_RECADO_MIN, recadoUrgentePendente, tarefaVisivelNaFila } from "./recadoResponsavel";
 import { montarMenuRadial } from "./menuRadial";
@@ -83,6 +84,14 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "Escolha ou cadastre o cliente e envie uma mensagem interna ao usuário selecionado, sem alterar a carteira. O recado vira tarefa manual na agenda dele, com autor e mensagem: urgente em 30 minutos, normal em 2 horas. Recados urgentes pendentes ficam no início de Agendados; cartão e aba piscam até concluir ou cancelar, mesmo sem vínculo com o cliente e em outra data. Quem estiver assumindo o responsável recebe o mesmo destaque; ao deixar de assumir, esse recado sai do seu escopo. O alerta permanece ao abrir o cartão. Nenhuma mensagem externa é enviada automaticamente.",
     comoUsar: ["Clique em Encaminhar recado ao lado de Contatos ou no cabeçalho do cliente.", "Pesquise o cliente ou clique em Cadastrar cliente; após salvar o cadastro, ele fica selecionado no recado.", "Escolha Enviar para, escreva a mensagem e confirme Enviar recado.", "O destinatário ou quem estiver assumindo ele abre Agendados e o cartão urgente para consultar a mensagem e providenciar o retorno."],
     simular: () => [passo("Recado urgente vence em 30 minutos", PRAZO_RECADO_MIN.urgente === 30), passo("Recado normal vence em 2 horas", PRAZO_RECADO_MIN.normal === 120), passo("Destinatário vê recado sem carteira", tarefaVisivelNaFila({ contact_id: "c", user_id: "u", origem_sub_item: "recado_urgente", status: "pending" }, new Set(), "u")), passo("Concluído não alerta", !recadoUrgentePendente({ origem_sub_item: "recado_urgente", status: "completed" }))],
+  },
+  {
+    id: "minha-jornada", modulo: "Fila e organização", titulo: "Minha jornada e comparação da equipe",
+    alvo: "abrir-jornada", pratica: { tipo: "clicar", alvo: "abrir-jornada", instrucao: "Clique no ícone Minha jornada ao lado de Contatos para abrir o painel." },
+    oQueE: "Minha jornada acompanha atividades, resultados, evolução diária e mensal e pendências; Jornada da equipe no menu Chats compara usuários com acesso autorizado.",
+    regraNegocio: "As ações pertencem a quem executou, inclusive ao assumir outro responsável. O painel usa apenas registros salvos: chamadas atendidas exigem horário de atendimento; respostas de e-mail usam Re:/Res: no assunto; visitas finalizadas e presença confirmada ficam separadas. Retorno em massa não comprova envio e encaminhamento não comprova entrega. Vendas seguem autor e data de fechamento no histórico. Pendências são atuais. Só administradores e gestores com papel protegido podem comparar a empresa; demais usuários veem apenas a própria jornada.",
+    comoUsar: ["Clique em Minha jornada ao lado de Contatos.", "Escolha Hoje, Este mês, Este ano ou as datas desejadas.", "Abra Evolução e escolha indicador e agrupamento diário ou mensal.", "Confira Dia a dia e Indicadores; exporte os registros se necessário.", "Em Chats → Jornada da equipe, usuários autorizados podem comparar os resultados e selecionar um usuário."],
+    simular: () => [passo("Retorno agendado não conta como WhatsApp encaminhado", totalJornada([{usuario_id:"u",dia:"2026-11-09",metrica:"massa_whatsapp_retornos",valor:1}],"massa_whatsapp_encaminhado","2026-11-09","2026-11-09") === 0)],
   },
   {
     id: "cadastro-filtro-contatos",
