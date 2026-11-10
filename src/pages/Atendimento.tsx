@@ -4518,9 +4518,6 @@ ${recentMessages}
         lista.push({
           id: `contato-${contato.id}`,
           tipo: pot ? "potencial" : "agendado",
-          temHistorico: possuiHistorico(r),
-          temAgenda: possuiAgenda(r),
-          temOrcamento: possuiOrcamento(r),
           potencial: pot ? { rotulo: ROTULO_TIPO[pot.tipo], motivos: pot.motivos } : undefined,
           credito: (creditoLocal[principal?.empresa_id] ?? principal?.empresas?.situacao_credito) as SituacaoCredito | undefined,
           onCredito: principal?.empresa_id ? (sit: SituacaoCredito) => {
