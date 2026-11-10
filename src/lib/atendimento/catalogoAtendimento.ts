@@ -21,6 +21,7 @@ import { pendenciasOrcamento } from "./cadastroOrcamento";
 import { ehEmailAutomatico, emailIgnorado } from "./remetentesIgnorados";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import { validarMotivoPerda } from "@/lib/orcamento/motivoPerda";
 import { montarRegistrosPorContato, possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa } from "./registrosContato";
 
 const DIA = 86_400_000;
@@ -92,6 +93,13 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     regraNegocio: "A análise usa somente orçamentos e pedidos salvos do contato: pedidos são os finalizados. Mostra ticket médio, intervalo médio entre compras (exige 2 pedidos), próxima compra prevista com alerta quando o ciclo passou, prazo/condição mais usado, desconto médio, conversão, produtos mais comprados, itens recorrentes que faltaram no último pedido, itens que outros clientes compram junto (mínimo 2 ocorrências), compras dos últimos 12 meses e meses mais fortes, orçamentos em aberto e motivos de perda. É somente leitura: orçamento e agendamento só acontecem pelos botões.",
     comoUsar: ["Abra o cliente.", "Clique em Auxiliar de vendas (lâmpada) na barra do cliente.", "Leia O que oferecer agora e copie o roteiro.", "Use Novo orçamento ou Agendar direto do painel."],
     simular: () => [passo("Ciclo de 30 dias atrasado gera alerta", analisarHabitos([{ id: "1", data: "2026-01-01", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }, { id: "2", data: "2026-01-31", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }], new Date("2026-03-15")).compraAtrasada)],
+  },
+  {
+    id: "pedido-aberto-diario", modulo: "Fila e organização", titulo: "Pedidos em aberto e motivo de perda",
+    oQueE: "Clientes com orçamento ou pedido em aberto aparecem todos os dias em Agendados com o selo Pedido em aberto e o valor.",
+    regraNegocio: "Etapas Orçamento, Negociação e Aprovação da gerência mantêm o cliente na agenda do dia, mesmo sem tarefa (cartão Acompanhar pedido em aberto). Só sai ao finalizar ou cancelar. Cancelar exige motivo: preço com itens e valor do cliente, falta de estoque com itens, prazo de entrega, condição de pagamento, desistência ou outro.",
+    comoUsar: ["Abra a aba Agendados.", "Veja o selo Pedido em aberto no cartão.", "Finalize o pedido ou, em Orçamentos, mova para Perdido e preencha o motivo."],
+    simular: () => [passo("Preço sem valor do cliente é bloqueado", validarMotivoPerda({ tipo: "preco", itens: [{ itemId: "1", nome: "X", nossoPreco: 10 }] }).length > 0)],
   },
   {
     id: "minha-jornada", modulo: "Fila e organização", titulo: "Minha jornada e comparação da equipe",
