@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
 
   try {
-    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy" } = await req.json();
+    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy", frase_exata = null } = await req.json();
 
     let fala = "";
     if (audio_wav_b64) {
@@ -92,9 +92,9 @@ Deno.serve(async (req) => {
       ? `\n\nREGRA DE OURO: o cliente acabou de dizer "${fala}". NÃO faça pergunta. Diga uma frase curta de transição (ex.: "Perfeito, vou te passar agora para o atendente, um instante.") e inclua [TRANSFERIR].`
       : "";
     // Atalhos sem LLM (economizam ~1s): frase exata (saudação) e transferência imediata.
-    const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(prompt.trim());
+    const exata = typeof frase_exata === "string" && frase_exata.trim() ? frase_exata.trim() : null;
     let resposta = exata && modo !== "assistir"
-      ? exata[1].trim()
+      ? exata
       : regraOuro && modo !== "assistir"
         ? TRANSICAO
         : await responder(key, sistema + regraOuro, hist);
