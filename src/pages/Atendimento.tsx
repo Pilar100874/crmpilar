@@ -62,7 +62,7 @@ import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager"
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
-import { correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
+import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
