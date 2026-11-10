@@ -293,6 +293,13 @@ export default function Atendimento() {
   const [dataAgendaCentral, setDataAgendaCentral] = useState<Date | null>(null);
   const [modoAgendaCentral, setModoAgendaCentral] = useState<string | null>(null);
   const [agendaCentralKey, setAgendaCentralKey] = useState(0);
+  const [buscaAgenda, setBuscaAgenda] = useState("");
+  const pesquisarAgenda = (valor: string) => {
+    setBuscaAgenda(valor);
+    if (valor.trim() && activeTab !== "agenda") {
+      window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "table" } }));
+    }
+  };
   const [atrasadosAgendaCentral, setAtrasadosAgendaCentral] = useState(false);
   const contatoSelecionarPendenteRef = useRef<string | null>(null);
   // Marca aberturas centrais vindas da seleção de contato pelo painel da tarefa (não fecham o painel)
@@ -6506,7 +6513,7 @@ ${recentMessages}
                 />
               ) : activeTab === "agenda" && !selectedTaskId && !selectedAgendaContato && agendaViewMode !== "massa" ? (
                 <div className="h-full min-h-0 overflow-y-auto bg-card">
-                  <ModuloCalendario key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} filtroAtrasadosInicial={atrasadosAgendaCentral} />
+                  <ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} key={`m-${agendaCentralKey}`} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={(modoAgendaCentral as any) ?? "day"} filtroAtrasadosInicial={atrasadosAgendaCentral} />
                 </div>
               ) : <MobileMainContent
                 activeTab={activeTab}
@@ -6947,7 +6954,7 @@ ${recentMessages}
         {/* Mantém a barra "Minha agenda" visível em todas as abas */}
         {(activeTab !== "agenda" || showDisparoMassa || showEnvioMassaWizard || showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento || agendaViewMode === 'massa') && (
           <div className="absolute h-0 w-0 overflow-hidden" aria-hidden={false}>
-            <Suspense fallback={null}><ModuloCalendario dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
+            <Suspense fallback={null}><ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} dataInicial={agendaDate} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} /></Suspense>
           </div>
         )}
         {/* Abinha para reabrir a Fila do dia quando encolhida (igual ao painel de detalhes) */}
@@ -7841,7 +7848,7 @@ ${recentMessages}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <div className="absolute inset-0 overflow-hidden text-left">
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
-                    <ModuloCalendario key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} tarefaInicialId={selectedTaskId} tarefaInicialNonce={tarefaCentralNonce} />
+                    <ModuloCalendario busca={buscaAgenda} onBuscaChange={pesquisarAgenda} key={agendaCentralKey} dataInicial={dataAgendaCentral ?? agendaDate} viewModeInicial={modoAgendaCentral as any} filtroAtrasadosInicial={atrasadosAgendaCentral} contatoSugerido={clienteCabecalho?.id ? { id: clienteCabecalho.id, nome: clienteCabecalho.nome } : undefined} tarefaInicialId={selectedTaskId} tarefaInicialNonce={tarefaCentralNonce} />
                   </Suspense>
                 </div>
               )}

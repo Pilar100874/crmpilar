@@ -4,6 +4,7 @@
  * todo recurso novo do Atendimento deve ganhar uma entrada aqui.
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
+import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
 import { correspondeFiltroContato } from "./filtroContato";
 import { usuariosComCriador } from "./vinculoCriador";
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
@@ -57,6 +58,16 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "busca-agenda", modulo: "Fila e organização", titulo: "Buscar contatos ou tarefas na agenda",
+    oQueE: "A busca no cabeçalho filtra os compromissos pelo contato, título, descrição, responsável ou data.",
+    regraNegocio: "A busca vale para Dia, Semana, Mês e Tabela, respeita o período e os demais filtros escolhidos e não altera os registros. Quando outra tela está aberta no Atendimento, digitar abre a agenda na área central e mantém o texto pesquisado.",
+    comoUsar: ["Digite o nome do contato ou parte da tarefa no campo do cabeçalho.", "Confira os compromissos encontrados no período selecionado; troque o período se necessário.", "Apague o texto para restaurar os compromissos."],
+    simular: () => {
+      const tarefa = { title: "Retorno", contactName: "João", date: new Date(2026, 10, 10) };
+      return [passo("Nome sem acento encontra o contato", correspondeBuscaAgenda(tarefa, "joao")), passo("Contato diferente não aparece", !correspondeBuscaAgenda(tarefa, "Ana")), passo("Limpar restaura a tarefa", correspondeBuscaAgenda(tarefa, ""))];
+    },
+  },
   {
     id: "cadastro-filtro-contatos",
     modulo: "Fila e organização",

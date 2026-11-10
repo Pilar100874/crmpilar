@@ -38,3 +38,4 @@
 - Apply Atendimento queue entity filtering through the shared filtroContato predicate using saved company-contact links and exact sender emails; never infer membership from display names.
 - ListasPanel embeds the same Empresas and Contatos pages used by Listas in the Atendimento central area; direct-create props open their real forms without popup alternatives.
 - Shared vinculoCriador helpers resolve the internal user before inserts and add creator links idempotently after contact/company creation; temporary contacts remain owned by the existing company trigger.
+- Calendar search uses the shared buscaAgenda predicate in every view; Atendimento owns the query across header-host and central calendar mounts so typing never filters an invisible instance only.
