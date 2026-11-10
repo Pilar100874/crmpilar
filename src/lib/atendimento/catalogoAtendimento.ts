@@ -85,7 +85,7 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     titulo: "Remetentes que não são clientes",
     oQueE: "E-mails automáticos (no-reply, notificações, boletos, newsletters) não entram nos Recebidos, e você pode ignorar e-mails, domínios ou números que não são clientes.",
     regraNegocio: "A caixa de Recebidos deve mostrar só quem precisa de atendimento. Ignorar nunca apaga mensagens e pode ser desfeito a qualquer momento.",
-    comoUsar: ["No cartão dos Recebidos, clique em Não é cliente.", "Escolha ignorar o e-mail, todo o domínio ou o número.", "Para desfazer, abra ⋮ › Remetentes ignorados e clique em Reativar."],
+    comoUsar: ["No cartão dos Recebidos, clique em Não é cliente.", "Escolha ignorar o e-mail, todo o domínio ou o número.", "Para desfazer, abra ⋮ › Remetentes ignorados, pesquise por e-mail, domínio ou telefone e clique em Reativar."],
     simular: () => [
       passo("E-mail no-reply sai dos Recebidos sozinho", ehEmailAutomatico("noreply@banco.com.br")),
       passo("Cliente comum continua aparecendo", !ehEmailAutomatico("joao@cliente.com.br", "Pedido")),
