@@ -86,6 +86,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Info } from "lucide-react";
+import { carregarCadastroOrcamento, pendenciasOrcamento } from "@/lib/atendimento/cadastroOrcamento";
+import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
+import { EmpresaFormSheetEdit } from "@/components/atendimento/EmpresaFormSheetEdit";
+import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
+import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface POSViewProps {
@@ -99,6 +104,8 @@ interface POSViewProps {
   showPanelToggle?: boolean;
   onTogglePanel?: () => void;
   initialEmpresaId?: string | null;
+  /** Confere o cadastro antes de criar orçamento novo; pode abrir o formulário para completar. */
+  validarCadastro?: (contatoId: string, empresaId: string) => Promise<boolean>;
 }
 
 export default function POSView({ 
@@ -111,7 +118,8 @@ export default function POSView({
   onToggleClientDetails,
   showPanelToggle = false,
   onTogglePanel,
-  initialEmpresaId
+  initialEmpresaId,
+  validarCadastro
 }: POSViewProps) {
   const isMobile = useIsMobile();
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -120,6 +128,12 @@ export default function POSView({
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [editarContatoCadastro, setEditarContatoCadastro] = useState<string | null>(null);
+  const [editarEmpresaCadastro, setEditarEmpresaCadastro] = useState<string | null>(null);
+  const [criarEmpresaCadastro, setCriarEmpresaCadastro] = useState(false);
+  const [criarContatoCadastro, setCriarContatoCadastro] = useState(false);
+  const cadastroVerificadoRef = useRef("");
+  const [cadastroRevisao, setCadastroRevisao] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmpresa, setSelectedEmpresa] = useState<string>(initialEmpresaId || "");
   const [selectedCliente, setSelectedCliente] = useState<string>("");
@@ -413,7 +427,7 @@ export default function POSView({
     };
     
     loadClientesPorEmpresa();
-  }, [selectedEmpresa]);
+  }, [selectedEmpresa, cadastroRevisao]);
 
   // Verificar se o contato selecionado pertence ao usuário logado
   useEffect(() => {
@@ -951,19 +965,46 @@ export default function POSView({
     }, 0);
   };
 
+  const conferirCadastro = async (contatoId: string, empresaId: string): Promise<boolean> => {
+    if (validarCadastro) return validarCadastro(contatoId, empresaId);
+    try {
+      const cadastro = await carregarCadastroOrcamento(contatoId, empresaId);
+      const faltas = pendenciasOrcamento(cadastro);
+      if (!faltas.length) return true;
+      toast.error("Complete o cadastro antes de criar o orçamento", { description: `Falta: ${faltas.join(", ")}.` });
+      if (!empresaId) setCriarEmpresaCadastro(true);
+      else if (!cadastro.contato) setCriarContatoCadastro(true);
+      else if (cadastro.empresa && faltas.length === 1 && faltas[0] === "CNPJ/CPF da empresa") setEditarEmpresaCadastro(cadastro.empresa.id);
+      else setEditarContatoCadastro(cadastro.contato.id);
+      return false;
+    } catch {
+      toast.error("Não foi possível conferir o cadastro do cliente");
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (orcamentoId || !selectedCliente || !selectedEmpresa) return;
+    const chave = `${selectedCliente}:${selectedEmpresa}`;
+    if (cadastroVerificadoRef.current === chave) return;
+    cadastroVerificadoRef.current = chave;
+    void conferirCadastro(selectedCliente, selectedEmpresa);
+  }, [selectedCliente, selectedEmpresa, orcamentoId]);
+
   const handleFinalize = async () => {
     if (!selectedEmpresa) {
-      toast.error('Selecione uma empresa');
+      await conferirCadastro(selectedCliente, "");
       return;
     }
 
     if (empresaSemVinculo) {
-      toast.error('Esta empresa precisa ter um contato com usuário responsável vinculado. Cadastre primeiro na tela de Atendimento.');
+      await conferirCadastro(selectedCliente, selectedEmpresa);
       return;
     }
 
     if (!selectedCliente) {
-      toast.error('Selecione um contato');
+      if (clientes.length > 0) setOpenClienteCombobox(true);
+      else await conferirCadastro("", selectedEmpresa);
       return;
     }
 
@@ -971,6 +1012,8 @@ export default function POSView({
       toast.error('Adicione itens ao carrinho');
       return;
     }
+
+    if (!(await conferirCadastro(selectedCliente, selectedEmpresa))) return;
 
     setLoading(true);
     try {
@@ -1180,10 +1223,25 @@ export default function POSView({
   };
 
   // Render mobile/tablet layout
+  const aoSalvarCadastro = () => {
+    setEditarContatoCadastro(null);
+    setEditarEmpresaCadastro(null);
+    setCriarContatoCadastro(false);
+    setCriarEmpresaCadastro(false);
+    setCadastroRevisao((v) => v + 1);
+    void loadEmpresas();
+  };
+  const formulariosCadastro = <>
+    <ContatoFormSheetEdit open={!!editarContatoCadastro} onOpenChange={(open) => { if (!open) setEditarContatoCadastro(null); }} customerId={editarContatoCadastro || ""} onSuccess={aoSalvarCadastro} />
+    <EmpresaFormSheetEdit open={!!editarEmpresaCadastro} onOpenChange={(open) => { if (!open) setEditarEmpresaCadastro(null); }} empresaId={editarEmpresaCadastro || ""} onSuccess={aoSalvarCadastro} />
+    <EmpresaFormSheet open={criarEmpresaCadastro} onOpenChange={setCriarEmpresaCadastro} onSuccess={(id) => { aoSalvarCadastro(); setSelectedEmpresa(id); }} />
+    <ContatoFormSheet open={criarContatoCadastro} onOpenChange={setCriarContatoCadastro} onSuccess={aoSalvarCadastro} />
+  </>;
+
   if (isCompact) {
     return (
       <>
-        <MobilePOSLayout
+        <>{formulariosCadastro}<MobilePOSLayout
           produtos={produtos}
           grupos={grupos}
           empresas={empresas}
@@ -1230,7 +1288,7 @@ export default function POSView({
           conjuntoItens={conjuntoItens}
           setConjuntoSelecionado={setConjuntoSelecionado}
           setConjuntoItens={setConjuntoItens}
-        />
+        /></>
         
         {/* Dialogs também para mobile */}
         <ConjuntoSelectorDialog
@@ -1244,6 +1302,7 @@ export default function POSView({
 
   return (
     <div className="flex flex-col h-full bg-muted dark:bg-background">
+      {formulariosCadastro}
       <div className="flex flex-1 overflow-hidden">
         {/* Grade de Produtos - Lado Esquerdo */}
         <div className="flex-1 flex flex-col bg-muted dark:bg-background min-w-0">

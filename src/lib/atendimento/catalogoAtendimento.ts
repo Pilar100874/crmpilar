@@ -9,6 +9,7 @@ import { classificarUrgencia, lerSugestaoLigacao, limparSugestaoLigacao, MENSAGE
 import { prepararNumeroDiscagem, validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "./prazosProximoContato";
 import { pendenciasCadastro } from "./pendenciasCadastro";
+import { pendenciasOrcamento } from "./cadastroOrcamento";
 import { ehEmailAutomatico, emailIgnorado } from "./remetentesIgnorados";
 import { substituirVariaveis } from "@/components/envio-massa/emailMensagem";
 import { cicloMedio, ganchoPotencial, ganchosPotenciais } from "@/lib/voz/publicoInteligente";
@@ -53,6 +54,18 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "cadastro-obrigatorio-orcamento",
+    modulo: "Atendimento e finalização",
+    titulo: "Cadastro obrigatório para orçamento",
+    oQueE: "Criar, duplicar ou repetir um orçamento exige empresa vinculada e contato completo. Se faltarem dados, o cadastro abre imediatamente.",
+    regraNegocio: "O contato precisa de nome, telefone ou WhatsApp, e-mail e responsável; a empresa precisa de CNPJ/CPF. Contatos temporários precisam ser substituídos pelos dados do contato real. Nenhum orçamento é criado enquanto houver pendências.",
+    comoUsar: ["Clique em Novo orçamento ou Repetir último pedido.", "Se o cadastro abrir, preencha os dados do contato e vincule a empresa na aba Empresa.", "Confira o responsável na aba Vínculos e o documento da empresa.", "Salve. Ao iniciar um novo orçamento pelo cliente, a conferência continua automaticamente; no carrinho, clique novamente em Finalizar Orçamento."],
+    simular: () => [
+      passo("Sem empresa ou contato, bloqueia o orçamento", pendenciasOrcamento({ vinculado: false, responsavel: false }).includes("Contato cadastrado")),
+      passo("Contato completo com empresa e responsável permite orçamento", pendenciasOrcamento({ contato: { id: "ana", nome: "Ana", telefone: "11999999999", tel: null, email: "ana@empresa.com" }, empresa: { id: "empresa", nome: "Empresa", cnpj: "12345678000199" }, vinculado: true, responsavel: true }).length === 0),
+    ],
+  },
   {
     id: "remetentes-ignorados",
     modulo: "Fila e organização",

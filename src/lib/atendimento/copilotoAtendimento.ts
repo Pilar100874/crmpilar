@@ -155,10 +155,11 @@ export async function executarReguaOrcamentos(estab: string, usuarioId: string) 
 
 // ---------------- Pedido repetido ----------------
 /** Cria um novo orçamento com os mesmos itens do último pedido finalizado do cliente. */
-export async function repetirUltimoPedido(clienteId: string, vendedorId?: string | null): Promise<string | null> {
+export async function repetirUltimoPedido(clienteId: string, vendedorId?: string | null, validarCadastro?: (clienteId: string, empresaId: string | null) => Promise<boolean>): Promise<string | null> {
   const { data: ult } = await db.from("orcamentos").select("*, orcamento_itens(*)").eq("cliente_id", clienteId)
     .eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!ult) return null;
+  if (validarCadastro && !(await validarCadastro(clienteId, ult.empresa_id))) return null;
   const { data: novo, error } = await db.from("orcamentos").insert({
     estabelecimento_id: ult.estabelecimento_id, cliente_id: ult.cliente_id, empresa_id: ult.empresa_id, unidade_id: ult.unidade_id,
     vendedor_id: vendedorId || ult.vendedor_id, condicao_pagamento_id: ult.condicao_pagamento_id, etapa: "orcamento", status: ult.status ?? "rascunho",

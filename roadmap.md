@@ -1,4 +1,5 @@
 # Roadmap — Atendimento
+- [x] Bloquear novos orçamentos sem empresa e contato completos e abrir cadastro para correção
 - [x] Copiloto de respostas (3 sugestões no chat)
 - [x] Próximo cliente (botão + Alt+↓)
 - [x] Próximo cliente e cliente anterior no topo da fila, ao lado do tour (Alt+↓ / Alt+↑)

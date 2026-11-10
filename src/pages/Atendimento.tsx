@@ -84,6 +84,7 @@ import { BarraProximoContato, ALTURA_BARRA_PROXIMO } from "@/components/atendime
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { useRegistrosContato } from "@/hooks/useRegistrosContato";
+import { carregarCadastroOrcamento, pendenciasOrcamento } from "@/lib/atendimento/cadastroOrcamento";
 import { possuiAgenda, possuiHistorico, possuiOrcamento, possuiTarefa, type RegistrosContato } from "@/lib/atendimento/registrosContato";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { contatoDaBarraFinalizacao } from "@/lib/atendimento/barraFinalizacao";
@@ -2349,6 +2350,8 @@ export default function Atendimento() {
         return;
       }
 
+      if (!(await exigirCadastroOrcamento(original.cliente_id, original.empresa_id))) return;
+
       // Criar novo orçamento
       const { data: newOrcamento, error: insertError } = await supabase
         .from('orcamentos')
@@ -2601,13 +2604,45 @@ export default function Atendimento() {
   }, [orcamentoSheetOpen]);
 
   // Criar orçamento a partir de um contato selecionado
+  const orcamentoPendenteCadastroRef = useRef<{ type: 'customer' | 'empresa'; data: any } | null>(null);
+  const exigirCadastroOrcamento = async (contatoId?: string | null, empresaId?: string | null, retomar?: { type: 'customer' | 'empresa'; data: any }) => {
+    try {
+      const cadastro = await carregarCadastroOrcamento(contatoId, empresaId);
+      const faltas = pendenciasOrcamento(cadastro);
+      if (!faltas.length) return true;
+      orcamentoPendenteCadastroRef.current = retomar || null;
+      toast.error("Complete o cadastro antes de criar o orçamento", { description: `Falta: ${faltas.join(", ")}.` });
+      if (!cadastro.contato) {
+        setCreatingContatoInitialData(null);
+        setCreatingContato(true);
+      } else if (cadastro.empresa && faltas.length === 1 && faltas[0] === "CNPJ/CPF da empresa") {
+        setEditingEmpresaId(cadastro.empresa.id);
+      } else {
+        setEditingContatoId(cadastro.contato.id);
+      }
+      return false;
+    } catch (error) {
+      console.error("Erro ao validar cadastro do orçamento:", error);
+      toast.error("Não foi possível conferir o cadastro do cliente");
+      return false;
+    }
+  };
+  const retomarOrcamentoAposCadastro = () => {
+    const pendente = orcamentoPendenteCadastroRef.current;
+    orcamentoPendenteCadastroRef.current = null;
+    if (pendente) window.setTimeout(() => void handleCreateOrcamentoFromContact(pendente.type, pendente.data), 300);
+  };
+
   const handleCreateOrcamentoFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    const liberado = await exigirCadastroOrcamento(type === 'customer' ? data.id : null, type === 'empresa' ? data.id : data.empresa_id, { type, data });
+    if (!liberado) return;
     setOrcamentoSheetOpen(false);
     setSelectedOrcamentoId(null);
     if (type === 'empresa') {
       setInitialEmpresaForOrcamento(data.id);
     } else {
-      setInitialEmpresaForOrcamento(data.empresa_id || null);
+      const cadastro = await carregarCadastroOrcamento(data.id, data.empresa_id);
+      setInitialEmpresaForOrcamento(cadastro.empresa?.id || null);
     }
     setTimeout(() => {
       setActiveTabState('orcamento');
@@ -4527,8 +4562,14 @@ ${recentMessages}
           } : undefined,
           menuItems: [
             { label: "Abrir atendimento", onClick: () => abrirItemContato(contato) },
-            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: () => {
-              void repetirUltimoPedido(contato.id, usuarioId).then((id) => {
+            ...(possuiOrcamento(r) ? [{ label: "Repetir último pedido (novo orçamento)", onClick: async () => {
+              let cadastroBloqueado = false;
+              void repetirUltimoPedido(contato.id, usuarioId, async (clienteId, empresaId) => {
+                const liberado = await exigirCadastroOrcamento(clienteId, empresaId);
+                cadastroBloqueado = !liberado;
+                return liberado;
+              }).then((id) => {
+                if (cadastroBloqueado) return;
                 if (!id) { toast.error("Este cliente ainda não tem pedido finalizado"); return; }
                 toast.success("Orçamento criado com os itens do último pedido");
                 setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contato.id, nome: contato.nome });
@@ -6490,6 +6531,7 @@ ${recentMessages}
                 estabelecimentoId={estabelecimentoId}
                 setOrcamentoSheetOpen={setOrcamentoSheetOpen}
                 initialEmpresaForOrcamento={initialEmpresaForOrcamento}
+                validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
                 onOrcamentoClose={() => {
                   setOrcamentoSheetOpen(false);
                   setSelectedOrcamentoId(null);
@@ -8063,8 +8105,11 @@ ${recentMessages}
             setCreatingContatoInitialData(null);
           }
         }}
-        onSuccess={() => {
+        onSuccess={(customerId) => {
+          const pendente = orcamentoPendenteCadastroRef.current;
+          if (pendente) orcamentoPendenteCadastroRef.current = { type: 'customer', data: { ...pendente.data, id: customerId } };
           setCreatingContato(false);
+          retomarOrcamentoAposCadastro();
           setCreatingContatoInitialData(null);
           if (activeTab === "agenda") loadTodayTasks();
           else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
@@ -8075,10 +8120,11 @@ ${recentMessages}
 
       <ContatoFormSheetEdit
         open={!!editingContatoId}
-        onOpenChange={(open) => !open && setEditingContatoId(null)}
+        onOpenChange={(open) => { if (!open) { setEditingContatoId(null); window.setTimeout(() => { orcamentoPendenteCadastroRef.current = null; }, 500); } }}
         customerId={editingContatoId || ""}
         onSuccess={() => {
           setEditingContatoId(null);
+          retomarOrcamentoAposCadastro();
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
           else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
@@ -8113,6 +8159,7 @@ ${recentMessages}
         empresaId={editingEmpresaId || ""}
         onSuccess={() => {
           setEditingEmpresaId(null);
+          retomarOrcamentoAposCadastro();
           setEditingCustomerEmpresaId(null);
           if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
           else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
@@ -8163,6 +8210,7 @@ ${recentMessages}
             showPanelToggle={!showConversationsList}
             onTogglePanel={() => setShowConversationsList(true)}
             initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
+            validarCadastro={(contatoId, empresaId) => exigirCadastroOrcamento(contatoId, empresaId)}
           />
         </div>
       ) : null}
@@ -9101,6 +9149,7 @@ interface MobileMainContentProps {
   estabelecimentoId: string;
   setOrcamentoSheetOpen: (open: boolean) => void;
   initialEmpresaForOrcamento?: string | null;
+  validarCadastro?: (contatoId: string, empresaId: string) => Promise<boolean>;
   onOrcamentoClose?: () => void;
   onOrcamentoDelete?: () => void;
   onOrcamentoSave?: () => void;
@@ -9158,6 +9207,7 @@ function MobileMainContent({
   estabelecimentoId,
   setOrcamentoSheetOpen,
   initialEmpresaForOrcamento,
+  validarCadastro,
   onOrcamentoClose,
   onOrcamentoDelete,
   onOrcamentoSave,
@@ -9379,6 +9429,7 @@ function MobileMainContent({
           showPanelToggle={false}
           onTogglePanel={() => {}}
           initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
+            validarCadastro={validarCadastro}
         />
       </div>
     );
