@@ -207,7 +207,7 @@ export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
     return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
-  if (!r.etapas.some((e) => e.condicoes.some((c) => c.acao === "desconto")) && r.departamento !== "financeiro")
+  if (r.departamento !== "financeiro" && (!d.descontoMax || !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "desconto"))))
     p.push(d.descontoMax ? `Se acharem caro, pode oferecer até ${d.descontoMax}% de desconto, nunca mais que isso.` : "Não ofereça desconto nem invente preço; o atendente confirma valores.");
   if (d.observacoes?.trim()) p.push(`Observação do usuário: ${d.observacoes.trim()}.`);
   return p.join(" ");
