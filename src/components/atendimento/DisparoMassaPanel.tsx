@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ganchosPotenciais } from "@/lib/voz/publicoInteligente";
+import { PainelAtendimentoHeader } from "./PainelAtendimentoHeader";
 
 export type CanalDisparo = "whatsapp" | "email" | "telefone" | "ia";
 type Aba = "tudo" | "agendados" | "recebidos" | "potenciais";
@@ -323,21 +324,12 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       {/* Cabeçalho */}
-      <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-border/40 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2">
+      <PainelAtendimentoHeader title="Disparo em massa" icon={Rocket} subtitle={canal ? cfgCanal?.label : undefined} onClose={onClose} closeLabel="Fechar disparo em massa" actions={<>
           {canal && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCanal(null)} aria-label="Voltar">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-bold text-foreground">Disparo em massa</h2>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {canal ? `${cfgCanal?.label} · escolha os contatos e inicie` : "Escolha o canal do disparo"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
           {(["canal", "contatos"] as const).map((etapa, i) => {
             const ativa = (etapa === "canal" && !canal) || (etapa === "contatos" && !!canal);
             return (
@@ -346,11 +338,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
               </span>
             );
           })}
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label="Fechar">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      </>} />
 
       {!canal ? (
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">

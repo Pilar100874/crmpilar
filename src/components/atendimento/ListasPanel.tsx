@@ -7,6 +7,7 @@ import Contatos from "@/pages/Contatos";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { PainelAtendimentoHeader } from "./PainelAtendimentoHeader";
 
 interface ListasPanelProps {
   onClose: () => void;
@@ -68,11 +69,8 @@ export function ListasPanel({ onClose, onSelect, onSaved, onContatoSalvo, title 
 
   return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-cadastro-central>
     <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="flex items-center gap-2 text-base font-semibold"><UserPlus className="h-5 w-5 text-primary" />{title}</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar cadastros" title="Fechar cadastros"><X className="h-4 w-4" /></Button>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
+        <PainelAtendimentoHeader title={title} icon={UserPlus} onClose={onClose} closeLabel="Fechar cadastros" />
+        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6">
           <div className="flex gap-2">
             <Button className="flex-1 gap-2" onClick={() => setForm({ tipo: "contato" })}><UserPlus className="h-4 w-4" />Novo contato</Button>
             <Button variant="outline" className="flex-1 gap-2" onClick={() => setForm({ tipo: "empresa" })}><Building2 className="h-4 w-4" />Nova empresa</Button>

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { PainelAtendimentoHeader } from "./PainelAtendimentoHeader";
 
 interface Tarefa {
   id: string;
@@ -27,7 +28,7 @@ interface Props {
 const concluida = (s: string) => ["completed", "concluida", "concluído", "concluida", "done"].includes((s || "").toLowerCase());
 
 /** Agenda do contato: próximos agendamentos e, opcionalmente, a sequência completa de tarefas. */
-export function AgendaContatoPanel({ contactId, nome, top = 0 }: Props) {
+export function AgendaContatoPanel({ contactId, nome, top = 0, onClose }: Props) {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [mostrarSequencia, setMostrarSequencia] = useState(() => localStorage.getItem("agendaContato.sequencia") !== "0");
@@ -66,20 +67,16 @@ export function AgendaContatoPanel({ contactId, nome, top = 0 }: Props) {
 
   return (
     <div data-painel-centro style={{ top }} className="absolute inset-x-0 bottom-0 z-[110] flex flex-col bg-background">
-      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold"><CalendarDays className="h-4 w-4 text-primary" /> Agenda do contato</h3>
-          <p className="truncate text-xs text-muted-foreground">{nome}</p>
-        </div>
+      <PainelAtendimentoHeader title="Agenda do contato" subtitle={nome} icon={CalendarDays} onClose={onClose} actions={
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Mostrar sequência de tarefas
             <Switch checked={mostrarSequencia} onCheckedChange={alternarSequencia} />
           </label>
         </div>
-      </div>
+      } />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         {carregando ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : (
