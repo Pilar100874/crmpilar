@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, UserPlus, X } from "lucide-react";
+import { AlertCircle, Clock3, Loader2, MessageSquare, Send, User, UserPlus, X, Zap } from "lucide-react";
 import { GlobalClientFilter } from "./GlobalClientFilter";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -54,12 +54,15 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
   };
 
   const conteudo = <>
-        <DialogHeader>
-          {embedded ? <h2 className="flex items-center gap-2 text-base font-semibold"><MessageSquare className="h-5 w-5 text-primary" />Encaminhar recado</h2> : <DialogTitle>Encaminhar recado</DialogTitle>}
+        <div className="flex items-start justify-between gap-3 border-b pb-5">
+        <DialogHeader className="min-w-0 text-left">
+          {embedded ? <h2 className="flex items-center gap-3 text-xl font-semibold"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><MessageSquare className="h-5 w-5" /></span>Encaminhar recado</h2> : <DialogTitle>Encaminhar recado</DialogTitle>}
           {!embedded && <DialogDescription>{contatoNome}</DialogDescription>}
         </DialogHeader>
-        <div className="space-y-3">
-          {embedded && <div className="space-y-1"><Label>Cliente</Label><div className="flex items-center gap-2"><span className="min-w-0 flex-1 break-words text-sm">{contatoNome || "Selecione o cliente"}</span><GlobalClientFilter compact activeFilter={contatoId ? { type: "customer", id: contatoId, nome: contatoNome } : null} onFilterChange={filtro => {
+        {embedded && <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" title="Fechar recado" aria-label="Fechar recado" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>}
+        </div>
+        <div className="space-y-6">
+          {embedded && <div className="space-y-2"><Label className="text-sm font-semibold">Cliente</Label><div className="flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-3"><User className="h-5 w-5 shrink-0 text-muted-foreground" /><span className={`min-w-0 flex-1 break-words text-sm ${contatoNome ? "font-medium" : "text-muted-foreground"}`}>{contatoNome || "Nenhum cliente selecionado"}</span><div className="flex shrink-0 items-center gap-1"><GlobalClientFilter compact activeFilter={contatoId ? { type: "customer", id: contatoId, nome: contatoNome } : null} onFilterChange={filtro => {
             if (!filtro) { onSelecionar?.("", ""); return; }
             if (filtro.type === "customer") { onSelecionar?.(filtro.id, filtro.nome); return; }
             void import("@/integrations/supabase/client").then(async ({ supabase }) => {
@@ -67,37 +70,37 @@ export function RecadoResponsavelDialog({ open, onOpenChange, contatoId, contato
               if (error || !data?.customer_id) { toast.error("Selecione ou cadastre um contato para esta empresa"); return; }
               onSelecionar?.(data.customer_id, data.customers?.nome || filtro.nome);
             });
-          }} /><Button variant="outline" size="icon" title="Cadastrar cliente" aria-label="Cadastrar cliente" onClick={onCadastrar}><UserPlus className="h-4 w-4" /></Button></div></div>}
-          <div className="space-y-1">
-            <Label>Enviar para</Label>
-            {bloqueado && <p role="alert" className="text-sm text-destructive">Este cliente está vinculado a você. Não é permitido encaminhar recado para sua própria carteira.</p>}
-            {carregando && contatoId && <p role="status" className="text-xs text-muted-foreground">Conferindo responsável…</p>}
-            {erroSelecao && <p role="alert" className="text-sm text-destructive">Não foi possível conferir o responsável. Selecione o cliente novamente.</p>}
+          }} /><Button variant="ghost" size="icon" title="Cadastrar cliente" aria-label="Cadastrar cliente" onClick={onCadastrar}><UserPlus className="h-4 w-4" /></Button></div></div></div>}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Enviar para</Label>
+            {bloqueado && <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />Este cliente está vinculado a você. Não é permitido encaminhar recado para sua própria carteira.</p>}
+            {carregando && contatoId && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Conferindo responsável…</p>}
+            {erroSelecao && <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />Não foi possível conferir o responsável. Selecione o cliente novamente.</p>}
             <Select value={responsavelId} onValueChange={setResponsavelId} disabled={bloqueado || carregando || erroSelecao}>
-              <SelectTrigger><SelectValue placeholder="Escolha quem deve retornar" /></SelectTrigger>
+              <SelectTrigger className="h-11"><SelectValue placeholder="Escolha quem deve retornar" /></SelectTrigger>
               <SelectContent>
                 {responsaveis.map(u => <SelectItem key={u.id} value={u.id}>{u.nome} (responsável)</SelectItem>)}
                 {outros.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label>Recado</Label>
-            <Textarea rows={4} value={recado} onChange={e => setRecado(e.target.value)} placeholder="Ex.: Cliente ligou pedindo a cotação de cimento." />
+          <div className="space-y-2">
+            <Label htmlFor="recado-mensagem" className="text-sm font-semibold">Recado</Label>
+            <Textarea id="recado-mensagem" className="min-h-[144px] resize-y text-sm leading-relaxed" rows={5} value={recado} onChange={e => setRecado(e.target.value)} placeholder="Ex.: Cliente ligou pedindo a cotação de cimento." />
           </div>
-          <div className="space-y-1">
-            <Label>Urgência</Label>
-            <div className="flex gap-2">
-              <Button type="button" className="flex-1" variant={urgencia === "normal" ? "default" : "outline"} onClick={() => setUrgencia("normal")}>Normal (2 h)</Button>
-              <Button type="button" className="flex-1" variant={urgencia === "urgente" ? "destructive" : "outline"} onClick={() => setUrgencia("urgente")}>Urgente (30 min)</Button>
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Urgência</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <Button type="button" aria-pressed={urgencia === "normal"} className="h-auto min-h-16 min-w-0 justify-start gap-2 whitespace-normal px-3 py-3" variant={urgencia === "normal" ? "default" : "outline"} onClick={() => setUrgencia("normal")}><Clock3 className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left"><span className="block font-semibold">Normal</span><span className="block text-xs font-normal">Retorno em 2 h</span></span></Button>
+              <Button type="button" aria-pressed={urgencia === "urgente"} className="h-auto min-h-16 min-w-0 justify-start gap-2 whitespace-normal px-3 py-3" variant={urgencia === "urgente" ? "destructive" : "outline"} onClick={() => setUrgencia("urgente")}><Zap className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left"><span className="block font-semibold">Urgente</span><span className="block text-xs font-normal">Retorno em 30 min</span></span></Button>
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2 border-t pt-5 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={salvar} disabled={salvando || bloqueado || carregando || erroSelecao || !contatoId || !recado.trim() || !responsavelId}>{salvando ? "Enviando..." : "Enviar recado"}</Button>
+          <Button className="gap-2" onClick={salvar} disabled={salvando || bloqueado || carregando || erroSelecao || !contatoId || !recado.trim() || !responsavelId}>{salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{salvando ? "Enviando..." : "Enviar recado"}</Button>
         </DialogFooter>
   </>;
-  if (embedded) return <section data-recado-central className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6"><div className="mb-4 flex justify-end"><Button variant="ghost" size="icon" aria-label="Fechar recado" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button></div><div className="mx-auto w-full max-w-xl space-y-5">{conteudo}</div></section>;
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-w-md">{conteudo}</DialogContent></Dialog>;
+  if (embedded) return <section data-recado-central className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6"><div className="mx-auto w-full max-w-xl space-y-6">{conteudo}</div></section>;
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">{conteudo}</DialogContent></Dialog>;
 }
