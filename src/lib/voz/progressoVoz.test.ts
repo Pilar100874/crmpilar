@@ -3,6 +3,13 @@ import { progressoVoz } from "../../../supabase/functions/_shared/progressoVoz";
 
 const pergunta = [{ papel: "agente", texto: "O senhor conseguiu dar uma olhada no orçamento?" }];
 describe("avanço do diálogo de orçamento", () => {
+  it("\"conseguiu\" conta como orçamento analisado", () => {
+    expect(progressoVoz(pergunta, "Conseguiu.", false).respostaOrcamento).toBe("analisou");
+  });
+  it("primeiro silêncio repete a pergunta pendente em vez de perguntar se está ouvindo", () => {
+    expect(progressoVoz(pergunta, "", true).respostaSilencio).toBe("Desculpe, não ouvi. O senhor conseguiu dar uma olhada no orçamento?");
+    expect(progressoVoz([...pergunta, { papel: "agente", texto: "Desculpe, não ouvi. O senhor conseguiu dar uma olhada no orçamento?" }], "", true).respostaSilencio).toBe("Alô, consegue me ouvir?");
+  });
   it("interpreta sim como orçamento analisado", () => {
     expect(progressoVoz(pergunta, "Sim.", false).respostaOrcamento).toBe("analisou");
   });
@@ -18,7 +25,8 @@ describe("avanço do diálogo de orçamento", () => {
   });
   it("encerra no segundo silêncio sem resposta, inclusive em aparelhos que não registram silêncio", () => {
     expect(progressoVoz(pergunta, "", true).encerrarSilencio).toBe(false);
-    expect(progressoVoz([...pergunta, { papel: "agente", texto: "Alô, consegue me ouvir?" }], "", true).encerrarSilencio).toBe(true);
+    expect(progressoVoz([...pergunta, { papel: "agente", texto: "Alô, consegue me ouvir?" }], "", true).encerrarSilencio).toBe(false);
+    expect(progressoVoz([...pergunta, { papel: "agente", texto: "Desculpe, não ouvi. O senhor conseguiu dar uma olhada no orçamento?" }, { papel: "agente", texto: "Alô, consegue me ouvir?" }], "", true).encerrarSilencio).toBe(true);
   });
   it("uma fala real reinicia a verificação de silêncio", () => {
     expect(progressoVoz([{ papel: "agente", texto: "Alô, consegue me ouvir?" }, { papel: "cliente", texto: "Sim" }, ...pergunta], "", true).encerrarSilencio).toBe(false);
