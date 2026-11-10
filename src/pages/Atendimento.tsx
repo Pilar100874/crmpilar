@@ -4928,7 +4928,7 @@ ${recentMessages}
     }
     return comSelecao;
 
-  }, [globalFilter, escopoEmpresaFiltro, contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, usuarioAgendaId, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
+  }, [globalFilter, escopoEmpresaFiltro, contatosComEnderecoVisita, discadorModo, agendaViewMode, fluxoCurrentTask, filteredTasks, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, selectedTaskId, selectedConversation, selectedEmailId, pendenciasAtendimento, convSinalizada, emailSinalizado, alternarSinalizacao, modoSimultaneo, filtroFila, usuarioId, usuarioAgendaId, usuariosRecados, orcamentos, contatosComIndicadores, idsContatosVinculados, selecaoFila, potenciaisPorCliente, creditoLocal]);
 
   // Pedidos de finalização também precisam abrir o cartão correspondente.
   useEffect(() => {
@@ -4995,7 +4995,7 @@ ${recentMessages}
     agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuariosRecados)).length,
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
     potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
-  }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuarioAgendaId, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
+  }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuariosRecados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
 
   const chaveContatosPotenciais = useMemo(() => contatosVinculados.map((c: any) => c.id).sort().join(","), [contatosVinculados]);
   useEffect(() => {
