@@ -203,6 +203,15 @@ export function gatilhoParaIA(g: string): string {
   return `Se a última fala do cliente contiver ${lista.slice(0, -1).join(", ")} ou ${lista[lista.length - 1]}`;
 }
 
+/** Remove a etapa `i` e corrige os destinos "Ir para a etapa" (destino removido vira "próxima etapa"). Pura. */
+export function removerEtapa(etapas: EtapaEditavel[], i: number): EtapaEditavel[] {
+  return etapas.filter((_, j) => j !== i).map((e) => ({ ...e, condicoes: e.condicoes.map((c) => {
+    if (c.acao !== "ir_etapa" || c.etapa == null) return c;
+    if (c.etapa === i) { const { etapa: _x, ...r } = c; return { ...r, acao: "avancar" as const }; }
+    return c.etapa > i ? { ...c, etapa: c.etapa - 1 } : c;
+  }) }));
+}
+
 /** Texto do roteiro editável para a IA: etapas numeradas + regras "Se X, faça Y". Pura: testável. */
 export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
   const validas = r.etapas.map((e, i) => ({ e, i })).filter((x) => x.e.fala.trim());
