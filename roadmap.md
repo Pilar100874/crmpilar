@@ -1,4 +1,5 @@
 # Roadmap — Atendimento
+- [ ] Atualizar menu radial com atalhos úteis à fila e ao cliente ativo, sem cortes ou ações sem contexto
 - [x] Corrigir busca do cabeçalho em todas as visualizações e manter a pesquisa ao abrir a agenda central
 - [x] Abrir cadastros na área central com os mesmos formulários de Empresas e Contatos do Listas
 - [x] Preservar regras do módulo Empresas e vincular automaticamente cadastros ao criador
