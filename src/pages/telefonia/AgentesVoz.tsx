@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Bot, KeyRound, PhoneCall, PhoneIncoming, Headset, Plus, Save, Trash2, Server, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { CamposAgenteEditor } from "@/components/telefonia/CamposAgenteEditor";
-import { lerCampos } from "@/lib/voz/camposAgente";
+import { ROTEIROS, lerConduta, type CondutaAgente } from "@/lib/voz/roteirosLigacao";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstabelecimento } from "@/lib/aip/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -291,8 +290,8 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
               </div>
               <div className="space-y-1 md:col-span-2"><Label>Saudação</Label><Input value={atual.saudacao} onChange={(e) => setAtual({ ...atual, saudacao: e.target.value })} /></div>
               <div className="space-y-1 md:col-span-2">
-                <Label>Instruções para a IA</Label>
-                <Textarea rows={6} placeholder="Ex.: Você atende a Pilar. Informe horários, agende visitas e transfira para vendas quando pedirem orçamento."
+                <Label>{atual.modos?.includes("ligar") ? "Sobre a empresa (opcional)" : "Instruções para a IA"}</Label>
+                <Textarea rows={4} maxLength={600} placeholder={atual.modos?.includes("ligar") ? "Ex.: Distribuidora de embalagens em Sorocaba, entrega em 24h. O roteiro da ligação é escolhido no disparo." : "Ex.: Você atende a Pilar. Informe horários, agende visitas e transfira para vendas quando pedirem orçamento."}
                   value={atual.prompt} onChange={(e) => setAtual({ ...atual, prompt: e.target.value })} />
               </div>
               <div className="space-y-2 rounded-md border p-3 md:col-span-2">
