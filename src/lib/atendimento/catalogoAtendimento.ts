@@ -5,6 +5,7 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
+import { montarMenuRadial } from "./menuRadial";
 import { correspondeFiltroContato } from "./filtroContato";
 import { usuariosComCriador } from "./vinculoCriador";
 import { calcularPotenciais, CONFIG_PADRAO, mensagemSugerida, type OrcPotencial } from "./potenciais";
@@ -58,6 +59,13 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "menu-radial", modulo: "Fila e organização", titulo: "Atalhos do Atendimento",
+    oQueE: "Menu circular com atalhos de Contatos, Minha agenda, Disparo em massa, cadastro e ações do cliente selecionado.",
+    regraNegocio: "Ações individuais só aparecem com cliente selecionado e respeitam canais, endereço e registros existentes. Ferramentas de mensagens só aparecem com conversa aberta e configuração habilitada. Navegar não encerra ligações nem finaliza contatos.",
+    comoUsar: ["Clique no ícone de atalhos no canto inferior ou use o botão direito fora dos campos de texto.", "Escolha Contatos para trocar a aba da fila ou Cliente selecionado para abrir seus registros e canais.", "Clique no centro para voltar ou fechar; Esc também fecha."],
+    simular: () => [passo("Sem cliente não oferece ações individuais", !montarMenuRadial({ cliente: false, whatsapp: false, telefone: false, email: false, visita: false, historico: false, tarefa: false, agenda: false, orcamentos: false }, []).some(i => i.id === "cliente"))],
+  },
   {
     id: "busca-agenda", modulo: "Fila e organização", titulo: "Buscar contatos ou tarefas na agenda",
     oQueE: "A busca mostra os itens encontrados logo abaixo do campo, com contato, tarefa e data.",

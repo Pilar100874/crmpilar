@@ -1,7 +1,9 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { X, ChevronLeft, type LucideIcon } from "lucide-react";
+import { X, ChevronLeft, LayoutGrid, type LucideIcon } from "lucide-react";
 
 export interface RadialMenuItem {
   id: string | number;
@@ -48,18 +50,19 @@ export function RadialMenu({
   const angleStep = (2 * Math.PI) / currentItems.length;
 
   const handleContextMenu = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("input, textarea, [contenteditable=true]")) return;
     e.preventDefault();
     
     const rect = containerRef.current?.getBoundingClientRect();
     if (rect) {
       // Calculate position relative to the container
-      let x = e.clientX - rect.left;
-      let y = e.clientY - rect.top;
+      let x = e.clientX;
+      let y = e.clientY;
       
       // Ensure menu stays within bounds
       const halfSize = size / 2;
-      x = Math.max(halfSize, Math.min(rect.width - halfSize, x));
-      y = Math.max(halfSize, Math.min(rect.height - halfSize, y));
+      x = Math.max(halfSize + 8, Math.min(window.innerWidth - halfSize - 8, x));
+      y = Math.max(halfSize + 8, Math.min(window.innerHeight - halfSize - 8, y));
       
       setPosition({ x, y });
     }
@@ -148,7 +151,7 @@ export function RadialMenu({
     >
       {children}
       
-      <AnimatePresence>
+      {createPortal(<AnimatePresence>
         {isOpen && (
           <>
             {/* Backdrop */}
@@ -157,7 +160,7 @@ export function RadialMenu({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-50 bg-black/20"
+              className="fixed inset-0 z-[900] bg-background/40"
               onMouseDown={(e) => {
                 e.stopPropagation();
                 handleClose();
@@ -171,7 +174,9 @@ export function RadialMenu({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute z-[60] pointer-events-none"
+              role="menu"
+              aria-label={activeSubMenu?.label || "Atalhos do Atendimento"}
+              className="fixed z-[901] pointer-events-none"
               onMouseDown={(e) => e.stopPropagation()}
               style={{
                 left: position.x - size / 2,
@@ -212,6 +217,11 @@ export function RadialMenu({
                   return (
                     <g
                       key={item.id}
+                      role="menuitem"
+                      aria-label={item.label}
+                      tabIndex={0}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleItemClick(item, index); } }}
+                      onFocus={() => setHoveredIndex(index)}
                       onClick={() => handleItemClick(item, index)}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
@@ -324,9 +334,9 @@ export function RadialMenu({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-xl shadow-xl shadow-primary/20 whitespace-nowrap"
+                    className="absolute left-0 right-0 top-full mt-1 px-2 py-1 bg-popover text-popover-foreground text-xs text-center font-medium rounded-md border border-border shadow-lg break-words"
                   >
-                    {currentItems[hoveredIndex].label}
+                    {currentItems[hoveredIndex]?.label}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -334,7 +344,12 @@ export function RadialMenu({
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
+      {createPortal(<Button variant="outline" size="icon" aria-label="Abrir atalhos do Atendimento" title="Atalhos do Atendimento"
+        className="fixed bottom-4 right-16 z-[800] h-9 w-9 rounded-full border-border bg-card shadow-md"
+        onClick={() => { setPosition({ x: Math.max(size / 2 + 8, window.innerWidth - size / 2 - 16), y: Math.max(size / 2 + 8, window.innerHeight - size / 2 - 52) }); setActiveSubMenu(null); setIsOpen(true); }}>
+        <LayoutGrid className="h-4 w-4" />
+      </Button>, document.body)}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
+import { montarMenuRadial } from "@/lib/atendimento/menuRadial";
 import { FilaDoDia, type FilaItem, type FilaCanal, type FiltroFila } from "@/components/atendimento/FilaDoDia";
 import { DispensarPotencialDialog } from "@/components/atendimento/DispensarPotencialDialog";
 import { EVENTO_TAREFAS_ALTERADAS } from "@/lib/calendario/eventos";
@@ -5004,6 +5005,8 @@ ${recentMessages}
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
+    // Ferramentas de mensagem precisam de uma conversa aberta; evita comandos sem destinatário.
+    if (currentTabType !== "chat" || !selectedConv) return [];
     const tools = getRadialMenuItems(currentTabType);
     // Only show active orchestrators
     const activeAgents = chatAgents.filter(a => (a as any).tipo_agente === 'orquestrador' && a.ativo);
@@ -5013,7 +5016,7 @@ ${recentMessages}
       label: agent.nome,
     }));
     return [...tools, ...agentItems];
-  }, [currentTabType, getRadialMenuItems, chatAgents]);
+  }, [currentTabType, getRadialMenuItems, chatAgents, selectedConv]);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -5151,19 +5154,17 @@ ${recentMessages}
     );
   }
 
-  const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
-    { id: "chat", icon: MessageSquare, label: "Conversas", badge: quantidadeCardsChat },
-    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: filteredTasks.length },
-    { id: "email", icon: Mail, label: "E-mails", badge: quantidadeCardsEmail },
-    { id: "orcamento", icon: Receipt, label: "Orç.", badge: quantidadeCardsOrcamento },
-    { id: "dialer", icon: PhoneCall, label: "Discador" },
-    ...(dynamicRadialTools.length > 0 ? [{ 
-      id: "tools", 
-      icon: Plus, 
-      label: "Ferramentas",
-      subItems: dynamicRadialTools
-    }] : []),
-  ];
+  const RADIAL_MENU_ITEMS = montarMenuRadial({
+    cliente: !!clienteCabecalho,
+    whatsapp: !!clienteCabecalho?.telefone,
+    telefone: !!clienteCabecalho?.tel,
+    email: !!clienteCabecalho?.email,
+    visita: !!clienteCabecalho?.id && contatosComEnderecoVisita.has(clienteCabecalho.id),
+    historico: possuiHistorico(registrosDoCabecalho),
+    tarefa: possuiTarefa(registrosDoCabecalho),
+    agenda: possuiAgenda(registrosDoCabecalho),
+    orcamentos: possuiOrcamento(registrosDoCabecalho),
+  }, dynamicRadialTools);
 
   // O discador só abre se o PABX estiver configurado no estabelecimento
   // e o usuário tiver ramal vinculado — sem os dois, a ligação nunca sai.
@@ -5365,13 +5366,37 @@ ${recentMessages}
   };
 
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
+    if (typeof item.id === "string" && item.id.startsWith("fila-")) {
+      setFiltroFila(item.id.replace("fila-", "") as typeof filtroFila);
+      setShowConversationsList(true);
+      if (isMobile) setMobileView("list");
+      return;
+    }
+    if (typeof item.id === "string" && item.id.startsWith("cliente-") && clienteCabecalho) {
+      const acao = item.id.replace("cliente-", "");
+      if (acao === "tarefa") { void abrirUltimaTarefaDoContato(clienteCabecalho.id, clienteCabecalho.nome); return; }
+      fecharConteudoCentral();
+      if (acao === "historico") setHistoricoCliente({ customerId: clienteCabecalho.id || undefined, nome: clienteCabecalho.nome });
+      else if (acao === "agenda" && clienteCabecalho.id) setAgendaContato({ id: clienteCabecalho.id, nome: clienteCabecalho.nome });
+      else if (acao === "orcamentos" && clienteCabecalho.id) setOrcamentosCliente({ id: clienteCabecalho.id, nome: clienteCabecalho.nome });
+      else trocarAba(acao);
+      setMobileView("main");
+      return;
+    }
     switch (item.id) {
+      case "disparo":
+        abrirDisparoMassa();
+        break;
+      case "cadastro":
+        setShowCustomerSearchForTask(true);
+        setMobileView("main");
+        break;
       case "chat":
         setActiveTab("chat");
         setShowConversationsList(true);
         break;
       case "agenda":
-        setActiveTab("agenda");
+        window.dispatchEvent(new CustomEvent("calendario:abrir-data", { detail: { data: agendaDate.toISOString(), modo: "day" } }));
         setShowConversationsList(true);
         break;
       case "email":
