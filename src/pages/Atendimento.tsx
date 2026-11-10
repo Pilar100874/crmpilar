@@ -66,7 +66,7 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { cartaoDoFiltro, correspondeFiltroContato, type EscopoEmpresa } from "@/lib/atendimento/filtroContato";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
-import { recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
+import { recadoDoEscopo, recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -571,6 +571,8 @@ export default function Atendimento() {
   const [cadastroParaRecado, setCadastroParaRecado] = useState(false);
   const [recadosRecebidos, setRecadosRecebidos] = useState<any[]>([]);
   const [usuarioAgendaId, setUsuarioAgendaId] = useState("");
+  const usuariosRecados = useMemo(() => [...new Set([usuarioAgendaId, ...idsVisiveis].filter(Boolean))], [usuarioAgendaId, idsVisiveis]);
+  const totalRecadosUrgentes = recadosRecebidos.filter(t => recadoDoEscopo(t, usuariosRecados) && recadoUrgentePendente(t)).length;
   const contatosNaFilaRef = useRef<Set<string>>(new Set());
   const abrirFichaForaDaFilaRef = useRef<(c: { id: string; nome: string; tel?: string; telefone?: string; email?: string }) => void>(() => {});
   const filtrarESelecionarCartao = (filtro: GlobalFilter | null) => {
@@ -1879,7 +1881,7 @@ export default function Atendimento() {
       );
       // Recados destinados ao usuário entram mesmo sem vínculo de carteira ou na virada do dia.
       const { data: recadosData, error: erroRecados } = await supabase.from('calendario_tarefas').select('*')
-        .eq('user_id', usuarioData.id)
+        .in('user_id', [...new Set([usuarioData.id, ...idsVisiveisRef.current])])
         .or('origem_sub_item.in.(recado_urgente,recado_normal),title.ilike.Recado: retornar %,title.ilike.URGENTE - Recado: retornar %')
         .not('status', 'in', '("concluido","cancelado","completed","cancelled")');
       if (erroRecados) throw erroRecados;
@@ -4707,7 +4709,7 @@ ${recentMessages}
 
     // Agendados: tarefas da agenda, somente de contatos vinculados ao(s) usuário(s) visíveis
     if (filtroFila === "agendados") filteredTasks
-      .filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioAgendaId))
+      .filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuariosRecados))
       .forEach((task: any) => {
       const r = registrosPorContato.get(task.contact_id);
       const ce = task.customers?.customer_empresas || [];
@@ -4729,7 +4731,7 @@ ${recentMessages}
         id: `task-${task.id}`,
         tipo: "agendado",
         contactId: task.contact_id,
-        recadoUrgente: task.user_id === usuarioAgendaId && recadoUrgentePendente(task),
+        recadoUrgente: recadoDoEscopo(task, usuariosRecados) && recadoUrgentePendente(task),
         temHistorico: possuiHistorico(r),
         temAgenda: possuiAgenda(r),
         temOrcamento: possuiOrcamento(r),
@@ -4990,7 +4992,7 @@ ${recentMessages}
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
-    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuarioAgendaId)).length,
+    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuariosRecados)).length,
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
     potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuarioAgendaId, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);
@@ -6510,7 +6512,7 @@ ${recentMessages}
               <div className="flex-1 min-h-0 flex flex-col">
                 <FilaDoDia
                   items={filaItemsMobile}
-                  totalRecadosUrgentes={recadosRecebidos.filter(recadoUrgentePendente).length}
+                  totalRecadosUrgentes={totalRecadosUrgentes}
                   headerExtra={acoesContatos}
                   vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}
                                     discadorAtivo={agendaViewMode === 'fluxo' ? discadorModo : null}
@@ -7096,7 +7098,7 @@ ${recentMessages}
         <DispensarPotencialDialog alvo={dispensarAlvo} usuarioId={usuarioId || null} onClose={() => setDispensarAlvo(null)} />
         <FilaDoDia
           items={filaItems}
-          totalRecadosUrgentes={recadosRecebidos.filter(recadoUrgentePendente).length}
+          totalRecadosUrgentes={totalRecadosUrgentes}
           headerExtra={acoesContatos}
           tablet={isTablet}
           vazioTexto={usarAgenda ? "Nenhum item na agenda de hoje" : "Nenhum contato vinculado"}

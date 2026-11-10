@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/estabelecimentoUtils", () => ({ getEstabelecimentoId: vi.fn(), getUserIdFromAuth: vi.fn() }));
 vi.mock("@/lib/calendario/eventos", () => ({ notificarTarefasAlteradas: vi.fn() }));
-import { montarTarefaRecado, recadoUrgentePendente, tarefaVisivelNaFila } from "./recadoResponsavel";
+import { montarTarefaRecado, recadoUrgentePendente, tarefaVisivelNaFila, recadoDoEscopo } from "./recadoResponsavel";
 
 const base = { contatoId: "c1", contatoNome: "Ana", responsavelId: "u2", autorId: "u1", autorNome: "Bia", recado: "Quer cotação", estabelecimentoId: "e1", agora: new Date(2026, 10, 9, 10, 0) };
 
@@ -40,5 +40,16 @@ describe("recado para o responsável", () => {
   });
   it("exige selecionar ou cadastrar cliente", () => {
     expect(() => montarTarefaRecado({ ...base, contatoId: "", urgencia: "urgente" })).toThrow();
+  });
+  it("quem assume o responsável vê seu recado urgente sem vínculo de carteira", () => {
+    const tarefa = montarTarefaRecado({ ...base, urgencia: "urgente" });
+    expect(tarefaVisivelNaFila(tarefa, new Set(), ["u1", "u2"])).toBe(true);
+    expect(recadoDoEscopo(tarefa, ["u1", "u2"]) && recadoUrgentePendente(tarefa)).toBe(true);
+    expect(tarefa.user_id).toBe("u2");
+  });
+  it("deixar de assumir remove visibilidade e alerta do recado", () => {
+    const tarefa = montarTarefaRecado({ ...base, urgencia: "urgente" });
+    expect(tarefaVisivelNaFila(tarefa, new Set(), ["u1"])).toBe(false);
+    expect(recadoDoEscopo(tarefa, ["u1"])).toBe(false);
   });
 });
