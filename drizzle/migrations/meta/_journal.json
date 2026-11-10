@@ -127,6 +127,13 @@
       "when": 1794274546352,
       "tag": "0017_resultado_observado_disparo_jornada",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794279499689,
+      "tag": "0018_orcamento_vendedor_automatico",
+      "breakpoints": true
     }
   ]
 }
