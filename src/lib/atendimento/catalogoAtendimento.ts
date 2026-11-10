@@ -5,6 +5,7 @@
  */
 import { contatoDaBarraFinalizacao, itemNaoFinalizado } from "./barraFinalizacao";
 import { correspondeBuscaAgenda } from "@/lib/calendario/buscaAgenda";
+import { PRAZO_RECADO_MIN } from "./recadoResponsavel";
 import { montarMenuRadial } from "./menuRadial";
 import { correspondeFiltroContato } from "./filtroContato";
 import { usuariosComCriador } from "./vinculoCriador";
