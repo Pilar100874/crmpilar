@@ -427,14 +427,28 @@ export function getEffectiveMainCustomization(
   };
   collectPlaced(migrated.roots);
 
+  let roots = migrated.roots;
+  const insertInOrigin = (nodes: CustomNode[], originId: string, originTitle: string | undefined, program: CustomNode): CustomNode[] =>
+    nodes.map((node) => {
+      if (node.kind !== "container") return node;
+      if (node.id === `c-${originId}` || node.id === originId || node.title === originTitle) {
+        placed.add(program.kind === "program" ? program.programId : program.id);
+        return { ...node, children: [...node.children, program] };
+      }
+      return { ...node, children: insertInOrigin(node.children, originId, originTitle, program) };
+    });
+
   const missing: CustomNode[] = [];
   for (const [id, program] of programs) {
     if (program.system || program.footerAdmin || placed.has(id)) continue;
+    if (program.originContainerId) {
+      roots = insertInOrigin(roots, program.originContainerId, program.originContainerTitle, { kind: "program", programId: id });
+      if (placed.has(id)) continue;
+    }
     missing.push({ kind: "program", programId: id });
   }
 
-  if (missing.length === 0) return migrated;
-  return { ...migrated, roots: [...migrated.roots, ...missing] };
+  return { ...migrated, roots: [...roots, ...missing] };
 }
 
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
