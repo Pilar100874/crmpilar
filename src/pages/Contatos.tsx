@@ -114,9 +114,10 @@ interface ContatosProps {
   criarInicial?: boolean;
   contatoIdInicial?: string;
   onFecharEmbutido?: () => void;
+  onContatoSalvo?: (id: string) => void;
 }
 
-export default function Contatos({ hideAdminButtons = false, criarInicial = false, contatoIdInicial, onFecharEmbutido }: ContatosProps) {
+export default function Contatos({ hideAdminButtons = false, criarInicial = false, contatoIdInicial, onFecharEmbutido, onContatoSalvo }: ContatosProps) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(criarInicial);
@@ -1650,6 +1651,7 @@ export default function Contatos({ hideAdminButtons = false, criarInicial = fals
       setBuscaEmpresa("");
       setEmpresasFiltradas([]);
       setEmpresasVinculadas([]);
+      onContatoSalvo?.(contatoId);
     } catch (e: any) {
       console.error('Erro ao salvar:', e);
       toast.error(e?.message || "Erro ao salvar contato");

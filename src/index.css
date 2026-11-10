@@ -1208,6 +1208,15 @@ body {
 .cabecalho-cliente-ativo .calendario-raiz, .atendimento-com-barra .calendario-raiz { padding-top: 0 !important; }
 
 /* Regra global: nenhuma tela deve exibir barra de rolagem horizontal */
+@keyframes recadoUrgenteAlerta {
+  0%, 100% { box-shadow: inset 0 0 0 2px hsl(var(--destructive) / 0.8); }
+  50% { box-shadow: inset 0 0 0 2px hsl(var(--destructive) / 0.15); }
+}
+.recado-urgente-alerta { animation: recadoUrgenteAlerta 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .recado-urgente-alerta { animation: none; box-shadow: inset 0 0 0 2px hsl(var(--destructive) / 0.8); }
+}
+
 @layer base {
   main, [data-quadro-central], .overflow-auto, .overflow-x-auto { overflow-x: hidden !important; }
   img, video, canvas, svg, iframe { max-width: 100%; }

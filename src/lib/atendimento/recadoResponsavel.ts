@@ -10,6 +10,17 @@ export const PRAZO_RECADO_MIN: Record<UrgenciaRecado, number> = { normal: 120, u
 
 export interface Responsavel { id: string; nome: string }
 
+export interface TarefaRecado { origem_sub_item?: string | null; title?: string | null; status?: string | null; user_id?: string | null }
+export function recadoPendente(t: TarefaRecado): boolean {
+  return (t.origem_sub_item === "recado_urgente" || t.origem_sub_item === "recado_normal" || /^(URGENTE - )?Recado: retornar /i.test(t.title || "")) && !["concluido", "cancelado", "completed", "cancelled"].includes(t.status || "");
+}
+export function recadoUrgentePendente(t: TarefaRecado): boolean {
+  return recadoPendente(t) && (t.origem_sub_item === "recado_urgente" || /^URGENTE - Recado:/i.test(t.title || ""));
+}
+export function tarefaVisivelNaFila(t: TarefaRecado & { contact_id?: string | null }, vinculados: Set<string>, usuarioId: string): boolean {
+  return !!t.contact_id && (vinculados.has(t.contact_id) || (t.user_id === usuarioId && recadoPendente(t)));
+}
+
 export interface DadosRecado {
   contatoId: string;
   contatoNome: string;
@@ -26,6 +37,7 @@ export interface DadosRecado {
 export function montarTarefaRecado(d: DadosRecado) {
   const texto = d.recado.trim();
   if (!texto) throw new Error("Escreva o recado");
+  if (!d.contatoId) throw new Error("Escolha ou cadastre o cliente");
   if (!d.responsavelId) throw new Error("Escolha o responsável");
   const prazo = addMinutes(d.agora ?? new Date(), PRAZO_RECADO_MIN[d.urgencia]);
   const urgente = d.urgencia === "urgente";
@@ -41,9 +53,10 @@ export function montarTarefaRecado(d: DadosRecado) {
     is_all_day: false,
     status: "pending",
     origem: "manual",
+    origem_sub_item: urgente ? "recado_urgente" : "recado_normal",
     data_original: format(prazo, "yyyy-MM-dd"),
     modo_criacao: "manual",
-    motivo: `Recado telefônico anotado por ${d.autorNome} para o responsável do contato`,
+    motivo: `Recado encaminhado por ${d.autorNome} para o usuário selecionado`,
   };
 }
 
@@ -74,6 +87,8 @@ export async function listarUsuarios(): Promise<Responsavel[]> {
 export async function registrarRecado(p: { contatoId: string; contatoNome: string; responsavelId: string; recado: string; urgencia: UrgenciaRecado }) {
   const [autorId, estab] = await Promise.all([getUserIdFromAuth(), getEstabelecimentoId()]);
   if (!autorId || !estab) throw new Error("Usuário não identificado");
+  const { data: destinatario, error: erroDestinatario } = await supabase.from("usuarios").select("id").eq("id", p.responsavelId).eq("estabelecimento_id", estab).maybeSingle();
+  if (erroDestinatario || !destinatario) throw new Error("Escolha um usuário da sua empresa");
   const { data: autor } = await (supabase as any).from("usuarios").select("nome").eq("id", autorId).maybeSingle();
   const linha = montarTarefaRecado({ ...p, autorId, autorNome: autor?.nome || "atendente", estabelecimentoId: estab });
   const { error } = await (supabase as any).from("calendario_tarefas").insert(linha);
