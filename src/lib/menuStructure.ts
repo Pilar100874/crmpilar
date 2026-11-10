@@ -55,6 +55,7 @@ export const menuStructure: MenuCategory[] = [
     icon: LucideIcons.ShoppingCart,
     subItems: [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: LucideIcons.FileBarChart },
+      { id: "Pedidos Perdidos", title: "Pedidos perdidos", url: "/pedidos-perdidos", icon: LucideIcons.TrendingDown },
       { id: "Rastreamento Pedidos", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
       { id: "Regras Ecommerce", title: "Regras do E-commerce", url: "/ecommerce-rules", icon: LucideIcons.Workflow },

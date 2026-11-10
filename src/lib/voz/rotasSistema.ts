@@ -83,6 +83,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/config/regras-monitoramento-visita", titulo: "Regras de Monitoramento de Visita", aliases: ["regras de monitoramento"] },
   { path: "/config/formularios-visita", titulo: "Formulários de Visita", aliases: ["formularios das visitas"] },
   { path: "/config/regras-formulario-visita", titulo: "Regras de Formulário de Visita", aliases: ["regras de formulario"] },
+  { path: "/pedidos-perdidos", titulo: "Pedidos perdidos", aliases: ["orcamentos perdidos", "vendas perdidas", "motivos de perda"] },
   { path: "/vendas-config", titulo: "Configuração de Vendas", aliases: ["configuracoes de vendas", "config de vendas", "config vendas"] },
 
   // ============ Menu Principal - Assistente ============
