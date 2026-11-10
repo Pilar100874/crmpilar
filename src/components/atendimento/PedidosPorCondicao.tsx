@@ -1,3 +1,5 @@
+import { carregarEquipeVisivel } from "@/lib/atendimento/equipeVisivel";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,21 +18,26 @@ export default function PedidosPorCondicao({ usuarioId, inicio, fim }: { usuario
   useEffect(() => {
     if (!usuarioId || !inicio || !fim) return;
     setCarregando(true);
+    void (async () => {
+    const estab = await getEstabelecimentoId();
+    const equipe = estab ? await carregarEquipeVisivel(estab) : null;
+    const ids = equipe && equipe.papel === "gerente" ? [usuarioId, ...equipe.membros.map((m) => m.id)] : [usuarioId];
     supabase.from("orcamentos")
       .select("id, etapa, valor_total, created_at, condicoes_pagamento:condicao_pagamento_id(nome)")
-      .eq("vendedor_id", usuarioId)
+      .in("vendedor_id", ids)
       .gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`)
       .limit(5000)
       .then(({ data, error }) => {
         if (error) {
           // fallback sem relação de condição
           supabase.from("orcamentos").select("id, etapa, valor_total, created_at, condicao_pagamento_id")
-            .eq("vendedor_id", usuarioId).gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`).limit(5000)
+            .in("vendedor_id", ids).gte("created_at", `${inicio}T00:00:00`).lte("created_at", `${fim}T23:59:59`).limit(5000)
             .then(({ data: d2 }) => { setLinhas(d2 || []); setCarregando(false); });
           return;
         }
         setLinhas(data || []); setCarregando(false);
       });
+    })();
   }, [usuarioId, inicio, fim]);
 
   const grupos = useMemo(() => {
