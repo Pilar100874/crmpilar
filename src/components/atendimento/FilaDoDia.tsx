@@ -601,7 +601,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <X className="h-3.5 w-3.5" />
             </Button>
           )}
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+          <div className="contents">
             <Button
               type="button"
               variant="ghost"
