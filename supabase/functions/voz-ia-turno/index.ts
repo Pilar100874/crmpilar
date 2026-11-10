@@ -103,6 +103,8 @@ Deno.serve(async (req) => {
       ? exata
       : silencio && modo !== "assistir"
         ? progresso.respostaSilencio ?? ""
+      : progresso.respostaSaudacao && modo !== "assistir"
+        ? progresso.respostaSaudacao
       : regraOuro && modo !== "assistir"
         ? TRANSICAO
         : await responder(key, sistema + regraOuro + notaAvanco, hist);

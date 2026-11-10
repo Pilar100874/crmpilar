@@ -23,4 +23,10 @@ describe("avanço do diálogo de orçamento", () => {
   it("uma fala real reinicia a verificação de silêncio", () => {
     expect(progressoVoz([{ papel: "agente", texto: "Alô, consegue me ouvir?" }, { papel: "cliente", texto: "Sim" }, ...pergunta], "", true).encerrarSilencio).toBe(false);
   });
+  it("alô no início repete só a pergunta atual, sem contar como resposta", () => {
+    const abertura = [{ papel: "agente", texto: "Olá, aqui é da Pilar. O senhor conseguiu dar uma olhada no orçamento?" }];
+    expect(progressoVoz(abertura, "Alô?", false).respostaSaudacao).toBe("Oi, tudo bem? O senhor conseguiu dar uma olhada no orçamento?");
+    expect(progressoVoz([...abertura, { papel: "cliente", texto: "Sim" }, ...pergunta], "Alô", false).respostaSaudacao).toBeNull();
+    expect(progressoVoz(abertura, "Não", false).respostaSaudacao).toBeNull();
+  });
 });

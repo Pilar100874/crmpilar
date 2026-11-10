@@ -19,5 +19,12 @@ export function progressoVoz(historico: FalaVoz[], fala: string, silencio: boole
   const respostaSilencio = !silencio ? null : encerrarSilencio
     ? "Não estou conseguindo ouvir sua resposta. Obrigado pela atenção, até mais. [DESLIGAR]"
     : "Alô, consegue me ouvir?";
-  return { respostaOrcamento, encerrarSilencio, respostaSilencio };
+  // "Alô" no início (antes de qualquer resposta real) é cumprimento, não resposta: repete só a última pergunta.
+  const apenasSaudacao = /^(alo+|ola|oi|pronto|bom dia|boa tarde|boa noite|quem fala|quem e|sim\??)?[\s,.!?]*(alo+|ola|oi|pronto|bom dia|boa tarde|boa noite|quem fala|quem e)[\s,.!?]*$/.test(resposta);
+  const clienteJaFalou = historico.some((h) => h.papel === "cliente");
+  const perguntaAtual = (ultima.match(/[^.!?]*\?/g) ?? []).pop()?.trim() ?? "";
+  const respostaSaudacao = !silencio && apenasSaudacao && !clienteJaFalou && perguntaAtual
+    ? `Oi, tudo bem? ${perguntaAtual}`
+    : null;
+  return { respostaOrcamento, encerrarSilencio, respostaSilencio, respostaSaudacao };
 }
