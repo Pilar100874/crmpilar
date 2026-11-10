@@ -16,7 +16,9 @@ export function progressoVoz(historico: FalaVoz[], fala: string, silencio: boole
   const falasSemResposta = historico.slice(ultimoCliente + 1).filter((h) => h.papel === "agente");
   const jaChecouAudio = falasSemResposta.some((h) => /consegue me ouvir|esta me ouvindo|nao estou conseguindo ouvir/i.test(normalizar(h.texto)));
   const encerrarSilencio = silencio && jaChecouAudio;
-  const respostaSilencio = !silencio ? null : encerrarSilencio
+  // Cliente respondeu e a IA ainda não respondeu: o silêncio é espera pela IA, não falta de áudio.
+  const clienteSemResposta = historico.length > 0 && historico[historico.length - 1].papel === "cliente" && normalizar(historico[historico.length - 1].texto).replace(/[^a-z]/g, "").length > 0;
+  const respostaSilencio = !silencio || clienteSemResposta ? null : encerrarSilencio
     ? "Não estou conseguindo ouvir sua resposta. Obrigado pela atenção, até mais. [DESLIGAR]"
     : "Alô, consegue me ouvir?";
   // "Alô" no início (antes de qualquer resposta real) é cumprimento, não resposta: repete só a última pergunta.
