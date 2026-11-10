@@ -7757,8 +7757,9 @@ ${recentMessages}
 
               {/* Agent Chat Panel - Embedded */}
               {/* Summary Panel */}
-              {showSummaryPanel && (
-                <Card className="bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl overflow-hidden">
+              {showSummaryPanel && createPortal(
+                <div className="fixed inset-0 z-[950] flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm" onClick={() => { setShowSummaryPanel(false); setConversationSummary(null); setSummaryGeneratedAt(null); }}>
+                <div className="flex max-h-[85dvh] w-full max-w-xl flex-col" onClick={(e) => e.stopPropagation()}>
                   <ConversationSummaryPanel
                     summary={conversationSummary}
                     isLoading={isSummaryLoading}
@@ -7769,7 +7770,9 @@ ${recentMessages}
                     }}
                     generatedAt={summaryGeneratedAt || undefined}
                   />
-                </Card>
+                </div>
+                </div>,
+                document.body
               )}
 
               {/* Agent Suggestion Panel */}
