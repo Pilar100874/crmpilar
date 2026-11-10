@@ -63,6 +63,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Chats ============
   { path: "/atendimento", titulo: "Painel de Chats", aliases: ["chats", "atendimento", "painel de atendimento", "painel dos chats"] },
+  { path: "/jornada-equipe", titulo: "Jornada da equipe", aliases: ["produtividade", "dashboard de atividades", "comparar usuarios", "desempenho da equipe"] },
   { path: "/agentes-chat", titulo: "Agentes IA", aliases: ["agentes de ia", "agentes de inteligencia artificial", "agentes do chat"] },
   { path: "/monitor-filas", titulo: "Monitor de Filas", aliases: ["monitor das filas", "filas de atendimento"] },
   { path: "/monitor-funcionarios", titulo: "Monitor de Funcionários", aliases: ["monitor dos funcionarios", "monitoramento de funcionarios"] },

@@ -84,6 +84,7 @@ const MarketingCampanhas = React.lazy(() => import("./pages/MarketingCampanhas")
 const BotResponseMonitor = React.lazy(() => import("./pages/BotResponseMonitor"));
 
 const ChatWebhook = React.lazy(() => import("./pages/ChatWebhook"));
+const JornadaEquipe = React.lazy(() => import("./pages/JornadaEquipe"));
 const MeusTextosProntos = React.lazy(() => import("./pages/MeusTextosProntos"));
 const MeusAnexos = React.lazy(() => import("./pages/MeusAnexos"));
 const Orcamentos = React.lazy(() => import("./pages/Orcamentos"));
@@ -664,6 +665,7 @@ const App = () => (
               <Route path="/vendas-config" element={<VendasConfig />} />
               <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
               <Route path="/atendimento-config" element={<AtendimentoConfig />} />
+              <Route path="/jornada-equipe" element={<JornadaEquipe />} />
               <Route path="/chat-interno" element={<ChatInterno />} />
               <Route path="/agentes-chat" element={<AgentChat />} />
               {/* Contagem Inteligente */}
