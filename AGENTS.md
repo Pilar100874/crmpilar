@@ -40,3 +40,4 @@
 - Shared vinculoCriador helpers resolve the internal user before inserts and add creator links idempotently after contact/company creation; temporary contacts remain owned by the existing company trigger.
 - Calendar search uses the shared buscaAgenda predicate and BuscaAgenda result picker; Atendimento owns the query across mounts, and selecting a result passes its task ID/date through the existing calendar navigation and contact-selection events.
 - Attendance radial shortcuts derive from menuRadial context and reuse existing panel navigation; render the radial overlay and touch launcher in body portals to avoid clipping and stacking beneath central panels.
+- Phone messages for an unavailable owner are saved as calendario_tarefas for the contact's linked user via src/lib/atendimento/recadoResponsavel.ts, so the owner sees them in their own queue without a separate inbox.
