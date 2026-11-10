@@ -70,6 +70,7 @@ import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/
 import { RecadoResponsavelDialog } from "@/components/atendimento/RecadoResponsavelDialog";
 import { PainelAtendimentoHeader } from "@/components/atendimento/PainelAtendimentoHeader";
 import { recadoDoEscopo, recadoUrgentePendente, tarefaVisivelNaFila } from "@/lib/atendimento/recadoResponsavel";
+import { carregarPedidosAbertos, clientesSemTarefaHoje, resumirPedidosAbertos, rotuloPedidoAberto, type PedidoAberto } from "@/lib/orcamento/pedidosAbertos";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -3829,6 +3830,20 @@ ${recentMessages}
   }, [carregandoContatosVinculados]);
   const idsContatosVinculados = useMemo(() => new Set(contatosVinculados.map((c) => c.id)), [contatosVinculados]);
 
+  // Pedidos em aberto: cliente fica nos Agendados todo dia até finalizar ou cancelar (com motivo)
+  const [pedidosAbertosLista, setPedidosAbertosLista] = useState<PedidoAberto[]>([]);
+  const chavePedidosAbertos = useMemo(() => [...idsContatosVinculados].sort().join(","), [idsContatosVinculados]);
+  useEffect(() => {
+    if (!chavePedidosAbertos) { setPedidosAbertosLista([]); return; }
+    let ativo = true;
+    const carregar = () => { void carregarPedidosAbertos(chavePedidosAbertos.split(",")).then((r) => { if (ativo) setPedidosAbertosLista(r); }).catch(() => {}); };
+    carregar();
+    const t = window.setInterval(carregar, 120000);
+    window.addEventListener("atendimento:pedidos-abertos-alterados", carregar);
+    return () => { ativo = false; window.clearInterval(t); window.removeEventListener("atendimento:pedidos-abertos-alterados", carregar); };
+  }, [chavePedidosAbertos]);
+  const pedidosAbertos = useMemo(() => resumirPedidosAbertos(pedidosAbertosLista), [pedidosAbertosLista]);
+
   const filteredConversations = useMemo(() => {
     const seenCustomers = new Set<string>();
     const filtradas = conversations.filter((conv) => {
@@ -4730,6 +4745,7 @@ ${recentMessages}
         tipo: "agendado",
         contactId: task.contact_id,
         recadoUrgente: recadoDoEscopo(task, usuariosRecados) && recadoUrgentePendente(task),
+        pedidoAberto: task.contact_id && pedidosAbertos.get(task.contact_id) ? rotuloPedidoAberto(pedidosAbertos.get(task.contact_id)!) : undefined,
         temHistorico: possuiHistorico(r),
         temAgenda: possuiAgenda(r),
         temOrcamento: possuiOrcamento(r),
@@ -4793,6 +4809,43 @@ ${recentMessages}
         },
       });
     });
+
+    // Agendados: clientes com pedido em aberto e sem tarefa hoje recebem cartão diário de acompanhamento
+    if (filtroFila === "agendados") {
+      const comTarefa = new Set<string>(filteredTasks.filter((t: any) => tarefaVisivelNaFila(t, idsContatosVinculados, usuariosRecados)).map((t: any) => t.contact_id).filter(Boolean));
+      clientesSemTarefaHoje(pedidosAbertos, comTarefa).forEach((cid) => {
+        const contato: any = contatosVinculados.find((c: any) => c.id === cid);
+        const resumo = pedidosAbertos.get(cid);
+        if (!contato || !resumo) return;
+        const r = registrosPorContato.get(cid);
+        const ce = contato.companies || [];
+        const principal = ce.find((c: any) => c.is_primary) || ce[0];
+        lista.push({
+          id: `pedido-${cid}`,
+          tipo: "agendado",
+          contactId: cid,
+          pedidoAberto: rotuloPedidoAberto(resumo),
+          temHistorico: possuiHistorico(r),
+          temAgenda: possuiAgenda(r),
+          temOrcamento: true,
+          nome: contato.nome,
+          empresa: principal?.empresas?.nome_fantasia || principal?.empresas?.nome || undefined,
+          motivo: "Acompanhar pedido em aberto",
+          canal: contato.telefone ? "whatsapp" : contato.tel ? "telefone" : contato.email ? "email" : "telefone",
+          horario: "",
+          canais: [
+            ...(contato.telefone ? ["whatsapp" as FilaCanal] : []),
+            ...(contato.tel ? ["telefone" as FilaCanal] : []),
+            ...(contato.email ? ["email" as FilaCanal] : []),
+          ],
+          onCanal: (c: FilaCanal) => abrirCanalDoContato(cid, c === "whatsapp" ? "chat" : c === "telefone" ? "tel" : c),
+          onOrcamentosCentro: (contatoId: string, contatoNome: string) => {
+            setHistoricoCliente(null); setAgendaContato(null); setOrcamentosCliente({ id: contatoId, nome: contatoNome });
+          },
+          onClick: () => abrirItemContato(contato),
+        } as FilaItem);
+      });
+    }
 
     // Recebidos: somente na aba "Recebidos" — mensagens recebidas e ainda não respondidas, agrupadas por contato.
     (filtroFila === "recebidos" ? conversasRecebidasAgrupadas : [])
@@ -4990,7 +5043,10 @@ ${recentMessages}
   const totaisFila = useMemo(() => ({
     // "Tudo" representa sempre os contatos cadastrados e vinculados, independentemente da aba ativa.
     tudo: contatosVinculados.length,
-    agendados: filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuariosRecados)).length,
+    agendados: (() => {
+      const vis = filteredTasks.filter((task: any) => tarefaVisivelNaFila(task, idsContatosVinculados, usuariosRecados));
+      return vis.length + clientesSemTarefaHoje(pedidosAbertos, new Set(vis.map((t: any) => t.contact_id).filter(Boolean))).filter((id) => idsContatosVinculados.has(id)).length;
+    })(),
     recebidos: conversasRecebidasAgrupadas.length + emailsRecebidosAgrupados.length,
     potenciais: contatosVinculados.filter((c: any) => potenciaisPorCliente.has(c.id)).length,
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, usuariosRecados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciaisPorCliente]);

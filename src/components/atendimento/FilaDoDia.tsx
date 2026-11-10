@@ -101,6 +101,8 @@ export interface FilaItem {
   /** Itens importantes faltando no cadastro do contato. */
   cadastroFaltando?: string[];
   recadoUrgente?: boolean;
+  /** Rótulo do selo "Pedido em aberto • R$ X" (permanece até finalizar ou cancelar). */
+  pedidoAberto?: string;
 }
 
 export type FiltroFila = "tudo" | "agendados" | "recebidos" | "potenciais";
@@ -742,6 +744,11 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                       ) : null}
                     </p>
                     {item.recadoUrgente && <span className="mt-1 block text-xs font-semibold text-destructive">Recado urgente · retornar</span>}
+                    {item.pedidoAberto && (
+                      <span className="mt-1 inline-flex max-w-full rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                        <span className="truncate">{item.pedidoAberto}</span>
+                      </span>
+                    )}
                      {item.tipo === "recebido" && (() => {
                        const cfg = CANAL_CONFIG[item.canal];
                        const Ic = cfg.icon;
