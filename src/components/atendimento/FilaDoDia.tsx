@@ -368,14 +368,14 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
         }}
       />
       {/* Cabeçalho */}
-      <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-border/40">
-        <div className="flex flex-wrap items-center justify-between gap-1">
-          <div className="flex min-w-0 items-center gap-1">
-            <h2 className="text-base font-bold text-foreground">Contatos</h2>
-            {headerExtra}
+      <div className="flex-shrink-0 px-2 pt-3 pb-2 border-b border-border/40">
+        <div className="flex flex-nowrap items-center justify-between gap-0.5">
+          <div className="flex min-w-0 items-center gap-0.5">
+            <h2 className="shrink-0 whitespace-nowrap text-sm font-bold text-foreground">Contatos</h2>
+            <div className="shrink-0 [&_button]:h-6 [&_button]:w-6 [&_button]:p-0">{headerExtra}</div>
             {botUsuario.botAtual && (
               <label
-                className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground"
+                className="flex shrink-0 items-center gap-0 text-[11px] text-muted-foreground"
                 title={`Bot: ${botUsuario.botAtual.nome}`}
               >
                 <Bot className="h-3.5 w-3.5 shrink-0" />
@@ -383,7 +383,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
                   checked={botUsuario.ativo}
                   onCheckedChange={(v) => void botUsuario.alternarAtivo(v)}
                   aria-label="Ativar bot de atendimento"
-                  className="scale-75"
+                  className="scale-75 -mx-1"
                 />
               </label>
             )}
@@ -417,7 +417,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
             <button
               type="button"
               onClick={() => setTutorialAberto(true)}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-muted transition-colors"
+              className="h-6 w-6 rounded-lg flex items-center justify-center text-primary hover:bg-muted transition-colors"
               aria-label="Tour interativo do Atendimento"
               title="Tour interativo do Atendimento"
             >
@@ -427,7 +427,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  className="h-6 w-6 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                   aria-label="Mais opções"
                   data-tour="fila-menu"
                 >
