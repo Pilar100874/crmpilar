@@ -1,3 +1,4 @@
+import { analisarHabitos } from "./auxiliarVendas";
 /**
  * Catálogo central dos recursos do Atendimento.
  * Fonte única para o Tutorial do atendente e para as Simulações do administrador:
@@ -82,8 +83,15 @@ export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
     id: "recado-responsavel", modulo: "Fila e organização", titulo: "Recado para o responsável",
     oQueE: "O botão de recado ao lado de Contatos abre o encaminhamento na tela central, mesmo sem cliente aberto. Clientes vinculados ao próprio usuário não permitem encaminhamento; ao selecionar outro cliente, seu responsável cadastrado já aparece em Enviar para.",
     regraNegocio: "Escolha ou cadastre o cliente e envie uma mensagem interna ao usuário selecionado, sem alterar a carteira. O recado vira tarefa manual na agenda dele, com autor e mensagem: urgente em 30 minutos, normal em 2 horas. Recados urgentes pendentes ficam no início de Agendados; cartão e aba piscam até concluir ou cancelar, mesmo sem vínculo com o cliente e em outra data. Quem estiver assumindo o responsável recebe o mesmo destaque; ao deixar de assumir, esse recado sai do seu escopo. O alerta permanece ao abrir o cartão. Nenhuma mensagem externa é enviada automaticamente.",
-    comoUsar: ["Clique em Encaminhar recado ao lado de Contatos ou no cabeçalho do cliente.", "Pesquise o cliente ou clique em Cadastrar cliente; após salvar o cadastro, ele fica selecionado no recado.", "Escolha Enviar para, escreva a mensagem e confirme Enviar recado.", "O destinatário ou quem estiver assumindo ele abre Agendados e o cartão urgente para consultar a mensagem e providenciar o retorno."],
+    comoUsar: ["Clique em Encaminhar recado ao lado de Contatos ou no topo da fila.", "Pesquise o cliente ou clique em Cadastrar cliente; após salvar o cadastro, ele fica selecionado no recado.", "Escolha Enviar para, escreva a mensagem e confirme Enviar recado.", "O destinatário ou quem estiver assumindo ele abre Agendados e o cartão urgente para consultar a mensagem e providenciar o retorno."],
     simular: () => [passo("Recado urgente vence em 30 minutos", PRAZO_RECADO_MIN.urgente === 30), passo("Recado normal vence em 2 horas", PRAZO_RECADO_MIN.normal === 120), passo("Destinatário vê recado sem carteira", tarefaVisivelNaFila({ contact_id: "c", user_id: "u", origem_sub_item: "recado_urgente", status: "pending" }, new Set(), "u")), passo("Concluído não alerta", !recadoUrgentePendente({ origem_sub_item: "recado_urgente", status: "completed" }))],
+  },
+  {
+    id: "auxiliar-vendas", modulo: "Fila e organização", titulo: "Auxiliar de vendas",
+    oQueE: "O botão de lâmpada na barra do cliente abre uma faixa com os hábitos de compra e sugestões do que oferecer.",
+    regraNegocio: "A análise usa somente orçamentos e pedidos salvos do contato: pedidos são os finalizados. Mostra ticket médio, intervalo médio entre compras (exige 2 pedidos), próxima compra prevista com alerta quando o ciclo passou, prazo/condição mais usado, desconto médio, conversão, produtos mais comprados e produtos recorrentes que faltaram no último pedido. É somente leitura: nada é criado nem enviado.",
+    comoUsar: ["Abra o cliente.", "Clique na lâmpada na barra do cliente.", "Use as sugestões para montar a oferta; clique de novo para recolher."],
+    simular: () => [passo("Ciclo de 30 dias atrasado gera alerta", analisarHabitos([{ id: "1", data: "2026-01-01", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }, { id: "2", data: "2026-01-31", etapa: "finalizado", valor: 1, percentualDesconto: 0, condicao: null, itens: [] }], new Date("2026-03-15")).compraAtrasada)],
   },
   {
     id: "minha-jornada", modulo: "Fila e organização", titulo: "Minha jornada e comparação da equipe",
