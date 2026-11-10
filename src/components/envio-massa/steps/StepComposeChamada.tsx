@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Bot, Check, ListOrdered, PhoneForwarded, PhoneOff } from "lucide-react";
+import { AlertCircle, Bot, Sparkles, Target, Check, ListOrdered, PhoneForwarded, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,13 @@ import { obterStatusRamalGlobal, ouvirStatusRamalGlobal } from "@/lib/telefonia/
 import { cn } from "@/lib/utils";
 import { CanalEnvio } from "../types";
 import { ProdutoBusca } from "../ProdutoBusca";
-import { ROTEIROS, lerConduta, regrasConduta, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
+import { DEPARTAMENTOS, campanhaInteligente, lerDepartamento, roteirosDoDepartamento, lerConduta, regrasConduta, montarObjetivoRoteiro, pendenciasRoteiro, roteiroPorId, type DadosRoteiro, type RoteiroId } from "@/lib/voz/roteirosLigacao";
 import { camposPendentes, camposUsaveis, textoCampos, type ValorCampo } from "@/lib/voz/camposAgente";
 
 type Oferta = {
-  roteiro: RoteiroId; roteiroEscolhido?: boolean; produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; aviso: string; texto: string;
+  roteiro: RoteiroId; roteiroEscolhido?: boolean; modo: "inteligente" | "fixo"; produto: { id: string; nome: string } | null; condicao: string; descontoMax: number; aviso: string; texto: string;
 };
-const OFERTA_INICIAL: Oferta = { roteiro: "reposicao", produto: null, condicao: "", descontoMax: 0, aviso: "", texto: "" };
+const OFERTA_INICIAL: Oferta = { modo: "inteligente", roteiro: "reposicao", produto: null, condicao: "", descontoMax: 0, aviso: "", texto: "" };
 /** Mantém o formulário ao voltar/avançar etapas. */
 let ultimaOferta: Oferta | null = null;
 let ultimosValores: Record<string, ValorCampo> = {};
@@ -64,7 +64,7 @@ export function StepComposeChamada({
         .eq("estabelecimento_id", est).eq("ativo", true).order("created_at");
       const lista = (data ?? []).filter((a: any) => (a.modos ?? []).includes("ligar"));
       setAgentes(lista);
-      if (lista[0] && agenteIaId !== lista[0].id) onAgenteChange(lista[0].id, lista[0].nome);
+      if (lista[0] && !lista.some((a: any) => a.id === agenteIaId)) onAgenteChange(lista[0].id, lista[0].nome);
       const r = await meuRamal();
       if (r && !ramalIa) onRamalChange(r);
     })();
@@ -83,20 +83,31 @@ export function StepComposeChamada({
     produtoNome: roteiroPorId(n.roteiro).campos.includes("produto") ? n.produto?.nome : undefined,
     condicao: n.condicao, descontoMax: n.descontoMax, aviso: n.aviso, observacoes: n.texto,
   });
-  const emitir = (n: Oferta, v: Record<string, ValorCampo>) =>
-    onObjetivoChange([regrasConduta(lerConduta(configAgente)), montarObjetivoRoteiro(n.roteiro, dadosDe(n)), textoCampos(campos, v)].filter(Boolean).join(" "));
+  const emitir = (n: Oferta, v: Record<string, ValorCampo>) => {
+    const intel = n.modo === "inteligente" && departamento === "comercial";
+    campanhaInteligente.ativo = intel; campanhaInteligente.dados = dadosDe(n);
+    const roteiroTxt = intel
+      ? `MODO INTELIGENTE: o roteiro de cada cliente foi escolhido pelo CRM e vem logo abaixo; siga só ele.${n.texto.trim() ? ` Observação do usuário: ${n.texto.trim()}.` : ""}`
+      : montarObjetivoRoteiro(n.roteiro, dadosDe(n));
+    onObjetivoChange([regrasConduta(lerConduta(configAgente)), roteiroTxt, textoCampos(campos, v)].filter(Boolean).join(" "));
+  };
   const mudarCampo = (id: string, valor: ValorCampo) => {
     const v = { ...valores, [id]: valor }; setValores(v); ultimosValores = v; emitir(oferta, v);
   };
   // Campos de produto do agente duplicariam o produto do roteiro: o roteiro decide o produto.
   const configAgente = agentes.find((a) => a.id === agenteIaId)?.config;
+  const departamento = lerDepartamento(configAgente);
+  const roteirosDisp = roteirosDoDepartamento(departamento);
+  const inteligente = oferta.modo === "inteligente" && departamento === "comercial";
   // Campos antigos do agente só valem se forem fixos (o roteiro decide o resto).
   const campos = camposUsaveis(configAgente).filter((c) => c.tipo !== "produto" && c.fixo);
   // Roteiro padrão do agente, quando o usuário ainda não escolheu outro nesta sessão.
   useEffect(() => {
     if (canal !== "ia") return;
     const padrao = lerConduta(configAgente).roteiroPadrao;
-    if (padrao && !ultimaOferta?.roteiroEscolhido) { mudar({ roteiro: padrao }); return; }
+    const validos = roteirosDoDepartamento(lerDepartamento(configAgente)).map((r) => r.id);
+    if (!validos.includes(oferta.roteiro)) { mudar({ roteiro: padrao && validos.includes(padrao) ? padrao : validos[0] }); return; }
+    if (padrao && validos.includes(padrao) && !ultimaOferta?.roteiroEscolhido) { mudar({ roteiro: padrao }); return; }
     emitir(oferta, valores);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agenteIaId, agentes.length]);
@@ -105,7 +116,7 @@ export function StepComposeChamada({
   useEffect(() => { if (canal === "ia") mudar({}); }, [canal]);
 
   const pronto = canal === "telefone" ? true : !!agenteIaId && !!ramalIa.trim() && camposPendentes(campos, valores).length === 0
-    && pendenciasRoteiro(oferta.roteiro, dadosDe(oferta)).length === 0;
+    && (inteligente || pendenciasRoteiro(oferta.roteiro, dadosDe(oferta)).length === 0);
 
   return (
     <div className="flex flex-col min-w-0 space-y-4">
@@ -165,11 +176,23 @@ export function StepComposeChamada({
                 Nenhum agente com "Fazer ligações" ativo. Crie um em Configurações de atendimento → Agentes de voz.
               </p>
             ) : (
-              <p className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-xs">
-                <Check className="h-4 w-4 shrink-0 text-primary" />
-                <span className="min-w-0"><span className="font-semibold text-foreground">Ligando com {agentes[0].nome}</span>
-                  <span className="block text-[10px] text-muted-foreground">Agente único de ligações · faz a ligação e transfere para você</span></span>
-              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {agentes.map((a) => {
+                  const dep = DEPARTAMENTOS.find((d) => d.id === lerDepartamento(a.config))!;
+                  const ativo = a.id === agenteIaId;
+                  return (
+                    <button key={a.id} type="button" onClick={() => onAgenteChange(a.id, a.nome)}
+                      className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors min-w-0",
+                        ativo ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
+                      <span className="min-w-0">
+                        <span className="block text-xs font-semibold text-foreground">{dep.rotulo} · {a.nome}</span>
+                        <span className="block text-[10px] text-muted-foreground">{dep.desc}</span>
+                      </span>
+                      {ativo && <Check className="ml-auto h-4 w-4 shrink-0 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </Card>
 
@@ -212,8 +235,38 @@ export function StepComposeChamada({
 
           <Card className="p-4 space-y-3">
             <h4 className="font-medium text-sm">Roteiro da ligação</h4>
+            {departamento === "comercial" && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {([
+                  { id: "inteligente", icone: Sparkles, rotulo: "Roteiro inteligente por cliente", desc: "Antes de ligar, o CRM escolhe o assunto de cada cliente." },
+                  { id: "fixo", icone: Target, rotulo: "Roteiro fixo da campanha", desc: "Você escolhe um roteiro igual para todos." },
+                ] as const).map((m) => (
+                  <button key={m.id} type="button" onClick={() => mudar({ modo: m.id })}
+                    className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors min-w-0",
+                      oferta.modo === m.id ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/50")}>
+                    <m.icone className={cn("h-4 w-4 shrink-0 mt-0.5", oferta.modo === m.id ? "text-primary" : "text-muted-foreground")} />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold text-foreground">{m.rotulo}</span>
+                      <span className="block text-[10px] text-muted-foreground">{m.desc}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {inteligente ? (
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-[11px] text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">Como o CRM escolhe para cada cliente:</p>
+                <ol className="list-decimal pl-4 space-y-0.5">
+                  <li>Orçamento aberto há mais de 3 dias → Retorno de orçamento.</li>
+                  <li>Sem comprar há mais de 60 dias → Reativar cliente.</li>
+                  <li>Cliente com compras → Reposição do produto habitual.</li>
+                  <li>Sem histórico → Apresentação da empresa.</li>
+                </ol>
+                <p>Quem não tem orçamento aberto nunca recebe a ligação de retorno de orçamento.</p>
+              </div>
+            ) : (<>
             <div className="grid gap-2 sm:grid-cols-2">
-              {ROTEIROS.map((r) => {
+              {roteirosDisp.map((r) => {
                 const ativo = oferta.roteiro === r.id;
                 return (
                   <button key={r.id} type="button" onClick={() => mudar({ roteiro: r.id, roteiroEscolhido: true })}
@@ -264,14 +317,15 @@ export function StepComposeChamada({
                   placeholder="Ex.: boleto com vencimento dia 15" />
               </div>
             )}
-            <details className="rounded-md border border-dashed px-3 py-2 text-[11px] text-muted-foreground">
+            </>)}
+            {!inteligente && <details className="rounded-md border border-dashed px-3 py-2 text-[11px] text-muted-foreground">
               <summary className="cursor-pointer font-medium">Como a IA vai conduzir</summary>
               <ol className="mt-2 list-decimal space-y-1 pl-4">
                 <li>Cumprimenta e confirma se fala com o contato (na recepção, pede por ele).</li>
                 {roteiro.etapas({ produtoNome: oferta.produto?.nome, condicao: oferta.condicao, aviso: oferta.aviso }).map((e) => <li key={e}>{e}</li>)}
                 <li>Com interesse, transfere para o seu ramal com o resumo na tela.</li>
               </ol>
-            </details>
+            </details>}
             <div className="space-y-1.5">
               <Label htmlFor="objetivo-ia-massa" className="text-xs">Observações para a IA</Label>
               <Textarea id="objetivo-ia-massa" rows={2} value={oferta.texto} onChange={(e) => mudar({ texto: e.target.value })}
