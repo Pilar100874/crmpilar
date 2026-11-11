@@ -4,6 +4,8 @@
  * em qualquer tela sem precisar alterar os formulários. Campos fora do catálogo
  * são explicados pela IA a partir do contexto da tela.
  */
+import { CATALOGO_ATENDIMENTO } from "@/lib/atendimento/catalogoAtendimento";
+
 export interface AjudaCampo {
   rotulos: string[];          // rótulos (ou trechos) que identificam o campo
   rota?: string;              // trecho da rota onde vale (opcional)
@@ -85,14 +87,42 @@ export const CATALOGO_CAMPOS: AjudaCampo[] = [
     paraQue: "Cada cartão é um cliente da sua carteira que precisa de contato hoje: tarefa agendada, mensagem recebida ou potencial de compra. Clicar abre o atendimento dele no centro da tela; Histórico, Tarefa, Agenda e Orçamentos só aparecem quando existem registros.",
     seVazio: "Ao atender, finalize com a data do próximo contato; sem ela o cartão fica marcado como não finalizado. Cliente com pedido em aberto aparece todo dia até o pedido ser finalizado ou cancelado.",
     exemplo: "Comece pelos cartões com tarja vermelha (atrasados) e pelos recados urgentes, que piscam." },
+  { rotulos: ["novo contato", "criar contato"], tela: "Cadastros",
+    paraQue: "Abre o cadastro completo de contato. E-mail e telefone não podem repetir na mesma empresa, e quem cria fica vinculado como responsável." },
+  { rotulos: ["nova empresa", "criar empresa"], tela: "Cadastros",
+    paraQue: "Abre o cadastro de empresa. Orçamentos só podem ser feitos para empresa e contato com cadastro completo; Visita só aparece com endereço." },
+  { rotulos: ["novo orcamento", "criar orcamento"], tela: "Orçamentos",
+    paraQue: "Cria uma proposta para o cliente. O sistema confere antes se empresa e contato estão completos e abre o cadastro se faltar algo, para a proposta não sair com dados errados." },
+  { rotulos: ["marcar como perdido", "perdido"], tela: "Orçamentos",
+    paraQue: "Encerra o orçamento como perdido pedindo o motivo, que alimenta a tela Pedidos perdidos." },
+  { rotulos: ["concluir tarefa", "concluir"], tela: "Agenda",
+    paraQue: "Fecha a tarefa. Para concluir é preciso marcar o próximo contato ou inativar o cliente, para ninguém sair da carteira sem retorno." },
+  { rotulos: ["reprogramar", "reagendar"], tela: "Agenda",
+    paraQue: "Muda a data da tarefa. A agenda avisa fins de semana e dias reservados e sugere outra data, mas a escolha é sua." },
+  { rotulos: ["transferir"], tela: "Pilar Fone",
+    paraQue: "Passa a ligação em andamento para outro ramal do PABX." },
+  { rotulos: ["confirmar saida"], tela: "Portaria",
+    paraQue: "O porteiro confirma a saída do veículo depois que o motorista fez o checklist do dia (água, óleo e demais itens)." },
+  { rotulos: ["exportar", "exportar csv"],
+    paraQue: "Baixa a lista que está na tela, com os filtros aplicados, em planilha." },
 ];
+
+/** Recursos documentados do Atendimento (os mesmos do tutorial) viram explicação oficial. */
+const DO_ATENDIMENTO: AjudaCampo[] = CATALOGO_ATENDIMENTO.map((r) => ({
+  rotulos: [normalizar(r.titulo)], tela: r.modulo,
+  paraQue: `${r.oQueE} ${r.regraNegocio}`.trim(),
+  exemplo: r.comoUsar[0],
+}));
+
+/** Tipos que são ações: não têm "se ficar vazio". */
+export const ehAcao = (tipo?: string) => !!tipo && /botão|aba|menu|link|bloco/.test(tipo);
 
 export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
   const r = normalizar(rotuloCanonico(rotulo));
   if (!r) return null;
   const rt = rota.toLowerCase();
   let melhor: { a: AjudaCampo; p: number } | null = null;
-  for (const a of CATALOGO_CAMPOS) {
+  for (const a of [...CATALOGO_CAMPOS, ...DO_ATENDIMENTO]) {
     if (a.rota && !rt.includes(a.rota)) continue;
     for (const x of a.rotulos) {
       const p = r === x ? 3 : r.startsWith(x) || x.startsWith(r) && r.length >= 6 ? 2 : r.includes(x) && x.length >= 8 ? 1 : 0;
@@ -102,5 +132,5 @@ export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
   return melhor?.a ?? null;
 }
 
-export const textoOficial = (a: AjudaCampo | null) =>
-  a ? [a.paraQue, a.seVazio && `Se ficar vazio: ${a.seVazio}`, a.exemplo && `Exemplo: ${a.exemplo}`].filter(Boolean).join("\n") : "";
+export const textoOficial = (a: AjudaCampo | null, tipo?: string) =>
+  a ? [a.paraQue, !ehAcao(tipo) && a.seVazio && `Se ficar vazio: ${a.seVazio}`, a.exemplo && `Exemplo: ${a.exemplo}`].filter(Boolean).join("\n") : "";

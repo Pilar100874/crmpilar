@@ -19,3 +19,12 @@ describe("Ajuda global – catálogo de campos", () => {
     expect(buscarAjuda("Gravações (3)")?.tela).toBe("Pilar Fone / Atendimento");
   });
 });
+
+import { buscarAjuda as buscar2, textoOficial as texto2 } from "./catalogoCampos";
+import { it as it2, expect as expect2 } from "vitest";
+it2("Disparo em massa usa o texto oficial do Atendimento", () => {
+  expect2(buscar2("Disparo em massa")?.paraQue).toContain("vários clientes");
+});
+it2("botão não mostra 'se ficar vazio'", () => {
+  expect2(texto2(buscar2("Ligação com IA"), "botão")).not.toContain("Se ficar vazio");
+});

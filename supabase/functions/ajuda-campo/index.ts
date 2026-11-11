@@ -30,6 +30,10 @@ Deno.serve(async (req) => {
       c.vizinhos ? `Outros campos da mesma seção: ${String(c.vizinhos).slice(0, 600)}` : ""].filter(Boolean).join("\n");
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-10)
       .map((m: { papel: string; texto: string }) => ({ role: m.papel === "ia" ? "assistant" : "user", content: String(m.texto).slice(0, 1500) }));
+    const acao = /botão|aba|menu|link|bloco/.test(String(c.tipo ?? ""));
+    const formato = acao
+      ? "**Por que existe:** objetivo prático no trabalho da empresa.\n**O que acontece:** o que o sistema faz ao clicar.\n**Dica:** quando usar."
+      : "**Por que existe:** objetivo prático no trabalho da empresa.\n**O que acontece:** o que o sistema faz com o valor preenchido.\n**Se ficar vazio:** só se houver impacto real conhecido; senão omita.\n**Dica:** exemplo de preenchimento.";
     const pergunta = String(b.pergunta ?? "").slice(0, 1500) || "Explique este item no contexto do CRM Pilar.";
     const r = await fetch(GW, {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
@@ -37,10 +41,8 @@ Deno.serve(async (req) => {
         instructions: `Você é a ajuda do CRM Pilar e explica qualquer item das telas (campos, botões, blocos de workflow, abas, menus, colunas) para usuários não técnicos, em português do Brasil.
 Use o CONHECIMENTO DO SISTEMA abaixo para explicar o motivo de negócio do item, ligando-o às regras reais (ex.: por que é obrigatório, o que ele destrava ou bloqueia, que outra tela ele alimenta). Nunca responda de forma genérica como "serve para inserir dados" ou "serve para salvar".
 Responda neste formato, curto (até 150 palavras):
-**Por que existe:** objetivo prático no trabalho da empresa.
-**O que acontece:** o que o sistema faz ao usar/preencher/clicar.
-**Se não usar ou ficar vazio:** só para campos e chaves com impacto real; omita para botões, abas, menus e links.
-**Dica:** exemplo ou quando usar.
+${formato}
+Use somente esses tópicos; nunca acrescente outros.
 Regras de escrita: não repita o texto clicado (datas, nomes, números); explique o componente. Não escreva o que o item NÃO faz, nem "não há bloqueio", "o contexto não informa/confirma", "não foi informado". Só cite regras do conhecimento que tenham relação direta com o item; nunca traga regras de outro assunto para preencher espaço. Se faltar informação, diga apenas o que a tela mostra.
 Sem nomes de tabelas ou código. Fale com segurança, sem "provavelmente", "talvez" ou "parece". Se o item clicado for um dado (nome de pessoa, empresa, valor, número), explique o componente que o exibe, usando o dado só como exemplo. Se não houver regra conhecida, explique apenas o que a tela mostra, sem inventar. ${DIRETIVA}
 
@@ -61,7 +63,7 @@ ${ctx}`,
       for (const l of ls) { if (!l.startsWith("data:")) continue; const d = l.slice(5).trim(); if (!d || d === "[DONE]") continue;
         try { const ev = JSON.parse(d); if (ev.type === "response.output_text.delta") t += ev.delta ?? ""; } catch { /* ignora */ } }
     }
-    return json({ resposta: limparResposta(t) || "Não consegui gerar uma explicação agora." });
+    return json({ resposta: limparResposta(acao ? t.replace(/\*\*Se (não usar|ficar vazio)[^\n]*\n?/gi, "") : t) || "Não consegui gerar uma explicação agora." });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }

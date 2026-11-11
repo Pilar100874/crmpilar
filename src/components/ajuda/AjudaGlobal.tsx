@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { buscarAjuda, rotuloCanonico, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
+import { buscarAjuda, ehAcao, rotuloCanonico, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
 
 interface CampoInfo { rotulo: string; secao?: string; dica?: string; placeholder?: string; tipo?: string; opcoes?: string; vizinhos?: string }
 interface Msg { papel: "user" | "ia"; texto: string }
@@ -78,7 +78,7 @@ export function AjudaGlobal() {
   const perguntar = useCallback(async (c: CampoInfo, of: AjudaCampo | null, hist: Msg[], texto?: string) => {
     setCarregando(true); setErro("");
     const { data, error } = await supabase.functions.invoke("ajuda-campo", {
-      body: { campo: c, tela: `${document.title} | ${document.querySelector("main h1, h1")?.textContent?.trim() ?? ""}`, rota: pathname, oficial: textoOficial(of), historico: hist, pergunta: texto },
+      body: { campo: c, tela: `${document.title} | ${document.querySelector("main h1, h1")?.textContent?.trim() ?? ""}`, rota: pathname, oficial: textoOficial(of, c.tipo), historico: hist, pergunta: texto },
     });
     setCarregando(false);
     const msg = (data as { error?: string } | null)?.error ?? (error ? "Não consegui falar com a IA agora." : "");
@@ -137,7 +137,7 @@ export function AjudaGlobal() {
               <div className="rounded-lg border bg-muted/40 p-3 space-y-2 text-sm">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-primary"><BookOpen className="h-3.5 w-3.5" /> Explicação oficial</div>
                 <p><strong>Para que serve:</strong> {oficial.paraQue}</p>
-                {oficial.seVazio && <p><strong>Se ficar vazio:</strong> {oficial.seVazio}</p>}
+                {oficial.seVazio && !ehAcao(campo?.tipo) && <p><strong>Se ficar vazio:</strong> {oficial.seVazio}</p>}
                 {oficial.exemplo && <p><strong>Exemplo:</strong> {oficial.exemplo}</p>}
               </div>
             )}
