@@ -21,7 +21,7 @@ describe("roteiro como workflow", () => {
   });
   it("bloco de workflow compila o marcador e encerra, ou continua na pergunta escolhida", () => {
     let r = novaPergunta(novaPergunta(vazio));
-    r = { ...r, etapas: r.etapas.map((e, i) => (i ? e : { ...e, condicoes: [{ gatilho: "manda no zap", acao: "workflow", workflow: { modulo: "omnichannel", id: "abc", nome: "Catálogo" } }] })) };
+    r = { ...r, etapas: r.etapas.map((e, i) => (i ? { ...e, fala: "Mais algo?" } : { ...e, fala: "Quer o catálogo?", condicoes: [{ gatilho: "manda no zap", acao: "workflow", workflow: { modulo: "omnichannel", id: "abc", nome: "Catálogo" } }] })) };
     expect(compilarRoteiro(r, {})).toContain("[FLUXO:omnichannel:abc]");
     expect(compilarRoteiro(r, {})).toContain("[DESLIGAR]");
     const cont = continuarAposWorkflow(r, 0, 0, 1);
