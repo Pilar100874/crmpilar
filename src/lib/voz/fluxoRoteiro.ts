@@ -14,7 +14,7 @@ export const SAIDAS_PRONTAS: { tipo: Exclude<TipoSaida, "personalizada">; rotulo
   { tipo: "nao", rotulo: "Resposta \"não\"", condicao: { gatilho: "não, ainda não, não deu tempo, não preciso", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." } },
   { tipo: "nao_reconheceu", rotulo: "Não reconheceu o que foi dito", condicao: { gatilho: "respondeu outra coisa que não está nas regras", acao: "responder", texto: "Responda em uma frase e volte à pergunta desta etapa, sem repetir etapas já respondidas. Se não der para ajudar, transfira." } },
   { tipo: "silencio", rotulo: "Silêncio / ruído", condicao: { gatilho: "não respondeu ou ficou em silêncio", acao: "responder", texto: "Repita só a pergunta atual, mais curta. Se calar de novo, agradeça e inclua [DESLIGAR]." } },
-  { tipo: "atendente", rotulo: "Pediu atendente", condicao: { gatilho: "quero falar com uma pessoa, me passa para alguém, atendente", acao: "transferir" } },
+  { tipo: "atendente", rotulo: "Pediu atendente / \"Humano\"", condicao: { gatilho: "humano, quero falar com uma pessoa, me passa para alguém, atendente", acao: "transferir" } },
   { tipo: "objecao", rotulo: "Dúvida / achou caro", condicao: { gatilho: "achou caro, qual o valor, tem desconto, qual o prazo", acao: "desconto" } },
   { tipo: "outro_dia", rotulo: "Pediu outro dia", condicao: { gatilho: "pediu para ligar outro dia, agora não posso, liga depois", acao: "reagendar" } },
   { tipo: "quem", rotulo: "Quem é? / do que se trata", condicao: { gatilho: "qual orçamento, quem é, do que se trata, não lembro", acao: "responder", texto: "Diga em uma frase quem é e o motivo, e repita a pergunta." } },
@@ -26,7 +26,7 @@ export function tipoSaida(c: CondicaoRoteiro): TipoSaida {
   if (/sil[eê]ncio|n[aã]o respondeu/.test(g)) return "silencio";
   if (/outra coisa|n[aã]o est[aá] nas regras|n[aã]o entendeu/.test(g)) return "nao_reconheceu";
   if (/outro dia|liga depois|n[aã]o posso/.test(g)) return "outro_dia";
-  if (/pessoa|atendente|algu[eé]m/.test(g)) return "atendente";
+  if (/humano|pessoa|atendente|algu[eé]m/.test(g)) return "atendente";
   if (/caro|valor|desconto|pre[cç]o|prazo/.test(g)) return "objecao";
   if (/quem [eé]|do que se trata|qual or[cç]amento/.test(g)) return "quem";
   if (/^\s*n[aã]o\b/.test(g)) return "nao";
