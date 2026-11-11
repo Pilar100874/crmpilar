@@ -159,6 +159,11 @@ async function dispararWorkflows(sb: SB, empresa: string, chamadaId: string, fal
     if (p.modulo === "marketing_automation") {
       const { error } = await sb.functions.invoke("marketing-automation-scheduler", { body: { automationId: p.id, params: variaveis } });
       status = error ? `erro: ${error.message}` : "disparado";
+    } else if (p.modulo === "omnichannel") {
+      const { error } = await sb.functions.invoke("executar-fluxo-omnichannel", {
+        body: { flowId: p.id, estabelecimentoId: empresa, canal: "whatsapp", triggerSource: "ligacao_ia", variaveis, contexto: { telefone: ch?.numero ?? null } },
+      });
+      status = error ? `erro: ${error.message}` : "disparado";
     }
     registros.push({ texto: `Workflow ${p.modulo}:${p.id} ${status} ao fim da ligação`, em: new Date().toISOString() });
   }
