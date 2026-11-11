@@ -1,0 +1,1 @@
+- Global field help (AjudaGlobal, mounted in App) reads official texts from the pure catalogoCampos catalog by normalized label and falls back to the ajuda-campo AI function, so forms need no per-field changes.
