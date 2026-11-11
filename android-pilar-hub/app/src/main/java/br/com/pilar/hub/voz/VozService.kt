@@ -208,7 +208,7 @@ class VozService : Service() {
     companion object {
         const val PREF = "pilar_voz"; const val CANAL = "pilar_voz"
         const val ACAO_PARAR = "br.com.pilar.voz.PARAR"; const val EVENTO = "br.com.pilar.voz.EVENTO"
-        const val LIMIAR_FALA = 700
+        const val LIMIAR_FALA = 450
         val EVENTOS = mutableListOf<String>()
         fun iniciar(ctx: Context) {
             val i = Intent(ctx, VozService::class.java)

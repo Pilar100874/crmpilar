@@ -78,12 +78,15 @@ Deno.serve(async (req) => {
       const s = await fetch(`${GW}/audio/transcriptions`, { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: fd });
       if (!s.ok) return json({ error: "Falha na transcrição", details: await s.text() }, s.status);
       fala = String((await s.json()).text ?? "").trim();
+      const bruto = fala;
       // Filtro de ruído/alucinação: caracteres não latinos ou fala curta sem letras úteis.
       const letras = fala.replace(/[^a-zA-ZÀ-ÿ]/g, "");
-      if (/[^\u0000-\u024F\s.,!?'"-]/.test(fala) || (letras.length < 2 && !/^(é|e|ah|oi|ok)$/i.test(fala.replace(/[^a-zA-ZÀ-ÿ]/g, "")))) fala = "";
+      if (/[^\u0000-\u024F\s.,!?;:'"()\u2010-\u2027-]/.test(fala) || (letras.length < 2 && !/^(é|e|ah|oi|ok)$/i.test(fala.replace(/[^a-zA-ZÀ-ÿ]/g, "")))) fala = "";
       // Ruído transcrito como inglês ou frases-fantasma comuns do transcritor.
       if (/\b(the|you|are|which|thank|this|is|what)\b/i.test(fala) && !/[ãõçéêáíóú]/i.test(fala)) fala = "";
       if (/legenda|inscreva|obrigad[oa] por assistir/i.test(fala)) fala = "";
+      // Diagnóstico: mostra nos logs o que o transcritor ouviu e se foi descartado.
+      console.log(`transcrição: "${bruto}"${bruto && !fala ? " (descartada como ruído)" : ""} — ${bytes.length} bytes`);
     }
     if (!fala && audio_wav_b64 && !forcar_transferencia) return json({ fala: "", resposta: "", audio_b64: null });
 

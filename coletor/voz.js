@@ -5,7 +5,7 @@ const dgram = require('dgram');
 const crypto = require('crypto');
 const { loadConfig, saveConfig } = require('./collector');
 
-const LIMIAR_FALA = 700;
+const LIMIAR_FALA = 450;
 
 // ─── Fila assíncrona com tempo limite ────────────────────────────────────
 class Fila {
