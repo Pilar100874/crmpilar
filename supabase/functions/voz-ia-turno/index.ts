@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
 
   try {
-    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy", frase_exata = null, silencio = false } = await req.json();
+    const { audio_wav_b64, prompt = "", historico = [], modo = "receber", voz = "alloy", frase_exata = null, silencio = false, forcar_transferencia = false } = await req.json();
 
     let fala = "";
     if (audio_wav_b64) {
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       if (/\b(the|you|are|which|thank|this|is|what)\b/i.test(fala) && !/[ãõçéêáíóú]/i.test(fala)) fala = "";
       if (/legenda|inscreva|obrigad[oa] por assistir/i.test(fala)) fala = "";
     }
-    if (!fala && audio_wav_b64) return json({ fala: "", resposta: "", audio_b64: null });
+    if (!fala && audio_wav_b64 && !forcar_transferencia) return json({ fala: "", resposta: "", audio_b64: null });
 
     const hist = [...historico, ...(fala ? [{ papel: "cliente", texto: fala }] : silencio ? [{ papel: "cliente", texto: "(o cliente ficou em silêncio, não disse nada)" }] : [])];
     const progresso = progressoVoz(historico, fala, silencio);
@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
           : "Perfeito. Posso seguir com o motivo da minha ligação?";
     }
     // Trava: só transfere se o cliente falou neste turno e a IA não terminou perguntando.
-    if (modo !== "assistir" && resposta?.includes("[TRANSFERIR]")) {
+    if (modo !== "assistir" && !forcar_transferencia && resposta?.includes("[TRANSFERIR]")) {
       const limpa = resposta.replace(/\[TRANSFERIR\]/g, "").trim();
       if (!fala || (!regraOuro && /\?\s*$/.test(limpa))) resposta = limpa;
     }

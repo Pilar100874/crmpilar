@@ -320,6 +320,14 @@ Deno.serve(async (req) => {
         const a = await agente();
         if (!a) return json({ error: "Nenhum agente ativo" }, 404);
         // Saudação: frase fixa, vai direto para a voz sem esperar CRM nem IA.
+        // Atendente clicou "Assumir ligação": a IA se despede e transfere na hora.
+        let assumir = false;
+        if (corpo.chamada_id) {
+          const ch = (await sb.from("voz_chamadas").select("assumir_pedido_em").eq("id", String(corpo.chamada_id))
+            .eq("estabelecimento_id", empresa).maybeSingle()).data as SB;
+          assumir = !!ch?.assumir_pedido_em;
+        }
+        if (assumir) corpo.prompt_extra = "Diga exatamente, sem mudar nada: Um instante, vou passar o senhor para um colega da equipe. [TRANSFERIR]";
         const silencio = corpo.prompt_extra === "[SILENCIO]";
         if (silencio) corpo.prompt_extra = null;
         const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
@@ -359,6 +367,7 @@ Deno.serve(async (req) => {
             voz: a.voz || "alloy",
             frase_exata: exata ? exata[1].trim() : null,
             silencio,
+            forcar_transferencia: assumir,
           }),
         });
         return new Response(await r.text(), { status: r.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

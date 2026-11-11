@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
 import { EditorRoteirosVoz } from "@/components/telefonia/EditorRoteirosVoz";
+import { MonitorChamadasIa } from "@/components/telefonia/MonitorChamadasIa";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { formatDistanceToNow } from "date-fns";
@@ -425,6 +426,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
         </TabsContent>
 
         <TabsContent value="chamadas" className="space-y-3">
+          <MonitorChamadasIa chamadas={chamadas as never} agentes={agentes} />
           {chamadas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma chamada da IA ainda.</p>}
           {chamadas.map((c) => (
             <Card key={c.id}>
