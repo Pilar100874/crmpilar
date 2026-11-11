@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ import { corrigirPergunta, opcoesEsperadas, validarPergunta } from "@/lib/voz/va
 import { palavrasGatilho } from "@/lib/voz/roteirosLigacao";
 import { aplicarTecnica, FASES_TECNICA, TECNICAS } from "@/lib/voz/tecnicasComerciais";
 import { WORKFLOW_MODULES } from "@/components/flow/block-configs/TriggerWorkflowConfig";
-import { ACOES, removerEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
+import { ACOES, removerEtapa, type ConfigVendaEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
 import {
   MENU_BLOCOS, SAIDAS_PRONTAS, adicionarAcao, adicionarSaida, novaPerguntaTipo, type BlocoMenu, continuarAposWorkflow, grafoDoRoteiro, ligarSaida, moverPergunta, novaPergunta, soltarSaida, tipoSaida, type TipoSaida,
 } from "@/lib/voz/fluxoRoteiro";
@@ -235,6 +236,30 @@ function MenuBlocosVoz({ onFechar, onAdicionar }: { onFechar: () => void; onAdic
   );
 }
 
+/** Propriedades do bloco "Venda & Negociação de Estoque". */
+function ConfigVenda({ v, onChange }: { v: ConfigVendaEtapa; onChange: (v: ConfigVendaEtapa) => void }) {
+  return (
+    <Card className="space-y-3 p-3">
+      <p className="text-xs font-semibold text-foreground">Venda & Negociação de Estoque</p>
+      <p className="text-[11px] text-muted-foreground">Nesta etapa a IA conversa livremente: consulta o estoque, informa quantidades com a unidade, oferece similares e negocia o preço até o mínimo. Só transfere quando o cliente fechar ou pedir uma pessoa.</p>
+      <div className="space-y-1">
+        <Label>Desconto máximo para negociar (%)</Label>
+        <Input className="h-8" type="number" min={0} max={50} value={v.descontoMax} onChange={(x) => onChange({ ...v, descontoMax: Math.max(0, Math.min(50, Number(x.target.value) || 0)) })} />
+        <p className="text-[11px] text-muted-foreground">O preço mínimo do produto, quando cadastrado, também é respeitado.</p>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <Label>Oferecer similares quando faltar</Label>
+        <Switch checked={v.similares} onCheckedChange={(similares) => onChange({ ...v, similares })} />
+      </div>
+      <div className="space-y-1">
+        <Label>Produtos considerados (opcional)</Label>
+        <Input className="h-8" value={v.filtro} maxLength={200} placeholder="Ex.: papel, toalha, interfolha" onChange={(x) => onChange({ ...v, filtro: x.target.value })} />
+        <p className="text-[11px] text-muted-foreground">Vazio usa todo o catálogo ativo. Separe palavras por vírgula.</p>
+      </div>
+    </Card>
+  );
+}
+
 /** Validação da pergunta: orienta para que a fala leve o cliente a uma resposta que siga o fluxo. */
 /** Técnicas comerciais aplicáveis à pergunta selecionada (acrescenta a saída da técnica). */
 function TecnicasEtapa({ r, i, onChange }: { r: RoteiroSalvo; i: number; onChange: (r: RoteiroSalvo) => void }) {
@@ -429,7 +454,8 @@ function Editor(p: FluxoRoteiroVozProps) {
                   </div>
                   <div className="space-y-1"><Label>Título</Label><Input className="h-8" value={e.titulo} onChange={(x) => setEtapa({ titulo: x.target.value })} /></div>
                   <div className="space-y-1"><Label>O que a IA fala</Label><Textarea rows={3} value={e.fala} maxLength={400} onChange={(x) => setEtapa({ fala: x.target.value })} placeholder="Uma pergunta curta, ex.: O senhor conseguiu ver o orçamento?" /></div>
-                  <ValidacaoPergunta r={roteiro} i={etapaSel} onChange={onChange} />
+                  {e.venda && <ConfigVenda v={e.venda} onChange={(venda) => setEtapa({ venda })} />}
+                  {!e.venda && <ValidacaoPergunta r={roteiro} i={etapaSel} onChange={onChange} />}
                   <TecnicasEtapa r={roteiro} i={etapaSel} onChange={onChange} />
                   <div className="flex items-center justify-between gap-2">
                     <Label>Saídas (respostas do cliente)</Label>

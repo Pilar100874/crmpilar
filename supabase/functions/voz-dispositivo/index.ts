@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { catalogoVenda, lerMarcadorVenda, regrasVenda, removerMarcadorVenda } from "../_shared/catalogoVenda.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { aplicarRegrasDiscagem } from "../_shared/regrasDiscagem.ts";
 import { destinoTransferencia } from "../_shared/transferenciaConfirmada.ts";
@@ -331,7 +332,10 @@ Deno.serve(async (req) => {
         const silencio = corpo.prompt_extra === "[SILENCIO]";
         if (silencio) corpo.prompt_extra = null;
         const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
-        const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${corpo.objetivo}\n\n` : "";
+        const cfgVenda = lerMarcadorVenda(String(corpo.objetivo ?? ""));
+        let venda = "";
+        if (cfgVenda && !exata) { try { venda = regrasVenda(cfgVenda, await catalogoVenda(sb, empresa, cfgVenda)); } catch (e) { console.error("catálogo venda", e); } }
+        const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${removerMarcadorVenda(String(corpo.objetivo))}${venda}\n\n` : "";
         let crm = "";
         const cfgA = (a.config ?? {}) as Record<string, unknown>;
         const modoT = corpo.modo ?? "receber";
@@ -354,7 +358,7 @@ Deno.serve(async (req) => {
           }
           if (vendas && cfgA.sugerir_similares !== false && crm) crm += "\nVocê pode sugerir reposição e produtos iguais ou similares aos que ele já compra.";
           // Ligação de vendas: contexto enxuto para a IA não citar históricos antigos.
-          if (vendas && crm) crm = crm.slice(0, 1500) + "\nUse esses dados só para escolher o gancho. NUNCA cite itens, produtos, quantidades ou valores de orçamentos (podem ser muitos e de vários orçamentos): fale só \"a proposta que nossa equipe enviou\". Nunca leia listas.";
+          if (vendas && crm) crm = crm.slice(0, 1500) + (cfgVenda ? "\nUse esses dados para entender o que o cliente costuma comprar. Não leia orçamentos antigos; preços e estoque vêm só do CATÁLOGO." : "\nUse esses dados só para escolher o gancho. NUNCA cite itens, produtos, quantidades ou valores de orçamentos (podem ser muitos e de vários orçamentos): fale só \"a proposta que nossa equipe enviou\". Nunca leia listas.");
         }
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voz-ia-turno`, {
           method: "POST",
@@ -367,6 +371,7 @@ Deno.serve(async (req) => {
             voz: a.voz || "alloy",
             frase_exata: exata ? exata[1].trim() : null,
             silencio,
+            venda: !!cfgVenda,
             forcar_transferencia: assumir,
           }),
         });

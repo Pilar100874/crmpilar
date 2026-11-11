@@ -1,5 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { getAuthContext } from "../_shared/auth.ts";
+import { getAuthContext, serviceClient } from "../_shared/auth.ts";
+import { catalogoVenda, lerMarcadorVenda, regrasVenda, removerMarcadorVenda } from "../_shared/catalogoVenda.ts";
 
 /**
  * Teste de roteiro em tela (sem ligação): devolve a próxima fala da IA para uma conversa digitada,
@@ -43,7 +44,8 @@ async function ia(key: string, system: string, user: string, nome: string, schem
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (!(await getAuthContext(req))) return json({ error: "Não autorizado" }, 401);
+  const ctx = await getAuthContext(req);
+  if (!ctx) return json({ error: "Não autorizado" }, 401);
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
   try {
@@ -68,9 +70,11 @@ Deno.serve(async (req) => {
         String(b.descricao ?? "").slice(0, 2000), "roteiro", SCH_GERAR);
       return json({ roteiro: r });
     }
+    const cfgVenda = lerMarcadorVenda(String(b.prompt ?? ""));
+    if (cfgVenda) b.prompt = removerMarcadorVenda(String(b.prompt)) + (ctx.estabelecimentoId ? regrasVenda(cfgVenda, await catalogoVenda(serviceClient(), ctx.estabelecimentoId, cfgVenda)) : "");
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-20)
       .map((f: { papel: string; texto: string }) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n");
-    const r = await ia(key, `Você simula um agente de voz ao telefone em português do Brasil, seguindo o roteiro abaixo. Fale como pessoa real: no máximo 2 frases curtas, uma pergunta por vez. Sem listas ou markdown. Responda em JSON {"resposta": string, "etapa": number (1 = primeira etapa do roteiro, em que a conversa está agora), "regra": string|null (texto da regra "Se o cliente..." que a última fala do cliente acionou, ou null se nenhuma), "acao": "transferir"|"encerrar"|null}. Se nenhuma regra cobrir a resposta, faça o mais sensato e devolva regra null. ${DIRETIVA}\n\n${String(b.prompt ?? "").slice(0, 8000)}`,
+    const r = await ia(key, `Você simula um agente de voz ao telefone em português do Brasil, seguindo o roteiro abaixo. Fale como pessoa real: no máximo 2 frases curtas, uma pergunta por vez. Sem listas ou markdown. Responda em JSON {"resposta": string, "etapa": number (1 = primeira etapa do roteiro, em que a conversa está agora), "regra": string|null (texto da regra "Se o cliente..." que a última fala do cliente acionou, ou null se nenhuma), "acao": "transferir"|"encerrar"|null}. Se nenhuma regra cobrir a resposta, faça o mais sensato e devolva regra null. ${DIRETIVA}\n\n${String(b.prompt ?? "").slice(0, cfgVenda ? 20000 : 8000)}`,
       hist ? `Conversa até agora:\n${hist}\n\nDiga a próxima fala da IA.` : "O cliente acabou de atender. Diga a primeira fala da IA.", "turno", SCH_TURNO);
     return json({ resposta: String(r.resposta ?? ""), etapa: Number(r.etapa) || 1, regra: r.regra ? String(r.regra) : null, acao: r.acao ?? null });
   } catch (e) {

@@ -90,7 +90,14 @@ export interface WorkflowAlvo { modulo: string; id: string; nome: string }
  */
 export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string; etapa?: number; workflow?: WorkflowAlvo }
 /** `pos` = posição do bloco no workflow visual (só tela). */
-export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number }; tecnicas?: string[] }
+export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number }; tecnicas?: string[]; venda?: ConfigVendaEtapa }
+/** Bloco "Venda & Negociação de Estoque": conversa livre com catálogo, estoque e preço mínimo. */
+export interface ConfigVendaEtapa { descontoMax: number; similares: boolean; filtro: string }
+/** Marcador lido pelas funções de voz (_shared/catalogoVenda.ts) para carregar o catálogo. Pura. */
+export function marcadorVenda(v: ConfigVendaEtapa): string {
+  const f = v.filtro.replace(/[;\]\[=]/g, " ").trim();
+  return `[VENDA:d=${Math.max(0, Math.min(50, Math.round(v.descontoMax || 0)))};s=${v.similares ? 1 : 0};f=${f}]`;
+}
 /** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
 export interface RoteiroSalvo {
   id?: string; chave: string; departamento: Departamento; nome: string; descricao: string;
@@ -245,10 +252,13 @@ export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
   const numero = (orig?: number) => { const k = validas.findIndex((x) => x.i === orig); return k < 0 ? undefined : `${k + 1}${validas[k].e.titulo.trim() ? ` (${validas[k].e.titulo.trim()})` : ""}`; };
   const etapas = validas.map(({ e }, i) => {
     const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d, c.acao === "ir_etapa" || c.acao === "workflow" ? numero(c.etapa) : undefined)}`);
-    return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
+    const livre = e.venda ? " [Etapa de VENDA LIVRE: converse sobre produtos, estoque e preços do CATÁLOGO até o cliente fechar, pedir uma pessoa ou recusar.]" : "";
+    return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${livre}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
-  if (r.departamento !== "financeiro" && (!d.descontoMax || !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "desconto"))))
+  const venda = r.etapas.find((e) => e.venda && e.fala.trim())?.venda;
+  if (venda) p.push(marcadorVenda(venda));
+  else if (r.departamento !== "financeiro" && (!d.descontoMax || !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "desconto"))))
     p.push(d.descontoMax ? `Se acharem caro, pode oferecer até ${d.descontoMax}% de desconto, nunca mais que isso.` : "Não ofereça desconto nem invente preço; o atendente confirma valores.");
   if (d.observacoes?.trim()) p.push(`Observação do usuário: ${d.observacoes.trim()}.`);
   return p.join(" ");

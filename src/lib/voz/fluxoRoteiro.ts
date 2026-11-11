@@ -118,7 +118,7 @@ export const moverPergunta = (r: RoteiroSalvo, i: number, pos: { x: number; y: n
 
 /** Blocos do menu lateral do editor. "pergunta" cria bloco; "saida"/"acao" se soltam sobre uma pergunta. */
 export type BlocoMenu =
-  | { tipo: "pergunta"; id: "simnao" | "opcoes" | "aberta" | "aviso"; rotulo: string; descricao: string }
+  | { tipo: "pergunta"; id: "simnao" | "opcoes" | "aberta" | "aviso" | "venda"; rotulo: string; descricao: string }
   | { tipo: "saida"; id: TipoSaida; rotulo: string; descricao: string }
   | { tipo: "acao"; id: "transferir" | "encerrar" | "reagendar" | "desconto" | "workflow"; rotulo: string; descricao: string };
 
@@ -128,6 +128,7 @@ export const MENU_BLOCOS: { grupo: string; blocos: BlocoMenu[] }[] = [
     { tipo: "pergunta", id: "opcoes", rotulo: "Pergunta com opções", descricao: "Cliente escolhe entre opções citadas" },
     { tipo: "pergunta", id: "aberta", rotulo: "Pergunta aberta", descricao: "Qualquer resposta segue adiante" },
     { tipo: "pergunta", id: "aviso", rotulo: "Fala / aviso", descricao: "Informa e segue para o próximo bloco" },
+    { tipo: "pergunta", id: "venda", rotulo: "Venda & Negociação de Estoque", descricao: "Conversa livre com estoque, preços e similares" },
   ] },
   { grupo: "Respostas do cliente", blocos: [
     ...SAIDAS_PRONTAS.map((s) => ({ tipo: "saida" as const, id: s.tipo, rotulo: s.rotulo, descricao: "Solte sobre uma pergunta" })),
@@ -143,13 +144,15 @@ export const MENU_BLOCOS: { grupo: string; blocos: BlocoMenu[] }[] = [
 ];
 
 /** Cria o bloco de pergunta do tipo escolhido na posição indicada. Puro. */
-export function novaPerguntaTipo(r: RoteiroSalvo, id: "simnao" | "opcoes" | "aberta" | "aviso", pos?: { x: number; y: number }): RoteiroSalvo {
+export function novaPerguntaTipo(r: RoteiroSalvo, id: "simnao" | "opcoes" | "aberta" | "aviso" | "venda", pos?: { x: number; y: number }): RoteiroSalvo {
   if (id === "simnao") return novaPergunta(r, pos);
   const n = r.etapas.length;
   const pronta = (t: TipoSaida) => ({ ...SAIDAS_PRONTAS.find((s) => s.tipo === t)!.condicao });
   const base = { pos: pos ?? { x: 80 + n * COL, y: 140 } };
   const etapa: EtapaEditavel =
     id === "opcoes" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "O senhor prefere opção 1 ou opção 2?", condicoes: [{ gatilho: "opção 1", acao: "avancar" }, { gatilho: "opção 2", acao: "avancar" }, pronta("nao_reconheceu"), pronta("silencio")] }
+    : id === "venda" ? { ...base, titulo: "Venda & Negociação", fala: "Me diga qual produto o senhor precisa que eu confiro no estoque agora?", venda: { descontoMax: 5, similares: true, filtro: "" },
+      condicoes: [{ gatilho: "pode mandar, fecha, quero, pode separar, fechado", acao: "transferir", texto: "Repita itens, quantidades e preço combinados e diga que o atendente vai emitir o pedido." }, pronta("atendente"), { gatilho: "não tenho interesse, não preciso, não quero", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." }, pronta("silencio")] }
     : id === "aberta" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }, pronta("silencio")] }
     : { ...base, titulo: `Aviso ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }] };
   return { ...r, etapas: [...r.etapas, etapa] };
