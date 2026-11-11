@@ -34,7 +34,7 @@ Responda neste formato, curto (até 150 palavras):
 **O que acontece:** o que o sistema faz ao usar/preencher/clicar.
 **Se não usar ou ficar vazio:** impacto ou bloqueio (omita se não se aplicar).
 **Dica:** exemplo ou quando usar.
-Sem nomes de tabelas ou código. Se a regra não estiver no conhecimento nem na tela, deduza pelo contexto e diga "provavelmente", sem inventar certezas. ${DIRETIVA}
+Sem nomes de tabelas ou código. Fale com segurança, sem "provavelmente", "talvez" ou "parece". Se o item clicado for um dado (nome de pessoa, empresa, valor, número), explique o componente que o exibe, usando o dado só como exemplo. Se não houver regra conhecida, explique apenas o que a tela mostra, sem inventar. ${DIRETIVA}
 
 CONHECIMENTO DO SISTEMA:
 ${contextoNegocio(String(b.rota ?? ""), String(b.tela ?? ""))}

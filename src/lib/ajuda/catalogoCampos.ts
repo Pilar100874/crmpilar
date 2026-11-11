@@ -59,6 +59,10 @@ export const CATALOGO_CAMPOS: AjudaCampo[] = [
     seVazio: "Ao escolher Perdido, é obrigatório informar o motivo, que alimenta a tela Pedidos perdidos." },
   { rotulos: ["roteiro inteligente", "inteligente"], rota: "voz", tela: "Disparo de ligação com IA",
     paraQue: "O sistema escolhe para cada cliente o roteiro e o produto mais adequados pelos dados dele, em vez de usar o mesmo para todos." },
+  { rotulos: ["cartao do cliente na fila do dia"], tela: "Atendimento → Fila do dia",
+    paraQue: "Cada cartão é um cliente da sua carteira que precisa de contato hoje: tarefa agendada, mensagem recebida ou potencial de compra. Clicar abre o atendimento dele no centro da tela; Histórico, Tarefa, Agenda e Orçamentos só aparecem quando existem registros.",
+    seVazio: "Ao atender, finalize com a data do próximo contato; sem ela o cartão fica marcado como não finalizado. Cliente com pedido em aberto aparece todo dia até o pedido ser finalizado ou cancelado.",
+    exemplo: "Comece pelos cartões com tarja vermelha (atrasados) e pelos recados urgentes, que piscam." },
 ];
 
 export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {

@@ -725,7 +725,7 @@ export function FilaDoDia({ items, tablet = false, onDisparoMassa, discadorAtivo
               >
 
                 {/* Contato: avatar + nome em cima */}
-                 <div className={cn("flex flex-1 min-w-0", tablet ? "items-start gap-2" : "items-center gap-3")}>
+                 <div className={cn("flex flex-1 min-w-0", tablet ? "items-start gap-2" : "items-center gap-3")} data-ajuda="Cartão do cliente na Fila do dia">
                    <div className={cn("shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-foreground/70", tablet ? "h-9 w-9 text-xs" : "h-11 w-11 text-[13px]")}>
                     {iniciais(item.nome)}
                   </div>
