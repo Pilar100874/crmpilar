@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Download, GitBranch, Loader2, Lightbulb, Monitor, PhoneCall, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { Copy, Download, GitBranch, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
 import { FluxoRoteiroVoz } from "./FluxoRoteiroVoz";
 import { CriarComIaDialog, DiagnosticoRoteiroCard, MapaConversa, ModelosProntosDialog } from "./AjudantesRoteiro";
 import { MODELOS_ROTEIRO, roteiroDoModelo } from "@/lib/voz/qualidadeRoteiro";
 import { corrigirTodas, validarPergunta } from "@/lib/voz/validacaoPergunta";
-import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
+import { adicionarResposta } from "@/lib/voz/aprimorarRoteiro";
 import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +65,6 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     </Dialog>
   );
 
-  const [ajustes, setAjustes] = useState<AjusteSugerido[]>([]);
 
   /** Grava a resposta na regra da etapa e salva o roteiro na hora (vale para disparo e Simulador). */
   const gravar = async (r: RoteiroSalvo) => {
@@ -92,11 +91,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     if (n === atual) return void toast.info("Essa resposta já está no roteiro");
     setAtual(n); toast.success(`"${resposta}" adicionado à pergunta ${etapa + 1} — salve para gravar`);
   };
-  useEffect(() => {
-    if (!estabelecimentoId) return;
-    void db.from("voz_chamadas").select("transcricao").eq("estabelecimento_id", estabelecimentoId).order("iniciada_em", { ascending: false }).limit(60)
-      .then(({ data }: { data: { transcricao: unknown }[] | null }) => setAjustes(ajustesSugeridos((data ?? []).map((c) => (Array.isArray(c.transcricao) ? c.transcricao as Fala[] : []))).slice(0, 8)));
-  }, [estabelecimentoId]);
+
 
   const carregar = useCallback(async () => {
     const salvos = await carregarRoteirosSalvos(db, estabelecimentoId);
@@ -165,15 +160,6 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
       </div>
       <CriarComIaDialog aberto={criarIa} onFechar={() => setCriarIa(false)} onCriado={(r) => { setCriarIa(false); abrir(r); setOriginal(""); }} />
       <ModelosProntosDialog aberto={modelos} onFechar={() => setModelos(false)} onEscolher={(r) => { setModelos(false); abrir(r); setOriginal(""); }} />
-      {ajustes.length > 0 && (
-        <Card className="space-y-2 p-3">
-          <p className="flex items-center gap-1 text-sm font-semibold text-foreground"><Lightbulb className="h-4 w-4 text-primary" /> Ajustes sugeridos pelas ligações reais</p>
-          <p className="text-xs text-muted-foreground">Respostas de clientes que a IA não entendeu de primeira. Abra o roteiro e inclua a resposta na regra certa, ou use "Simular" para testar.</p>
-          <div className="flex flex-wrap gap-1">
-            {ajustes.map((a) => <Badge key={a.resposta} variant="secondary" className="max-w-full break-words">"{a.resposta}" · {a.vezes}x em {a.chamadas} {a.chamadas === 1 ? "ligação" : "ligações"}</Badge>)}
-          </div>
-        </Card>
-      )}
       {DEPARTAMENTOS.map((dep) => (
         <div key={dep.id} className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">{dep.rotulo}</h4>
