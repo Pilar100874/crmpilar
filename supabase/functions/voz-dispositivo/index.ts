@@ -136,6 +136,35 @@ function hojeSP() {
 }
 
 /** Pede à IA a data de retorno combinada e cria a tarefa na agenda de quem disparou a ligação. */
+/** Workflows pedidos pela IA (marcador [FLUXO:modulo:id]) — mesmo formato de src/lib/voz/roteirosLigacao.ts. */
+function workflowsNaFala(texto: string): { modulo: string; id: string }[] {
+  const vistos = new Set<string>();
+  return [...texto.matchAll(/\[FLUXO:([a-z_]+):([^\]\s]+)\]/g)].flatMap(([, modulo, id]) => {
+    const k = `${modulo}:${id}`;
+    if (vistos.has(k)) return [];
+    vistos.add(k);
+    return [{ modulo, id }];
+  });
+}
+
+async function dispararWorkflows(sb: SB, empresa: string, chamadaId: string, falas: { papel: string; texto: string }[]) {
+  const pedidos = workflowsNaFala(falas.filter((f) => f.papel === "agente").map((f) => f.texto).join(" "));
+  if (!pedidos.length) return;
+  const ch = (await sb.from("voz_chamadas").select("numero, sugestoes").eq("id", chamadaId).maybeSingle()).data as SB;
+  const variaveis = { origem: "ligacao_ia", chamada_id: chamadaId, telefone: ch?.numero ?? null, estabelecimento_id: empresa,
+    conversa: falas.map((f) => `${f.papel}: ${f.texto.replace(/\[[^\]]*\]/g, "").trim()}`).join("\n") };
+  const registros: { texto: string; em: string }[] = [];
+  for (const p of pedidos) {
+    let status = "registrado";
+    if (p.modulo === "marketing_automation") {
+      const { error } = await sb.functions.invoke("marketing-automation-scheduler", { body: { automationId: p.id, params: variaveis } });
+      status = error ? `erro: ${error.message}` : "disparado";
+    }
+    registros.push({ texto: `Workflow ${p.modulo}:${p.id} ${status} ao fim da ligação`, em: new Date().toISOString() });
+  }
+  await sb.from("voz_chamadas").update({ sugestoes: [...(ch?.sugestoes ?? []), ...registros] }).eq("id", chamadaId);
+}
+
 async function reagendar(sb: SB, empresa: string, chamadaId: string, falas: { papel: string; texto: string }[], objetivo: string | null) {
   const h = hojeSP();
   const txt = await resumir(falas, objetivo,
@@ -376,6 +405,8 @@ Deno.serve(async (req) => {
           finalizada_em: new Date().toISOString(),
           duracao_seg: Math.round((Date.now() - new Date(c.iniciada_em as string).getTime()) / 1000),
         }).eq("id", c.id);
+        // Blocos "Disparar workflow": a IA marcou [FLUXO:modulo:id] na fala; dispara agora que a ligação acabou.
+        try { await dispararWorkflows(sb, empresa, c.id, falas); } catch (e) { console.error("workflows", e); }
         // Reagendamento: se o cliente pediu retorno, cria a tarefa na agenda de quem disparou.
         if (!transferido && cc?.modo === "ligar" && falas.some((f) => f.papel === "cliente")) {
           try { await reagendar(sb, empresa, c.id, falas, cc?.objetivo ?? null); } catch (e) { console.error("reagendar", e); }
