@@ -1,3 +1,4 @@
+import { silencioPrematuro } from "../_shared/silencioVoz.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { catalogoVenda, lerMarcadorVenda, regrasVenda, removerMarcadorVenda } from "../_shared/catalogoVenda.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -331,6 +332,15 @@ Deno.serve(async (req) => {
         if (assumir) corpo.prompt_extra = "Diga exatamente, sem mudar nada: Um instante, vou passar o senhor para um colega da equipe. [TRANSFERIR]";
         const silencio = corpo.prompt_extra === "[SILENCIO]";
         if (silencio) corpo.prompt_extra = null;
+        // Aparelho avisou silêncio cedo demais (logo após a IA terminar de falar): ignora e deixa o cliente responder.
+        if (silencio && !assumir && corpo.chamada_id) {
+          const ch = (await sb.from("voz_chamadas").select("transcricao").eq("id", String(corpo.chamada_id))
+            .eq("estabelecimento_id", empresa).maybeSingle()).data as SB;
+          if (silencioPrematuro(ch?.transcricao as never)) {
+            console.log("silêncio prematuro ignorado", corpo.chamada_id);
+            return json({ fala: "", resposta: "", audio_b64: null, ignorado: true });
+          }
+        }
         const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
         const cfgVenda = lerMarcadorVenda(String(corpo.objetivo ?? ""));
         let venda = "";
