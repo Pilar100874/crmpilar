@@ -98,7 +98,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
 
   const salvar = async () => {
     if (!empresa) return;
-    if (!atual.nome.trim() || !atual.ramal_ia.trim()) return toast.error("Informe o nome e o ramal da IA");
+    if (!atual.nome.trim()) return toast.error("Informe o nome do agente");
     const ramalUsuario = await meuRamal();
     if (!ramalUsuario) return toast.error("Seu usuário não tem ramal configurado no cadastro");
     const { id, ...dados } = atual;
@@ -224,7 +224,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                           customContent={
                             <>
                               <div className="flex flex-wrap items-center gap-2">
-                                <Badge variant="secondary" className="text-xs">Ramal IA {a.ramal_ia || "—"}</Badge>
+                                
                                 <Badge variant="outline" className={`text-xs ${a.qualidade === "premium" ? "border-primary/20 bg-primary/10 text-primary" : ""}`}>
                                   {a.qualidade === "premium" ? "Premium" : "Gratuita"}
                                 </Badge>
@@ -272,9 +272,6 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
             <CardContent className="grid gap-4 border-t p-3 pt-4 sm:p-4 md:grid-cols-2">
               <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => setAtual({ ...atual, nome: e.target.value })} /></div>
               <div className="flex items-end gap-2"><Switch checked={atual.ativo} onCheckedChange={(v) => setAtual({ ...atual, ativo: v })} /><Label>Ativo</Label></div>
-              <div className="space-y-1"><Label>Ramal da IA na central</Label><Input placeholder="ex.: 7000" value={atual.ramal_ia} onChange={(e) => setAtual({ ...atual, ramal_ia: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Senha do ramal da IA</Label><Input type="password" autoComplete="new-password" placeholder="senha SIP do ramal" value={atual.senha_ramal_ia ?? ""} onChange={(e) => setAtual({ ...atual, senha_ramal_ia: e.target.value })} /><p className="text-xs text-muted-foreground">Os Coletores usam esta senha automaticamente, sem digitar no aparelho.</p></div>
-              <div className="space-y-1"><Label>Código de escuta</Label><Input placeholder="*45" value={atual.codigo_escuta ?? ""} onChange={(e) => setAtual({ ...atual, codigo_escuta: e.target.value })} /></div>
               <div className="space-y-1">
                 <Label>Transferir para o ramal</Label>
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>

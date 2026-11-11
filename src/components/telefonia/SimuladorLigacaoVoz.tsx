@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { meuRamal } from "@/components/telefonia/IaAjudaAtendente";
+import { meusRamaisIa, podeLigarComIa } from "@/lib/voz/ramaisUsuario";
 import {
   compilarRoteiro, lerConduta, lerDepartamento, regrasConduta, regrasConversa,
   type RoteiroSalvo,
@@ -93,6 +94,8 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecio
     setStatus("cancelado");
   };
 
+  const [iaLiberada, setIaLiberada] = useState(false);
+  useEffect(() => { void meusRamaisIa().then((r) => setIaLiberada(podeLigarComIa(r))); }, []);
   const emCurso = !!cmd && ["pendente", "executando", "concluido"].includes(status);
 
   return (
@@ -130,7 +133,7 @@ export function SimuladorLigacaoVoz({ estabelecimentoId, agentes, roteiroSelecio
               <Textarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={() => void ligar()} disabled={emCurso}>
+              <Button onClick={() => void ligar()} disabled={emCurso || !iaLiberada} title={iaLiberada ? undefined : "Cadastre e ative o ramal para fazer ligações no seu usuário"}>
                 {emCurso ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <PhoneCall className="mr-1 h-4 w-4" />} Ligar agora
               </Button>
               {status === "pendente" && <Button variant="outline" onClick={() => void cancelar()}><PhoneOff className="mr-1 h-4 w-4" /> Cancelar</Button>}
