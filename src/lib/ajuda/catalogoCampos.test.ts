@@ -28,3 +28,6 @@ it2("Disparo em massa usa o texto oficial do Atendimento", () => {
 it2("botão não mostra 'se ficar vazio'", () => {
   expect2(texto2(buscar2("Ligação com IA"), "botão")).not.toContain("Se ficar vazio");
 });
+it2("Próximo cliente no Atendimento tem texto oficial", () => {
+  expect2(buscar2("Próximo cliente", "/atendimento")?.paraQue).toContain("próximo cliente da fila");
+});

@@ -74,6 +74,7 @@ export function AjudaGlobal() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const fimRef = useRef<HTMLDivElement>(null);
+  const ativa = pathname.startsWith("/atendimento") && !pathname.startsWith("/atendimento-config");
 
   const perguntar = useCallback(async (c: CampoInfo, of: AjudaCampo | null, hist: Msg[], texto?: string) => {
     setCarregando(true); setErro("");
@@ -95,18 +96,20 @@ export function AjudaGlobal() {
   useEffect(() => {
     const clique = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (!(modo || e.altKey) || t.closest("[data-ajuda-global]")) return;
+      if (!ativa || !(modo || e.altKey) || t.closest("[data-ajuda-global]")) return;
       const c = extrair(t); if (!c) return;
       e.preventDefault(); e.stopPropagation(); abrir(c);
     };
     const tecla = (e: KeyboardEvent) => {
-      if (e.key === "F1" && e.shiftKey) { e.preventDefault(); setModo((m) => !m); }
+      if (e.key === "F1" && e.shiftKey && ativa) { e.preventDefault(); setModo((m) => !m); }
       else if (e.key === "Escape") setModo(false);
     };
     document.addEventListener("click", clique, true);
     document.addEventListener("keydown", tecla);
     return () => { document.removeEventListener("click", clique, true); document.removeEventListener("keydown", tecla); };
-  }, [modo, abrir]);
+  }, [modo, abrir, ativa]);
+
+  useEffect(() => { if (!ativa) setModo(false); }, [ativa]);
 
   useEffect(() => { fimRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, carregando]);
 
@@ -121,11 +124,11 @@ export function AjudaGlobal() {
           <button aria-label="Sair do modo ajuda" onClick={() => setModo(false)} className="ml-1 rounded-full p-0.5 hover:bg-primary-foreground/20"><X className="h-4 w-4" /></button>
         </div>
       )}
-      <Button size="icon" variant={modo ? "default" : "outline"} aria-label="Ajuda: o que é este campo?"
+      {ativa && <Button size="icon" variant={modo ? "default" : "outline"} aria-label="Ajuda: o que é este campo?"
         title="Ajuda: clique aqui e depois no campo (atalho: Shift+F1 ou Alt+clique no campo)"
         onClick={() => setModo((m) => !m)} className="fixed bottom-4 left-4 z-[2147483645] h-10 w-10 rounded-full shadow-lg">
         <HelpCircle className="h-5 w-5" />
-      </Button>
+      </Button>}
       <Sheet open={!!campo} onOpenChange={(o) => !o && setCampo(null)}>
         <SheetContent data-ajuda-global overlayClassName="z-[2147483646]" className="z-[2147483647] w-full sm:max-w-md flex flex-col gap-3 overflow-hidden">
           <SheetHeader>

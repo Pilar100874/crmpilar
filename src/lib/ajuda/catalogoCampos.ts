@@ -5,6 +5,7 @@
  * são explicados pela IA a partir do contexto da tela.
  */
 import { CATALOGO_ATENDIMENTO } from "@/lib/atendimento/catalogoAtendimento";
+import { CATALOGO_TELA_ATENDIMENTO } from "./catalogoTelaAtendimento";
 
 export interface AjudaCampo {
   rotulos: string[];          // rótulos (ou trechos) que identificam o campo
@@ -122,7 +123,7 @@ export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
   if (!r) return null;
   const rt = rota.toLowerCase();
   let melhor: { a: AjudaCampo; p: number } | null = null;
-  for (const a of [...CATALOGO_CAMPOS, ...DO_ATENDIMENTO]) {
+  for (const a of [...CATALOGO_TELA_ATENDIMENTO, ...CATALOGO_CAMPOS, ...DO_ATENDIMENTO]) {
     if (a.rota && !rt.includes(a.rota)) continue;
     for (const x of a.rotulos) {
       const p = r === x ? 3 : r.startsWith(x) || x.startsWith(r) && r.length >= 6 ? 2 : r.includes(x) && x.length >= 8 ? 1 : 0;
