@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Copy, GitBranch, Lightbulb, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Save, Sparkles, Trash2, Workflow } from "lucide-react";
+import { Copy, GitBranch, Lightbulb, Monitor, PhoneCall, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
 import { FluxoRoteiroVoz } from "./FluxoRoteiroVoz";
@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +18,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { removerEtapa } from "@/lib/voz/roteirosLigacao";
 import { SimuladorLigacaoVoz, type AgenteSim } from "./SimuladorLigacaoVoz";
 import {
-  ACOES, DEPARTAMENTOS, GATILHOS_PRONTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, palavrasGatilho, roteiroDeFabrica,
+  DEPARTAMENTOS, ROTEIROS, carregarRoteirosSalvos, compilarRoteiro, ehDeFabrica, roteiroDeFabrica,
   type CampoRoteiro, type RoteiroBaseId, type RoteiroSalvo,
 } from "@/lib/voz/roteirosLigacao";
 
@@ -31,7 +29,6 @@ const CAMPOS: { id: CampoRoteiro; rotulo: string }[] = [
   { id: "produto", rotulo: "Produto" }, { id: "condicao", rotulo: "Condição" },
   { id: "desconto", rotulo: "Desconto máximo" }, { id: "aviso", rotulo: "Aviso (financeiro)" },
 ];
-const LIVRE = "__livre__";
 
 /** Lista e editor dos roteiros de ligação da empresa: fábrica editável + novos, com regras "Se X, faça Y". */
 export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecimentoId: string | null; agentes: AgenteSim[] }) {
@@ -68,8 +65,6 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   );
 
   const [ajustes, setAjustes] = useState<AjusteSugerido[]>([]);
-  const [sugestoes, setSugestoes] = useState<Record<string, string[]>>({});
-  const [sugerindo, setSugerindo] = useState<string | null>(null);
 
   /** Grava a resposta na regra da etapa e salva o roteiro na hora (vale para disparo e Simulador). */
   const gravar = async (r: RoteiroSalvo) => {
@@ -96,17 +91,6 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     if (n === atual) return void toast.info("Essa resposta já está no roteiro");
     setAtual(n); toast.success(`"${resposta}" adicionado à pergunta ${etapa + 1} — salve para gravar`);
   };
-  const sugerirVariacoes = async (chaveRegra: string, pergunta: string, gatilho: string) => {
-    setSugerindo(chaveRegra);
-    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "sinonimos", pergunta, gatilho } });
-    setSugerindo(null);
-    if (error || data?.error) return toast.error(data?.error ?? "Falha ao sugerir");
-    const ja = new Set(palavrasGatilho(gatilho).map((p) => p.toLowerCase()));
-    const v = (data.variacoes as string[]).filter((p) => !ja.has(p.toLowerCase()));
-    if (!v.length) return toast.info("Nenhuma variação nova");
-    setSugestoes((s) => ({ ...s, [chaveRegra]: v }));
-  };
-
   useEffect(() => {
     if (!estabelecimentoId) return;
     void db.from("voz_chamadas").select("transcricao").eq("estabelecimento_id", estabelecimentoId).order("iniciada_em", { ascending: false }).limit(60)
