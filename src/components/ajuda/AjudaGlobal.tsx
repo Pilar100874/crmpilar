@@ -114,18 +114,18 @@ export function AjudaGlobal() {
     <div data-ajuda-global>
       {modo && <style>{`input,textarea,select,[role=switch],[role=combobox],[role=checkbox],label{outline:2px dashed hsl(var(--primary)/.6)!important;outline-offset:2px}*{cursor:help!important}`}</style>}
       {modo && (
-        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm shadow-lg max-w-[90vw]">
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[2147483647] flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm shadow-lg max-w-[90vw]">
           <HelpCircle className="h-4 w-4 shrink-0" /> <span>Clique em qualquer campo, botão, bloco, aba ou menu</span>
           <button aria-label="Sair do modo ajuda" onClick={() => setModo(false)} className="ml-1 rounded-full p-0.5 hover:bg-primary-foreground/20"><X className="h-4 w-4" /></button>
         </div>
       )}
       <Button size="icon" variant={modo ? "default" : "outline"} aria-label="Ajuda: o que é este campo?"
         title="Ajuda: clique aqui e depois no campo (atalho: Shift+F1 ou Alt+clique no campo)"
-        onClick={() => setModo((m) => !m)} className="fixed bottom-4 left-4 z-[90] h-10 w-10 rounded-full shadow-lg">
+        onClick={() => setModo((m) => !m)} className="fixed bottom-4 left-4 z-[2147483645] h-10 w-10 rounded-full shadow-lg">
         <HelpCircle className="h-5 w-5" />
       </Button>
       <Sheet open={!!campo} onOpenChange={(o) => !o && setCampo(null)}>
-        <SheetContent data-ajuda-global className="w-full sm:max-w-md flex flex-col gap-3 overflow-hidden">
+        <SheetContent data-ajuda-global overlayClassName="z-[2147483646]" className="z-[2147483647] w-full sm:max-w-md flex flex-col gap-3 overflow-hidden">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 pr-6"><HelpCircle className="h-5 w-5 text-primary shrink-0" /><span className="break-words">{campo?.rotulo}</span></SheetTitle>
             <SheetDescription className="break-words">{campo?.tipo && <span className="capitalize">{campo.tipo} · </span>}{oficial?.tela ?? campo?.secao ?? document.title}</SheetDescription>
