@@ -26,6 +26,7 @@ export function diagnosticarRoteiro(r: RoteiroSalvo): DiagnosticoRoteiro {
     e.condicoes.forEach((c) => { if (!c.gatilho.trim()) a.push({ nivel: "erro", etapa: i, texto: "Regra com o campo SE vazio." }); });
     e.condicoes.forEach((c) => {
       if (c.acao === "ir_etapa" && (c.etapa == null || !r.etapas[c.etapa])) a.push({ nivel: "erro", etapa: i, texto: "Regra \"Ir para a etapa\" sem etapa de destino." });
+      else if (c.acao === "workflow" && !c.workflow?.id) a.push({ nivel: "erro", etapa: i, texto: "Bloco \"Disparar workflow\" sem workflow escolhido." });
       else if (c.acao === "ir_etapa" && c.etapa === i) a.push({ nivel: "aviso", etapa: i, texto: "Regra manda ir para a própria etapa (pode repetir a pergunta)." });
     });
     if (e.condicoes.some((c) => c.acao === "avancar") && i === r.etapas.length - 1)
@@ -33,7 +34,7 @@ export function diagnosticarRoteiro(r: RoteiroSalvo): DiagnosticoRoteiro {
   });
   if (r.etapas.length && !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "transferir")))
     a.push({ nivel: "aviso", etapa: null, texto: "Nenhuma regra transfere para um atendente quando o cliente tiver dúvida." });
-  if (r.etapas.length && !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "encerrar" || /\[DESLIGAR\]/.test(c.texto ?? ""))))
+  if (r.etapas.length && !r.etapas.some((e) => e.condicoes.some((c) => c.acao === "encerrar" || c.acao === "reagendar" || (c.acao === "workflow" && c.etapa == null) || /\[DESLIGAR\]/.test(c.texto ?? ""))))
     a.push({ nivel: "aviso", etapa: null, texto: "Nenhuma regra encerra a ligação educadamente." });
   const nota = Math.max(0, 10 - a.reduce((s, x) => s + (x.nivel === "erro" ? 3 : 1), 0));
   return { nota, alertas: a };
@@ -117,11 +118,12 @@ export function mapaRoteiro(r: RoteiroSalvo): NoMapa[] {
     const ultima = i === r.etapas.length - 1;
     const ramos = e.condicoes.map((c) => {
       const alvo = c.acao === "ir_etapa" && c.etapa != null ? r.etapas[c.etapa] : undefined;
-      const semSaida = (c.acao === "avancar" && ultima) || (c.acao === "ir_etapa" && !alvo);
+      const semSaida = (c.acao === "avancar" && ultima) || (c.acao === "ir_etapa" && !alvo) || (c.acao === "workflow" && !c.workflow?.id);
       const destino = c.acao === "ir_etapa" ? (alvo ? `Etapa ${c.etapa! + 1}${alvo.titulo.trim() ? ` · ${alvo.titulo.trim()}` : ""}` : "Etapa não definida")
         : c.acao === "avancar" ? (ultima ? "Sem próxima etapa" : `Etapa ${i + 2}`)
         : c.acao === "transferir" ? "Transferir para atendente" : c.acao === "encerrar" ? "Encerrar ligação"
-        : c.acao === "desconto" ? "Oferecer desconto" : /\[DESLIGAR\]/.test(c.texto ?? "") ? "Responder e encerrar" : "Responder e continuar";
+        : c.acao === "desconto" ? "Oferecer desconto" : c.acao === "reagendar" ? "Reagendar retorno"
+        : c.acao === "workflow" ? (c.workflow?.id ? `Disparar workflow · ${c.workflow.nome}` : "Workflow não escolhido") : /\[DESLIGAR\]/.test(c.texto ?? "") ? "Responder e encerrar" : "Responder e continuar";
       return { gatilho: c.gatilho, acao: c.acao, destino, semSaida };
     });
     const temSaida = ramos.some((x) => !x.semSaida && x.acao !== "responder") || (!ultima && !e.fala.includes("?"));
