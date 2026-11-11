@@ -1,0 +1,64 @@
+/**
+ * Catálogo central da Ajuda global: explicações oficiais dos campos do sistema.
+ * A busca casa pelo rótulo normalizado (e opcionalmente pela rota), então funciona
+ * em qualquer tela sem precisar alterar os formulários. Campos fora do catálogo
+ * são explicados pela IA a partir do contexto da tela.
+ */
+export interface AjudaCampo {
+  rotulos: string[];          // rótulos (ou trechos) que identificam o campo
+  rota?: string;              // trecho da rota onde vale (opcional)
+  tela?: string;
+  paraQue: string;
+  seVazio?: string;
+  exemplo?: string;
+}
+
+export const normalizar = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[*:?()]/g, " ").replace(/\s+/g, " ").trim();
+
+export const CATALOGO_CAMPOS: AjudaCampo[] = [
+  { rotulos: ["telas de automacao", "painel no celular", "painel no tablet"], tela: "Cadastro de usuários",
+    paraQue: "Define qual painel do módulo de Automação (luzes, portões, relés) abre direto quando o usuário entra pelo celular ou tablet.",
+    seVazio: "O sistema escolhe automaticamente o painel padrão da automação.", exemplo: "Celular: \"Portaria\"; Tablet: \"Painel geral\"." },
+  { rotulos: ["ramal para fazer ligacoes"], tela: "Cadastro de usuários",
+    paraQue: "Ramal do PABX usado pelas ligações com IA disparadas por este usuário e como destino das transferências.",
+    seVazio: "Os botões Ligação com IA, Ligar agora e Ouvir em silêncio ficam desativados para o usuário.", exemplo: "2050" },
+  { rotulos: ["pode escutar ramais de outros usuarios"], tela: "Cadastro de usuários",
+    paraQue: "Permite que o usuário escute em silêncio a ligação de qualquer outro usuário, escolhendo pelo nome na aba Chamadas → Ao vivo.",
+    seVazio: "Desligado: o usuário só escuta as ligações da IA que ele mesmo disparou.", exemplo: "Ligue apenas para supervisores." },
+  { rotulos: ["codigo de escuta silenciosa", "codigo de escuta"], tela: "Configuração PABX",
+    paraQue: "Código do PABX que inicia a escuta sem o cliente perceber. O sistema disca esse código seguido do ramal.",
+    seVazio: "Usa *54, o padrão do Grandstream UCM.", exemplo: "*54" },
+  { rotulos: ["dados que o usuario preenche ao disparar"], tela: "Roteiros de voz",
+    paraQue: "Escolhe quais informações (produto, condição, desconto, aviso) quem dispara a campanha precisa preencher. Elas entram nas falas como {produto}, {condicao}...",
+    seVazio: "O disparo não pede nenhum dado extra.", exemplo: "Marque Produto e Desconto máximo para uma campanha promocional." },
+  { rotulos: ["roteiro ativo"], tela: "Roteiros de voz",
+    paraQue: "Quando ligado, o roteiro aparece na lista do Disparo em massa → Ligação com IA.",
+    seVazio: "Desligado, o roteiro fica como rascunho e não pode ser disparado." },
+  { rotulos: ["motivo da perda", "motivo"], rota: "orcamento", tela: "Orçamentos",
+    paraQue: "Registra por que o pedido foi perdido; alimenta a tela Pedidos perdidos.",
+    seVazio: "Obrigatório: o orçamento não pode ser marcado como perdido sem motivo." },
+  { rotulos: ["marca"], rota: "produto", tela: "Produtos",
+    paraQue: "Marca do produto, usada nos filtros de Pedidos perdidos e relatórios.", seVazio: "Obrigatório para salvar o produto." },
+  { rotulos: ["proximo contato", "data do proximo contato"], tela: "Atendimento",
+    paraQue: "Data em que o cliente volta para a fila do dia. Todo atendimento finalizado precisa de uma próxima data.",
+    seVazio: "O atendimento fica como não finalizado e o cartão mostra aviso." },
+];
+
+export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
+  const r = normalizar(rotulo);
+  if (!r) return null;
+  const rt = rota.toLowerCase();
+  let melhor: { a: AjudaCampo; p: number } | null = null;
+  for (const a of CATALOGO_CAMPOS) {
+    if (a.rota && !rt.includes(a.rota)) continue;
+    for (const x of a.rotulos) {
+      const p = r === x ? 3 : r.startsWith(x) || x.startsWith(r) && r.length >= 6 ? 2 : r.includes(x) && x.length >= 8 ? 1 : 0;
+      if (p && (!melhor || p > melhor.p)) melhor = { a, p };
+    }
+  }
+  return melhor?.a ?? null;
+}
+
+export const textoOficial = (a: AjudaCampo | null) =>
+  a ? [a.paraQue, a.seVazio && `Se ficar vazio: ${a.seVazio}`, a.exemplo && `Exemplo: ${a.exemplo}`].filter(Boolean).join("\n") : "";
