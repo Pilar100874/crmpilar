@@ -40,7 +40,8 @@ export function validarPergunta(e: EtapaEditavel): AvisoPergunta[] {
   if (!decisao) return []; // fala informativa ou pergunta aberta sem ramificação
   const ops = opcoesEsperadas(e);
   const av: AvisoPergunta[] = [];
-  const interrog = (fala.match(/\?/g) ?? []).length;
+  // Instruções como "Pergunte se…" valem como uma pergunta que a IA vai formular.
+  const interrog = (fala.match(/\?/g) ?? []).length + (/^\s*(pergunte|confirme|verifique se)\b/i.test(fala) ? 1 : 0);
   if (!interrog) av.push({ nivel: "erro", codigo: "sem_pergunta", texto: "A fala não termina em pergunta: o cliente não sabe o que responder.", corrigivel: true });
   if (interrog > 1) av.push({ nivel: "erro", codigo: "varias_perguntas", texto: "Há mais de uma pergunta. Faça uma por vez para o cliente responder a certa.", corrigivel: false });
   if (fala.split(" ").length > 30) av.push({ nivel: "aviso", codigo: "longa", texto: "Fala longa (mais de 30 palavras): o cliente tende a interromper ou esquecer a pergunta.", corrigivel: false });
