@@ -1,9 +1,9 @@
 import "@xyflow/react/dist/style.css";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  Background, Controls, Handle, Position, ReactFlow, useNodesState, type Connection, type Edge, type Node, type NodeProps,
+  Background, BackgroundVariant, Controls, Handle, Position, ReactFlow, ReactFlowProvider, useNodesState, useReactFlow, type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
-import { CalendarClock, MessageCircleQuestion, PhoneForwarded, PhoneOff, Play, Plus, Percent, MessageSquare, Trash2, Workflow } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Sparkles, Wand2, X, CalendarClock, MessageCircleQuestion, PhoneForwarded, PhoneOff, Play, Plus, Percent, MessageSquare, Trash2, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,10 +13,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { corrigirPergunta, opcoesEsperadas, validarPergunta } from "@/lib/voz/validacaoPergunta";
+import { palavrasGatilho } from "@/lib/voz/roteirosLigacao";
 import { WORKFLOW_MODULES } from "@/components/flow/block-configs/TriggerWorkflowConfig";
 import { ACOES, removerEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
 import {
-  SAIDAS_PRONTAS, adicionarSaida, continuarAposWorkflow, grafoDoRoteiro, ligarSaida, moverPergunta, novaPergunta, soltarSaida, tipoSaida, type TipoSaida,
+  MENU_BLOCOS, SAIDAS_PRONTAS, adicionarAcao, adicionarSaida, novaPerguntaTipo, type BlocoMenu, continuarAposWorkflow, grafoDoRoteiro, ligarSaida, moverPergunta, novaPergunta, soltarSaida, tipoSaida, type TipoSaida,
 } from "@/lib/voz/fluxoRoteiro";
 
 const COR_SAIDA: Record<TipoSaida, string> = {
@@ -31,7 +38,7 @@ const ROTULO_ACAO: Record<string, string> = {
   workflow: "Disparar workflow", desconto: "Oferecer desconto", responder: "Responder e continuar",
 };
 
-type DadosPergunta = { titulo: string; fala: string; numero: number; condicoes: CondicaoRoteiro[] };
+type DadosPergunta = { titulo: string; fala: string; numero: number; condicoes: CondicaoRoteiro[]; avisos: number; erros: number };
 type DadosAcao = { condicao: CondicaoRoteiro };
 
 const InicioNode = memo(() => (
@@ -47,7 +54,10 @@ const PerguntaNode = memo(({ data, selected }: NodeProps<Node<DadosPergunta>>) =
     <div className="flex items-center gap-2 border-b border-border px-3 py-2">
       <MessageCircleQuestion className="h-4 w-4 shrink-0 text-primary" />
       <Badge variant="secondary" className="shrink-0">{data.numero}</Badge>
-      <span className="truncate text-sm font-semibold">{data.titulo || "Pergunta"}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{data.titulo || "Pergunta"}</span>
+      {data.erros + data.avisos > 0
+        ? <span title="Pergunta precisa de ajustes" className={`flex shrink-0 items-center gap-0.5 text-[11px] font-semibold ${data.erros ? "text-destructive" : "text-muted-foreground"}`}><AlertTriangle className="h-3.5 w-3.5" />{data.erros + data.avisos}</span>
+        : <CheckCircle2 aria-label="Pergunta validada" className="h-3.5 w-3.5 shrink-0 text-primary" />}
     </div>
     <p className="line-clamp-3 px-3 py-2 text-xs text-muted-foreground">{data.fala || "Defina o que a IA fala…"}</p>
     <div className="space-y-1 border-t border-border py-2">
@@ -111,12 +121,32 @@ function EditorSaida({ r, i, j, onChange }: { r: RoteiroSalvo; i: number; j: num
   const set = (p: Partial<CondicaoRoteiro>) => onChange({ ...r, etapas: r.etapas.map((e, k) => (k !== i ? e : { ...e, condicoes: e.condicoes.map((x, m) => (m === j ? { ...x, ...p } : x)) })) });
   const remover = () => onChange({ ...r, etapas: r.etapas.map((e, k) => (k !== i ? e : { ...e, condicoes: e.condicoes.filter((_, m) => m !== j) })) });
   const outras = r.etapas.map((e, k) => ({ k, nome: `${k + 1}. ${e.titulo || "Pergunta"}` })).filter((x) => x.k !== i);
+  const [sug, setSug] = useState<string[] | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const sugerir = async () => {
+    setCarregando(true);
+    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "sinonimos", pergunta: r.etapas[i].fala, gatilho: c.gatilho } });
+    setCarregando(false);
+    if (error || data?.error) return void toast.error(data?.error ?? "Falha ao sugerir");
+    const ja = new Set(palavrasGatilho(c.gatilho).map((p) => p.toLowerCase()));
+    const v = ((data.variacoes as string[]) ?? []).filter((p) => !ja.has(p.toLowerCase()));
+    if (!v.length) toast.info("Nenhuma variação nova");
+    setSug(v);
+  };
   return (
     <Card className="space-y-2 p-3">
       <div className="flex items-center gap-2">
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${COR_SAIDA[tipoSaida(c)]}`} />
         <Input className="h-8" value={c.gatilho} onChange={(e) => set({ gatilho: e.target.value })} placeholder="Respostas, separadas por vírgula" />
         <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Remover saída" onClick={remover}><Trash2 className="h-4 w-4" /></Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-1">
+        <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[11px]" disabled={!c.gatilho.trim() || carregando} onClick={() => void sugerir()}>
+          {carregando ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Sugerir variações
+        </Button>
+        {sug?.map((p) => (
+          <Badge key={p} variant="outline" className="cursor-pointer text-[10px]" onClick={() => { set({ gatilho: [...palavrasGatilho(c.gatilho), p].join(", ") }); setSug((x) => x?.filter((y) => y !== p) ?? null); }}>+ {p}</Badge>
+        ))}
       </div>
       <Select value={c.acao} onValueChange={(v) => {
         const acao = v as CondicaoRoteiro["acao"];
@@ -151,22 +181,127 @@ function EditorSaida({ r, i, j, onChange }: { r: RoteiroSalvo; i: number; j: num
   );
 }
 
-/** Roteiro de voz como workflow de blocos: perguntas com saídas prontas ligadas a perguntas ou ações. */
-export function FluxoRoteiroVoz({ roteiro, onChange }: { roteiro: RoteiroSalvo; onChange: (r: RoteiroSalvo) => void }) {
-  const [sel, setSel] = useState<string | null>(roteiro.etapas.length ? "e0" : null);
+const PAINEL = "workflow-props animate-slide-in-right fixed inset-y-0 right-0 z-40 flex h-full w-full flex-col overflow-x-hidden border-l border-border bg-background shadow-2xl sm:w-96 lg:static lg:inset-auto lg:z-auto lg:m-2 lg:h-[calc(100%-1rem)] lg:rounded-2xl lg:border-2 lg:border-border lg:bg-gradient-to-b lg:from-background lg:to-border lg:shadow-lg";
+
+/** Menu lateral de blocos (mesmo visual do menu do Criar Bot). */
+function MenuBlocosVoz({ onFechar, onAdicionar }: { onFechar: () => void; onAdicionar: (b: BlocoMenu) => void }) {
+  const [busca, setBusca] = useState("");
+  const [abertos, setAbertos] = useState<string[]>(["Perguntas", "Ações"]);
+  const q = busca.toLowerCase();
+  const grupos = MENU_BLOCOS.map((g) => ({ ...g, blocos: g.blocos.filter((b) => b.rotulo.toLowerCase().includes(q) || b.descricao.toLowerCase().includes(q)) })).filter((g) => g.blocos.length);
+  return (
+    <div className="relative m-2 flex h-[calc(100%-1rem)] w-60 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-border bg-gradient-to-b from-background to-border shadow-lg animate-slide-in">
+      <div className="p-4 pb-2">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-foreground text-background"><Sparkles className="h-3.5 w-3.5" /></div>
+            <h3 className="text-base font-bold tracking-tight text-foreground">Menu</h3>
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onFechar} aria-label="Fechar menu"><X className="h-4 w-4" /></Button>
+        </div>
+        <Input placeholder="Buscar..." value={busca} onChange={(e) => setBusca(e.target.value)} className="h-8 border-0 bg-muted/40 text-xs shadow-sm" />
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="space-y-0.5 px-2 pb-4">
+          {grupos.map((g) => {
+            const aberto = abertos.includes(g.grupo) || !!q;
+            return (
+              <Collapsible key={g.grupo} open={aberto} onOpenChange={() => setAbertos((a) => (a.includes(g.grupo) ? a.filter((x) => x !== g.grupo) : [...a, g.grupo]))}>
+                <CollapsibleTrigger className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${aberto ? "bg-foreground text-background" : "text-foreground hover:bg-muted"}`}>
+                  <span className="text-xs font-medium">{g.grupo}</span>
+                  <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-semibold ${aberto ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>{g.blocos.length}</span>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="relative ml-5 py-1 pl-4">
+                    <div className="absolute bottom-0 left-0 top-0 w-px bg-foreground/40" />
+                    {g.blocos.map((b) => (
+                      <div key={`${b.tipo}-${b.id}`} draggable title="Arraste para o quadro ou clique 2x"
+                        onDragStart={(ev) => { ev.dataTransfer.setData("application/vozbloco", JSON.stringify(b)); ev.dataTransfer.effectAllowed = "move"; }}
+                        onDoubleClick={() => onAdicionar(b)}
+                        className="cursor-grab select-none rounded-xl px-3 py-2 transition-colors hover:bg-muted/60 active:cursor-grabbing">
+                        <p className="truncate text-xs text-foreground">{b.rotulo}</p>
+                        <p className="truncate text-[10px] text-muted-foreground">{b.descricao}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+/** Validação da pergunta: orienta para que a fala leve o cliente a uma resposta que siga o fluxo. */
+function ValidacaoPergunta({ r, i, onChange }: { r: RoteiroSalvo; i: number; onChange: (r: RoteiroSalvo) => void }) {
+  const e = r.etapas[i];
+  const avisos = validarPergunta(e);
+  const ops = opcoesEsperadas(e);
+  const [reescrevendo, setReescrevendo] = useState(false);
+  const reescrever = async () => {
+    setReescrevendo(true);
+    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "orientar", fala: e.fala, opcoes: (ops.length ? ops : ["qualquer resposta"]).join(", ") } });
+    setReescrevendo(false);
+    if (error || data?.error || !data?.fala) return void toast.error(data?.error ?? "Falha ao reescrever");
+    onChange({ ...r, etapas: r.etapas.map((x, k) => (k === i ? { ...x, fala: data.fala } : x)) });
+    toast.success("Pergunta reescrita para guiar o cliente");
+  };
+  return (
+    <Card className="space-y-2 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold text-foreground">Validação da pergunta</p>
+        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" disabled={!e.fala.trim() || reescrevendo} onClick={() => void reescrever()}>
+          {reescrevendo ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />} Reescrever com IA
+        </Button>
+      </div>
+      {ops.length > 0 && <p className="text-[11px] text-muted-foreground">Respostas que seguem o fluxo: {ops.map((o) => <Badge key={o} variant="secondary" className="mr-1 text-[10px]">{o}</Badge>)}</p>}
+      {!avisos.length && <p className="flex items-center gap-1 text-xs text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> A pergunta conduz o cliente a uma resposta prevista.</p>}
+      {avisos.map((a) => (
+        <div key={a.codigo} className={`flex items-start gap-2 rounded-md border p-2 text-xs ${a.nivel === "erro" ? "border-destructive/50 text-destructive" : "border-border text-muted-foreground"}`}>
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span className="min-w-0 flex-1">{a.texto}</span>
+          {a.corrigivel && <Button size="sm" variant="ghost" className="h-6 shrink-0 px-2 text-[11px]" onClick={() => onChange(corrigirPergunta(r, i, a.codigo))}>Corrigir</Button>}
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+export interface FluxoRoteiroVozProps {
+  roteiro: RoteiroSalvo; onChange: (r: RoteiroSalvo) => void;
+  onSalvar: () => void; onFechar: () => void; salvando?: boolean; sujo?: boolean;
+  /** Painel "Testar" (simulador) mostrado à direita no lugar das propriedades. */
+  painelTeste: ReactNode;
+  /** Propriedades do roteiro (quando nenhum bloco está selecionado). */
+  propriedadesRoteiro: ReactNode;
+  acoesTopo?: ReactNode;
+}
+
+function Editor(p: FluxoRoteiroVozProps) {
+  const { roteiro, onChange } = p;
+  const rf = useReactFlow();
+  const [sel, setSel] = useState<string | null>(null);
+  const [menu, setMenu] = useState(true);
+  const [testando, setTestando] = useState(false);
+  const [painel, setPainel] = useState(true);
+  const [travado, setTravado] = useState(false);
   const grafo = useMemo(() => grafoDoRoteiro(roteiro), [roteiro]);
-  const calculados: Node[] = useMemo(() => grafo.nos.map((n) => ({
-    id: n.id, type: n.tipo, position: { x: n.x, y: n.y }, selected: n.id === sel,
-    draggable: n.tipo === "pergunta",
-    data: n.tipo === "pergunta"
-      ? { ...roteiro.etapas[n.etapa!], numero: n.etapa! + 1 }
-      : n.tipo === "acao" ? { condicao: roteiro.etapas[n.etapa!].condicoes[n.saida!] } : {},
-  })), [grafo, roteiro, sel]);
+  const calculados: Node[] = useMemo(() => grafo.nos.map((n) => {
+    const av = n.tipo === "pergunta" ? validarPergunta(roteiro.etapas[n.etapa!]) : [];
+    return {
+      id: n.id, type: n.tipo, position: { x: n.x, y: n.y }, selected: n.id === sel, draggable: n.tipo === "pergunta" && !travado,
+      data: n.tipo === "pergunta"
+        ? { ...roteiro.etapas[n.etapa!], numero: n.etapa! + 1, erros: av.filter((a) => a.nivel === "erro").length, avisos: av.filter((a) => a.nivel === "aviso").length }
+        : n.tipo === "acao" ? { condicao: roteiro.etapas[n.etapa!].condicoes[n.saida!] } : {},
+    };
+  }), [grafo, roteiro, sel, travado]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(calculados);
   useEffect(() => { setNodes(calculados); }, [calculados, setNodes]);
   const edges: Edge[] = grafo.arestas.map((a) => ({
-    id: a.id, source: a.origem, sourceHandle: a.saida, target: a.destino, animated: a.origem === "inicio",
-    style: { strokeWidth: 2 }, deletable: a.origem !== "inicio",
+    id: a.id, source: a.origem, sourceHandle: a.saida, target: a.destino, animated: true, type: "smoothstep",
+    style: { stroke: "hsl(var(--primary))", strokeWidth: 2 }, markerEnd: { type: "arrowclosed" as never, color: "hsl(var(--primary))" }, deletable: a.origem !== "inicio",
   }));
   const idx = (id: string) => id.slice(1).split("-").map(Number);
 
@@ -186,65 +321,104 @@ export function FluxoRoteiroVoz({ roteiro, onChange }: { roteiro: RoteiroSalvo; 
   };
 
   const etapaSel = sel?.startsWith("e") ? Number(sel.slice(1)) : null;
+  /** Adiciona um bloco do menu: perguntas viram blocos; respostas e ações entram na pergunta alvo (ou selecionada). */
+  const adicionar = useCallback((b: BlocoMenu, pos?: { x: number; y: number }, alvo?: number | null) => {
+    if (b.tipo === "pergunta") {
+      const centro = pos ?? rf.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      onChange(novaPerguntaTipo(roteiro, b.id, { x: Math.round(centro.x), y: Math.round(centro.y) }));
+      setSel(`e${roteiro.etapas.length}`); setPainel(true); setTestando(false);
+      return;
+    }
+    const i = alvo ?? (sel?.startsWith("a") ? idx(sel)[0] : etapaSel);
+    if (i == null || !roteiro.etapas[i]) return void toast.info("Solte sobre uma pergunta (ou selecione uma) para adicionar essa saída");
+    onChange(b.tipo === "saida" ? adicionarSaida(roteiro, i, b.id) : adicionarAcao(roteiro, i, b.id));
+    setSel(`e${i}`); setPainel(true); setTestando(false);
+    toast.success(`${b.rotulo} adicionado à pergunta ${i + 1}`);
+  }, [roteiro, onChange, rf, sel, etapaSel]);
+
+  const soltar = (ev: React.DragEvent) => {
+    ev.preventDefault();
+    const raw = ev.dataTransfer.getData("application/vozbloco");
+    if (!raw || travado) return;
+    const b = JSON.parse(raw) as BlocoMenu;
+    const no = (ev.target as Element).closest(".react-flow__node")?.getAttribute("data-id") ?? "";
+    const alvo = no.startsWith("e") ? Number(no.slice(1)) : no.startsWith("a") ? idx(no)[0] : null;
+    adicionar(b, rf.screenToFlowPosition({ x: ev.clientX, y: ev.clientY }), alvo);
+  };
+
   const acaoSel = sel?.startsWith("a") ? idx(sel) : null;
   const e = etapaSel != null ? roteiro.etapas[etapaSel] : null;
-  const setEtapa = (p: Partial<RoteiroSalvo["etapas"][number]>) =>
-    onChange({ ...roteiro, etapas: roteiro.etapas.map((x, k) => (k === etapaSel ? { ...x, ...p } : x)) });
+  const setEtapa = (x: Partial<RoteiroSalvo["etapas"][number]>) =>
+    onChange({ ...roteiro, etapas: roteiro.etapas.map((y, k) => (k === etapaSel ? { ...y, ...x } : y)) });
+  const tituloPainel = testando ? "Testar roteiro" : e ? `Pergunta ${etapaSel! + 1}` : acaoSel ? `Saída da pergunta ${acaoSel[0] + 1}` : "Propriedades do roteiro";
 
   return (
-    <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <Card className="relative h-[620px] min-w-0 overflow-hidden">
-        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => { onChange(novaPergunta(roteiro)); setSel(`e${roteiro.etapas.length}`); }}><Plus className="mr-1 h-4 w-4" /> Pergunta</Button>
-        </div>
+    <WorkflowBuilderLayout
+      title="AGENTE DE VOZ" subtitle="Roteiro de ligação em blocos"
+      flowName={roteiro.nome} onFlowNameChange={(nome) => onChange({ ...roteiro, nome })}
+      onSave={p.onSalvar} isSaving={p.salvando} hasUnsavedChanges={p.sujo} onClose={p.onFechar}
+      onTest={() => { setTestando((t) => !t); setPainel(true); }} showTest={testando} isTestActive={testando} testLabel="Testar"
+      onZoomIn={() => rf.zoomIn()} onZoomOut={() => rf.zoomOut()} onFitView={() => rf.fitView({ padding: 0.2, duration: 300 })}
+      isLocked={travado} onToggleLock={() => setTravado((t) => !t)}
+      rightContent={p.acoesTopo}
+    >
+      {menu && <MenuBlocosVoz onFechar={() => setMenu(false)} onAdicionar={(b) => adicionar(b)} />}
+      <div className="relative min-w-0 flex-1" onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; }} onDrop={soltar}>
+        {!menu && <FloatingAddBlockButton onClick={() => setMenu(true)} />}
         <ReactFlow
-          nodes={nodes} edges={edges} nodeTypes={TIPOS} fitView minZoom={0.2}
-          onConnect={conectar} onEdgesDelete={apagarArestas}
-          onNodeClick={(_, n) => setSel(n.id)} onPaneClick={() => setSel(null)}
+          nodes={nodes} edges={edges} nodeTypes={TIPOS} fitView fitViewOptions={{ padding: 0.2, maxZoom: 1 }} minZoom={0.2}
+          onConnect={conectar} onEdgesDelete={apagarArestas} nodesConnectable={!travado} edgesFocusable={!travado}
+          onNodeClick={(_, n) => { setSel(n.id); setPainel(true); setTestando(false); }} onPaneClick={() => setSel(null)}
           onNodeDragStop={(_, n) => n.id.startsWith("e") && onChange(moverPergunta(roteiro, Number(n.id.slice(1)), n.position))}
-          onNodesChange={onNodesChange} proOptions={{ hideAttribution: true }}
+          onNodesChange={onNodesChange} proOptions={{ hideAttribution: true }} className="bg-background"
         >
-          <Background /><Controls showInteractive={false} />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} className="opacity-40" />
+          <Controls showInteractive={false} className="rounded-lg border border-border bg-card shadow-lg" />
         </ReactFlow>
-      </Card>
-
-      <div className="min-w-0 space-y-3">
-        {!e && !acaoSel && (
-          <Card className="space-y-2 p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Como montar</p>
-            <p>Cada bloco é uma pergunta da IA. Cada bolinha à direita é uma resposta possível do cliente.</p>
-            <p>Arraste a bolinha até outra pergunta para seguir por ali, ou escolha no painel: transferir, encerrar, reagendar ou disparar um workflow (WhatsApp, Bot, Vendas…).</p>
-            <p>Para desfazer uma ligação, clique na linha e aperte Delete.</p>
-          </Card>
-        )}
-        {e && etapaSel != null && (
-          <Card className="space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <Badge>Pergunta {etapaSel + 1}</Badge>
-              <Button size="sm" variant="ghost" onClick={() => { onChange({ ...roteiro, etapas: removerEtapa(roteiro.etapas, etapaSel) }); setSel(null); }}><Trash2 className="mr-1 h-4 w-4" /> Remover</Button>
-            </div>
-            <div className="space-y-1"><Label>Título</Label><Input className="h-8" value={e.titulo} onChange={(x) => setEtapa({ titulo: x.target.value })} /></div>
-            <div className="space-y-1"><Label>O que a IA fala</Label><Textarea rows={3} value={e.fala} onChange={(x) => setEtapa({ fala: x.target.value })} placeholder="Uma pergunta curta, ex.: O senhor conseguiu ver o orçamento?" /></div>
-            <div className="flex items-center justify-between gap-2">
-              <Label>Saídas (respostas do cliente)</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild><Button size="sm" variant="outline" className="h-8"><Plus className="mr-1 h-4 w-4" /> Saída</Button></DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {SAIDAS_PRONTAS.map((s) => <DropdownMenuItem key={s.tipo} onClick={() => onChange(adicionarSaida(roteiro, etapaSel, s.tipo))}>{s.rotulo}</DropdownMenuItem>)}
-                  <DropdownMenuItem onClick={() => onChange(adicionarSaida(roteiro, etapaSel, "personalizada"))}>Personalizada…</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            {e.condicoes.map((_, j) => <EditorSaida key={j} r={roteiro} i={etapaSel} j={j} onChange={onChange} />)}
-          </Card>
-        )}
-        {acaoSel && roteiro.etapas[acaoSel[0]]?.condicoes[acaoSel[1]] && (
-          <div className="space-y-2">
-            <Badge variant="secondary">Saída da pergunta {acaoSel[0] + 1}</Badge>
-            <EditorSaida r={roteiro} i={acaoSel[0]} j={acaoSel[1]} onChange={onChange} />
-          </div>
-        )}
+        {!painel && <Button size="sm" variant="outline" className="absolute right-3 top-3 z-10" onClick={() => setPainel(true)}>Propriedades</Button>}
       </div>
-    </div>
+
+      {painel && (
+        <div className={PAINEL}>
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <h3 className="truncate text-sm font-bold text-foreground">{tituloPainel}</h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Fechar painel" onClick={() => { setPainel(false); setTestando(false); }}><X className="h-4 w-4" /></Button>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="min-w-0 space-y-3 p-4">
+              {testando && p.painelTeste}
+              {!testando && !e && !acaoSel && p.propriedadesRoteiro}
+              {!testando && e && etapaSel != null && (
+                <>
+                  <div className="flex items-center justify-end">
+                    <Button size="sm" variant="ghost" onClick={() => { onChange({ ...roteiro, etapas: removerEtapa(roteiro.etapas, etapaSel) }); setSel(null); }}><Trash2 className="mr-1 h-4 w-4" /> Remover bloco</Button>
+                  </div>
+                  <div className="space-y-1"><Label>Título</Label><Input className="h-8" value={e.titulo} onChange={(x) => setEtapa({ titulo: x.target.value })} /></div>
+                  <div className="space-y-1"><Label>O que a IA fala</Label><Textarea rows={3} value={e.fala} maxLength={400} onChange={(x) => setEtapa({ fala: x.target.value })} placeholder="Uma pergunta curta, ex.: O senhor conseguiu ver o orçamento?" /></div>
+                  <ValidacaoPergunta r={roteiro} i={etapaSel} onChange={onChange} />
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Saídas (respostas do cliente)</Label>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><Button size="sm" variant="outline" className="h-8"><Plus className="mr-1 h-4 w-4" /> Saída</Button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="z-[60]">
+                        {SAIDAS_PRONTAS.map((s) => <DropdownMenuItem key={s.tipo} onClick={() => onChange(adicionarSaida(roteiro, etapaSel, s.tipo))}>{s.rotulo}</DropdownMenuItem>)}
+                        <DropdownMenuItem onClick={() => onChange(adicionarSaida(roteiro, etapaSel, "personalizada"))}>Personalizada…</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  {e.condicoes.map((_, j) => <EditorSaida key={j} r={roteiro} i={etapaSel} j={j} onChange={onChange} />)}
+                </>
+              )}
+              {!testando && acaoSel && roteiro.etapas[acaoSel[0]]?.condicoes[acaoSel[1]] && <EditorSaida r={roteiro} i={acaoSel[0]} j={acaoSel[1]} onChange={onChange} />}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+    </WorkflowBuilderLayout>
   );
+}
+
+/** Editor do roteiro de voz em tela cheia, no mesmo padrão dos workflows (menu de blocos, quadro e propriedades). */
+export function FluxoRoteiroVoz(p: FluxoRoteiroVozProps) {
+  return <ReactFlowProvider><Editor {...p} /></ReactFlowProvider>;
 }
