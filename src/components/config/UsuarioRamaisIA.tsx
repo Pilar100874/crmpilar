@@ -16,7 +16,7 @@ export function UsuarioRamaisIA({ usuarioId, estabelecimentoId }: { usuarioId: s
   const { toast } = useToast();
   const vazio: RamaisUsuario = {
     usuario_id: usuarioId, estabelecimento_id: estabelecimentoId, virtual_ativo: false, ramal_virtual: "",
-    senha_virtual: "", agente_virtual_id: null, ligacoes_ativo: false, ramal_ligacoes: "", senha_ligacoes: "", ajuda_ativa: false,
+    senha_virtual: "", agente_virtual_id: null, ligacoes_ativo: false, ramal_ligacoes: "", senha_ligacoes: "", ajuda_ativa: false, escuta_geral: false,
   };
   const [r, setR] = useState<RamaisUsuario>(vazio);
   const [agentes, setAgentes] = useState<{ id: string; nome: string }[]>([]);
@@ -87,6 +87,13 @@ export function UsuarioRamaisIA({ usuarioId, estabelecimentoId }: { usuarioId: s
               <Input type="password" value={r.senha_ligacoes ?? ""} onChange={(e) => m({ senha_ligacoes: e.target.value })} /></div>
           </div>
         )}
+      </div>
+      <div className="space-y-1 rounded-md border border-border/60 p-2">
+        <div className="flex items-center justify-between gap-2">
+          <Label>Pode escutar ramais de outros usuários</Label>
+          <Switch checked={!!r.escuta_geral} onCheckedChange={(v) => m({ escuta_geral: v })} />
+        </div>
+        <p className="text-xs text-muted-foreground">Ligado, este usuário escolhe qualquer usuário pelo nome e ouve o ramal dele em silêncio (precisa do ramal para fazer ligações).</p>
       </div>
       <Button type="button" size="sm" onClick={salvar} disabled={salvando}><Save className="h-4 w-4 mr-1" />Salvar ramais de IA</Button>
     </div>

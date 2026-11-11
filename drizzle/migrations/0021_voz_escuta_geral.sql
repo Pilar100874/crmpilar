@@ -1,0 +1,1 @@
+ALTER TABLE public.voz_ramais_usuario ADD COLUMN IF NOT EXISTS escuta_geral boolean NOT NULL DEFAULT false;

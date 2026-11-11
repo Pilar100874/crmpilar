@@ -13,11 +13,17 @@ export interface RamaisUsuario {
   ramal_ligacoes: string | null;
   senha_ligacoes: string | null;
   ajuda_ativa: boolean;
+  escuta_geral?: boolean;
 }
 
 /** Ligação em massa por IA só fica liberada com "fazer ligações" ligado e ramal preenchido. */
 export function podeLigarComIa(r: Pick<RamaisUsuario, "ligacoes_ativo" | "ramal_ligacoes"> | null | undefined): boolean {
   return !!r?.ligacoes_ativo && !!String(r.ramal_ligacoes ?? "").trim();
+}
+
+/** Escuta geral: só com a permissão ligada e um ramal próprio para ouvir. */
+export function podeEscutarRamais(r: Pick<RamaisUsuario, "ligacoes_ativo" | "ramal_ligacoes" | "escuta_geral"> | null | undefined): boolean {
+  return !!r?.escuta_geral && podeLigarComIa(r);
 }
 
 /** Ramal ocupado: em chamada pelo sistema ou aparecendo em algum canal ativo da central. */

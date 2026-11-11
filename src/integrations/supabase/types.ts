@@ -31040,6 +31040,7 @@ export type Database = {
         Row: {
           agente_virtual_id: string | null
           ajuda_ativa: boolean
+          escuta_geral: boolean
           estabelecimento_id: string
           ligacoes_ativo: boolean
           ramal_ligacoes: string | null
@@ -31053,6 +31054,7 @@ export type Database = {
         Insert: {
           agente_virtual_id?: string | null
           ajuda_ativa?: boolean
+          escuta_geral?: boolean
           estabelecimento_id: string
           ligacoes_ativo?: boolean
           ramal_ligacoes?: string | null
@@ -31066,6 +31068,7 @@ export type Database = {
         Update: {
           agente_virtual_id?: string | null
           ajuda_ativa?: boolean
+          escuta_geral?: boolean
           estabelecimento_id?: string
           ligacoes_ativo?: boolean
           ramal_ligacoes?: string | null
