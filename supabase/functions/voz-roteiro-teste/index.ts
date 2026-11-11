@@ -58,6 +58,11 @@ Deno.serve(async (req) => {
         `Fala atual: ${String(b.fala ?? "").slice(0, 500)}\nRespostas esperadas: ${String(b.opcoes ?? "").slice(0, 300)}`, "orientar", SCH_ORI);
       return json({ fala: String(r.fala ?? "") });
     }
+    if (b.acao === "corrigir") {
+      const r = await ia(key, `Você reescreve a fala de UMA etapa de um roteiro de agente de voz ao telefone em português do Brasil, incorporando a correção que o usuário pediu. Regras: no máximo 25 palavras, UMA única pergunta no final, tom educado e natural, sem listas. Mantenha {produto}, {condicao}, {desconto} e {aviso} se existirem. Devolva JSON {"fala": string}. ${DIRETIVA}`,
+        `Fala atual da etapa: ${String(b.fala ?? "").slice(0, 500)}\nO que a IA disse no teste: ${String(b.dita ?? "").slice(0, 500)}\nCorreção do usuário: ${String(b.correcao ?? "").slice(0, 800)}`, "corrigir", SCH_ORI);
+      return json({ fala: String(r.fala ?? "") });
+    }
     if (b.acao === "gerar") {
       const r = await ia(key, `Você cria roteiros de ligação telefônica B2B em português do Brasil para um agente de voz com IA. Devolva JSON com nome, descricao, departamento e de 2 a 4 etapas. Cada fala: no máximo 25 palavras e UMA única pergunta. Use {produto}, {condicao}, {desconto} ou {aviso} quando a fala depender de dados da campanha. Cada etapa com pergunta precisa de regras: resposta positiva (acao avancar, ou transferir na última), resposta negativa (encerrar ou responder perguntando melhor dia e incluindo [DESLIGAR] no texto), "não respondeu ou ficou em silêncio" (responder: repita só a pergunta, se calar de novo inclua [DESLIGAR]) e dúvida/valor/prazo (transferir). Gatilhos: várias respostas coloquiais separadas por vírgula. Use "achou caro" com acao desconto só se houver desconto. texto null quando não precisar. ${b.tecnicas ? `Aplique estas técnicas comerciais nas etapas certas: ${String(b.tecnicas).slice(0, 2000)}` : ""} ${DIRETIVA}`,
         String(b.descricao ?? "").slice(0, 2000), "roteiro", SCH_GERAR);

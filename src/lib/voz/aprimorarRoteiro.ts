@@ -59,3 +59,18 @@ export function ajustesSugeridos(transcricoes: Fala[][]): AjusteSugerido[] {
   }));
   return [...m.values()].map((g) => ({ resposta: g.resposta, vezes: g.vezes, chamadas: g.ch.size })).sort((a, b) => b.vezes - a.vezes);
 }
+
+/** Como aplicar a correção de uma fala errada da IA no teste. */
+export type ModoCorrecao = "trocar" | "regra";
+
+/**
+ * Corrige no roteiro uma fala errada da IA. "trocar" substitui a fala da etapa pela correção;
+ * "regra" cria "se o cliente disser <resposta anterior>, responda <correção>" na etapa da resposta. Pura.
+ */
+export function corrigirFala(r: RoteiroSalvo, etapa: number, modo: ModoCorrecao, correcao: string, respostaAnterior?: string): RoteiroSalvo {
+  const t = correcao.trim();
+  if (!t || !r.etapas[etapa]) return r;
+  if (modo === "regra") return respostaAnterior?.trim() ? adicionarResposta(r, etapa, respostaAnterior, "responder", t) : r;
+  if (r.etapas[etapa].fala.trim() === t) return r;
+  return { ...r, etapas: r.etapas.map((x, k) => (k === etapa ? { ...x, fala: t } : x)) };
+}

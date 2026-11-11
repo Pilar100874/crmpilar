@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { compilarRoteiro, lerConduta, regrasConduta, regrasConversa, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
 import { falaNaoEntendida, type Fala } from "@/lib/voz/aprimorarRoteiro";
 import { AprimorarFala, type Aprimorar } from "./AprimorarFala";
+import { CorrigirFalaIa, type AplicarCorrecao } from "./CorrigirFalaIa";
 import type { AgenteSim } from "./SimuladorLigacaoVoz";
 
 type Linha = Fala & { etapa?: number; regra?: string | null };
 
 /** Teste do roteiro no navegador, sem ligação: digite ou fale e veja etapa e regra acionadas. */
-export function SimuladorTelaVoz({ roteiro, agente, onAprimorar }: { roteiro: RoteiroSalvo; agente?: AgenteSim; onAprimorar: Aprimorar }) {
+export function SimuladorTelaVoz({ roteiro, agente, onAprimorar, onCorrigir }: { roteiro: RoteiroSalvo; agente?: AgenteSim; onAprimorar: Aprimorar; onCorrigir?: AplicarCorrecao }) {
   const [falas, setFalas] = useState<Linha[]>([]);
   const [txt, setTxt] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -57,6 +58,10 @@ export function SimuladorTelaVoz({ roteiro, agente, onAprimorar }: { roteiro: Ro
           <div key={i}>
             <p className="break-words text-sm"><span className="font-semibold text-foreground">{f.papel === "agente" ? "IA" : "Você"}:</span> <span className="text-foreground">{f.texto}</span>
               {f.papel === "agente" && f.etapa !== undefined && <Badge variant="outline" className="ml-2 text-[10px]">Etapa {f.etapa + 1}</Badge>}</p>
+            {onCorrigir && f.papel === "agente" && f.etapa !== undefined && (
+              <CorrigirFalaIa roteiro={roteiro} etapa={f.etapa} dita={f.texto}
+                respostaAnterior={falas[i - 1]?.papel === "cliente" ? falas[i - 1].texto : undefined} onAplicar={onCorrigir} />
+            )}
             {f.papel === "cliente" && f.etapa !== undefined && falas[i + 1] && (
               <AprimorarFala roteiro={roteiro} etapa={f.etapa} resposta={f.texto} naoEntendida={!f.regra && falaNaoEntendida(falas, i)} onAprimorar={onAprimorar} />
             )}
@@ -71,7 +76,7 @@ export function SimuladorTelaVoz({ roteiro, agente, onAprimorar }: { roteiro: Ro
         <Button size="icon" aria-label="Enviar" onClick={() => enviar()} disabled={carregando || !txt.trim()}><Send className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Recomeçar" onClick={() => { setFalas([]); void turno([]); }}><RotateCcw className="h-4 w-4" /></Button>
       </div>
-      <p className="text-xs text-muted-foreground">Nenhuma ligação é feita. Ao adicionar uma resposta, o roteiro é salvo na hora.</p>
+      <p className="text-xs text-muted-foreground">Nenhuma ligação é feita. Ao adicionar uma resposta ou corrigir uma fala, o roteiro é ajustado na hora.</p>
     </div>
   );
 }

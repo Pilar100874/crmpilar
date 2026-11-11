@@ -57,7 +57,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
               <TabsTrigger value="tela"><Monitor className="mr-1 h-4 w-4" /> Teste em tela</TabsTrigger>
               <TabsTrigger value="ligacao"><PhoneCall className="mr-1 h-4 w-4" /> Ligação real</TabsTrigger>
             </TabsList>
-            <TabsContent value="tela"><SimuladorTelaVoz roteiro={simulando} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorar(...a)} /></TabsContent>
+            <TabsContent value="tela"><SimuladorTelaVoz roteiro={simulando} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorar(...a)} onCorrigir={(n, m) => corrigir(n, m)} /></TabsContent>
             <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={simulando} onAprimorar={(...a) => aprimorar(...a)} /></TabsContent>
           </Tabs>
         )}
@@ -84,6 +84,13 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     setSimulando(salvo);
     setAtual((a) => (a && a.chave === salvo.chave ? { ...a, id: salvo.id, etapas: salvo.etapas } : a));
     toast.success(`"${resposta}" adicionado à etapa ${etapa + 1}`); void carregar();
+  };
+  const corrigir = async (novo: RoteiroSalvo, mensagem: string) => {
+    const salvo = await gravar(novo);
+    if (!salvo) return;
+    setSimulando(salvo);
+    setAtual((a) => (a && a.chave === salvo.chave ? { ...a, id: salvo.id, etapas: salvo.etapas } : a));
+    toast.success(mensagem); void carregar();
   };
   const aprimorarAtual = async (etapa: number, resposta: string, acao: AcaoCondicao, texto?: string) => {
     if (!atual) return;
@@ -246,7 +253,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
         <TabsTrigger value="tela"><Monitor className="mr-1 h-4 w-4" /> Em tela</TabsTrigger>
         <TabsTrigger value="ligacao"><PhoneCall className="mr-1 h-4 w-4" /> Ligação real</TabsTrigger>
       </TabsList>
-      <TabsContent value="tela"><SimuladorTelaVoz roteiro={atual} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorarAtual(...a)} /></TabsContent>
+      <TabsContent value="tela"><SimuladorTelaVoz roteiro={atual} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorarAtual(...a)} onCorrigir={async (n, m) => { setAtual(n); toast.success(`${m} — salve para gravar`); }} /></TabsContent>
       <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={atual} onAprimorar={(...a) => aprimorarAtual(...a)} /></TabsContent>
     </Tabs>
   );
