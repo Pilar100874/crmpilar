@@ -81,10 +81,16 @@ export const ROTEIROS: Roteiro[] = [
 
 /* ---------------- Roteiros editáveis (Se X, faça Y) ---------------- */
 
-export type AcaoCondicao = "responder" | "desconto" | "transferir" | "encerrar" | "avancar" | "ir_etapa";
-/** `etapa` = índice (0-based) da etapa de destino quando acao = "ir_etapa". */
-export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string; etapa?: number }
-export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[] }
+export type AcaoCondicao = "responder" | "desconto" | "transferir" | "encerrar" | "avancar" | "ir_etapa" | "reagendar" | "workflow";
+/** Workflow de outro módulo disparado quando a ligação termina (bloco "Disparar workflow"). */
+export interface WorkflowAlvo { modulo: string; id: string; nome: string }
+/**
+ * `etapa` = índice (0-based) da etapa de destino quando acao = "ir_etapa"; em "workflow",
+ * etapa opcional para continuar a conversa depois do disparo (sem ela, encerra).
+ */
+export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string; etapa?: number; workflow?: WorkflowAlvo }
+/** `pos` = posição do bloco no workflow visual (só tela). */
+export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number } }
 /** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
 export interface RoteiroSalvo {
   id?: string; chave: string; departamento: Departamento; nome: string; descricao: string;
@@ -107,7 +113,22 @@ export const ACOES: { id: AcaoCondicao; rotulo: string }[] = [
   { id: "encerrar", rotulo: "Agradecer e encerrar" },
   { id: "avancar", rotulo: "Ir para a próxima etapa" },
   { id: "ir_etapa", rotulo: "Ir para a etapa…" },
+  { id: "reagendar", rotulo: "Reagendar retorno" },
+  { id: "workflow", rotulo: "Disparar workflow" },
 ];
+
+/** Marcador que a IA inclui na fala para o CRM disparar o workflow ao fim da ligação. Puro. */
+export const marcadorWorkflow = (w: WorkflowAlvo) => `[FLUXO:${w.modulo}:${w.id}]`;
+/** Workflows pedidos pela IA numa fala/transcrição (sem repetir). Puro: testável. */
+export function workflowsNaFala(texto: string): { modulo: string; id: string }[] {
+  const vistos = new Set<string>();
+  return [...texto.matchAll(/\[FLUXO:([a-z_]+):([^\]\s]+)\]/g)].flatMap(([, modulo, id]) => {
+    const k = `${modulo}:${id}`;
+    if (vistos.has(k)) return [];
+    vistos.add(k);
+    return [{ modulo, id }];
+  });
+}
 
 let salvos: RoteiroSalvo[] = [];
 /** Define os roteiros salvos da empresa usados em toda a montagem do objetivo. */
@@ -182,6 +203,12 @@ function textoAcao(c: CondicaoRoteiro, d: DadosRoteiro, destino?: string) {
     case "encerrar": return `agradeça com simpatia e inclua [DESLIGAR].${extra}`;
     case "avancar": return `siga para a próxima etapa.${extra}`;
     case "ir_etapa": return destino ? `vá direto para a etapa ${destino} e faça a fala dela (pule as etapas no meio).${extra}` : `siga para a próxima etapa.${extra}`;
+    case "reagendar": return `pergunte o melhor dia e horário para retornar; ao ouvir, confirme (\"Combinado, retorno na sexta\") e inclua [DESLIGAR] — a agenda é marcada sozinha.${extra}`;
+    case "workflow": {
+      if (!c.workflow?.id) return `responda em uma frase curta.${extra}`;
+      const depois = destino ? `vá para a etapa ${destino}` : "agradeça e inclua [DESLIGAR]";
+      return `diga em uma frase que vai providenciar, inclua ${marcadorWorkflow(c.workflow)} na fala e ${depois}.${extra}`;
+    }
     default: return extra.trim() || "responda em uma frase curta.";
   }
 }
@@ -217,7 +244,7 @@ export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
   const validas = r.etapas.map((e, i) => ({ e, i })).filter((x) => x.e.fala.trim());
   const numero = (orig?: number) => { const k = validas.findIndex((x) => x.i === orig); return k < 0 ? undefined : `${k + 1}${validas[k].e.titulo.trim() ? ` (${validas[k].e.titulo.trim()})` : ""}`; };
   const etapas = validas.map(({ e }, i) => {
-    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d, c.acao === "ir_etapa" ? numero(c.etapa) : undefined)}`);
+    const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d, c.acao === "ir_etapa" || c.acao === "workflow" ? numero(c.etapa) : undefined)}`);
     return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
