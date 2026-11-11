@@ -46,7 +46,12 @@ object Api {
 
     fun fala(id: String, papel: String, texto: String) { runCatching { voz("fala", JSONObject().put("chamada_id", id).put("papel", papel).put("texto", texto)) } }
     fun sugestao(id: String, texto: String) { runCatching { voz("sugestao", JSONObject().put("chamada_id", id).put("texto", texto)) } }
-    fun finalizar(id: String, erro: Boolean = false) { runCatching { voz("finalizar", JSONObject().put("chamada_id", id).put("status", if (erro) "erro" else "finalizada")) } }
+    fun finalizar(id: String, erro: Boolean = false, transferidoPara: String? = null) {
+        runCatching {
+            voz("finalizar", JSONObject().put("chamada_id", id).put("status", if (erro) "erro" else "finalizada")
+                .put("transferido_para", transferidoPara?.trim()?.takeIf { it.isNotBlank() } ?: JSONObject.NULL))
+        }
+    }
     fun proximoComando(): JSONObject? = voz("comandos").optJSONObject("comando")
     fun statusComando(id: String, status: String) { runCatching { voz("comando_status", JSONObject().put("comando_id", id).put("status", status)) } }
 }

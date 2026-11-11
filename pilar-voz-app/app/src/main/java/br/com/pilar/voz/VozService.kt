@@ -120,6 +120,7 @@ class VozService : Service() {
             chamadaId?.let { Api.fala(it, papel, texto) }
         }
         var erro = false
+        var transferidoPara: String? = null
         try {
             val saudacao = cfg.optString("saudacao")
             if (modo != "assistir" && saudacao.isNotBlank()) {
@@ -155,7 +156,14 @@ class VozService : Service() {
                                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
                                     while (c.ativa && c.rtp.tocando()) Thread.sleep(100)
                                     val transf = if (modo == "ligar" && !ramal.isNullOrBlank()) ramal else cfg.optString("ramal_transferencia")
-                                    if (resp.contains("[TRANSFERIR]") && transf.isNotBlank()) { Monitor.transferidas++; log("Transferindo para o ramal $transf"); c.transferir(transf); Thread.sleep(4000); break }
+                                    if (resp.contains("[TRANSFERIR]") && transf.isNotBlank() && c.ativa) {
+                                        log("Transferindo para o ramal $transf")
+                                        c.transferir(transf)
+                                        transferidoPara = transf
+                                        Monitor.transferidas++
+                                        Thread.sleep(4000)
+                                        break
+                                    }
                                     if (resp.contains("[DESLIGAR]")) break
                                 }
                             }
@@ -167,7 +175,7 @@ class VozService : Service() {
         } catch (e: Exception) { erro = true; log("Erro na ligação: ${e.message}") }
         finally {
             c.desligar()
-            chamadaId?.let { Api.finalizar(it, erro) }
+            chamadaId?.let { Api.finalizar(it, erro, transferidoPara) }
             Monitor.fimLigacao(); Monitor.avisar(this)
             log("Ligação encerrada")
         }
