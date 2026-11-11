@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Copy, GitBranch, Lightbulb, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Save, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, GitBranch, Lightbulb, Loader2, Monitor, PhoneCall, Plus, RotateCcw, Save, Sparkles, Trash2, Workflow } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
+import { FluxoRoteiroVoz } from "./FluxoRoteiroVoz";
 import { CriarComIaDialog, DiagnosticoRoteiroCard, MapaConversa, ModelosProntosDialog } from "./AjudantesRoteiro";
 import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
 import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
@@ -39,7 +40,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   const [simulando, setSimulando] = useState<RoteiroSalvo | null>(null);
   const [criarIa, setCriarIa] = useState(false);
   const [modelos, setModelos] = useState(false);
-  const [visao, setVisao] = useState<"lista" | "mapa">("lista");
+  const [visao, setVisao] = useState<"fluxo" | "lista" | "mapa">("fluxo");
   const simulador = (
     <Dialog open={!!simulando} onOpenChange={(aberto) => { if (!aberto) setSimulando(null); }}>
       <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto">
@@ -223,13 +224,15 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
       </Card>
 
       <DiagnosticoRoteiroCard roteiro={atual} onCorrigir={(r) => { setAtual(r); toast.success("Regras de escape adicionadas"); }} />
-      <Tabs value={visao} onValueChange={(v) => setVisao(v as "lista" | "mapa")}>
-        <TabsList className="grid w-full max-w-xs grid-cols-2">
+      <Tabs value={visao} onValueChange={(v) => setVisao(v as "fluxo" | "lista" | "mapa")}>
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="fluxo"><Workflow className="mr-1 h-4 w-4" /> Workflow</TabsTrigger>
           <TabsTrigger value="lista">Etapas</TabsTrigger>
           <TabsTrigger value="mapa"><GitBranch className="mr-1 h-4 w-4" /> Mapa da conversa</TabsTrigger>
         </TabsList>
       </Tabs>
       {visao === "mapa" && <MapaConversa roteiro={atual} />}
+      {visao === "fluxo" && <FluxoRoteiroVoz roteiro={atual} onChange={setAtual} />}
       {visao === "lista" && atual.etapas.map((e, i) => (
         <Card key={i} className="space-y-3 p-4">
           <div className="flex items-center gap-2">
