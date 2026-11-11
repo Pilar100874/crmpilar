@@ -1,1 +1,1 @@
-- Global field help (AjudaGlobal, mounted in App) reads official texts from the pure catalogoCampos catalog by normalized label and falls back to the ajuda-campo AI function, so forms need no per-field changes.
+- Global field help (AjudaGlobal, mounted in App) inspects any clicked element (fields, buttons, flow blocks, tabs, menus; data-ajuda overrides the label), reads official texts from the pure catalogoCampos catalog by normalized label and falls back to the ajuda-campo AI function, so forms need no per-field changes.

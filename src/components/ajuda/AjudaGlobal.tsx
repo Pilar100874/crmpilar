@@ -27,19 +27,39 @@ function rotuloDe(el: HTMLElement): string {
   return limpo(el.getAttribute("placeholder") || el.getAttribute("name") || el.textContent);
 }
 
+const SEL_ELEMENTO = "[data-ajuda],.react-flow__node,[role=tab],[role=menuitem],[role=option],[role=row],button,a[href],th,h1,h2,h3,h4,[role=dialog] [class*=CardTitle]";
+
+/** Tipo do elemento em linguagem do usuário, para a IA e o título do painel. */
+function tipoDe(el: HTMLElement): string {
+  if (el.closest(".react-flow__node")) return "bloco do workflow";
+  const role = el.getAttribute("role"), tag = el.tagName;
+  if (role === "tab") return "aba"; if (role === "menuitem") return "item de menu"; if (role === "option") return "opção de lista";
+  if (role === "switch" || el.getAttribute("type") === "checkbox" || role === "checkbox") return "chave liga/desliga";
+  if (role === "combobox" || tag === "SELECT") return "lista de escolha";
+  if (tag === "BUTTON") return "botão"; if (tag === "A") return "link do menu"; if (tag === "TH") return "coluna de tabela";
+  if (/^H[1-4]$/.test(tag)) return "título de seção"; if (role === "row") return "linha de tabela";
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "LABEL") return "campo";
+  return "elemento da tela";
+}
+
 function extrair(alvo: HTMLElement): CampoInfo | null {
-  const el = alvo.closest<HTMLElement>(SEL_CAMPO) ?? alvo.closest<HTMLElement>("button");
+  const marcado = alvo.closest<HTMLElement>("[data-ajuda]");
+  const el = marcado ?? alvo.closest<HTMLElement>(SEL_CAMPO) ?? alvo.closest<HTMLElement>(SEL_ELEMENTO)
+    ?? (limpo(alvo.textContent) ? alvo : null);
   if (!el) return null;
-  const rotulo = rotuloDe(el); if (!rotulo) return null;
-  const grupo = el.closest("[class*=card], section, fieldset, form");
+  const tipo = tipoDe(el);
+  const no = el.closest<HTMLElement>(".react-flow__node");
+  const rotulo = limpo(marcado?.getAttribute("data-ajuda")) || (no ? limpo(no.querySelector("[class*=font-semibold],[class*=font-medium],strong")?.textContent || no.textContent).slice(0, 80)
+    : rotuloDe(el) || limpo(el.getAttribute("title")));
+  if (!rotulo) return null;
+  const grupo = el.closest("[class*=card], section, fieldset, form, [role=dialog], [role=tabpanel]");
   const titulo = grupo?.querySelector("h1,h2,h3,h4,legend,[class*=CardTitle],[class*=font-semibold]")?.textContent;
   const bloco = el.parentElement?.parentElement;
-  const dica = bloco?.querySelector("p,[class*=muted-foreground]")?.textContent;
-  const vizinhos = grupo ? Array.from(grupo.querySelectorAll("label")).map((l) => limpo(l.textContent)).filter((t) => t && t !== rotulo).slice(0, 10).join(", ") : "";
+  const dica = no ? limpo(no.textContent) : el.getAttribute("title") || bloco?.querySelector("p,[class*=muted-foreground]")?.textContent;
+  const vizinhos = grupo ? Array.from(grupo.querySelectorAll("label,button,[role=tab]")).map((l) => limpo(l.textContent)).filter((t) => t && t !== rotulo && t.length < 40).slice(0, 12).join(", ") : "";
   const opcoes = el.tagName === "SELECT" ? Array.from((el as HTMLSelectElement).options).map((o) => o.text).join(", ") : "";
   return { rotulo, secao: limpo(titulo) || undefined, dica: limpo(dica) !== rotulo ? limpo(dica) || undefined : undefined,
-    placeholder: limpo(el.getAttribute("placeholder")) || undefined, tipo: el.getAttribute("type") || el.getAttribute("role") || el.tagName.toLowerCase(),
-    opcoes: opcoes || undefined, vizinhos: vizinhos || undefined };
+    placeholder: limpo(el.getAttribute("placeholder")) || undefined, tipo, opcoes: opcoes || undefined, vizinhos: vizinhos || undefined };
 }
 
 export function AjudaGlobal() {
@@ -92,10 +112,10 @@ export function AjudaGlobal() {
 
   return createPortal(
     <div data-ajuda-global>
-      {modo && <style>{`input,textarea,select,[role=switch],[role=combobox],[role=checkbox],label{outline:2px dashed hsl(var(--primary)/.6)!important;outline-offset:2px;cursor:help!important}`}</style>}
+      {modo && <style>{`input,textarea,select,[role=switch],[role=combobox],[role=checkbox],label{outline:2px dashed hsl(var(--primary)/.6)!important;outline-offset:2px}*{cursor:help!important}`}</style>}
       {modo && (
         <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm shadow-lg max-w-[90vw]">
-          <HelpCircle className="h-4 w-4 shrink-0" /> <span>Clique no campo que você quer entender</span>
+          <HelpCircle className="h-4 w-4 shrink-0" /> <span>Clique em qualquer campo, botão, bloco, aba ou menu</span>
           <button aria-label="Sair do modo ajuda" onClick={() => setModo(false)} className="ml-1 rounded-full p-0.5 hover:bg-primary-foreground/20"><X className="h-4 w-4" /></button>
         </div>
       )}
@@ -108,7 +128,7 @@ export function AjudaGlobal() {
         <SheetContent data-ajuda-global className="w-full sm:max-w-md flex flex-col gap-3 overflow-hidden">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 pr-6"><HelpCircle className="h-5 w-5 text-primary shrink-0" /><span className="break-words">{campo?.rotulo}</span></SheetTitle>
-            <SheetDescription className="break-words">{oficial?.tela ?? campo?.secao ?? document.title}</SheetDescription>
+            <SheetDescription className="break-words">{campo?.tipo && <span className="capitalize">{campo.tipo} · </span>}{oficial?.tela ?? campo?.secao ?? document.title}</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-3 pr-1">
             {oficial && (
@@ -131,7 +151,7 @@ export function AjudaGlobal() {
             <div ref={fimRef} />
           </div>
           <div className="space-y-2 border-t pt-3">
-            <Textarea value={pergunta} onChange={(e) => setPergunta(e.target.value)} rows={2} placeholder="Pergunte à IA sobre este campo…"
+            <Textarea value={pergunta} onChange={(e) => setPergunta(e.target.value)} rows={2} placeholder="Pergunte à IA sobre isto…"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }} />
             <Button className="w-full" onClick={enviar} disabled={carregando || !pergunta.trim()}><Send className="h-4 w-4 mr-2" /> Perguntar à IA</Button>
           </div>

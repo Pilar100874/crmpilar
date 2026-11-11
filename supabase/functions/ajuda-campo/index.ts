@@ -15,18 +15,18 @@ Deno.serve(async (req) => {
     const b = await req.json();
     const c = b.campo ?? {};
     const ctx = [`Tela: ${String(b.tela ?? "").slice(0, 200)} (${String(b.rota ?? "").slice(0, 200)})`,
-      `Campo: ${String(c.rotulo ?? "").slice(0, 200)}`, c.secao ? `Seção: ${String(c.secao).slice(0, 200)}` : "",
+      `Item clicado: ${String(c.rotulo ?? "").slice(0, 200)}`, c.secao ? `Seção: ${String(c.secao).slice(0, 200)}` : "",
       c.dica ? `Texto de apoio na tela: ${String(c.dica).slice(0, 400)}` : "", c.placeholder ? `Exemplo na tela: ${String(c.placeholder).slice(0, 200)}` : "",
-      c.tipo ? `Tipo: ${String(c.tipo).slice(0, 50)}` : "", c.opcoes ? `Opções: ${String(c.opcoes).slice(0, 400)}` : "",
+      c.tipo ? `Tipo do item: ${String(c.tipo).slice(0, 50)}` : "", c.opcoes ? `Opções: ${String(c.opcoes).slice(0, 400)}` : "",
       b.oficial ? `Explicação oficial do sistema: ${String(b.oficial).slice(0, 1500)}` : "",
       c.vizinhos ? `Outros campos da mesma seção: ${String(c.vizinhos).slice(0, 600)}` : ""].filter(Boolean).join("\n");
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-10)
       .map((m: { papel: string; texto: string }) => ({ role: m.papel === "ia" ? "assistant" : "user", content: String(m.texto).slice(0, 1500) }));
-    const pergunta = String(b.pergunta ?? "").slice(0, 1500) || "Explique para que serve este campo, o que acontece se ficar vazio e dê um exemplo de preenchimento.";
+    const pergunta = String(b.pergunta ?? "").slice(0, 1500) || "Explique para que serve este item. Se for campo, diga o que acontece se ficar vazio e dê exemplo; se for botão, bloco, aba ou menu, diga o que ele faz e quando usar.";
     const r = await fetch(GW, {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({ model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
-        instructions: `Você é a ajuda do CRM Pilar e explica campos das telas para usuários não técnicos, em português do Brasil. Responda em até 120 palavras, direto, sem jargão técnico, sem nomes de tabelas ou código. Use a explicação oficial quando existir; se não souber algo com certeza, diga que não tem certeza em vez de inventar. Pode usar listas curtas. ${DIRETIVA}\n\n${ctx}`,
+        instructions: `Você é a ajuda do CRM Pilar e explica qualquer item das telas (campos, botões, blocos de workflow, abas, menus, colunas, títulos) para usuários não técnicos, em português do Brasil. Responda em até 120 palavras, direto, sem jargão técnico, sem nomes de tabelas ou código. Use a explicação oficial quando existir; se não souber algo com certeza, diga que não tem certeza em vez de inventar. Pode usar listas curtas. ${DIRETIVA}\n\n${ctx}`,
         input: [...hist, { role: "user", content: pergunta }] }),
     });
     if (r.status === 429) return json({ error: "Muitas perguntas seguidas, tente em instantes." }, 429);
