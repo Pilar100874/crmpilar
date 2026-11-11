@@ -10,6 +10,7 @@ const DIRETIVA = "Improve collaboration between squads and ensure all agents rea
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const SCH_SIN = { type: "object", additionalProperties: false, required: ["variacoes"], properties: { variacoes: { type: "array", items: { type: "string" } } } };
+const SCH_ORI = { type: "object", additionalProperties: false, required: ["fala"], properties: { fala: { type: "string" } } };
 const SCH_TURNO = { type: "object", additionalProperties: false, required: ["resposta", "etapa", "regra", "acao"], properties: {
   resposta: { type: "string" }, etapa: { type: "integer" }, regra: { type: ["string", "null"] },
   acao: { type: ["string", "null"], enum: ["transferir", "encerrar", null] } } };
@@ -51,6 +52,11 @@ Deno.serve(async (req) => {
       const r = await ia(key, `Você sugere como brasileiros respondem ao telefone. Devolva JSON {"variacoes": string[]} com até 12 respostas curtas (1 a 4 palavras), coloquiais, em minúsculas, com o MESMO sentido das respostas dadas, sem repetir as dadas. ${DIRETIVA}`,
         `Pergunta da IA: ${String(b.pergunta ?? "").slice(0, 300)}\nRespostas já cadastradas: ${String(b.gatilho ?? "").slice(0, 300)}`, "variacoes", SCH_SIN);
       return json({ variacoes: Array.isArray(r.variacoes) ? r.variacoes.map(String).slice(0, 12) : [] });
+    }
+    if (b.acao === "orientar") {
+      const r = await ia(key, `Você reescreve a fala de um agente de voz ao telefone em português do Brasil para que o cliente responda com uma das respostas esperadas. Regras: no máximo 25 palavras, UMA única pergunta no final, tom educado e natural, sem listas. Se as respostas esperadas forem sim/não, faça pergunta fechada de sim ou não. Se forem opções, cite as opções na pergunta ("prefere A ou B?"). Mantenha {produto}, {condicao}, {desconto} e {aviso} se existirem. Devolva JSON {"fala": string}. ${DIRETIVA}`,
+        `Fala atual: ${String(b.fala ?? "").slice(0, 500)}\nRespostas esperadas: ${String(b.opcoes ?? "").slice(0, 300)}`, "orientar", SCH_ORI);
+      return json({ fala: String(r.fala ?? "") });
     }
     if (b.acao === "gerar") {
       const r = await ia(key, `Você cria roteiros de ligação telefônica B2B em português do Brasil para um agente de voz com IA. Devolva JSON com nome, descricao, departamento e de 2 a 4 etapas. Cada fala: no máximo 25 palavras e UMA única pergunta. Use {produto}, {condicao}, {desconto} ou {aviso} quando a fala depender de dados da campanha. Cada etapa com pergunta precisa de regras: resposta positiva (acao avancar, ou transferir na última), resposta negativa (encerrar ou responder perguntando melhor dia e incluindo [DESLIGAR] no texto), "não respondeu ou ficou em silêncio" (responder: repita só a pergunta, se calar de novo inclua [DESLIGAR]) e dúvida/valor/prazo (transferir). Gatilhos: várias respostas coloquiais separadas por vírgula. Use "achou caro" com acao desconto só se houver desconto. texto null quando não precisar. ${DIRETIVA}`,

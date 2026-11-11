@@ -115,3 +115,56 @@ export function adicionarSaida(r: RoteiroSalvo, i: number, tipo: TipoSaida): Rot
 /** Grava a posição arrastada da pergunta `i`. Puro. */
 export const moverPergunta = (r: RoteiroSalvo, i: number, pos: { x: number; y: number }): RoteiroSalvo =>
   ({ ...r, etapas: r.etapas.map((e, k) => (k === i ? { ...e, pos: { x: Math.round(pos.x), y: Math.round(pos.y) } } : e)) });
+
+/** Blocos do menu lateral do editor. "pergunta" cria bloco; "saida"/"acao" se soltam sobre uma pergunta. */
+export type BlocoMenu =
+  | { tipo: "pergunta"; id: "simnao" | "opcoes" | "aberta" | "aviso"; rotulo: string; descricao: string }
+  | { tipo: "saida"; id: TipoSaida; rotulo: string; descricao: string }
+  | { tipo: "acao"; id: "transferir" | "encerrar" | "reagendar" | "desconto" | "workflow"; rotulo: string; descricao: string };
+
+export const MENU_BLOCOS: { grupo: string; blocos: BlocoMenu[] }[] = [
+  { grupo: "Perguntas", blocos: [
+    { tipo: "pergunta", id: "simnao", rotulo: "Pergunta sim/não", descricao: "Saídas sim, não e não reconheceu" },
+    { tipo: "pergunta", id: "opcoes", rotulo: "Pergunta com opções", descricao: "Cliente escolhe entre opções citadas" },
+    { tipo: "pergunta", id: "aberta", rotulo: "Pergunta aberta", descricao: "Qualquer resposta segue adiante" },
+    { tipo: "pergunta", id: "aviso", rotulo: "Fala / aviso", descricao: "Informa e segue para o próximo bloco" },
+  ] },
+  { grupo: "Respostas do cliente", blocos: [
+    ...SAIDAS_PRONTAS.map((s) => ({ tipo: "saida" as const, id: s.tipo, rotulo: s.rotulo, descricao: "Solte sobre uma pergunta" })),
+    { tipo: "saida", id: "personalizada", rotulo: "Resposta personalizada", descricao: "Defina as palavras" },
+  ] },
+  { grupo: "Ações", blocos: [
+    { tipo: "acao", id: "transferir", rotulo: "Transferir para atendente", descricao: "Passa a ligação com resumo" },
+    { tipo: "acao", id: "encerrar", rotulo: "Agradecer e encerrar", descricao: "Finaliza a ligação" },
+    { tipo: "acao", id: "reagendar", rotulo: "Reagendar retorno", descricao: "Cria tarefa na agenda" },
+    { tipo: "acao", id: "desconto", rotulo: "Oferecer desconto", descricao: "Usa o desconto máximo" },
+    { tipo: "acao", id: "workflow", rotulo: "Disparar workflow", descricao: "Omnichannel, Bot, Vendas…" },
+  ] },
+];
+
+/** Cria o bloco de pergunta do tipo escolhido na posição indicada. Puro. */
+export function novaPerguntaTipo(r: RoteiroSalvo, id: "simnao" | "opcoes" | "aberta" | "aviso", pos?: { x: number; y: number }): RoteiroSalvo {
+  if (id === "simnao") return novaPergunta(r, pos);
+  const n = r.etapas.length;
+  const pronta = (t: TipoSaida) => ({ ...SAIDAS_PRONTAS.find((s) => s.tipo === t)!.condicao });
+  const base = { pos: pos ?? { x: 80 + n * COL, y: 140 } };
+  const etapa: EtapaEditavel =
+    id === "opcoes" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "O senhor prefere opção 1 ou opção 2?", condicoes: [{ gatilho: "opção 1", acao: "avancar" }, { gatilho: "opção 2", acao: "avancar" }, pronta("nao_reconheceu"), pronta("silencio")] }
+    : id === "aberta" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }, pronta("silencio")] }
+    : { ...base, titulo: `Aviso ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }] };
+  return { ...r, etapas: [...r.etapas, etapa] };
+}
+
+const GATILHO_ACAO: Record<string, string> = {
+  transferir: SAIDAS_PRONTAS.find((s) => s.tipo === "atendente")!.condicao.gatilho,
+  encerrar: SAIDAS_PRONTAS.find((s) => s.tipo === "nao")!.condicao.gatilho,
+  reagendar: SAIDAS_PRONTAS.find((s) => s.tipo === "outro_dia")!.condicao.gatilho,
+  desconto: SAIDAS_PRONTAS.find((s) => s.tipo === "objecao")!.condicao.gatilho,
+  workflow: "me manda pelo whatsapp, manda mensagem, manda o catálogo",
+};
+
+/** Solta um bloco de ação sobre a pergunta `i`: vira uma saída nova com essa ação. Puro. */
+export function adicionarAcao(r: RoteiroSalvo, i: number, acao: "transferir" | "encerrar" | "reagendar" | "desconto" | "workflow"): RoteiroSalvo {
+  const c: CondicaoRoteiro = { gatilho: GATILHO_ACAO[acao], acao };
+  return { ...r, etapas: r.etapas.map((e, k) => (k === i ? { ...e, condicoes: [...e.condicoes, c] } : e)) };
+}
