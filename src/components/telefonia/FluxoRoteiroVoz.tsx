@@ -20,6 +20,7 @@ import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockBu
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import { corrigirPergunta, opcoesEsperadas, validarPergunta } from "@/lib/voz/validacaoPergunta";
 import { palavrasGatilho } from "@/lib/voz/roteirosLigacao";
+import { aplicarTecnica, FASES_TECNICA, TECNICAS } from "@/lib/voz/tecnicasComerciais";
 import { WORKFLOW_MODULES } from "@/components/flow/block-configs/TriggerWorkflowConfig";
 import { ACOES, removerEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
 import {
@@ -235,6 +236,39 @@ function MenuBlocosVoz({ onFechar, onAdicionar }: { onFechar: () => void; onAdic
 }
 
 /** Validação da pergunta: orienta para que a fala leve o cliente a uma resposta que siga o fluxo. */
+/** Técnicas comerciais aplicáveis à pergunta selecionada (acrescenta a saída da técnica). */
+function TecnicasEtapa({ r, i, onChange }: { r: RoteiroSalvo; i: number; onChange: (r: RoteiroSalvo) => void }) {
+  const ativas = r.etapas[i]?.tecnicas ?? [];
+  return (
+    <Collapsible className="rounded-md border border-border">
+      <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-foreground">
+        <span className="flex items-center gap-1"><Sparkles className="h-4 w-4 text-primary" /> Técnicas comerciais</span>
+        {ativas.length > 0 && <Badge variant="secondary" className="text-[10px]">{ativas.length}</Badge>}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 border-t border-border p-3">
+        {FASES_TECNICA.map((f) => (
+          <div key={f.id} className="space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase text-muted-foreground">{f.rotulo}</p>
+            {TECNICAS.filter((t) => t.fase === f.id).map((t) => {
+              const on = ativas.includes(t.id);
+              return (
+                <div key={t.id} className="min-w-0 space-y-1 rounded-md bg-muted/40 p-2">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-foreground">{t.nome}</p>
+                    <Button size="sm" variant={on ? "secondary" : "outline"} className="h-6 shrink-0 px-2 text-[11px]" disabled={on} onClick={() => onChange(aplicarTecnica(r, i, t.id))}>{on ? "Aplicada" : "Aplicar"}</Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{t.resumo}</p>
+                  <p className="break-words text-[11px] italic text-muted-foreground">Ex.: {t.exemplo}</p>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 function ValidacaoPergunta({ r, i, onChange }: { r: RoteiroSalvo; i: number; onChange: (r: RoteiroSalvo) => void }) {
   const e = r.etapas[i];
   const avisos = validarPergunta(e);
@@ -396,6 +430,7 @@ function Editor(p: FluxoRoteiroVozProps) {
                   <div className="space-y-1"><Label>Título</Label><Input className="h-8" value={e.titulo} onChange={(x) => setEtapa({ titulo: x.target.value })} /></div>
                   <div className="space-y-1"><Label>O que a IA fala</Label><Textarea rows={3} value={e.fala} maxLength={400} onChange={(x) => setEtapa({ fala: x.target.value })} placeholder="Uma pergunta curta, ex.: O senhor conseguiu ver o orçamento?" /></div>
                   <ValidacaoPergunta r={roteiro} i={etapaSel} onChange={onChange} />
+                  <TecnicasEtapa r={roteiro} i={etapaSel} onChange={onChange} />
                   <div className="flex items-center justify-between gap-2">
                     <Label>Saídas (respostas do cliente)</Label>
                     <DropdownMenu>

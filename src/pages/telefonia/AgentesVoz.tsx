@@ -310,14 +310,14 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Departamento</Label>
-                      <Select value={lerDepartamento(atual.config)} onValueChange={(v: Departamento) => setAtual({ ...atual, config: { ...(atual.config ?? {}), departamento: v, conduta: { ...c, roteiroPadrao: roteirosDoDepartamento(v)[0].id } } })}>
+                      <Select value={lerDepartamento(atual.config)} onValueChange={(v: Departamento) => setAtual({ ...atual, config: { ...(atual.config ?? {}), departamento: v, conduta: { ...c, roteiroPadrao: roteirosDoDepartamento(v)[0]?.id } } })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{DEPARTAMENTOS.map((d) => <SelectItem key={d.id} value={d.id}>{d.rotulo}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Roteiro padrão no modo fixo</Label>
-                      <Select value={c.roteiroPadrao ?? roteirosDoDepartamento(lerDepartamento(atual.config))[0].id} onValueChange={(v: any) => set({ roteiroPadrao: v })}>
+                      <Select value={c.roteiroPadrao ?? roteirosDoDepartamento(lerDepartamento(atual.config))[0]?.id ?? ""} onValueChange={(v: any) => set({ roteiroPadrao: v })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{roteirosDoDepartamento(lerDepartamento(atual.config)).map((r) => <SelectItem key={r.id} value={r.id}>{r.rotulo}</SelectItem>)}</SelectContent>
                       </Select>

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Copy, GitBranch, Lightbulb, Monitor, PhoneCall, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { Copy, Download, GitBranch, Loader2, Lightbulb, Monitor, PhoneCall, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
 import { FluxoRoteiroVoz } from "./FluxoRoteiroVoz";
 import { CriarComIaDialog, DiagnosticoRoteiroCard, MapaConversa, ModelosProntosDialog } from "./AjudantesRoteiro";
+import { MODELOS_ROTEIRO, roteiroDoModelo } from "@/lib/voz/qualidadeRoteiro";
 import { corrigirTodas, validarPergunta } from "@/lib/voz/validacaoPergunta";
 import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
 import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
@@ -99,7 +100,8 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
 
   const carregar = useCallback(async () => {
     const salvos = await carregarRoteirosSalvos(db, estabelecimentoId);
-    const fab = ROTEIROS.map((r) => salvos.find((s) => s.chave === r.id) ?? roteiroDeFabrica(r.id as RoteiroBaseId));
+    // Roteiros antigos de fábrica só aparecem se a empresa já os editou; os modelos por departamento os substituem.
+    const fab = ROTEIROS.map((r) => salvos.find((s) => s.chave === r.id)).filter((x): x is RoteiroSalvo => !!x);
     setLista([...fab, ...salvos.filter((s) => !ehDeFabrica(s.chave))]);
   }, [estabelecimentoId]);
   useEffect(() => { void carregar(); }, [carregar]);
@@ -126,6 +128,18 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   };
   const novo = () => abrir({ chave: `custom_${Date.now().toString(36)}`, departamento: "comercial", nome: "", descricao: "", campos: ["condicao", "desconto"], ativo: true,
     etapas: [{ titulo: "Abertura", fala: "Diga o motivo da ligação em uma frase.", condicoes: [] }, { titulo: "Pergunta", fala: "", condicoes: [{ gatilho: "demonstrou interesse", acao: "transferir" }] }] });
+  const [instalando, setInstalando] = useState(false);
+  const instalarModelos = async () => {
+    if (!estabelecimentoId) return;
+    setInstalando(true);
+    const linhas = MODELOS_ROTEIRO.map((m) => { const r = roteiroDoModelo(m); return { estabelecimento_id: estabelecimentoId, chave: `custom_modelo_${m.id}`, departamento: r.departamento,
+      nome: r.nome, descricao: r.descricao, campos: r.campos, etapas: r.etapas, ativo: true, updated_at: new Date().toISOString() }; })
+      .filter((l) => !lista.some((x) => x.chave === l.chave));
+    const r = linhas.length ? await db.from("voz_roteiros").upsert(linhas, { onConflict: "estabelecimento_id,chave" }) : { error: null };
+    setInstalando(false);
+    if (r.error) return void toast.error(r.error.message);
+    toast.success(linhas.length ? `${linhas.length} modelos instalados` : "Todos os modelos já estão instalados"); void carregar();
+  };
   const duplicar = (r: RoteiroSalvo) => abrir({ ...structuredClone(r), id: undefined, chave: `custom_${Date.now().toString(36)}`, nome: `${r.nome} (cópia)` });
 
   if (!atual) return (
@@ -134,6 +148,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Edite as falas e as regras "Se o cliente..., faça..." de cada roteiro, ou crie novos.</p>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={instalando} onClick={() => void instalarModelos()}>{instalando ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />} Instalar modelos por departamento</Button>
           <Button size="sm" variant="outline" onClick={() => setModelos(true)}><Copy className="mr-1 h-4 w-4" /> Modelos prontos</Button>
           <Button size="sm" variant="outline" onClick={() => setCriarIa(true)}><Sparkles className="mr-1 h-4 w-4" /> Criar com IA</Button>
           <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
@@ -154,6 +169,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
         <div key={dep.id} className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">{dep.rotulo}</h4>
           <div className="grid gap-2 sm:grid-cols-2">
+            {!lista.some((r) => r.departamento === dep.id) && <p className="text-xs text-muted-foreground sm:col-span-2">Nenhum roteiro. Use "Instalar modelos por departamento" ou "Modelos prontos".</p>}
             {lista.filter((r) => r.departamento === dep.id).map((r) => (
               <Card key={r.chave} className="flex min-w-0 flex-col gap-2 p-3">
                 <div className="flex min-w-0 items-start justify-between gap-2">

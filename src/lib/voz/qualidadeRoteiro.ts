@@ -1,3 +1,4 @@
+import { departamentoValido } from "./roteirosLigacao";
 import type { AcaoCondicao, CondicaoRoteiro, Departamento, EtapaEditavel, RoteiroSalvo } from "./roteirosLigacao";
 
 /** Diagnóstico, modelos extras e mapa visual dos roteiros de voz (funções puras, sem efeito no que está salvo). */
@@ -59,34 +60,114 @@ const SIL_C: CondicaoRoteiro = { gatilho: "não respondeu ou ficou em silêncio"
 const TRANSF: CondicaoRoteiro = { gatilho: "dúvida, quero falar com alguém, valor, prazo", acao: "transferir" };
 const et = (titulo: string, fala: string, ...condicoes: CondicaoRoteiro[]): EtapaEditavel => ({ titulo, fala, condicoes: [...condicoes, SIL_C] });
 
-export interface ModeloRoteiro { id: string; nome: string; descricao: string; departamento: Departamento; etapas: EtapaEditavel[] }
+export interface ModeloRoteiro { id: string; nome: string; descricao: string; departamento: Departamento; tecnicas: string[]; etapas: EtapaEditavel[] }
+const ESPELHO: CondicaoRoteiro = { gatilho: "achei caro, está caro, frete alto, prazo longo, não sei", acao: "responder", texto: "Espelhe: repita em tom de pergunta as 2 ou 3 palavras-chave que o cliente usou e espere ele explicar." };
+const ROTULO: CondicaoRoteiro = { gatilho: "tenho receio, preocupado, já tive problema", acao: "responder", texto: "Rotule: diga \"parece que [a preocupação] te preocupa\", confirme e só então ofereça a solução." };
+const BATNA = (alt: string): CondicaoRoteiro => ({ gatilho: "não, não quero, não tenho interesse, agora não", acao: "responder", texto: `Ofereça o plano B: ${alt}. Se recusar de novo, agradeça e inclua [DESLIGAR].` });
+const SEM_TEMPO: CondicaoRoteiro = { gatilho: "agora não, estou ocupado, sem tempo, não posso", acao: "reagendar", texto: "Pergunte o melhor dia e horário para retornar." };
+const NAO_E: CondicaoRoteiro = { gatilho: "não sou eu, não está, não é comigo", acao: "responder", texto: "Pergunte quem cuida disso e o melhor horário; ao ouvir, agradeça e inclua [DESLIGAR]." };
+const t = (e: EtapaEditavel, ...tecnicas: string[]): EtapaEditavel => ({ ...e, tecnicas });
+
 export const MODELOS_ROTEIRO: ModeloRoteiro[] = [
-  { id: "pos_venda", nome: "Pós-venda", departamento: "comercial", descricao: "Confirma a entrega e a satisfação com a última compra.", etapas: [
-    et("Abertura", "Oi, tudo bem? Estou ligando para saber se o seu último pedido chegou certinho. Chegou tudo bem?",
-      { gatilho: "sim, chegou, tudo certo", acao: "avancar" }, { gatilho: "não chegou, faltou, veio errado, problema", acao: "transferir", texto: "Peça desculpas e diga que o atendente resolve agora." }),
-    et("Satisfação", "Que bom! De zero a dez, que nota você dá para o nosso atendimento?",
-      { gatilho: "nota baixa, ruim, reclamação", acao: "transferir", texto: "Agradeça a sinceridade e diga que um atendente vai ouvir." }, { gatilho: "nota alta, ótimo, bom, não, tudo certo", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." }),
+  // ---------- Comercial ----------
+  { id: "com_followup_orcamento", nome: "Follow-up de orçamento", departamento: "comercial", tecnicas: ["upfront", "mirroring", "labeling", "perda", "dupla_alternativa", "batna"],
+    descricao: "Retoma a proposta enviada, trata objeções e conduz ao fechamento com plano B.", etapas: [
+    t(et("Contrato prévio", "Oi, tudo bem? Preciso de só 30 segundos sobre a proposta que nossa equipe enviou. Pode ser agora?",
+      { gatilho: "sim, pode, pode falar, fala", acao: "avancar" }, SEM_TEMPO), "upfront"),
+    t(et("Checagem", "O senhor conseguiu dar uma olhada na proposta?",
+      { gatilho: "sim, vi, olhei, recebi", acao: "avancar" }, { gatilho: "não, não vi, não recebi", acao: "responder", texto: "Diga que a equipe reenvia agora e pergunte se pode ligar amanhã; ao ouvir, inclua [DESLIGAR]." }, ESPELHO, ROTULO), "mirroring", "labeling"),
+    t(et("Urgência", "As condições dessa proposta valem só até o fim da semana, depois entra o reajuste. Faz sentido garantir agora?",
+      { gatilho: "sim, faz sentido, quero, pode fechar", acao: "avancar" }, ESPELHO, BATNA("mandar a proposta pelo WhatsApp para avaliar com calma"), TRANSF), "perda", "batna"),
+    t(et("Fechamento", "Ótimo! Prefere que o atendente confirme agora por telefone ou por WhatsApp?",
+      { gatilho: "telefone, agora, liga, pode passar", acao: "transferir" }, { gatilho: "whatsapp, mensagem, zap", acao: "encerrar", texto: "Confirme que o atendente chama no WhatsApp ainda hoje." }, { gatilho: "não, depois", acao: "reagendar", texto: "Pergunte o melhor dia para retomar." }), "dupla_alternativa"),
   ] },
-  { id: "lembrete_preventivo", nome: "Lembrete de boleto a vencer", departamento: "financeiro", descricao: "Aviso cordial antes do vencimento, sem cobrança.", etapas: [
-    et("Abertura", "Oi, tudo bem? Falo com o responsável pelo financeiro?", { gatilho: "sim, sou eu, pode falar", acao: "avancar" }, { gatilho: "não, não está, não sou", acao: "responder", texto: "Pergunte o melhor horário; ao ouvir, agradeça e inclua [DESLIGAR]." }),
-    et("Aviso", "É só um lembrete: {aviso}. Você já recebeu o boleto?",
-      { gatilho: "sim, recebi, já paguei", acao: "encerrar", texto: "Agradeça e deseje um bom dia." }, { gatilho: "não, não recebi, manda de novo", acao: "encerrar", texto: "Confirme que vão reenviar." }, { gatilho: "prazo, parcelar, negociar", acao: "transferir" }),
+  { id: "com_venda_ativa", nome: "Venda ativa / prospecção", departamento: "comercial", tecnicas: ["upfront", "yes_ladder", "ancoragem", "dupla_alternativa", "batna"],
+    descricao: "Apresenta {produto} com escada de sins, ancoragem de preço e fechamento em duas opções.", etapas: [
+    t(et("Contrato prévio", "Oi, tudo bem? Tenho uma novidade de {produto} que leva 30 segundos. Posso contar?",
+      { gatilho: "sim, pode, fala, conta", acao: "avancar" }, SEM_TEMPO), "upfront"),
+    t(et("Escada de sins", "O senhor ainda trabalha com {produto} por aí, certo?",
+      { gatilho: "sim, trabalho, uso, certo", acao: "avancar" }, { gatilho: "não, não uso, parei", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." }), "yes_ladder"),
+    t(et("Ancoragem", "A tabela costuma ser mais alta, mas nesta semana conseguimos {condicao}. Vale a pena para o senhor?",
+      { gatilho: "sim, vale, interessa, gostei", acao: "avancar" }, { gatilho: "achou caro", acao: "desconto" }, ESPELHO, BATNA("um lote menor para testar ou mandar o catálogo pelo WhatsApp"), TRANSF), "ancoragem", "batna"),
+    t(et("Fechamento", "Perfeito! Fica melhor entregar ainda esta semana ou na próxima?",
+      { gatilho: "esta semana, essa semana, próxima, semana que vem", acao: "transferir", texto: "Diga que o atendente confirma o pedido agora." }, { gatilho: "não, vou pensar", acao: "reagendar", texto: "Pergunte quando pode retornar." }), "dupla_alternativa"),
   ] },
-  { id: "confirmacao_entrega", nome: "Confirmação de entrega ou visita", departamento: "comercial", descricao: "Alinha dia e horário de entrega ou visita.", etapas: [
-    et("Abertura", "Oi, tudo bem? Estou ligando para confirmar a entrega ou visita marcada. O horário combinado continua bom?",
-      { gatilho: "sim, pode ser, confirmado", acao: "encerrar", texto: "Confirme e agradeça." }, { gatilho: "não, mudar, outro dia, não vou estar", acao: "responder", texto: "Pergunte o melhor dia; ao ouvir, confirme e inclua [DESLIGAR]." }, TRANSF),
+  { id: "com_reativacao", nome: "Reativação de inativos", departamento: "comercial", tecnicas: ["upfront", "mirroring", "labeling", "batna"],
+    descricao: "Descobre por que o cliente parou de comprar e oferece {condicao} na volta.", etapas: [
+    t(et("Contrato prévio", "Oi, tudo bem? Sentimos sua falta por aqui. Tem 30 segundos para me ajudar com uma coisa?",
+      { gatilho: "sim, pode, fala", acao: "avancar" }, SEM_TEMPO), "upfront"),
+    t(et("Investigação", "O que fez o senhor deixar de comprar com a gente?",
+      { gatilho: "qualquer resposta", acao: "avancar", texto: "Antes de avançar, espelhe as palavras-chave e rotule a preocupação." }, ESPELHO, ROTULO, { gatilho: "não sei, nada não, sem motivo", acao: "avancar" }), "mirroring", "labeling"),
+    t(et("Oferta", "Entendi. Para resolver isso, na próxima compra o senhor tem {condicao}. Quer aproveitar?",
+      { gatilho: "sim, quero, pode ser", acao: "transferir" }, { gatilho: "achou caro", acao: "desconto" }, BATNA("mandar o catálogo atualizado pelo WhatsApp")), "batna"),
   ] },
-  { id: "convite_evento", nome: "Convite para evento", departamento: "comercial", descricao: "Convida para lançamento, feira ou café na loja.", etapas: [
-    et("Abertura", "Oi, tudo bem? Vamos ter um evento especial na loja com {condicao}. Posso te contar rapidinho?",
-      { gatilho: "sim, pode, fala", acao: "avancar" }, { gatilho: "não, agora não, sem tempo", acao: "encerrar", texto: "Agradeça e diga que manda o convite por mensagem." }),
-    et("Convite", "Seria ótimo ter você lá. Você consegue ir?",
-      { gatilho: "sim, vou, pode contar", acao: "encerrar", texto: "Agradeça e diga que vai mandar os detalhes." }, { gatilho: "não, não consigo", acao: "encerrar", texto: "Agradeça e diga que fica para a próxima." }, TRANSF),
+  // ---------- Compras ----------
+  { id: "cmp_cotacao", nome: "Cotação com fornecedor", departamento: "compras", tecnicas: ["upfront", "ancoragem", "mirroring", "dupla_alternativa", "batna"],
+    descricao: "Pede preço e prazo de {produto}, ancora no valor de mercado e negocia pagamento.", etapas: [
+    t(et("Contrato prévio", "Oi, tudo bem? Falo do setor de compras e preciso de 1 minuto para uma cotação. Pode ser agora?",
+      { gatilho: "sim, pode, fala", acao: "avancar" }, SEM_TEMPO, NAO_E), "upfront"),
+    t(et("Disponibilidade", "Vocês têm {produto} disponível para entrega este mês?",
+      { gatilho: "sim, tenho, temos, disponível", acao: "avancar" }, { gatilho: "não, não tenho, em falta", acao: "responder", texto: "Pergunte a previsão de chegada; ao ouvir, agradeça e inclua [DESLIGAR]." }), "upfront"),
+    t(et("Ancoragem", "Recebemos propostas de mercado bem competitivas. Qual o melhor preço que o senhor consegue para esse volume?",
+      { gatilho: "qualquer resposta, valor, preço, reais", acao: "avancar" }, ESPELHO, { gatilho: "não sei, preciso ver, não tenho agora", acao: "responder", texto: "Peça para mandar a proposta por e-mail hoje; agradeça e inclua [DESLIGAR]." }), "ancoragem", "mirroring"),
+    t(et("Pagamento", "Para fechar, fica melhor faturar em 28 dias ou com desconto à vista?",
+      { gatilho: "28 dias, prazo, à vista, a vista, desconto", acao: "transferir", texto: "Diga que o comprador confirma o pedido agora." }, BATNA("receber a proposta por e-mail para comparar"), TRANSF), "dupla_alternativa", "batna"),
   ] },
-  { id: "reativacao_90", nome: "Reativação 90 dias com benefício", departamento: "comercial", descricao: "Cliente sem comprar há 90 dias recebe um benefício na volta.", etapas: [
-    et("Abertura", "Oi, tudo bem? Sentimos sua falta por aqui. Posso te contar uma condição especial para você voltar?",
-      { gatilho: "sim, pode, fala", acao: "avancar" }, { gatilho: "não, não preciso, mudei de fornecedor", acao: "responder", texto: "Pergunte, sem insistir, o que fez ele mudar; depois agradeça e inclua [DESLIGAR]." }),
-    et("Oferta", "Na próxima compra você tem {condicao}. Quer aproveitar?",
-      { gatilho: "sim, quero, pode ser", acao: "transferir" }, { gatilho: "achou caro", acao: "desconto" }, { gatilho: "não, agora não", acao: "encerrar", texto: "Agradeça e diga que a condição vale por alguns dias." }),
+  { id: "cmp_atraso", nome: "Cobrança de entrega do fornecedor", departamento: "compras", tecnicas: ["labeling", "dupla_alternativa"],
+    descricao: "Confirma pedido de compra atrasado e combina nova data.", etapas: [
+    et("Abertura", "Oi, tudo bem? Falo do setor de compras sobre um pedido em atraso. É com o senhor?",
+      { gatilho: "sim, sou eu, pode falar", acao: "avancar" }, NAO_E),
+    t(et("Nova data", "Conseguem entregar ainda esta semana ou só na próxima?",
+      { gatilho: "esta semana, essa semana, próxima, semana que vem, amanhã", acao: "encerrar", texto: "Confirme a data dita e agradeça." }, ROTULO, { gatilho: "não sei, não tenho previsão", acao: "transferir", texto: "Diga que o comprador vai alinhar agora." }), "dupla_alternativa", "labeling"),
+  ] },
+  // ---------- Financeiro ----------
+  { id: "fin_lembrete", nome: "Lembrete de vencimento", departamento: "financeiro", tecnicas: ["upfront"],
+    descricao: "Aviso cordial antes do vencimento, sem cobrança.", etapas: [
+    t(et("Abertura", "Oi, tudo bem? Falo do financeiro, é rapidinho. Falo com o responsável pelos pagamentos?",
+      { gatilho: "sim, sou eu, pode falar", acao: "avancar" }, NAO_E), "upfront"),
+    et("Aviso", "É só um lembrete: {aviso}. O senhor já recebeu o boleto?",
+      { gatilho: "sim, recebi, já paguei", acao: "encerrar", texto: "Agradeça e deseje um bom dia." }, { gatilho: "não, não recebi, manda de novo", acao: "encerrar", texto: "Confirme que vão reenviar hoje." }, { gatilho: "prazo, parcelar, negociar", acao: "transferir" }),
+  ] },
+  { id: "fin_cobranca_acordo", nome: "Cobrança amigável e acordo", departamento: "financeiro", tecnicas: ["labeling", "dupla_alternativa", "batna"],
+    descricao: "Lembra a pendência com respeito e propõe duas formas de acerto, com plano B.", etapas: [
+    et("Abertura", "Oi, tudo bem? Falo do financeiro. Posso confirmar se falo com o responsável pelos pagamentos?",
+      { gatilho: "sim, sou eu, pode falar", acao: "avancar" }, NAO_E),
+    t(et("Pendência", "Consta em aberto {aviso}. O senhor estava sabendo?",
+      { gatilho: "sim, sabia, estou sabendo", acao: "avancar" }, { gatilho: "já paguei, paguei, está pago", acao: "encerrar", texto: "Peça desculpas, diga que vão conferir a baixa e agradeça." }, ROTULO, { gatilho: "não sabia, não chegou", acao: "avancar", texto: "Diga que o boleto será reenviado." }), "labeling"),
+    t(et("Acordo", "Para facilitar, fica melhor pagar à vista no Pix ou parcelar em duas vezes?",
+      { gatilho: "pix, à vista, a vista, parcelar, duas vezes", acao: "transferir", texto: "Diga que o atendente envia o acordo agora." }, BATNA("combinar uma data para pagamento ainda este mês"), TRANSF), "dupla_alternativa", "batna"),
+  ] },
+  // ---------- Pós-venda ----------
+  { id: "pv_satisfacao", nome: "Satisfação e recompra", departamento: "pos_venda", tecnicas: ["yes_ladder", "labeling", "dupla_alternativa"],
+    descricao: "Confirma a entrega, mede satisfação, trata problemas e abre recompra.", etapas: [
+    t(et("Entrega", "Oi, tudo bem? Estou ligando para saber se o seu último pedido chegou certinho. Chegou tudo bem?",
+      { gatilho: "sim, chegou, tudo certo", acao: "avancar" }, { gatilho: "não chegou, faltou, veio errado, problema, não", acao: "transferir", texto: "Peça desculpas e diga que o atendente resolve agora." }, ROTULO), "yes_ladder", "labeling"),
+    et("Satisfação", "Que bom! De zero a dez, que nota o senhor dá para o nosso atendimento?",
+      { gatilho: "nota baixa, ruim, reclamação", acao: "transferir", texto: "Agradeça a sinceridade e diga que um atendente vai ouvir." }, { gatilho: "nota alta, ótimo, bom, dez", acao: "avancar" }, { gatilho: "não sei, não quero dar nota", acao: "avancar" }),
+    t(et("Recompra", "Obrigado! Quer que eu deixe a próxima reposição agendada para este mês ou para o próximo?",
+      { gatilho: "este mês, esse mês, próximo, mês que vem", acao: "transferir", texto: "Diga que o atendente confirma a reposição." }, { gatilho: "não, agora não", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." }), "dupla_alternativa"),
+  ] },
+  { id: "pv_reclamacao", nome: "Retorno de reclamação", departamento: "pos_venda", tecnicas: ["labeling", "mirroring"],
+    descricao: "Liga após uma reclamação para confirmar se o problema foi resolvido.", etapas: [
+    t(et("Abertura", "Oi, tudo bem? Estou ligando para saber se o problema que o senhor relatou foi resolvido. Ficou tudo certo?",
+      { gatilho: "sim, resolveu, tudo certo", acao: "encerrar", texto: "Agradeça a paciência e diga que fica à disposição." }, { gatilho: "não, ainda não, continua", acao: "transferir", texto: "Rotule a frustração, peça desculpas e diga que o atendente resolve agora." }, ESPELHO, ROTULO), "labeling", "mirroring"),
+  ] },
+  // ---------- Logística ----------
+  { id: "log_entrega", nome: "Confirmação de entrega", departamento: "logistica", tecnicas: ["dupla_alternativa"],
+    descricao: "Confirma quem recebe, o turno e as condições de descarga.", etapas: [
+    et("Abertura", "Oi, tudo bem? Falo da logística sobre a entrega do seu pedido. Vai ter alguém para receber?",
+      { gatilho: "sim, vai, tem, eu recebo", acao: "avancar" }, { gatilho: "não, ninguém, não vai ter", acao: "reagendar", texto: "Pergunte o melhor dia para a entrega." }),
+    t(et("Turno", "Fica melhor receber de manhã ou à tarde?",
+      { gatilho: "manhã, cedo, tarde, depois do almoço", acao: "avancar" }, { gatilho: "não sei, tanto faz", acao: "avancar" }), "dupla_alternativa"),
+    et("Descarga", "O caminhão consegue parar perto do local de descarga?",
+      { gatilho: "sim, consegue, tem espaço", acao: "encerrar", texto: "Confirme o turno escolhido e agradeça." }, { gatilho: "não, rua estreita, difícil", acao: "transferir", texto: "Diga que o atendente da logística combina os detalhes." }),
+  ] },
+  { id: "log_visita", nome: "Confirmação de visita técnica", departamento: "logistica", tecnicas: ["dupla_alternativa"],
+    descricao: "Confirma ou remarca visita técnica ou de medição.", etapas: [
+    et("Abertura", "Oi, tudo bem? Estou confirmando a visita técnica marcada. O horário combinado continua bom?",
+      { gatilho: "sim, pode ser, confirmado", acao: "encerrar", texto: "Confirme e agradeça." }, { gatilho: "não, mudar, outro dia, não vou estar", acao: "avancar" }, TRANSF),
+    t(et("Remarcar", "Sem problema. Fica melhor amanhã ou depois de amanhã?",
+      { gatilho: "amanhã, depois de amanhã, outro dia", acao: "reagendar", texto: "Confirme o dia escolhido." }, { gatilho: "não sei, não posso", acao: "transferir" }), "dupla_alternativa"),
   ] },
 ];
 
@@ -97,7 +178,7 @@ export function roteiroDoModelo(m: ModeloRoteiro, agora = Date.now()): RoteiroSa
 }
 
 /** Converte a resposta da IA ("Criar com IA") em roteiro válido, descartando ações desconhecidas. */
-const ACOES_OK: AcaoCondicao[] = ["responder", "desconto", "transferir", "encerrar", "avancar", "ir_etapa"];
+const ACOES_OK: AcaoCondicao[] = ["responder", "desconto", "transferir", "encerrar", "avancar", "ir_etapa", "reagendar"];
 export function roteiroGerado(g: { nome?: string; descricao?: string; departamento?: string; etapas?: { titulo?: string; fala?: string; condicoes?: { gatilho?: string; acao?: string; texto?: string | null; etapa?: number | null }[] }[] }, agora = Date.now()): RoteiroSalvo {
   const etapas = (g.etapas ?? []).filter((e) => e.fala?.trim()).slice(0, 8).map((e, i) => ({
     titulo: e.titulo?.trim() || `Etapa ${i + 1}`, fala: e.fala!.trim().slice(0, 400),
@@ -106,7 +187,7 @@ export function roteiroGerado(g: { nome?: string; descricao?: string; departamen
   }));
   const texto = etapas.map((e) => e.fala).join(" ");
   const campos = (["produto", "condicao", "desconto", "aviso"] as const).filter((c) => texto.includes(`{${c}}`) || (c === "desconto" && etapas.some((e) => e.condicoes.some((x) => x.acao === "desconto"))));
-  return { chave: `custom_${agora.toString(36)}`, departamento: g.departamento === "financeiro" ? "financeiro" : "comercial",
+  return { chave: `custom_${agora.toString(36)}`, departamento: departamentoValido(g.departamento),
     nome: g.nome?.trim() || "Roteiro criado com IA", descricao: g.descricao?.trim() ?? "", campos: [...campos], ativo: true, etapas };
 }
 

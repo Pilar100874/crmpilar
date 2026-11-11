@@ -18,7 +18,7 @@ const SCH_TURNO = { type: "object", additionalProperties: false, required: ["res
 const COND = { type: "object", additionalProperties: false, required: ["gatilho", "acao", "texto"], properties: {
   gatilho: { type: "string" }, acao: { type: "string", enum: ["responder", "desconto", "transferir", "encerrar", "avancar"] }, texto: { type: ["string", "null"] } } };
 const SCH_GERAR = { type: "object", additionalProperties: false, required: ["nome", "descricao", "departamento", "etapas"], properties: {
-  nome: { type: "string" }, descricao: { type: "string" }, departamento: { type: "string", enum: ["comercial", "financeiro"] },
+  nome: { type: "string" }, descricao: { type: "string" }, departamento: { type: "string", enum: ["comercial", "compras", "financeiro", "pos_venda", "logistica"] },
   etapas: { type: "array", items: { type: "object", additionalProperties: false, required: ["titulo", "fala", "condicoes"], properties: {
     titulo: { type: "string" }, fala: { type: "string" }, condicoes: { type: "array", items: COND } } } } } };
 
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       return json({ fala: String(r.fala ?? "") });
     }
     if (b.acao === "gerar") {
-      const r = await ia(key, `Você cria roteiros de ligação telefônica B2B em português do Brasil para um agente de voz com IA. Devolva JSON com nome, descricao, departamento e de 2 a 4 etapas. Cada fala: no máximo 25 palavras e UMA única pergunta. Use {produto}, {condicao}, {desconto} ou {aviso} quando a fala depender de dados da campanha. Cada etapa com pergunta precisa de regras: resposta positiva (acao avancar, ou transferir na última), resposta negativa (encerrar ou responder perguntando melhor dia e incluindo [DESLIGAR] no texto), "não respondeu ou ficou em silêncio" (responder: repita só a pergunta, se calar de novo inclua [DESLIGAR]) e dúvida/valor/prazo (transferir). Gatilhos: várias respostas coloquiais separadas por vírgula. Use "achou caro" com acao desconto só se houver desconto. texto null quando não precisar. ${DIRETIVA}`,
+      const r = await ia(key, `Você cria roteiros de ligação telefônica B2B em português do Brasil para um agente de voz com IA. Devolva JSON com nome, descricao, departamento e de 2 a 4 etapas. Cada fala: no máximo 25 palavras e UMA única pergunta. Use {produto}, {condicao}, {desconto} ou {aviso} quando a fala depender de dados da campanha. Cada etapa com pergunta precisa de regras: resposta positiva (acao avancar, ou transferir na última), resposta negativa (encerrar ou responder perguntando melhor dia e incluindo [DESLIGAR] no texto), "não respondeu ou ficou em silêncio" (responder: repita só a pergunta, se calar de novo inclua [DESLIGAR]) e dúvida/valor/prazo (transferir). Gatilhos: várias respostas coloquiais separadas por vírgula. Use "achou caro" com acao desconto só se houver desconto. texto null quando não precisar. ${b.tecnicas ? `Aplique estas técnicas comerciais nas etapas certas: ${String(b.tecnicas).slice(0, 2000)}` : ""} ${DIRETIVA}`,
         String(b.descricao ?? "").slice(0, 2000), "roteiro", SCH_GERAR);
       return json({ roteiro: r });
     }

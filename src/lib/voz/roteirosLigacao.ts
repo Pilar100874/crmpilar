@@ -90,7 +90,7 @@ export interface WorkflowAlvo { modulo: string; id: string; nome: string }
  */
 export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: string; etapa?: number; workflow?: WorkflowAlvo }
 /** `pos` = posição do bloco no workflow visual (só tela). */
-export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number } }
+export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number }; tecnicas?: string[] }
 /** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
 export interface RoteiroSalvo {
   id?: string; chave: string; departamento: Departamento; nome: string; descricao: string;
@@ -344,16 +344,21 @@ export function regrasConduta(c: CondutaAgente): string {
 /* ---------------- Departamentos e roteiro inteligente por cliente ---------------- */
 
 /** Departamento do agente de ligações (voz_agentes.config.departamento). */
-export type Departamento = "comercial" | "financeiro";
+export type Departamento = "comercial" | "compras" | "financeiro" | "pos_venda" | "logistica";
 export const DEPARTAMENTOS: { id: Departamento; rotulo: string; desc: string; roteiros: RoteiroId[] }[] = [
   { id: "comercial", rotulo: "Comercial", desc: "Reposição, orçamentos, reativação e promoções.",
     roteiros: ["reposicao", "orcamento_aberto", "reativacao", "produto_foco"] },
   { id: "financeiro", rotulo: "Financeiro", desc: "Lembretes de vencimento e pendências, em tom discreto.",
     roteiros: ["lembrete_financeiro"] },
+  { id: "compras", rotulo: "Compras", desc: "Cotações, negociação e prazos com fornecedores.", roteiros: [] },
+  { id: "pos_venda", rotulo: "Pós-venda", desc: "Satisfação, problemas na entrega e recompra.", roteiros: [] },
+  { id: "logistica", rotulo: "Logística", desc: "Confirmação de entregas, recebedor e horários.", roteiros: [] },
 ];
+const IDS_DEP = ["comercial", "compras", "financeiro", "pos_venda", "logistica"];
+export const departamentoValido = (d: unknown): Departamento => (IDS_DEP.includes(String(d)) ? d as Departamento : "comercial");
 export function lerDepartamento(config: unknown): Departamento {
   const d = (config as { departamento?: string } | null)?.departamento;
-  return d === "financeiro" ? "financeiro" : "comercial";
+  return departamentoValido(d);
 }
 export const roteirosDoDepartamento = (d: Departamento) =>
   todosRoteiros().filter((r) => {
@@ -366,7 +371,7 @@ export async function carregarRoteirosSalvos(db: any, estabelecimentoId: string 
   if (!estabelecimentoId) return salvos;
   const { data } = await db.from("voz_roteiros").select("*").eq("estabelecimento_id", estabelecimentoId).order("created_at");
   definirRoteirosSalvos((data ?? []).map((x: any) => ({
-    id: x.id, chave: x.chave, departamento: x.departamento === "financeiro" ? "financeiro" : "comercial",
+    id: x.id, chave: x.chave, departamento: departamentoValido(x.departamento),
     nome: x.nome, descricao: x.descricao ?? "", campos: x.campos ?? [], etapas: Array.isArray(x.etapas) ? x.etapas : [], ativo: x.ativo !== false,
   })));
   return salvos;

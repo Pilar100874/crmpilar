@@ -9,14 +9,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { corrigirAutomatico, diagnosticarRoteiro, mapaRoteiro, MODELOS_ROTEIRO, roteiroDoModelo, roteiroGerado } from "@/lib/voz/qualidadeRoteiro";
 import { DEPARTAMENTOS, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
+import { instrucaoTecnicas, tecnica, TECNICAS } from "@/lib/voz/tecnicasComerciais";
 
 /** Descreve o objetivo em texto livre e recebe o roteiro completo montado pela IA (abre no editor, sem salvar). */
 export function CriarComIaDialog({ aberto, onFechar, onCriado }: { aberto: boolean; onFechar: () => void; onCriado: (r: RoteiroSalvo) => void }) {
   const [texto, setTexto] = useState("");
   const [gerando, setGerando] = useState(false);
+  const [tecs, setTecs] = useState<string[]>(["upfront", "mirroring", "dupla_alternativa", "batna"]);
   const gerar = async () => {
     setGerando(true);
-    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "gerar", descricao: texto } });
+    const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "gerar", descricao: texto, tecnicas: instrucaoTecnicas(tecs) } });
     setGerando(false);
     if (error || data?.error) return void toast.error(data?.error ?? "Não foi possível criar o roteiro");
     const r = roteiroGerado(data.roteiro ?? {});
@@ -32,6 +34,15 @@ export function CriarComIaDialog({ aberto, onFechar, onCriado }: { aberto: boole
         </DialogHeader>
         <Textarea rows={6} value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)}
           placeholder="Ex.: oferecer impermeabilizante para quem comprou argamassa no mês passado, com 10% de desconto e frete grátis acima de R$ 500." />
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold text-foreground">Técnicas comerciais a usar</p>
+          <div className="flex flex-wrap gap-1.5">
+            {TECNICAS.map((t) => { const on = tecs.includes(t.id); return (
+              <Badge key={t.id} variant={on ? "default" : "outline"} className="cursor-pointer" title={t.resumo}
+                onClick={() => setTecs((x) => (on ? x.filter((y) => y !== t.id) : [...x, t.id]))}>{t.nome}</Badge>
+            ); })}
+          </div>
+        </div>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onFechar} disabled={gerando}>Cancelar</Button>
           <Button onClick={() => void gerar()} disabled={gerando || texto.trim().length < 15}>
@@ -51,19 +62,22 @@ export function ModelosProntosDialog({ aberto, onFechar, onEscolher }: { aberto:
           <DialogTitle>Modelos prontos</DialogTitle>
           <DialogDescription>Escolha um modelo para abrir como roteiro novo e ajustar antes de salvar.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {MODELOS_ROTEIRO.map((m) => (
+        {DEPARTAMENTOS.map((d) => { const ms = MODELOS_ROTEIRO.filter((m) => m.departamento === d.id); if (!ms.length) return null; return (
+        <div key={d.id} className="space-y-2">
+          <h4 className="text-sm font-semibold text-foreground">{d.rotulo}</h4>
+          <div className="grid gap-2 sm:grid-cols-2">
+          {ms.map((m) => (
             <Card key={m.id} className="flex min-w-0 flex-col gap-2 p-3">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">{m.nome}</p>
-                <Badge variant="outline" className="shrink-0 text-[10px]">{DEPARTAMENTOS.find((d) => d.id === m.departamento)?.rotulo}</Badge>
-              </div>
+              <p className="text-sm font-semibold text-foreground">{m.nome}</p>
               <p className="text-xs text-muted-foreground">{m.descricao}</p>
+              <div className="flex flex-wrap gap-1">{m.tecnicas.map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{tecnica(t)?.nome}</Badge>)}</div>
               <p className="text-xs text-muted-foreground">{m.etapas.length} etapas · {m.etapas.reduce((n, e) => n + e.condicoes.length, 0)} regras</p>
               <Button size="sm" variant="outline" className="mt-auto h-8" onClick={() => onEscolher(roteiroDoModelo(m))}>Usar modelo</Button>
             </Card>
           ))}
+          </div>
         </div>
+        ); })}
       </DialogContent>
     </Dialog>
   );
