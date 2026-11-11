@@ -137,7 +137,7 @@ class VozService : Service() {
                 if (modo != "assistir" && c.rtp.tocando()) { trecho.clear(); falando = false; mudo = 0; continue }
                 val e = Audio.energia(q)
                 // Cliente calado ~4s depois da fala da IA: a IA segue o roteiro sozinha.
-                val calado = e <= LIMIAR_FALA && !falando && modo != "assistir" && ++mudo >= 300
+                val calado = e <= LIMIAR_FALA && !falando && modo != "assistir" && ++mudo >= 550
                 if (e > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; q.forEach { trecho.add(it) } }
                 else if (falando || calado) {
                     if (!calado) q.forEach { trecho.add(it) }

@@ -432,7 +432,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       if (modo !== 'assistir' && c.rtp.tocando()) { trecho = []; falando = false; mudo = 0; continue; }
       if (energia(q) > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; trecho.push(...q); continue; }
       // Cliente calado ~6s depois da fala da IA: a IA segue o roteiro sozinha.
-      const calado = !falando && modo !== 'assistir' && ++mudo >= 300;
+      const calado = !falando && modo !== 'assistir' && ++mudo >= 550;
       if (!falando && !calado) continue;
       if (!calado) { trecho.push(...q); if (++silencio <= 40) continue; }
       if (calado || trecho.length >= 1600) {
