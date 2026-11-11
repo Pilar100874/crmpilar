@@ -1205,7 +1205,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             />
           </div>
 
-          <div className="mt-4 rounded-lg border border-border p-3">
+        </Card>
+
+        {/* Automação */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">🏠 Automação</h3>
+          <div>
             <Label>Telas de automação no celular e no tablet</Label>
             <p className="text-xs text-muted-foreground mb-3">
               Escolha qual painel de automação este usuário abre no aplicativo. Deixe vazio para o aplicativo
