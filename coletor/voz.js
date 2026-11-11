@@ -431,10 +431,10 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       const q = await c.rtp.entrada.pop(300); if (!q) continue;
       if (modo !== 'assistir' && c.rtp.tocando()) { trecho = []; falando = false; mudo = 0; continue; }
       if (energia(q) > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; trecho.push(...q); continue; }
-      // Cliente calado ~4s depois da fala da IA: a IA segue o roteiro sozinha.
-      const calado = !falando && modo !== 'assistir' && ++mudo >= 200;
+      // Cliente calado ~6s depois da fala da IA: a IA segue o roteiro sozinha.
+      const calado = !falando && modo !== 'assistir' && ++mudo >= 300;
       if (!falando && !calado) continue;
-      if (!calado) { trecho.push(...q); if (++silencio <= 20) continue; }
+      if (!calado) { trecho.push(...q); if (++silencio <= 40) continue; }
       if (calado || trecho.length >= 1600) {
         mudo = 0;
         const r = await turno(calado ? null : wav8k(trecho).toString('base64'), hist, modo, objetivo, calado ? '[SILENCIO]' : null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });
