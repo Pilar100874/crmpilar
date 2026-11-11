@@ -446,6 +446,8 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
             registrar('agente', resp.replace('[TRANSFERIR]', '').replace('[DESLIGAR]', '').trim());
             if (r.audio_b64) c.rtp.tocar(wavPara8k(r.audio_b64));
             while (c.ativa && c.rtp.tocando()) await dormir(100);
+            // Descarta o áudio acumulado enquanto a IA falava: senão ele conta como silêncio e a IA diz "não ouvi" com o cliente começando a responder.
+            c.rtp.entrada.itens.length = 0; mudo = 0;
             const transf = modo === 'ligar' && ramal ? ramal : cfg.ramal_transferencia;
             if (resp.includes('[TRANSFERIR]') && transf) { MON.transferidas++; transferidoPara = transf; log(`Transferindo para o ramal ${transf}`); c.transferir(transf); await dormir(4000); break; }
             if (resp.includes('[DESLIGAR]')) break;

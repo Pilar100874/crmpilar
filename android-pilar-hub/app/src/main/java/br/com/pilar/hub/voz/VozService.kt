@@ -155,6 +155,8 @@ class VozService : Service() {
                                     registrar("agente", resp.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").trim())
                                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
                                     while (c.ativa && c.rtp.tocando()) Thread.sleep(100)
+                                    // Descarta o áudio acumulado durante a fala da IA (contaria como silêncio).
+                                    c.rtp.entrada.clear(); mudo = 0
                                     val transf = if (modo == "ligar" && !ramal.isNullOrBlank()) ramal else cfg.optString("ramal_transferencia")
                                     if (resp.contains("[TRANSFERIR]") && transf.isNotBlank() && c.ativa) {
                                         log("Transferindo para o ramal $transf")
