@@ -18,10 +18,12 @@ export function MonitorChamadasIa({ chamadas, agentes }: { chamadas: ChamadaViva
   const [agora, setAgora] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setAgora(Date.now()), 1000); return () => clearInterval(t); }, []);
   const vivas = chamadas.filter(chamadaAoVivo);
+  const [codigoPabx, setCodigoPabx] = useState<string | null>(null);
+  useEffect(() => { db.from("ucm_config").select("codigo_escuta").limit(1).maybeSingle().then((r: any) => setCodigoPabx(r.data?.codigo_escuta ?? null)); }, []);
 
   const ouvir = (a?: AgenteBasico) => {
-    const n = numeroEscuta(a?.codigo_escuta, a?.ramal_ia);
-    if (!n) return toast.error("Informe o \"Código de escuta\" do PABX na aba Agente (ex.: *54)");
+    const n = numeroEscuta(a?.codigo_escuta?.trim() || codigoPabx, a?.ramal_ia);
+    if (!n) return toast.error("Informe o \"Código de escuta silenciosa\" na Configuração do PABX (ex.: *54)");
     abrirPilarSip(n, { aba: "ramais" });
     toast.success("Ligando para a escuta. Você ouve a conversa sem o cliente perceber.");
   };

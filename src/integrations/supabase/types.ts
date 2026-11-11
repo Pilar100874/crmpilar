@@ -28996,6 +28996,7 @@ export type Database = {
       }
       ucm_config: {
         Row: {
+          codigo_escuta: string | null
           conference_room_number: string | null
           conference_room_password: string | null
           created_at: string
@@ -29024,6 +29025,7 @@ export type Database = {
           voz_senha_ramal_empresa: string | null
         }
         Insert: {
+          codigo_escuta?: string | null
           conference_room_number?: string | null
           conference_room_password?: string | null
           created_at?: string
@@ -29052,6 +29054,7 @@ export type Database = {
           voz_senha_ramal_empresa?: string | null
         }
         Update: {
+          codigo_escuta?: string | null
           conference_room_number?: string | null
           conference_room_password?: string | null
           created_at?: string

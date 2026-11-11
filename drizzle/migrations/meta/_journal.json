@@ -141,6 +141,13 @@
       "when": 1794321797339,
       "tag": "0019_voz_roteiros",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794421804259,
+      "tag": "0020_migration",
+      "breakpoints": true
     }
   ]
 }

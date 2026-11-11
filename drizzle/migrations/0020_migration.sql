@@ -1,0 +1,1 @@
+ALTER TABLE public.ucm_config ADD COLUMN IF NOT EXISTS codigo_escuta text DEFAULT '*54';

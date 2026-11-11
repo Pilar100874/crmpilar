@@ -26,6 +26,7 @@ interface UCMConfig {
   sip_porta_alternativa?: number | string | null;
   sip_porta_interna?: number | string | null;
   ramal_portaria?: string | null;
+  codigo_escuta?: string | null;
   voz_endereco?: string | null;
   voz_porta?: number | string | null;
   ucm_user: string;
@@ -50,6 +51,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     sip_porta_alternativa: 8089,
     sip_porta_interna: "",
     ramal_portaria: "",
+    codigo_escuta: "*54",
     voz_endereco: "externo",
     voz_porta: 5060,
     ucm_user: "",
@@ -113,6 +115,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
           sip_porta_interna: config.sip_porta_interna ? Number(config.sip_porta_interna) : null,
           ramal_portaria: config.ramal_portaria || null,
+          codigo_escuta: config.codigo_escuta?.trim() || null,
           voz_endereco: config.voz_endereco === "interno" ? "interno" : "externo",
           voz_porta: Number(config.voz_porta) || 5060,
           ucm_user: config.ucm_user,
@@ -267,6 +270,17 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
               value={config.ramal_portaria || ""}
               onChange={(e) => setConfig({ ...config, ramal_portaria: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="codigo_escuta">Código de escuta silenciosa</Label>
+            <Input
+              id="codigo_escuta"
+              placeholder="*54"
+              value={config.codigo_escuta || ""}
+              onChange={(e) => setConfig({ ...config, codigo_escuta: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">Prefixo do PABX para ouvir uma ligação sem o cliente perceber (padrão *54). Usado quando o agente não tem código próprio.</p>
           </div>
         </div>
 
