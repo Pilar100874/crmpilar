@@ -6,9 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { buscarAjuda, ehAcao, rotuloCanonico, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
+import { ajudaDaArea, buscarAjuda, ehAcao, rotuloCanonico, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
 
-interface CampoInfo { rotulo: string; secao?: string; dica?: string; placeholder?: string; tipo?: string; opcoes?: string; vizinhos?: string }
+interface CampoInfo { rotulo: string; area?: string; cartao?: boolean; secao?: string; dica?: string; placeholder?: string; tipo?: string; opcoes?: string; vizinhos?: string }
 interface Msg { papel: "user" | "ia"; texto: string }
 
 const SEL_CAMPO = "input,textarea,select,[role=switch],[role=combobox],[role=checkbox],[role=radio],[role=slider],label";
@@ -60,7 +60,9 @@ function extrair(alvo: HTMLElement): CampoInfo | null {
   const dica = no ? limpo(no.textContent) : el.getAttribute("title") || bloco?.querySelector("p,[class*=muted-foreground]")?.textContent;
   const vizinhos = grupo ? Array.from(grupo.querySelectorAll("label,button,[role=tab]")).map((l) => limpo(l.textContent)).filter((t) => t && t !== rotulo && t.length < 40).slice(0, 12).join(", ") : "";
   const opcoes = el.tagName === "SELECT" ? Array.from((el as HTMLSelectElement).options).map((o) => o.text).join(", ") : "";
-  return { rotulo: canon, secao: limpo(titulo) || undefined, dica: limpo(dica) !== rotulo ? limpo(dica) || undefined : undefined,
+  const area = el.closest("[data-tour]")?.getAttribute("data-tour") ?? undefined;
+  const cartao = !!alvo.closest('[data-ajuda="Cartão do cliente na Fila do dia"]');
+  return { area, cartao, rotulo: canon, secao: limpo(titulo) || undefined, dica: limpo(dica) !== rotulo ? limpo(dica) || undefined : undefined,
     placeholder: limpo(el.getAttribute("placeholder")) || undefined, tipo, opcoes: opcoes || undefined, vizinhos: vizinhos || undefined };
 }
 
@@ -88,10 +90,11 @@ export function AjudaGlobal() {
   }, [pathname]);
 
   const abrir = useCallback((c: CampoInfo) => {
-    const of = buscarAjuda(c.rotulo, pathname);
+    const of = buscarAjuda(c.rotulo, pathname)
+      ?? (ativa ? (c.cartao ? buscarAjuda("Cartão do cliente na Fila do dia") : null) ?? ajudaDaArea(c.area) : null);
     setCampo(c); setOficial(of); setMsgs([]); setPergunta(""); setErro(""); setModo(false);
     if (!of) void perguntar(c, null, []);
-  }, [pathname, perguntar]);
+  }, [pathname, perguntar, ativa]);
 
   useEffect(() => {
     const clique = (e: MouseEvent) => {

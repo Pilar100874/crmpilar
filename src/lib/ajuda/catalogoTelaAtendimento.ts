@@ -76,6 +76,14 @@ export const CATALOGO_TELA_ATENDIMENTO: AjudaCampo[] = [
   e(["atualizar registros"], "Recarrega os números da jornada com os dados mais recentes."),
   e(["exportar registros"], "Baixa os registros da jornada do período em planilha."),
   e(["meus pedidos", "pedidos por status, com visao de funil", "filtrar por status", "agrupar funil por"], "Lista seus pedidos e orçamentos por etapa, como um funil. Pedido em aberto mantém o cliente na agenda todo dia até ser finalizado ou cancelado."),
+  // Abas e filtros da fila
+  e(["tudo"], "Mostra todos os clientes da fila de hoje: agendados, mensagens recebidas e potenciais."),
+  e(["agendados"], "Clientes com tarefa marcada para hoje ou atrasada na sua agenda, incluindo os com pedido em aberto."),
+  e(["recebidos"], "Clientes que mandaram mensagem ou ligaram e estão esperando resposta, ordenados pela urgência."),
+  e(["potenciais"], "Clientes com chance de compra calculada pelo sistema (recompra, orçamento parado, queda de compras). Não viram tarefa até você agir ou dispensar."),
+  e(["telefone", "whatsapp", "e-mail"], "Filtra a fila pelo canal da próxima ação. Clique de novo ou em Limpar filtros para ver todos."),
+  e(["visita"], "Agenda ou registra uma visita ao cliente. Só aparece quando o cliente tem endereço cadastrado."),
+  e(["nao finalizados", "nao finalizado"], "Mostra só os clientes que você abriu e ainda não finalizou com a data do próximo contato."),
   // Outros
   e(["ativar ligacoes automaticas"], "Liga as ligações automáticas pela IA conforme as regras configuradas; a IA transfere para o seu ramal."),
   e(["ativar resposta fora do horario"], "Responde automaticamente quem escreve fora do horário de atendimento."),

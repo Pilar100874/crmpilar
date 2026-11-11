@@ -26,6 +26,8 @@ export function rotuloCanonico(rotulo: string): string {
   if (/^(hoje|seg|ter|qua|qui|sex|sab|dom)\w*\s*·?\s*\d{1,2}\s*\d*$/.test(r)) return "dia da barra da agenda";
   if (/^atrasados\s*\d*$/.test(r)) return "atrasados da agenda";
   if (/^gravacoes\s*\d*$/.test(r)) return "gravacoes";
+  const semContador = r.replace(/\s*\(?\d+\)?$/, "");
+  if (semContador !== r && semContador.length >= 3) return semContador;
   return rotulo;
 }
 
@@ -135,3 +137,9 @@ export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
 
 export const textoOficial = (a: AjudaCampo | null, tipo?: string) =>
   a ? [a.paraQue, !ehAcao(tipo) && a.seVazio && `Se ficar vazio: ${a.seVazio}`, a.exemplo && `Exemplo: ${a.exemplo}`].filter(Boolean).join("\n") : "";
+
+/** Na tela de Atendimento, item sem texto próprio usa o recurso da área onde está (marcada para o tour). */
+export function ajudaDaArea(alvo: string | null | undefined): AjudaCampo | null {
+  const r = alvo ? CATALOGO_ATENDIMENTO.find((x) => x.alvo === alvo) : null;
+  return r ? { rotulos: [normalizar(r.titulo)], tela: `Atendimento → ${r.titulo}`, paraQue: `${r.oQueE} ${r.regraNegocio}`.trim(), exemplo: r.comoUsar[0] } : null;
+}

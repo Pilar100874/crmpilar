@@ -31,3 +31,6 @@ it2("botão não mostra 'se ficar vazio'", () => {
 it2("Próximo cliente no Atendimento tem texto oficial", () => {
   expect2(buscar2("Próximo cliente", "/atendimento")?.paraQue).toContain("próximo cliente da fila");
 });
+it2("aba com contador usa o texto da aba", () => {
+  expect2(buscar2("Potenciais 12", "/atendimento")?.paraQue).toContain("chance de compra");
+});
