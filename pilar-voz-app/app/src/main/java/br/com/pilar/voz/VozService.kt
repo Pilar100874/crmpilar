@@ -141,7 +141,7 @@ class VozService : Service() {
                 if (e > LIMIAR_FALA) { falando = true; silencio = 0; mudo = 0; q.forEach { trecho.add(it) } }
                 else if (falando || calado) {
                     if (!calado) q.forEach { trecho.add(it) }
-                    if (calado || ++silencio > 40) {
+                    if (calado || ++silencio > 28) {
                         mudo = 0
                         if (calado || trecho.size >= 1600) {
                             val wav = if (calado) null else Audio.paraBase64(Audio.wav8k(trecho.toShortArray()))

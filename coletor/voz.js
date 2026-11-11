@@ -434,7 +434,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       // Cliente calado ~6s depois da fala da IA: a IA segue o roteiro sozinha.
       const calado = !falando && modo !== 'assistir' && ++mudo >= 550;
       if (!falando && !calado) continue;
-      if (!calado) { trecho.push(...q); if (++silencio <= 40) continue; }
+      if (!calado) { trecho.push(...q); if (++silencio <= 28) continue; }
       if (calado || trecho.length >= 1600) {
         mudo = 0;
         const r = await turno(calado ? null : wav8k(trecho).toString('base64'), hist, modo, objetivo, calado ? '[SILENCIO]' : null, chamadaId, numero).catch((e) => { log('IA: ' + e.message); return null; });

@@ -17,7 +17,7 @@ describe("roteiros de ligação", () => {
   });
   it("regras forçam falas curtas e transferência para o ramal", () => {
     const r = regrasConversa("2222");
-    expect(r).toContain("máximo 2 frases");
+    expect(r).toContain("no máximo 2");
     expect(r).toContain("ramal 2222");
   });
 });

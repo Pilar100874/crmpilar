@@ -96,8 +96,8 @@ export const MODELOS_ROTEIRO: ModeloRoteiro[] = [
     descricao: "Descobre por que o cliente parou de comprar e oferece {condicao} na volta.", etapas: [
     t(et("Contrato prévio", "Oi, tudo bem? Sentimos sua falta por aqui. Tem 30 segundos para me ajudar com uma coisa?",
       { gatilho: "sim, pode, fala", acao: "avancar" }, SEM_TEMPO), "upfront"),
-    t(et("Investigação", "O que fez o senhor deixar de comprar com a gente?",
-      { gatilho: "qualquer resposta", acao: "avancar", texto: "Antes de avançar, espelhe as palavras-chave e rotule a preocupação." }, ESPELHO, ROTULO, { gatilho: "não sei, nada não, sem motivo", acao: "avancar" }), "mirroring", "labeling"),
+    t(et("Investigação", "Faz um tempinho que a gente não se fala. Como estão as coisas por aí, teve algum probleminha que a gente possa resolver?",
+      { gatilho: "qualquer resposta", acao: "avancar", texto: "Mostre que entendeu com palavras suas, em poucas palavras, e siga." }, ESPELHO, ROTULO, { gatilho: "não sei, nada não, sem motivo", acao: "avancar" }), "mirroring", "labeling"),
     t(et("Oferta", "Entendi. Para resolver isso, na próxima compra o senhor tem {condicao}. Quer aproveitar?",
       { gatilho: "sim, quero, pode ser", acao: "transferir" }, { gatilho: "achou caro", acao: "desconto" }, BATNA("mandar o catálogo atualizado pelo WhatsApp")), "batna"),
   ] },
