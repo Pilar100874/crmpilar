@@ -402,14 +402,26 @@ All colors MUST be HSL.
     pointer-events: none;
   }
 
-  /* Mobile/tablet: painel ocupa tela inteira e aba some quando aberto */
+  /* Celular: painel ocupa tela inteira e aba some quando aberto.
+     No tablet o telefone abre igual ao desktop (painel lateral de 400px com a aba ao lado). */
   @media (max-width: 1024px) {
-    .chat-slide-menu,
-    .sip-slide-menu {
+    .chat-slide-menu {
       width: 100vw;
       right: -100vw;
     }
     .chat-tab.chat-open {
+      right: -40px;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .sip-slide-menu {
+      width: 100vw;
+      right: -100vw;
+    }
+    .sip-tab.open {
       right: -40px;
       opacity: 0;
       pointer-events: none;
