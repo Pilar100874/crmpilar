@@ -35,7 +35,7 @@ export function tipoSaida(c: CondicaoRoteiro): TipoSaida {
 }
 
 /** Ações que viram bloco final próprio no desenho. */
-export const ACOES_BLOCO: AcaoCondicao[] = ["transferir", "encerrar", "reagendar", "workflow", "desconto", "responder"];
+export const ACOES_BLOCO: AcaoCondicao[] = ["transferir", "encerrar", "reagendar", "workflow", "desconto"];
 
 export interface NoFluxo { id: string; tipo: "inicio" | "pergunta" | "acao"; etapa?: number; saida?: number; x: number; y: number }
 export interface ArestaFluxo { id: string; origem: string; saida?: string; destino: string }

@@ -1,7 +1,7 @@
 import "@xyflow/react/dist/style.css";
 import { memo, useEffect, useMemo, useState } from "react";
 import {
-  Background, Controls, Handle, MiniMap, Position, ReactFlow, useNodesState, type Connection, type Edge, type Node, type NodeProps,
+  Background, Controls, Handle, Position, ReactFlow, useNodesState, type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import { CalendarClock, MessageCircleQuestion, PhoneForwarded, PhoneOff, Play, Plus, Percent, MessageSquare, Trash2, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
