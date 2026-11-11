@@ -121,10 +121,16 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   };
   const remover = async () => {
     if (!atual?.id) return;
-    const r = await db.from("voz_roteiros").delete().eq("id", atual.id);
-    if (r.error) return toast.error(r.error.message);
-    toast.success(ehDeFabrica(atual.chave) ? "Roteiro original restaurado" : "Roteiro excluído");
-    setExcluir(false); abrir(null); void carregar();
+    await removerRoteiro(atual);
+    abrir(null);
+  };
+  const [excluindoCard, setExcluindoCard] = useState<RoteiroSalvo | null>(null);
+  const removerRoteiro = async (r: RoteiroSalvo) => {
+    if (!r.id) return;
+    const res = await db.from("voz_roteiros").delete().eq("id", r.id);
+    if (res.error) return toast.error(res.error.message);
+    toast.success(ehDeFabrica(r.chave) ? "Roteiro original restaurado" : "Roteiro excluído");
+    setExcluir(false); setExcluindoCard(null); void carregar();
   };
   const novo = () => abrir({ chave: `custom_${Date.now().toString(36)}`, departamento: "comercial", nome: "", descricao: "", campos: ["condicao", "desconto"], ativo: true,
     etapas: [{ titulo: "Abertura", fala: "Diga o motivo da ligação em uma frase.", condicoes: [] }, { titulo: "Pergunta", fala: "", condicoes: [{ gatilho: "demonstrou interesse", acao: "transferir" }] }] });
@@ -145,6 +151,9 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   if (!atual) return (
     <div className="space-y-3">
       {simulador}
+      <DeleteConfirmDialog open={!!excluindoCard} onOpenChange={(v) => { if (!v) setExcluindoCard(null); }} onConfirm={() => { if (excluindoCard) void removerRoteiro(excluindoCard); }}
+        title={excluindoCard && ehDeFabrica(excluindoCard.chave) ? "Restaurar roteiro original?" : "Excluir roteiro?"}
+        description={excluindoCard && ehDeFabrica(excluindoCard.chave) ? `Suas alterações em "${excluindoCard.nome}" serão descartadas.` : `O roteiro "${excluindoCard?.nome ?? ""}" deixará de aparecer no disparo.`} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Edite as falas e as regras "Se o cliente..., faça..." de cada roteiro, ou crie novos.</p>
         <div className="flex flex-wrap gap-2">
@@ -187,6 +196,11 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
                   <Button size="sm" variant="outline" className="h-8" onClick={() => abrir(structuredClone(r))}>Editar</Button>
                   <Button size="sm" variant="outline" className="h-8" onClick={() => setSimulando(structuredClone(r))}><PhoneCall className="mr-1 h-3.5 w-3.5" /> Simular</Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicar(r)}><Copy className="mr-1 h-3.5 w-3.5" /> Duplicar</Button>
+                  {r.id && (
+                    <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => setExcluindoCard(r)}>
+                      <Trash2 className="mr-1 h-3.5 w-3.5" /> {ehDeFabrica(r.chave) ? "Restaurar" : "Excluir"}
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}
