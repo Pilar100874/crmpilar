@@ -33,3 +33,13 @@ describe("roteiro como workflow", () => {
       .toEqual([{ modulo: "omnichannel", id: "abc" }, { modulo: "marketing_automation", id: "9" }]);
   });
 });
+
+import { SAIDAS_PRONTAS as SP, tipoSaida as ts } from "./fluxoRoteiro";
+describe("saída Humano", () => {
+  it("\"humano\" sempre transfere para atendente", () => {
+    const s = SP.find((x) => x.tipo === "atendente")!;
+    expect(s.condicao.gatilho).toContain("humano");
+    expect(s.condicao.acao).toBe("transferir");
+    expect(ts({ gatilho: "humano", acao: "transferir" })).toBe("atendente");
+  });
+});
