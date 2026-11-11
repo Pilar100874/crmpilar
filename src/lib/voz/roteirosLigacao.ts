@@ -233,8 +233,8 @@ export function gatilhoParaIA(g: string): string {
 /** Remove a etapa `i` e corrige os destinos "Ir para a etapa" (destino removido vira "próxima etapa"). Pura. */
 export function removerEtapa(etapas: EtapaEditavel[], i: number): EtapaEditavel[] {
   return etapas.filter((_, j) => j !== i).map((e) => ({ ...e, condicoes: e.condicoes.map((c) => {
-    if (c.acao !== "ir_etapa" || c.etapa == null) return c;
-    if (c.etapa === i) { const { etapa: _x, ...r } = c; return { ...r, acao: "avancar" as const }; }
+    if ((c.acao !== "ir_etapa" && c.acao !== "workflow") || c.etapa == null) return c;
+    if (c.etapa === i) { const { etapa: _x, ...r } = c; return c.acao === "workflow" ? r : { ...r, acao: "avancar" as const }; }
     return c.etapa > i ? { ...c, etapa: c.etapa - 1 } : c;
   }) }));
 }
