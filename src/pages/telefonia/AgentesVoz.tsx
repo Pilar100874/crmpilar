@@ -428,7 +428,7 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
         <TabsContent value="chamadas" className="space-y-3">
           <MonitorChamadasIa chamadas={chamadas as never} agentes={agentes} />
           {chamadas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma chamada da IA ainda.</p>}
-          {chamadas.map((c) => (
+          {chamadas.slice(0, 5).map((c) => (
             <Card key={c.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex flex-wrap items-center gap-2 text-base">
