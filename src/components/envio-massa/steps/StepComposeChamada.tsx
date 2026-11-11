@@ -236,6 +236,7 @@ export function StepComposeChamada({
 
           <Card className="p-4 space-y-3">
             <h4 className="font-medium text-sm">Roteiro da ligação</h4>
+            <p className="text-[11px] text-muted-foreground">Aparecem os roteiros ativos do departamento do agente escolhido. Cada contato recebe o roteiro marcado abaixo.</p>
             {departamento === "comercial" && (
               <div className="grid gap-2 sm:grid-cols-2">
                 {([

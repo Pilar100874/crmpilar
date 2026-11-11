@@ -279,27 +279,9 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                 <Label>Transferir para o ramal</Label>
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>
               </div>
-              <div className="space-y-1 md:col-span-2"><Label>Saudação</Label><Input value={atual.saudacao} onChange={(e) => setAtual({ ...atual, saudacao: e.target.value })} /></div>
-              <div className="space-y-1 md:col-span-2">
-                <Label>{atual.modos?.includes("ligar") ? "Sobre a empresa (opcional)" : "Instruções para a IA"}</Label>
-                <Textarea rows={4} maxLength={600} placeholder={atual.modos?.includes("ligar") ? "Ex.: Distribuidora de embalagens em Sorocaba, entrega em 24h. O roteiro da ligação é escolhido no disparo." : "Ex.: Você atende a Pilar. Informe horários, agende visitas e transfira para vendas quando pedirem orçamento."}
-                  value={atual.prompt} onChange={(e) => setAtual({ ...atual, prompt: e.target.value })} />
-              </div>
-              <div className="space-y-2 rounded-md border p-3 md:col-span-2">
-                <Label>O que o agente pode saber do cliente</Label>
-                {([
-                  ["usar_historico", "Histórico de compras e orçamentos", "Últimos produtos, frequência e data da última compra"],
-                  ["usar_pagamento", "Formas e prazos de pagamento", "Condições habituais usadas nos pedidos do cliente"],
-                  ["sugerir_similares", "Sugerir reposição e produtos similares", "Compara a oferta com o que o cliente já compra"],
-                  ["usar_gancho_potencial", "Adaptar abordagem ao motivo de cliente potencial", "Só vale quando o disparo usa o filtro Clientes potenciais"],
-                ] as const).map(([k, l, d]) => (
-                  <label key={k} className="flex items-start gap-2 text-sm">
-                    <Switch checked={(atual.config as any)?.[k] !== false}
-                      onCheckedChange={(v) => setAtual({ ...atual, config: { ...(atual.config ?? {}), [k]: v } })} />
-                    <span className="min-w-0"><span className="block">{l}</span><span className="block text-xs text-muted-foreground">{d}</span></span>
-                  </label>
-                ))}
-              </div>
+              <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground md:col-span-2">
+                Saudação, contexto da empresa e o que a IA fala ficam no <strong>roteiro</strong>. Aqui você define só o perfil e a telefonia do agente.
+              </p>
               {atual.modos?.includes("ligar") && (() => {
                 const c = lerConduta(atual.config);
                 const set = (p: Partial<CondutaAgente>) => setAtual({ ...atual, config: { ...(atual.config ?? {}), conduta: { ...c, ...p } } });

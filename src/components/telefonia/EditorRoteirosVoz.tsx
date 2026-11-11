@@ -210,7 +210,8 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
       </div>
       <div className="space-y-1"><Label>Descrição</Label><Textarea rows={2} value={atual.descricao} onChange={(e) => set({ descricao: e.target.value })} /></div>
       <div className="space-y-1">
-        <Label>Campos pedidos no disparo</Label>
+        <Label>Dados que o usuário preenche ao disparar</Label>
+        <p className="text-xs text-muted-foreground">Marque só o que muda a cada campanha (ex.: produto da oferta, desconto). Quem dispara a campanha será obrigado a preencher.</p>
         <div className="grid gap-2">
           {CAMPOS.map((c) => (
             <label key={c.id} className="flex items-center gap-2 text-sm">
@@ -221,7 +222,8 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
         </div>
         <p className="text-xs text-muted-foreground">Use nas falas: {"{produto}"}, {"{condicao}"}, {"{desconto}"}, {"{aviso}"}.</p>
       </div>
-      <label className="flex items-center gap-2 text-sm"><Switch checked={atual.ativo} onCheckedChange={(v) => set({ ativo: v })} /> Disponível no disparo</label>
+      <label className="flex items-center gap-2 text-sm"><Switch checked={atual.ativo} onCheckedChange={(v) => set({ ativo: v })} /> Roteiro ativo (aparece na escolha do disparo em massa)</label>
+      <p className="-mt-2 text-xs text-muted-foreground">Desligado = rascunho, não aparece para quem dispara.</p>
       <Card className="space-y-2 p-3">
         <p className="text-xs font-semibold text-foreground">Validação das perguntas</p>
         <p className="text-xs text-muted-foreground">{avisosTotais ? `${avisosTotais} ajuste(s) para que cada pergunta leve o cliente a uma resposta prevista no fluxo. Clique numa pergunta para ver.` : "Todas as perguntas conduzem o cliente a respostas previstas."}</p>
