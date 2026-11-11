@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimuladorTelaVoz } from "./SimuladorTelaVoz";
 import { FluxoRoteiroVoz } from "./FluxoRoteiroVoz";
 import { CriarComIaDialog, DiagnosticoRoteiroCard, MapaConversa, ModelosProntosDialog } from "./AjudantesRoteiro";
+import { corrigirTodas, validarPergunta } from "@/lib/voz/validacaoPergunta";
 import { adicionarResposta, ajustesSugeridos, type AjusteSugerido, type Fala } from "@/lib/voz/aprimorarRoteiro";
 import type { AcaoCondicao } from "@/lib/voz/roteirosLigacao";
 import { toast } from "sonner";
@@ -35,12 +36,16 @@ const LIVRE = "__livre__";
 /** Lista e editor dos roteiros de ligação da empresa: fábrica editável + novos, com regras "Se X, faça Y". */
 export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecimentoId: string | null; agentes: AgenteSim[] }) {
   const [lista, setLista] = useState<RoteiroSalvo[]>([]);
-  const [atual, setAtual] = useState<RoteiroSalvo | null>(null);
+  const [atual, setAtualRaw] = useState<RoteiroSalvo | null>(null);
+  const [original, setOriginal] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  /** Abrir outro roteiro guarda a versão de partida (para avisar alterações não salvas). */
+  const abrir = (r: RoteiroSalvo | null) => { setAtualRaw(r); setOriginal(r ? JSON.stringify(r) : ""); };
+  const setAtual = (r: RoteiroSalvo | null | ((a: RoteiroSalvo | null) => RoteiroSalvo | null)) => setAtualRaw(r as never);
   const [excluir, setExcluir] = useState(false);
   const [simulando, setSimulando] = useState<RoteiroSalvo | null>(null);
   const [criarIa, setCriarIa] = useState(false);
   const [modelos, setModelos] = useState(false);
-  const [visao, setVisao] = useState<"fluxo" | "lista" | "mapa">("fluxo");
   const simulador = (
     <Dialog open={!!simulando} onOpenChange={(aberto) => { if (!aberto) setSimulando(null); }}>
       <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto">
@@ -85,6 +90,12 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     setAtual((a) => (a && a.chave === salvo.chave ? { ...a, id: salvo.id, etapas: salvo.etapas } : a));
     toast.success(`"${resposta}" adicionado à etapa ${etapa + 1}`); void carregar();
   };
+  const aprimorarAtual = async (etapa: number, resposta: string, acao: AcaoCondicao, texto?: string) => {
+    if (!atual) return;
+    const n = adicionarResposta(atual, etapa, resposta, acao, texto);
+    if (n === atual) return void toast.info("Essa resposta já está no roteiro");
+    setAtual(n); toast.success(`"${resposta}" adicionado à pergunta ${etapa + 1} — salve para gravar`);
+  };
   const sugerirVariacoes = async (chaveRegra: string, pergunta: string, gatilho: string) => {
     setSugerindo(chaveRegra);
     const { data, error } = await supabase.functions.invoke("voz-roteiro-teste", { body: { acao: "sinonimos", pergunta, gatilho } });
@@ -115,20 +126,23 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     if (!atual.etapas.some((e) => e.fala.trim())) return toast.error("Inclua pelo menos uma etapa com fala");
     const corpo = { estabelecimento_id: estabelecimentoId, chave: atual.chave, departamento: atual.departamento, nome: atual.nome.trim(),
       descricao: atual.descricao, campos: atual.campos, etapas: atual.etapas, ativo: atual.ativo, updated_at: new Date().toISOString() };
+    setSalvando(true);
     const r = await db.from("voz_roteiros").upsert(corpo, { onConflict: "estabelecimento_id,chave" }).select().single();
+    setSalvando(false);
     if (r.error) return toast.error(r.error.message);
-    toast.success("Roteiro salvo"); setAtual(null); void carregar();
+    const salvo = { ...atual, id: r.data.id };
+    toast.success("Roteiro salvo"); abrir(salvo); void carregar();
   };
   const remover = async () => {
     if (!atual?.id) return;
     const r = await db.from("voz_roteiros").delete().eq("id", atual.id);
     if (r.error) return toast.error(r.error.message);
     toast.success(ehDeFabrica(atual.chave) ? "Roteiro original restaurado" : "Roteiro excluído");
-    setExcluir(false); setAtual(null); void carregar();
+    setExcluir(false); abrir(null); void carregar();
   };
-  const novo = () => setAtual({ chave: `custom_${Date.now().toString(36)}`, departamento: "comercial", nome: "", descricao: "", campos: ["condicao", "desconto"], ativo: true,
+  const novo = () => abrir({ chave: `custom_${Date.now().toString(36)}`, departamento: "comercial", nome: "", descricao: "", campos: ["condicao", "desconto"], ativo: true,
     etapas: [{ titulo: "Abertura", fala: "Diga o motivo da ligação em uma frase.", condicoes: [] }, { titulo: "Pergunta", fala: "", condicoes: [{ gatilho: "demonstrou interesse", acao: "transferir" }] }] });
-  const duplicar = (r: RoteiroSalvo) => setAtual({ ...structuredClone(r), id: undefined, chave: `custom_${Date.now().toString(36)}`, nome: `${r.nome} (cópia)` });
+  const duplicar = (r: RoteiroSalvo) => abrir({ ...structuredClone(r), id: undefined, chave: `custom_${Date.now().toString(36)}`, nome: `${r.nome} (cópia)` });
 
   if (!atual) return (
     <div className="space-y-3">
@@ -141,8 +155,8 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
           <Button size="sm" onClick={novo}><Plus className="mr-1 h-4 w-4" /> Novo roteiro</Button>
         </div>
       </div>
-      <CriarComIaDialog aberto={criarIa} onFechar={() => setCriarIa(false)} onCriado={(r) => { setCriarIa(false); setVisao("lista"); setAtual(r); }} />
-      <ModelosProntosDialog aberto={modelos} onFechar={() => setModelos(false)} onEscolher={(r) => { setModelos(false); setVisao("lista"); setAtual(r); }} />
+      <CriarComIaDialog aberto={criarIa} onFechar={() => setCriarIa(false)} onCriado={(r) => { setCriarIa(false); abrir(r); setOriginal(""); }} />
+      <ModelosProntosDialog aberto={modelos} onFechar={() => setModelos(false)} onEscolher={(r) => { setModelos(false); abrir(r); setOriginal(""); }} />
       {ajustes.length > 0 && (
         <Card className="space-y-2 p-3">
           <p className="flex items-center gap-1 text-sm font-semibold text-foreground"><Lightbulb className="h-4 w-4 text-primary" /> Ajustes sugeridos pelas ligações reais</p>
@@ -170,7 +184,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
                 </div>
                 <p className="text-xs text-muted-foreground"><GitBranch className="mr-1 inline h-3 w-3" />{r.etapas.length} etapas · {r.etapas.reduce((n, e) => n + e.condicoes.length, 0)} regras</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" className="h-8" onClick={() => setAtual(structuredClone(r))}>Editar</Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={() => abrir(structuredClone(r))}>Editar</Button>
                   <Button size="sm" variant="outline" className="h-8" onClick={() => setSimulando(structuredClone(r))}><PhoneCall className="mr-1 h-3.5 w-3.5" /> Simular</Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicar(r)}><Copy className="mr-1 h-3.5 w-3.5" /> Duplicar</Button>
                 </div>
@@ -183,136 +197,69 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
   );
 
   const set = (p: Partial<RoteiroSalvo>) => setAtual({ ...atual, ...p });
-  const setEtapa = (i: number, p: Partial<RoteiroSalvo["etapas"][number]>) => set({ etapas: atual.etapas.map((e, j) => (j === i ? { ...e, ...p } : e)) });
   const fabrica = ehDeFabrica(atual.chave);
+  const avisosTotais = atual.etapas.reduce((n, e) => n + validarPergunta(e).length, 0);
+
+  const propriedades = (
+    <div className="space-y-3">
+      <div className="space-y-1"><Label>Departamento</Label>
+        <Select value={atual.departamento} onValueChange={(v) => set({ departamento: v as RoteiroSalvo["departamento"] })} disabled={fabrica}>
+          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectContent className="z-[60]">{DEPARTAMENTOS.map((d) => <SelectItem key={d.id} value={d.id}>{d.rotulo}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1"><Label>Descrição</Label><Textarea rows={2} value={atual.descricao} onChange={(e) => set({ descricao: e.target.value })} /></div>
+      <div className="space-y-1">
+        <Label>Campos pedidos no disparo</Label>
+        <div className="grid gap-2">
+          {CAMPOS.map((c) => (
+            <label key={c.id} className="flex items-center gap-2 text-sm">
+              <Switch checked={atual.campos.includes(c.id)} onCheckedChange={(v) => set({ campos: v ? [...atual.campos, c.id] : atual.campos.filter((x) => x !== c.id) })} />
+              {c.rotulo}
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">Use nas falas: {"{produto}"}, {"{condicao}"}, {"{desconto}"}, {"{aviso}"}.</p>
+      </div>
+      <label className="flex items-center gap-2 text-sm"><Switch checked={atual.ativo} onCheckedChange={(v) => set({ ativo: v })} /> Disponível no disparo</label>
+      <Card className="space-y-2 p-3">
+        <p className="text-xs font-semibold text-foreground">Validação das perguntas</p>
+        <p className="text-xs text-muted-foreground">{avisosTotais ? `${avisosTotais} ajuste(s) para que cada pergunta leve o cliente a uma resposta prevista no fluxo. Clique numa pergunta para ver.` : "Todas as perguntas conduzem o cliente a respostas previstas."}</p>
+        {avisosTotais > 0 && <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => { setAtual(corrigirTodas(atual)); toast.success("Perguntas ajustadas"); }}>Corrigir o que for automático</Button>}
+      </Card>
+      <DiagnosticoRoteiroCard roteiro={atual} onCorrigir={(r) => { setAtual(r); toast.success("Regras de escape adicionadas"); }} />
+      <details className="rounded-lg border border-border p-3">
+        <summary className="cursor-pointer text-xs font-semibold text-foreground">Mapa da conversa</summary>
+        <div className="mt-2"><MapaConversa roteiro={atual} /></div>
+      </details>
+      <details className="rounded-lg border border-border p-3">
+        <summary className="cursor-pointer text-xs font-semibold text-foreground">Como a IA vai receber</summary>
+        <p className="mt-2 whitespace-pre-wrap break-words text-xs text-muted-foreground">{compilarRoteiro(atual, { descontoMax: 5, condicao: "frete grátis" })}</p>
+      </details>
+    </div>
+  );
+  const painelTeste = (
+    <Tabs defaultValue="tela">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="tela"><Monitor className="mr-1 h-4 w-4" /> Em tela</TabsTrigger>
+        <TabsTrigger value="ligacao"><PhoneCall className="mr-1 h-4 w-4" /> Ligação real</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tela"><SimuladorTelaVoz roteiro={atual} agente={agentes.find((a) => a.ativo && a.modos?.includes("ligar"))} onAprimorar={(...a) => aprimorarAtual(...a)} /></TabsContent>
+      <TabsContent value="ligacao"><SimuladorLigacaoVoz estabelecimentoId={estabelecimentoId} agentes={agentes} roteiroSelecionado={atual} onAprimorar={(...a) => aprimorarAtual(...a)} /></TabsContent>
+    </Tabs>
+  );
 
   return (
-    <div className="space-y-4">
-      {simulador}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button size="sm" variant="ghost" onClick={() => setAtual(null)}><ArrowLeft className="mr-1 h-4 w-4" /> Roteiros</Button>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => setSimulando(structuredClone(atual))}><PhoneCall className="mr-1 h-4 w-4" /> Simular</Button>
-          {atual.id && <Button size="sm" variant="outline" onClick={() => setExcluir(true)}>
-            {fabrica ? <><RotateCcw className="mr-1 h-4 w-4" /> Restaurar original</> : <><Trash2 className="mr-1 h-4 w-4" /> Excluir</>}</Button>}
-          <Button size="sm" onClick={() => void salvar()}><Save className="mr-1 h-4 w-4" /> Salvar</Button>
-        </div>
-      </div>
-
-      <Card className="grid gap-3 p-4 sm:grid-cols-2">
-        <div className="space-y-1"><Label>Nome</Label><Input value={atual.nome} onChange={(e) => set({ nome: e.target.value })} placeholder="Ex.: Convite para feira" /></div>
-        <div className="space-y-1"><Label>Departamento</Label>
-          <Select value={atual.departamento} onValueChange={(v) => set({ departamento: v as RoteiroSalvo["departamento"] })} disabled={fabrica}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{DEPARTAMENTOS.map((d) => <SelectItem key={d.id} value={d.id}>{d.rotulo}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1 sm:col-span-2"><Label>Descrição</Label><Input value={atual.descricao} onChange={(e) => set({ descricao: e.target.value })} /></div>
-        <div className="space-y-1 sm:col-span-2">
-          <Label>Campos pedidos no disparo</Label>
-          <div className="flex flex-wrap gap-3">
-            {CAMPOS.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 text-sm">
-                <Switch checked={atual.campos.includes(c.id)} onCheckedChange={(v) => set({ campos: v ? [...atual.campos, c.id] : atual.campos.filter((x) => x !== c.id) })} />
-                {c.rotulo}
-              </label>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">Use nas falas: {"{produto}"}, {"{condicao}"}, {"{desconto}"}, {"{aviso}"}.</p>
-        </div>
-        <label className="flex items-center gap-2 text-sm"><Switch checked={atual.ativo} onCheckedChange={(v) => set({ ativo: v })} /> Disponível no disparo</label>
-      </Card>
-
-      <DiagnosticoRoteiroCard roteiro={atual} onCorrigir={(r) => { setAtual(r); toast.success("Regras de escape adicionadas"); }} />
-      <Tabs value={visao} onValueChange={(v) => setVisao(v as "fluxo" | "lista" | "mapa")}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="fluxo"><Workflow className="mr-1 h-4 w-4" /> Workflow</TabsTrigger>
-          <TabsTrigger value="lista">Etapas</TabsTrigger>
-          <TabsTrigger value="mapa"><GitBranch className="mr-1 h-4 w-4" /> Mapa da conversa</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      {visao === "mapa" && <MapaConversa roteiro={atual} />}
-      {visao === "fluxo" && <FluxoRoteiroVoz roteiro={atual} onChange={setAtual} />}
-      {visao === "lista" && atual.etapas.map((e, i) => (
-        <Card key={i} className="space-y-3 p-4">
-          <div className="flex items-center gap-2">
-            <Badge>{i + 1}</Badge>
-            <Input className="h-8" value={e.titulo} onChange={(x) => setEtapa(i, { titulo: x.target.value })} placeholder="Título da etapa" />
-            <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Remover etapa" onClick={() => set({ etapas: removerEtapa(atual.etapas, i) })}><Trash2 className="h-4 w-4" /></Button>
-          </div>
-          <div className="space-y-1"><Label>O que a IA diz/faz</Label>
-            <Textarea rows={2} value={e.fala} maxLength={400} onChange={(x) => setEtapa(i, { fala: x.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>Regras desta etapa</Label>
-            <p className="text-xs text-muted-foreground">No campo SE, escreva várias respostas possíveis separadas por vírgula (ex.: sim, tenho dúvida, quero fechar) — a regra vale para qualquer uma delas.</p>
-            {e.condicoes.map((c, k) => {
-              const livre = !GATILHOS_PRONTOS.includes(c.gatilho);
-              const palavras = palavrasGatilho(c.gatilho);
-              const setC = (p: Partial<typeof c>) => setEtapa(i, { condicoes: e.condicoes.map((y, z) => (z === k ? { ...y, ...p } : y)) });
-              return (
-                <div key={k} className="grid gap-2 rounded-lg border border-border/60 p-2 sm:grid-cols-[auto_1fr_auto_1fr_auto] sm:items-center">
-                  <span className="text-xs font-semibold text-muted-foreground">SE o cliente</span>
-                  <div className="space-y-1">
-                    <Select value={livre ? LIVRE : c.gatilho} onValueChange={(v) => setC({ gatilho: v === LIVRE ? "" : v })}>
-                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                      <SelectContent>{GATILHOS_PRONTOS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}<SelectItem value={LIVRE}>Outro (escrever)</SelectItem></SelectContent>
-                    </Select>
-                    <Input className="h-8" value={c.gatilho} onChange={(x) => setC({ gatilho: x.target.value })} placeholder="Ex.: sim, tenho dúvida, quero fechar" />
-                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[11px]" disabled={!c.gatilho.trim() || sugerindo === `${i}-${k}`}
-                      onClick={() => void sugerirVariacoes(`${i}-${k}`, e.fala, c.gatilho)}>
-                      {sugerindo === `${i}-${k}` ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Sugerir variações
-                    </Button>
-                    {sugestoes[`${i}-${k}`]?.length ? (
-                      <div className="flex flex-wrap items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">clique para incluir:</span>
-                        {sugestoes[`${i}-${k}`].map((p) => (
-                          <Badge key={p} variant="outline" className="cursor-pointer text-[10px]" onClick={() => {
-                            setC({ gatilho: [...palavrasGatilho(c.gatilho), p].join(", ") });
-                            setSugestoes((s) => ({ ...s, [`${i}-${k}`]: s[`${i}-${k}`].filter((x) => x !== p) }));
-                          }}>+ {p}</Badge>
-                        ))}
-                      </div>
-                    ) : null}
-                    {palavras.length > 1 && (
-                      <div className="flex flex-wrap items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">qualquer uma:</span>
-                        {palavras.map((p) => <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>)}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs font-semibold text-muted-foreground">ENTÃO</span>
-                  <div className="space-y-1">
-                    <Select value={c.acao} onValueChange={(v) => setC({ acao: v as typeof c.acao, ...(v === "ir_etapa" && c.etapa == null ? { etapa: Math.min(i + 1, atual.etapas.length - 1) } : {}) })}>
-                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                      <SelectContent>{ACOES.map((a) => <SelectItem key={a.id} value={a.id}>{a.rotulo}</SelectItem>)}</SelectContent>
-                    </Select>
-                    {c.acao === "ir_etapa" && (
-                      <Select value={c.etapa != null ? String(c.etapa) : ""} onValueChange={(v) => setC({ etapa: Number(v) })}>
-                        <SelectTrigger className="h-8"><SelectValue placeholder="Escolha a etapa de destino" /></SelectTrigger>
-                        <SelectContent>{atual.etapas.map((x, z) => <SelectItem key={z} value={String(z)} disabled={z === i}>Etapa {z + 1}{x.titulo.trim() ? ` · ${x.titulo.trim()}` : ""}</SelectItem>)}</SelectContent>
-                      </Select>
-                    )}
-                    <Input className="h-8" value={c.texto ?? ""} onChange={(x) => setC({ texto: x.target.value })} placeholder={c.acao === "responder" ? "O que responder" : "Complemento (opcional)"} />
-                  </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Remover regra" onClick={() => setEtapa(i, { condicoes: e.condicoes.filter((_, z) => z !== k) })}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              );
-            })}
-            <Button size="sm" variant="outline" onClick={() => setEtapa(i, { condicoes: [...e.condicoes, { gatilho: "achou caro", acao: "desconto" }] })}><Plus className="mr-1 h-3.5 w-3.5" /> Regra</Button>
-          </div>
-        </Card>
-      ))}
-      {visao === "lista" && <Button variant="outline" onClick={() => set({ etapas: [...atual.etapas, { titulo: `Etapa ${atual.etapas.length + 1}`, fala: "", condicoes: [] }] })}><Plus className="mr-1 h-4 w-4" /> Etapa</Button>}
-
-      <Card className="p-4">
-        <p className="mb-1 text-xs font-semibold text-foreground">Como a IA vai receber</p>
-        <p className="whitespace-pre-wrap break-words text-xs text-muted-foreground">{compilarRoteiro(atual, { descontoMax: 5, condicao: "frete grátis" })}</p>
-      </Card>
-
+    <>
+      <FluxoRoteiroVoz roteiro={atual} onChange={setAtual} onSalvar={() => void salvar()} salvando={salvando} sujo={JSON.stringify(atual) !== original}
+        onFechar={() => setAtual(null)} painelTeste={painelTeste} propriedadesRoteiro={propriedades}
+        acoesTopo={atual.id ? (
+          <Button size="sm" variant="outline" className="h-8 px-2 text-xs sm:px-3" onClick={() => setExcluir(true)}>
+            {fabrica ? <><RotateCcw className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Restaurar original</span></> : <><Trash2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Excluir</span></>}
+          </Button>) : null} />
       <DeleteConfirmDialog open={excluir} onOpenChange={setExcluir} onConfirm={() => void remover()}
         title={fabrica ? "Restaurar roteiro original?" : "Excluir roteiro?"}
         description={fabrica ? "Suas alterações neste roteiro serão descartadas." : "O roteiro deixará de aparecer no disparo."} />
-    </div>
+    </>
   );
 }
