@@ -30915,6 +30915,8 @@ export type Database = {
       voz_chamadas: {
         Row: {
           agente_id: string | null
+          assumir_pedido_em: string | null
+          assumir_por: string | null
           duracao_seg: number | null
           estabelecimento_id: string
           finalizada_em: string | null
@@ -30932,6 +30934,8 @@ export type Database = {
         }
         Insert: {
           agente_id?: string | null
+          assumir_pedido_em?: string | null
+          assumir_por?: string | null
           duracao_seg?: number | null
           estabelecimento_id: string
           finalizada_em?: string | null
@@ -30949,6 +30953,8 @@ export type Database = {
         }
         Update: {
           agente_id?: string | null
+          assumir_pedido_em?: string | null
+          assumir_por?: string | null
           duracao_seg?: number | null
           estabelecimento_id?: string
           finalizada_em?: string | null
