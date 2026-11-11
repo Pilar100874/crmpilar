@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { buscarAjuda, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
+import { buscarAjuda, rotuloCanonico, textoOficial, type AjudaCampo } from "@/lib/ajuda/catalogoCampos";
 
 interface CampoInfo { rotulo: string; secao?: string; dica?: string; placeholder?: string; tipo?: string; opcoes?: string; vizinhos?: string }
 interface Msg { papel: "user" | "ia"; texto: string }
@@ -52,6 +52,7 @@ function extrair(alvo: HTMLElement): CampoInfo | null {
   const rotulo = limpo(marcado?.getAttribute("data-ajuda")) || (no ? limpo(no.querySelector("[class*=font-semibold],[class*=font-medium],strong")?.textContent || no.textContent).slice(0, 80)
     : rotuloDe(el) || limpo(el.getAttribute("title")));
   if (!rotulo) return null;
+  const canon = rotuloCanonico(rotulo);
   const grupo = el.closest("[class*=card], section, fieldset, form, [role=dialog], [role=tabpanel]");
   const dlg = el.closest("[role=dialog]")?.querySelector("h2,[class*=DialogTitle]")?.textContent;
   const titulo = dlg || grupo?.querySelector("h1,h2,h3,h4,legend,[class*=CardTitle],[class*=font-semibold]")?.textContent;
@@ -59,7 +60,7 @@ function extrair(alvo: HTMLElement): CampoInfo | null {
   const dica = no ? limpo(no.textContent) : el.getAttribute("title") || bloco?.querySelector("p,[class*=muted-foreground]")?.textContent;
   const vizinhos = grupo ? Array.from(grupo.querySelectorAll("label,button,[role=tab]")).map((l) => limpo(l.textContent)).filter((t) => t && t !== rotulo && t.length < 40).slice(0, 12).join(", ") : "";
   const opcoes = el.tagName === "SELECT" ? Array.from((el as HTMLSelectElement).options).map((o) => o.text).join(", ") : "";
-  return { rotulo, secao: limpo(titulo) || undefined, dica: limpo(dica) !== rotulo ? limpo(dica) || undefined : undefined,
+  return { rotulo: canon, secao: limpo(titulo) || undefined, dica: limpo(dica) !== rotulo ? limpo(dica) || undefined : undefined,
     placeholder: limpo(el.getAttribute("placeholder")) || undefined, tipo, opcoes: opcoes || undefined, vizinhos: vizinhos || undefined };
 }
 

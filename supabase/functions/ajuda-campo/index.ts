@@ -7,6 +7,13 @@ const GW = "https://ai.gateway.lovable.dev/v1/responses";
 const DIRETIVA = "Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+/** Remove hesitações e comentários sobre o "contexto" que escapem do modelo. */
+function limparResposta(t: string): string {
+  return t.replace(/[^.\n]*\b(contexto (fornecido|informado)|não (é|foi) (informad|confirmad)|não há (bloqueio|informação) informad)[^.\n]*\.\s*/gi, "")
+    .replace(/\b(provavelmente|possivelmente|aparentemente|talvez|parece que)\s*,?\s*/gi, "")
+    .replace(/(^|[.:]\s+|\*\*\s)([a-zà-ú])/g, (_m, a, l) => a + l.toUpperCase()).trim();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (!(await getAuthContext(req))) return json({ error: "Não autorizado" }, 401);
@@ -32,12 +39,13 @@ Use o CONHECIMENTO DO SISTEMA abaixo para explicar o motivo de negócio do item,
 Responda neste formato, curto (até 150 palavras):
 **Por que existe:** objetivo prático no trabalho da empresa.
 **O que acontece:** o que o sistema faz ao usar/preencher/clicar.
-**Se não usar ou ficar vazio:** impacto ou bloqueio (omita se não se aplicar).
+**Se não usar ou ficar vazio:** só para campos e chaves com impacto real; omita para botões, abas, menus e links.
 **Dica:** exemplo ou quando usar.
+Regras de escrita: não repita o texto clicado (datas, nomes, números); explique o componente. Não escreva o que o item NÃO faz, nem "não há bloqueio", "o contexto não informa/confirma", "não foi informado". Só cite regras do conhecimento que tenham relação direta com o item; nunca traga regras de outro assunto para preencher espaço. Se faltar informação, diga apenas o que a tela mostra.
 Sem nomes de tabelas ou código. Fale com segurança, sem "provavelmente", "talvez" ou "parece". Se o item clicado for um dado (nome de pessoa, empresa, valor, número), explique o componente que o exibe, usando o dado só como exemplo. Se não houver regra conhecida, explique apenas o que a tela mostra, sem inventar. ${DIRETIVA}
 
 CONHECIMENTO DO SISTEMA:
-${contextoNegocio(String(b.rota ?? ""), String(b.tela ?? ""))}
+${contextoNegocio(String(b.rota ?? ""), String(b.tela ?? ""), `${c.rotulo ?? ""} ${c.secao ?? ""}`)}
 
 ITEM CLICADO:
 ${ctx}`,
@@ -53,7 +61,7 @@ ${ctx}`,
       for (const l of ls) { if (!l.startsWith("data:")) continue; const d = l.slice(5).trim(); if (!d || d === "[DONE]") continue;
         try { const ev = JSON.parse(d); if (ev.type === "response.output_text.delta") t += ev.delta ?? ""; } catch { /* ignora */ } }
     }
-    return json({ resposta: t.trim() || "Não consegui gerar uma explicação agora." });
+    return json({ resposta: limparResposta(t) || "Não consegui gerar uma explicação agora." });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }

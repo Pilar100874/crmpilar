@@ -12,4 +12,10 @@ describe("Ajuda global – catálogo de campos", () => {
   it("campo desconhecido fica para a IA", () => {
     expect(buscarAjuda("Cor favorita")).toBeNull();
   });
+  it("botão de data dinâmica vira o seletor de data da agenda", () => {
+    expect(buscarAjuda("Selecionar 18/11/2026")?.tela).toBe("Minha agenda");
+  });
+  it("Gravações com contador tem explicação oficial", () => {
+    expect(buscarAjuda("Gravações (3)")?.tela).toBe("Pilar Fone / Atendimento");
+  });
 });

@@ -16,7 +16,29 @@ export interface AjudaCampo {
 export const normalizar = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[*:?()]/g, " ").replace(/\s+/g, " ").trim();
 
+/** Troca rótulos dinâmicos (datas, contadores) pelo nome do componente, para a ajuda explicar o papel e não o dado. */
+export function rotuloCanonico(rotulo: string): string {
+  const r = normalizar(rotulo);
+  if (/^selecionar \d{1,2}\/\d{1,2}\/\d{2,4}$/.test(r) || /^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(r)) return "seletor de data da agenda";
+  if (/^(hoje|seg|ter|qua|qui|sex|sab|dom)\w*\s*·?\s*\d{1,2}\s*\d*$/.test(r)) return "dia da barra da agenda";
+  if (/^atrasados\s*\d*$/.test(r)) return "atrasados da agenda";
+  if (/^gravacoes\s*\d*$/.test(r)) return "gravacoes";
+  return rotulo;
+}
+
 export const CATALOGO_CAMPOS: AjudaCampo[] = [
+  { rotulos: ["gravacoes"], tela: "Pilar Fone / Atendimento",
+    paraQue: "Lista as ligações gravadas pelo Pilar Fone (áudio do seu microfone e do cliente) com data, número e duração, para ouvir de novo o que foi combinado. No Atendimento mostra só as gravações do cliente aberto.",
+    seVazio: "Sem gravações, a lista aparece vazia; as ligações só são gravadas quando feitas pelo Pilar Fone.",
+    exemplo: "Ouça a última ligação antes de retornar um orçamento para não pedir ao cliente que repita prazos e quantidades." },
+  { rotulos: ["seletor de data da agenda", "dia da barra da agenda"], tela: "Minha agenda",
+    paraQue: "Abre na área central as tarefas daquele dia em lista, com o número de contatos previstos, para você ver a carga de trabalho e escolher quem atender. O cliente aberto na fila continua o mesmo.",
+    exemplo: "Clique em amanhã no fim do dia para ver se cabe mais um retorno antes de marcar com o cliente." },
+  { rotulos: ["atrasados da agenda", "atrasados"], tela: "Minha agenda",
+    paraQue: "Mostra as tarefas com data já vencida que ainda não foram concluídas. São clientes que ficaram sem contato no dia combinado.",
+    exemplo: "Comece o dia por aqui: resolva ou reprograme os atrasados antes das tarefas de hoje." },
+  { rotulos: ["abrir agenda de hoje"], tela: "Minha agenda",
+    paraQue: "Volta a agenda para o dia de hoje no modo Dia, com as tarefas por horário." },
   { rotulos: ["telas de automacao", "painel no celular", "painel no tablet"], tela: "Cadastro de usuários",
     paraQue: "Define qual painel do módulo de Automação (luzes, portões, relés) abre direto quando o usuário entra pelo celular ou tablet.",
     seVazio: "O sistema escolhe automaticamente o painel padrão da automação.", exemplo: "Celular: \"Portaria\"; Tablet: \"Painel geral\"." },
@@ -66,7 +88,7 @@ export const CATALOGO_CAMPOS: AjudaCampo[] = [
 ];
 
 export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
-  const r = normalizar(rotulo);
+  const r = normalizar(rotuloCanonico(rotulo));
   if (!r) return null;
   const rt = rota.toLowerCase();
   let melhor: { a: AjudaCampo; p: number } | null = null;

@@ -15,10 +15,12 @@ export const MODULOS: { chave: RegExp; nome: string; regras: string }[] = [
 - Marcar como perdido exige motivo estruturado; isso alimenta a tela Pedidos perdidos (filtros por produto, marca, motivo, vendedor) para entender por que se perde venda.
 - Produto exige marca, usada nas análises de perda.
 - Orçamento perdido pode gerar reconquista automática como tarefa (nunca envio automático).` },
-  { chave: /calendar|agenda|tarefa/, nome: "Agenda", regras: `- Tarefas podem ser arrastadas entre dias/horários; regras da agenda avisam fim de semana e dias reservados e sugerem data, mas a escolha é sempre do usuário.
+  { chave: /calendar|agenda|tarefa|selecionar \d|atrasad/, nome: "Agenda", regras: `- A barra de dias mostra Atrasados, Hoje e os próximos dias com o número de tarefas; clicar abre a lista daquele dia na área central sem trocar o cliente aberto.
+- Tarefas podem ser arrastadas entre dias/horários; regras da agenda avisam fim de semana e dias reservados e sugerem data, mas a escolha é sempre do usuário.
 - Concluir uma tarefa exige reprogramar o próximo contato ou inativar o cliente.
 - Toda tarefa registra se foi criada manual, automática ou inteligente, e o motivo.` },
-  { chave: /voz|agente|roteiro|telefon|ucm|ramal|telefonista/, nome: "Telefonia e agentes de voz", regras: `- Pilar Fone é o telefone do navegador ligado ao PABX Grandstream UCM; liga, transfere e grava.
+  { chave: /voz|agente|roteiro|telefon|ucm|ramal|telefonista|grava|pilar fone|liga|discad|chamad/, nome: "Telefonia e agentes de voz", regras: `- Pilar Fone é o telefone do navegador ligado ao PABX Grandstream UCM; abre como painel lateral em qualquer tela; liga, transfere e grava.
+- Gravações: o Pilar Fone grava o áudio do microfone e do cliente e lista as ligações com data, número e duração; no Atendimento aparecem as do cliente aberto.
 - O ramal pessoal fica no cadastro do usuário; sem ele, Ligação com IA, Ligar agora e Ouvir em silêncio ficam desativados, porque a IA transfere o cliente para esse ramal.
 - Agente de voz é o perfil (nome, departamento, tom); roteiro é o que ele fala. Roteiros são workflows de blocos: Pergunta com saídas (Sim, Não, Dúvida, Silêncio, "Humano"/pediu atendente, não reconhecido), Ir para etapa, Reagendar (cria tarefa de retorno), Transferir e Disparar workflow.
 - Dados preenchidos no disparo ({produto}, {condicao}, {desconto}, {aviso}) entram nas falas.
@@ -36,9 +38,10 @@ export const MODULOS: { chave: RegExp; nome: string; regras: string }[] = [
 - Toda exclusão pede confirmação.` },
 ];
 
-export function contextoNegocio(rota: string, tela: string): string {
-  const alvo = `${rota} ${tela}`.toLowerCase();
-  const achados = MODULOS.filter((m) => m.chave.test(alvo));
-  const usar = achados.length ? achados : MODULOS.slice(0, 2);
-  return `${VISAO_GERAL}\n\n${usar.map((m) => `## ${m.nome}\n${m.regras}`).join("\n\n")}`;
+/** Escolhe as regras pelo item clicado primeiro (painéis como o Pilar Fone abrem em qualquer tela) e depois pela tela. */
+export function contextoNegocio(rota: string, tela: string, item = ""): string {
+  const doItem = MODULOS.filter((m) => m.chave.test(item.toLowerCase()));
+  const daTela = MODULOS.filter((m) => m.chave.test(`${rota} ${tela}`.toLowerCase()));
+  const usar = doItem.length ? doItem : daTela;
+  return usar.length ? `${VISAO_GERAL}\n\n${usar.map((m) => `## ${m.nome}\n${m.regras}`).join("\n\n")}` : VISAO_GERAL;
 }
