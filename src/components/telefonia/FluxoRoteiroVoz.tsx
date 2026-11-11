@@ -204,7 +204,7 @@ export function FluxoRoteiroVoz({ roteiro, onChange }: { roteiro: RoteiroSalvo; 
           onNodeDragStop={(_, n) => n.id.startsWith("e") && onChange(moverPergunta(roteiro, Number(n.id.slice(1)), n.position))}
           onNodesChange={onNodesChange} proOptions={{ hideAttribution: true }}
         >
-          <Background /><Controls showInteractive={false} /><MiniMap pannable zoomable className="!hidden md:!block" />
+          <Background /><Controls showInteractive={false} />
         </ReactFlow>
       </Card>
 
