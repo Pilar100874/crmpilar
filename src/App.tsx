@@ -10,7 +10,6 @@ import BannerCreditosIA from "@/components/ai/BannerCreditosIA";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AjudaGlobal } from "@/components/ajuda/AjudaGlobal";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { PermissoesProvider } from "@/hooks/usePermissoesUsuario";
@@ -1006,7 +1005,6 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes></React.Suspense></RouteErrorBoundary>
-          <AjudaGlobal />
           </UnsavedChangesProvider>
         </BrowserRouter>
       </TooltipProvider>
