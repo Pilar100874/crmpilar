@@ -427,6 +427,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
       registrar('agente', cfg.saudacao);
     }
     let trecho = []; let silencio = 0; let falando = false; let mudo = 0;
+    let retomar = null; // fala do cliente que interrompeu a IA (barge-in)
     while (c.ativa) {
       const q = await c.rtp.entrada.pop(300); if (!q) continue;
       if (modo !== 'assistir' && c.rtp.tocando()) { trecho = []; falando = false; mudo = 0; continue; }
@@ -445,7 +446,14 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
           else if (resp) {
             registrar('agente', resp.replace('[TRANSFERIR]', '').replace('[DESLIGAR]', '').trim());
             if (r.audio_b64) c.rtp.tocar(wavPara8k(r.audio_b64));
-            while (c.ativa && c.rtp.tocando()) await dormir(100);
+            const podeCortar = !resp.includes('[TRANSFERIR]') && !resp.includes('[DESLIGAR]');
+            let alto = 0; let inicio = [];
+            while (c.ativa && c.rtp.tocando()) {
+              const f = await c.rtp.entrada.pop(100); if (!f) continue;
+              // Cliente falando por cima (~0,3 s forte): a IA para e escuta, como uma pessoa.
+              if (podeCortar && energia(f) > LIMIAR_FALA * 3) { alto++; inicio.push(...f); if (alto >= 15) { c.rtp.saida.length = 0; retomar = inicio; log('Cliente interrompeu a IA'); break; } }
+              else { alto = 0; inicio = []; }
+            }
             // Descarta o áudio acumulado enquanto a IA falava: senão ele conta como silêncio e a IA diz "não ouvi" com o cliente começando a responder.
             c.rtp.entrada.itens.length = 0; mudo = 0;
             const transf = modo === 'ligar' && ramal ? ramal : cfg.ramal_transferencia;
@@ -455,6 +463,7 @@ async function conduzir(c, cfg, modo, objetivo, numero, ramal) {
         }
       }
       trecho = []; silencio = 0; falando = false;
+      if (retomar) { trecho = retomar; falando = true; retomar = null; }
     }
   } catch (e) { erro = true; log('Erro na ligação: ' + e.message); }
   finally {

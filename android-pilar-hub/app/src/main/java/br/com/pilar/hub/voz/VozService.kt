@@ -132,6 +132,8 @@ class VozService : Service() {
                 registrar("agente", saudacao)
             }
             val trecho = ArrayList<Short>(); var silencio = 0; var falando = false; var mudo = 0
+            // Interrupção (barge-in): fala do cliente que cortou a IA vira o começo do próximo trecho.
+            var retomar: ArrayList<Short>? = null
             while (c.ativa) {
                 val q = c.rtp.entrada.poll(300, TimeUnit.MILLISECONDS) ?: continue
                 if (modo != "assistir" && c.rtp.tocando()) { trecho.clear(); falando = false; mudo = 0; continue }
@@ -154,7 +156,15 @@ class VozService : Service() {
                                 else if (resp.isNotBlank()) {
                                     registrar("agente", resp.replace("[TRANSFERIR]", "").replace("[DESLIGAR]", "").trim())
                                     r.optString("audio_b64").takeIf { it.isNotBlank() && it != "null" }?.let { c.rtp.tocar(Audio.wavPara8k(it)) }
-                                    while (c.ativa && c.rtp.tocando()) Thread.sleep(100)
+                                    val podeCortar = !resp.contains("[TRANSFERIR]") && !resp.contains("[DESLIGAR]")
+                                    var alto = 0; val inicio = ArrayList<Short>()
+                                    while (c.ativa && c.rtp.tocando()) {
+                                        val f = c.rtp.entrada.poll(100, TimeUnit.MILLISECONDS) ?: continue
+                                        // Cliente falando por cima (~0,3 s forte): a IA para e escuta, como uma pessoa.
+                                        if (podeCortar && Audio.energia(f) > LIMIAR_FALA * 3) { alto++; f.forEach { inicio.add(it) }
+                                            if (alto >= 15) { c.rtp.limparSaida(); retomar = inicio; log("Cliente interrompeu a IA"); break }
+                                        } else { alto = 0; inicio.clear() }
+                                    }
                                     // Descarta o áudio acumulado durante a fala da IA (contaria como silêncio).
                                     c.rtp.entrada.clear(); mudo = 0
                                     val transf = if (modo == "ligar" && !ramal.isNullOrBlank()) ramal else cfg.optString("ramal_transferencia")
@@ -171,6 +181,7 @@ class VozService : Service() {
                             }
                         }
                         trecho.clear(); silencio = 0; falando = false
+                        retomar?.let { trecho.addAll(it); falando = true; retomar = null }
                     }
                 }
             }
