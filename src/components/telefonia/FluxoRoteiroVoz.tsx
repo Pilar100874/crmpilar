@@ -1,7 +1,7 @@
 import "@xyflow/react/dist/style.css";
 import { memo, useEffect, useMemo, useState } from "react";
 import {
-  Background, Controls, Handle, MiniMap, Position, ReactFlow, type Connection, type Edge, type Node, type NodeProps,
+  Background, Controls, Handle, MiniMap, Position, ReactFlow, useNodesState, type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import { CalendarClock, MessageCircleQuestion, PhoneForwarded, PhoneOff, Play, Plus, Percent, MessageSquare, Trash2, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,13 +155,15 @@ function EditorSaida({ r, i, j, onChange }: { r: RoteiroSalvo; i: number; j: num
 export function FluxoRoteiroVoz({ roteiro, onChange }: { roteiro: RoteiroSalvo; onChange: (r: RoteiroSalvo) => void }) {
   const [sel, setSel] = useState<string | null>(roteiro.etapas.length ? "e0" : null);
   const grafo = useMemo(() => grafoDoRoteiro(roteiro), [roteiro]);
-  const nodes: Node[] = grafo.nos.map((n) => ({
+  const calculados: Node[] = useMemo(() => grafo.nos.map((n) => ({
     id: n.id, type: n.tipo, position: { x: n.x, y: n.y }, selected: n.id === sel,
     draggable: n.tipo === "pergunta",
     data: n.tipo === "pergunta"
       ? { ...roteiro.etapas[n.etapa!], numero: n.etapa! + 1 }
       : n.tipo === "acao" ? { condicao: roteiro.etapas[n.etapa!].condicoes[n.saida!] } : {},
-  }));
+  })), [grafo, roteiro, sel]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(calculados);
+  useEffect(() => { setNodes(calculados); }, [calculados, setNodes]);
   const edges: Edge[] = grafo.arestas.map((a) => ({
     id: a.id, source: a.origem, sourceHandle: a.saida, target: a.destino, animated: a.origem === "inicio",
     style: { strokeWidth: 2 }, deletable: a.origem !== "inicio",
@@ -200,7 +202,7 @@ export function FluxoRoteiroVoz({ roteiro, onChange }: { roteiro: RoteiroSalvo; 
           onConnect={conectar} onEdgesDelete={apagarArestas}
           onNodeClick={(_, n) => setSel(n.id)} onPaneClick={() => setSel(null)}
           onNodeDragStop={(_, n) => n.id.startsWith("e") && onChange(moverPergunta(roteiro, Number(n.id.slice(1)), n.position))}
-          onNodesChange={() => undefined} proOptions={{ hideAttribution: true }}
+          onNodesChange={onNodesChange} proOptions={{ hideAttribution: true }}
         >
           <Background /><Controls showInteractive={false} /><MiniMap pannable zoomable className="!hidden md:!block" />
         </ReactFlow>
