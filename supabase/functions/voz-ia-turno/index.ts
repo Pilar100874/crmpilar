@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
         ? TRANSICAO
         : await responder(key, sistema + regraOuro + notaAvanco, hist);
     // Resposta vazia do modelo deixava o cliente sem retorno e disparava "consegue me ouvir?".
-    if (modo !== "assistir" && !resposta?.replace(/\[(TRANSFERIR|DESLIGAR)\]/g, "").trim() && (fala || silencio)) {
+    if (modo !== "assistir" && !resposta?.replace(/\[(TRANSFERIR|DESLIGAR|FLUXO:[^\]]*)\]/g, "").trim() && (fala || silencio)) {
       resposta = await responder(key, sistema + regraOuro + notaAvanco, hist, "google/gemini-2.5-flash").catch(() => "");
       if (!resposta?.trim()) resposta = progresso.respostaOrcamento === "analisou"
         ? "Que bom! Ficou alguma dúvida ou podemos seguir com o pedido?"
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
     let audio_b64: string | null = null;
     if (modo !== "assistir" && resposta) {
-      const falar = resposta.replace(/\[(TRANSFERIR|DESLIGAR)\]/g, "").trim();
+      const falar = resposta.replace(/\[(TRANSFERIR|DESLIGAR|FLUXO:[^\]]*)\]/g, "").trim();
       const ck = `${voz}|${falar}`;
       const audioSalvo = CACHE_AUDIO.get(ck);
       if (falar && audioSalvo) audio_b64 = audioSalvo;
