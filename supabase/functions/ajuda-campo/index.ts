@@ -1,5 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { getAuthContext } from "../_shared/auth.ts";
+import { contextoNegocio } from "./conhecimento.ts";
 
 /** Ajuda global: explica um campo de qualquer tela e responde dúvidas sobre ele. */
 const GW = "https://ai.gateway.lovable.dev/v1/responses";
@@ -22,11 +23,24 @@ Deno.serve(async (req) => {
       c.vizinhos ? `Outros campos da mesma seção: ${String(c.vizinhos).slice(0, 600)}` : ""].filter(Boolean).join("\n");
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-10)
       .map((m: { papel: string; texto: string }) => ({ role: m.papel === "ia" ? "assistant" : "user", content: String(m.texto).slice(0, 1500) }));
-    const pergunta = String(b.pergunta ?? "").slice(0, 1500) || "Explique para que serve este item. Se for campo, diga o que acontece se ficar vazio e dê exemplo; se for botão, bloco, aba ou menu, diga o que ele faz e quando usar.";
+    const pergunta = String(b.pergunta ?? "").slice(0, 1500) || "Explique este item no contexto do CRM Pilar.";
     const r = await fetch(GW, {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({ model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
-        instructions: `Você é a ajuda do CRM Pilar e explica qualquer item das telas (campos, botões, blocos de workflow, abas, menus, colunas, títulos) para usuários não técnicos, em português do Brasil. Responda em até 120 palavras, direto, sem jargão técnico, sem nomes de tabelas ou código. Use a explicação oficial quando existir; se não souber algo com certeza, diga que não tem certeza em vez de inventar. Pode usar listas curtas. ${DIRETIVA}\n\n${ctx}`,
+        instructions: `Você é a ajuda do CRM Pilar e explica qualquer item das telas (campos, botões, blocos de workflow, abas, menus, colunas) para usuários não técnicos, em português do Brasil.
+Use o CONHECIMENTO DO SISTEMA abaixo para explicar o motivo de negócio do item, ligando-o às regras reais (ex.: por que é obrigatório, o que ele destrava ou bloqueia, que outra tela ele alimenta). Nunca responda de forma genérica como "serve para inserir dados" ou "serve para salvar".
+Responda neste formato, curto (até 150 palavras):
+**Por que existe:** objetivo prático no trabalho da empresa.
+**O que acontece:** o que o sistema faz ao usar/preencher/clicar.
+**Se não usar ou ficar vazio:** impacto ou bloqueio (omita se não se aplicar).
+**Dica:** exemplo ou quando usar.
+Sem nomes de tabelas ou código. Se a regra não estiver no conhecimento nem na tela, deduza pelo contexto e diga "provavelmente", sem inventar certezas. ${DIRETIVA}
+
+CONHECIMENTO DO SISTEMA:
+${contextoNegocio(String(b.rota ?? ""), String(b.tela ?? ""))}
+
+ITEM CLICADO:
+${ctx}`,
         input: [...hist, { role: "user", content: pergunta }] }),
     });
     if (r.status === 429) return json({ error: "Muitas perguntas seguidas, tente em instantes." }, 429);

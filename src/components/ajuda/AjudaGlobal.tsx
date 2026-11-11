@@ -53,7 +53,8 @@ function extrair(alvo: HTMLElement): CampoInfo | null {
     : rotuloDe(el) || limpo(el.getAttribute("title")));
   if (!rotulo) return null;
   const grupo = el.closest("[class*=card], section, fieldset, form, [role=dialog], [role=tabpanel]");
-  const titulo = grupo?.querySelector("h1,h2,h3,h4,legend,[class*=CardTitle],[class*=font-semibold]")?.textContent;
+  const dlg = el.closest("[role=dialog]")?.querySelector("h2,[class*=DialogTitle]")?.textContent;
+  const titulo = dlg || grupo?.querySelector("h1,h2,h3,h4,legend,[class*=CardTitle],[class*=font-semibold]")?.textContent;
   const bloco = el.parentElement?.parentElement;
   const dica = no ? limpo(no.textContent) : el.getAttribute("title") || bloco?.querySelector("p,[class*=muted-foreground]")?.textContent;
   const vizinhos = grupo ? Array.from(grupo.querySelectorAll("label,button,[role=tab]")).map((l) => limpo(l.textContent)).filter((t) => t && t !== rotulo && t.length < 40).slice(0, 12).join(", ") : "";
@@ -76,7 +77,7 @@ export function AjudaGlobal() {
   const perguntar = useCallback(async (c: CampoInfo, of: AjudaCampo | null, hist: Msg[], texto?: string) => {
     setCarregando(true); setErro("");
     const { data, error } = await supabase.functions.invoke("ajuda-campo", {
-      body: { campo: c, tela: document.title, rota: pathname, oficial: textoOficial(of), historico: hist, pergunta: texto },
+      body: { campo: c, tela: `${document.title} | ${document.querySelector("main h1, h1")?.textContent?.trim() ?? ""}`, rota: pathname, oficial: textoOficial(of), historico: hist, pergunta: texto },
     });
     setCarregando(false);
     const msg = (data as { error?: string } | null)?.error ?? (error ? "Não consegui falar com a IA agora." : "");

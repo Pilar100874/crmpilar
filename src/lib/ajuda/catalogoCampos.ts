@@ -43,6 +43,22 @@ export const CATALOGO_CAMPOS: AjudaCampo[] = [
   { rotulos: ["proximo contato", "data do proximo contato"], tela: "Atendimento",
     paraQue: "Data em que o cliente volta para a fila do dia. Todo atendimento finalizado precisa de uma próxima data.",
     seVazio: "O atendimento fica como não finalizado e o cartão mostra aviso." },
+  { rotulos: ["ouvir em silencio"], tela: "Agentes de voz → Chamadas",
+    paraQue: "Escuta a ligação da IA sem o cliente perceber, para acompanhar a qualidade e decidir se precisa assumir.",
+    seVazio: "Desativado se você não tiver ramal cadastrado no seu usuário: o PABX precisa do seu ramal para tocar a escuta." },
+  { rotulos: ["assumir ligacao"], tela: "Agentes de voz → Chamadas",
+    paraQue: "Tira a ligação da IA e passa para você: na próxima fala a IA se despede e transfere o cliente com o resumo da conversa." },
+  { rotulos: ["ligacao com ia"], tela: "Disparo em massa",
+    paraQue: "Liga para a lista de clientes, um por vez, usando um agente de voz e um roteiro; quando o cliente quer avançar, transfere para o seu ramal.",
+    seVazio: "Indisponível sem ramal no seu usuário, porque a transferência não teria destino." },
+  { rotulos: ["finalizar atendimento", "finalizar"], rota: "atendimento", tela: "Atendimento",
+    paraQue: "Encerra o atendimento do cliente clicado e agenda o próximo contato, para ele voltar à fila na data certa.",
+    seVazio: "Sem finalizar, o cartão fica marcado como não finalizado." },
+  { rotulos: ["mudar status para"], tela: "Orçamentos no Atendimento",
+    paraQue: "Move o orçamento no funil (enviado, negociação, ganho, perdido) sem sair do atendimento.",
+    seVazio: "Ao escolher Perdido, é obrigatório informar o motivo, que alimenta a tela Pedidos perdidos." },
+  { rotulos: ["roteiro inteligente", "inteligente"], rota: "voz", tela: "Disparo de ligação com IA",
+    paraQue: "O sistema escolhe para cada cliente o roteiro e o produto mais adequados pelos dados dele, em vez de usar o mesmo para todos." },
 ];
 
 export function buscarAjuda(rotulo: string, rota = ""): AjudaCampo | null {
