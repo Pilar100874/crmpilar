@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       return json({ roteiro: r });
     }
     const cfgVenda = lerMarcadorVenda(String(b.prompt ?? ""));
-    if (cfgVenda) b.prompt = removerMarcadorVenda(String(b.prompt)) + (ctx.estabelecimentoId ? regrasVenda(cfgVenda, await catalogoVenda(serviceClient(), ctx.estabelecimentoId, cfgVenda)) : "");
+    if (cfgVenda) b.prompt = removerMarcadorVenda(String(b.prompt)) + (ctx.estabelecimentoId ? regrasVenda(cfgVenda, cfgVenda.modalidade === "venda" ? await catalogoVenda(serviceClient(), ctx.estabelecimentoId, cfgVenda) : "") : "");
     const hist = (Array.isArray(b.historico) ? b.historico : []).slice(-20)
       .map((f: { papel: string; texto: string }) => `${f.papel === "agente" ? "IA" : "Cliente"}: ${f.texto}`).join("\n");
     const r = await ia(key, `Você simula um agente de voz ao telefone em português do Brasil, seguindo o roteiro abaixo. Fale como pessoa real: no máximo 2 frases curtas, uma pergunta por vez. Sem listas ou markdown. Responda em JSON {"resposta": string, "etapa": number (1 = primeira etapa do roteiro, em que a conversa está agora), "regra": string|null (texto da regra "Se o cliente..." que a última fala do cliente acionou, ou null se nenhuma), "acao": "transferir"|"encerrar"|null}. Se nenhuma regra cobrir a resposta, faça o mais sensato e devolva regra null. ${DIRETIVA}\n\n${String(b.prompt ?? "").slice(0, cfgVenda ? 20000 : 8000)}`,

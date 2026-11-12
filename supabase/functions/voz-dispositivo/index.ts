@@ -344,7 +344,7 @@ Deno.serve(async (req) => {
         const exata = /^Diga exatamente, sem mudar nada:\s*([\s\S]+)$/.exec(String(corpo.prompt_extra ?? "").trim());
         const cfgVenda = lerMarcadorVenda(String(corpo.objetivo ?? ""));
         let venda = "";
-        if (cfgVenda && !exata) { try { venda = regrasVenda(cfgVenda, await catalogoVenda(sb, empresa, cfgVenda)); } catch (e) { console.error("catálogo venda", e); } }
+        if (cfgVenda && !exata) { try { venda = regrasVenda(cfgVenda, cfgVenda.modalidade === "venda" ? await catalogoVenda(sb, empresa, cfgVenda) : ""); } catch (e) { console.error("catálogo venda", e); } }
         const objetivo = corpo.objetivo ? `PRIORIDADE MÁXIMA nesta ligação (vale acima das instruções gerais do agente):\n${removerMarcadorVenda(String(corpo.objetivo))}${venda}\n\n` : "";
         let crm = "";
         const cfgA = (a.config ?? {}) as Record<string, unknown>;

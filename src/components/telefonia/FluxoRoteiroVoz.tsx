@@ -23,7 +23,7 @@ import { corrigirPergunta, opcoesEsperadas, validarPergunta } from "@/lib/voz/va
 import { palavrasGatilho } from "@/lib/voz/roteirosLigacao";
 import { aplicarTecnica, FASES_TECNICA, TECNICAS } from "@/lib/voz/tecnicasComerciais";
 import { WORKFLOW_MODULES } from "@/components/flow/block-configs/TriggerWorkflowConfig";
-import { ACOES, removerEtapa, type ConfigVendaEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
+import { ACOES, removerEtapa, MODALIDADES_NEGOCIACAO, type ModalidadeNegociacao, type ConfigVendaEtapa, type CondicaoRoteiro, type RoteiroSalvo } from "@/lib/voz/roteirosLigacao";
 import {
   MENU_BLOCOS, SAIDAS_PRONTAS, adicionarAcao, adicionarSaida, novaPerguntaTipo, type BlocoMenu, continuarAposWorkflow, grafoDoRoteiro, ligarSaida, moverPergunta, novaPergunta, soltarSaida, tipoSaida, type TipoSaida,
 } from "@/lib/voz/fluxoRoteiro";
@@ -236,25 +236,55 @@ function MenuBlocosVoz({ onFechar, onAdicionar }: { onFechar: () => void; onAdic
   );
 }
 
-/** Propriedades do bloco "Venda & Negociação de Estoque". */
+/** Propriedades do bloco "Negociação Inteligente": modalidade, limites e diretrizes escritas pela empresa. */
+const EXEMPLO_DIRETRIZ: Record<ModalidadeNegociacao, string> = {
+  venda: "Ex.: Boleto 28 dias acima de R$ 500 ou Pix com 3% de desconto. Frete grátis a partir de 10 fardos. Destaque a marca X; se achar caro, ofereça a linha econômica.",
+  cobranca: "Ex.: Entrada mínima de 30%. Vencimento da 1ª parcela em até 7 dias. Nunca ameace negativação; se o cliente contestar a dívida, transfira.",
+  orcamento: "Ex.: Pode antecipar a entrega em 2 dias para fechar hoje. Pagamento em 30/60 só acima de R$ 2.000. Lembre a validade da proposta.",
+  livre: "Descreva o objetivo, o que pode ceder, os limites e quando transferir para o atendente.",
+};
 function ConfigVenda({ v, onChange }: { v: ConfigVendaEtapa; onChange: (v: ConfigVendaEtapa) => void }) {
+  const m = v.modalidade ?? "venda";
+  const info = MODALIDADES_NEGOCIACAO.find((x) => x.id === m)!;
   return (
     <Card className="space-y-3 p-3">
-      <p className="text-xs font-semibold text-foreground">Venda & Negociação de Estoque</p>
-      <p className="text-[11px] text-muted-foreground">Nesta etapa a IA conversa livremente: consulta o estoque, informa quantidades com a unidade, oferece similares e negocia o preço até o mínimo. Só transfere quando o cliente fechar ou pedir uma pessoa.</p>
+      <p className="text-xs font-semibold text-foreground">Negociação Inteligente</p>
       <div className="space-y-1">
-        <Label>Desconto máximo para negociar (%)</Label>
+        <Label>Tipo de negociação</Label>
+        <Select value={m} onValueChange={(x) => onChange({ ...v, modalidade: x as ModalidadeNegociacao })}>
+          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectContent className="z-[60]">{MODALIDADES_NEGOCIACAO.map((x) => <SelectItem key={x.id} value={x.id}>{x.rotulo}</SelectItem>)}</SelectContent>
+        </Select>
+        <p className="text-[11px] text-muted-foreground">{info.desc}</p>
+      </div>
+      <div className="space-y-1">
+        <Label>{m === "cobranca" ? "Desconto máximo em juros/multa (%)" : m === "livre" ? "Concessão máxima (%)" : "Desconto máximo para negociar (%)"}</Label>
         <Input className="h-8" type="number" min={0} max={50} value={v.descontoMax} onChange={(x) => onChange({ ...v, descontoMax: Math.max(0, Math.min(50, Number(x.target.value) || 0)) })} />
-        <p className="text-[11px] text-muted-foreground">O preço mínimo do produto, quando cadastrado, também é respeitado.</p>
+        {m === "venda" && <p className="text-[11px] text-muted-foreground">O preço mínimo do produto, quando cadastrado, também é respeitado.</p>}
       </div>
-      <div className="flex items-center justify-between gap-2">
-        <Label>Oferecer similares quando faltar</Label>
-        <Switch checked={v.similares} onCheckedChange={(similares) => onChange({ ...v, similares })} />
-      </div>
+      {m === "cobranca" && (
+        <div className="space-y-1">
+          <Label>Parcelamento máximo (vezes)</Label>
+          <Input className="h-8" type="number" min={1} max={24} value={v.parcelasMax ?? 1} onChange={(x) => onChange({ ...v, parcelasMax: Math.max(1, Math.min(24, Number(x.target.value) || 1)) })} />
+        </div>
+      )}
+      {m === "venda" && (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <Label>Oferecer similares quando faltar</Label>
+            <Switch checked={v.similares} onCheckedChange={(similares) => onChange({ ...v, similares })} />
+          </div>
+          <div className="space-y-1">
+            <Label>Produtos considerados (opcional)</Label>
+            <Input className="h-8" value={v.filtro} maxLength={200} placeholder="Ex.: papel, toalha, interfolha" onChange={(x) => onChange({ ...v, filtro: x.target.value })} />
+            <p className="text-[11px] text-muted-foreground">Vazio usa todo o catálogo ativo. Separe palavras por vírgula.</p>
+          </div>
+        </>
+      )}
       <div className="space-y-1">
-        <Label>Produtos considerados (opcional)</Label>
-        <Input className="h-8" value={v.filtro} maxLength={200} placeholder="Ex.: papel, toalha, interfolha" onChange={(x) => onChange({ ...v, filtro: x.target.value })} />
-        <p className="text-[11px] text-muted-foreground">Vazio usa todo o catálogo ativo. Separe palavras por vírgula.</p>
+        <Label>Diretrizes da negociação (como a IA deve agir)</Label>
+        <Textarea rows={6} maxLength={1500} value={v.instrucoes ?? ""} placeholder={EXEMPLO_DIRETRIZ[m]} onChange={(x) => onChange({ ...v, instrucoes: x.target.value })} />
+        <p className="text-[11px] text-muted-foreground">Escreva as regras da sua empresa: pagamento, frete, prazos, pedido mínimo, argumentos e quando transferir. Elas valem acima das regras gerais. {(v.instrucoes ?? "").length}/1500</p>
       </div>
     </Card>
   );

@@ -128,7 +128,7 @@ export const MENU_BLOCOS: { grupo: string; blocos: BlocoMenu[] }[] = [
     { tipo: "pergunta", id: "opcoes", rotulo: "Pergunta com opções", descricao: "Cliente escolhe entre opções citadas" },
     { tipo: "pergunta", id: "aberta", rotulo: "Pergunta aberta", descricao: "Qualquer resposta segue adiante" },
     { tipo: "pergunta", id: "aviso", rotulo: "Fala / aviso", descricao: "Informa e segue para o próximo bloco" },
-    { tipo: "pergunta", id: "venda", rotulo: "Venda & Negociação de Estoque", descricao: "Conversa livre com estoque, preços e similares" },
+    { tipo: "pergunta", id: "venda", rotulo: "Negociação Inteligente", descricao: "Venda de estoque, cobrança, orçamento ou livre, com suas diretrizes" },
   ] },
   { grupo: "Respostas do cliente", blocos: [
     ...SAIDAS_PRONTAS.map((s) => ({ tipo: "saida" as const, id: s.tipo, rotulo: s.rotulo, descricao: "Solte sobre uma pergunta" })),
@@ -151,7 +151,7 @@ export function novaPerguntaTipo(r: RoteiroSalvo, id: "simnao" | "opcoes" | "abe
   const base = { pos: pos ?? { x: 80 + n * COL, y: 140 } };
   const etapa: EtapaEditavel =
     id === "opcoes" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "O senhor prefere opção 1 ou opção 2?", condicoes: [{ gatilho: "opção 1", acao: "avancar" }, { gatilho: "opção 2", acao: "avancar" }, pronta("nao_reconheceu"), pronta("silencio")] }
-    : id === "venda" ? { ...base, titulo: "Venda & Negociação", fala: "Me diga qual produto o senhor precisa que eu confiro no estoque agora?", venda: { descontoMax: 5, similares: true, filtro: "" },
+    : id === "venda" ? { ...base, titulo: "Negociação", fala: "Me diga qual produto o senhor precisa que eu confiro no estoque agora?", venda: { descontoMax: 5, similares: true, filtro: "", modalidade: "venda", instrucoes: "" },
       condicoes: [] }
     : id === "aberta" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }, pronta("silencio")] }
     : { ...base, titulo: `Aviso ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }] };

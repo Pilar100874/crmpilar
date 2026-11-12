@@ -92,11 +92,20 @@ export interface CondicaoRoteiro { gatilho: string; acao: AcaoCondicao; texto?: 
 /** `pos` = posição do bloco no workflow visual (só tela). */
 export interface EtapaEditavel { titulo: string; fala: string; condicoes: CondicaoRoteiro[]; pos?: { x: number; y: number }; tecnicas?: string[]; venda?: ConfigVendaEtapa }
 /** Bloco "Venda & Negociação de Estoque": conversa livre com catálogo, estoque e preço mínimo. */
-export interface ConfigVendaEtapa { descontoMax: number; similares: boolean; filtro: string }
+export type ModalidadeNegociacao = "venda" | "cobranca" | "orcamento" | "livre";
+export const MODALIDADES_NEGOCIACAO: { id: ModalidadeNegociacao; rotulo: string; desc: string }[] = [
+  { id: "venda", rotulo: "Venda de estoque", desc: "Usa o catálogo real: estoque, preço de tabela, preço mínimo e similares." },
+  { id: "cobranca", rotulo: "Cobrança / acordo", desc: "Negocia pendências: parcelamento, entrada e desconto em juros/multa, dentro dos limites." },
+  { id: "orcamento", rotulo: "Orçamento em aberto", desc: "Negocia a proposta já enviada: valor, prazo de entrega e pagamento para fechar." },
+  { id: "livre", rotulo: "Negociação livre", desc: "Segue só as diretrizes que você escrever abaixo." },
+];
+export interface ConfigVendaEtapa { descontoMax: number; similares: boolean; filtro: string; modalidade?: ModalidadeNegociacao; instrucoes?: string; parcelasMax?: number }
 /** Marcador lido pelas funções de voz (_shared/catalogoVenda.ts) para carregar o catálogo. Pura. */
 export function marcadorVenda(v: ConfigVendaEtapa): string {
   const f = v.filtro.replace(/[;\]\[=]/g, " ").trim();
-  return `[VENDA:d=${Math.max(0, Math.min(50, Math.round(v.descontoMax || 0)))};s=${v.similares ? 1 : 0};f=${f}]`;
+  const m = v.modalidade ?? "venda";
+  const parc = m === "cobranca" ? `;p=${Math.max(1, Math.min(24, Math.round(v.parcelasMax || 1)))}` : "";
+  return `[VENDA:d=${Math.max(0, Math.min(50, Math.round(v.descontoMax || 0)))};s=${v.similares ? 1 : 0};f=${f}${m !== "venda" ? `;m=${m}` : ""}${parc}]`;
 }
 /** Roteiro salvo pela empresa (voz_roteiros). Chave igual a um de fábrica = versão editada dele. */
 export interface RoteiroSalvo {
@@ -252,7 +261,11 @@ export function compilarRoteiro(r: RoteiroSalvo, d: DadosRoteiro): string {
   const numero = (orig?: number) => { const k = validas.findIndex((x) => x.i === orig); return k < 0 ? undefined : `${k + 1}${validas[k].e.titulo.trim() ? ` (${validas[k].e.titulo.trim()})` : ""}`; };
   const etapas = validas.map(({ e }, i) => {
     const regras = e.condicoes.filter((c) => c.gatilho.trim()).map((c) => `${gatilhoParaIA(c.gatilho)}: ${textoAcao(c, d, c.acao === "ir_etapa" || c.acao === "workflow" ? numero(c.etapa) : undefined)}`);
-    const livre = e.venda ? " [Etapa de VENDA LIVRE: converse sobre produtos, estoque e preços do CATÁLOGO até o cliente fechar, pedir uma pessoa ou recusar.]" : "";
+    const mod = e.venda?.modalidade ?? "venda";
+    const dir = e.venda?.instrucoes?.trim() ? ` DIRETRIZES DA EMPRESA PARA ESTA NEGOCIAÇÃO (siga à risca): ${e.venda.instrucoes.trim().replace(/[\[\]]/g, " ")}` : "";
+    const livre = !e.venda ? "" : mod === "venda"
+      ? ` [Etapa de VENDA LIVRE: converse sobre produtos, estoque e preços do CATÁLOGO até o cliente fechar, pedir uma pessoa ou recusar.${dir}]`
+      : ` [Etapa de NEGOCIAÇÃO LIVRE (${MODALIDADES_NEGOCIACAO.find((x) => x.id === mod)!.rotulo}): converse livremente até o cliente aceitar, pedir uma pessoa ou recusar.${dir}]`;
     return `${i + 1}) ${e.titulo.trim() ? `${e.titulo.trim()}: ` : ""}${preencher(e.fala.trim(), d)}${livre}${regras.length ? ` (${regras.join(" ")})` : ""}`;
   });
   const p = [`ROTEIRO: ${r.nome}. Siga as etapas, uma por fala, esperando a resposta do cliente: ${etapas.join(" ")}`];
