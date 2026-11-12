@@ -350,7 +350,7 @@ function Editor(p: FluxoRoteiroVozProps) {
   const calculados: Node[] = useMemo(() => grafo.nos.map((n) => {
     const av = n.tipo === "pergunta" ? validarPergunta(roteiro.etapas[n.etapa!]) : [];
     return {
-      id: n.id, type: n.tipo, position: { x: n.x, y: n.y }, selected: n.id === sel, draggable: n.tipo === "pergunta" && !travado,
+      id: n.id, type: n.tipo, position: { x: n.x, y: n.y }, selected: n.id === sel, deletable: n.tipo !== "inicio" && !travado, draggable: n.tipo === "pergunta" && !travado,
       data: n.tipo === "pergunta"
         ? { ...roteiro.etapas[n.etapa!], numero: n.etapa! + 1, erros: av.filter((a) => a.nivel === "erro").length, avisos: av.filter((a) => a.nivel === "aviso").length }
         : n.tipo === "acao" ? { condicao: roteiro.etapas[n.etapa!].condicoes[n.saida!] } : {},
@@ -377,6 +377,16 @@ function Editor(p: FluxoRoteiroVozProps) {
       else if (e.source.startsWith("a")) { const [i, j] = idx(e.source); r = continuarAposWorkflow(r, i, j, null); }
     }
     onChange(r);
+  };
+
+  /** Tecla Delete/Backspace: apaga de verdade no roteiro (perguntas e saídas de ação), sem recriar o bloco. */
+  const apagarNos = (ns: Node[]) => {
+    let etapas = roteiro.etapas;
+    const acoes = ns.filter((n) => n.id.startsWith("a")).map((n) => idx(n.id)).sort((x, y) => y[1] - x[1]);
+    for (const [i, j] of acoes) etapas = etapas.map((e, k) => (k === i ? { ...e, condicoes: e.condicoes.filter((_, m) => m !== j) } : e));
+    const perguntas = ns.filter((n) => n.id.startsWith("e")).map((n) => Number(n.id.slice(1))).sort((x, y) => y - x);
+    for (const i of perguntas) etapas = removerEtapa(etapas, i);
+    onChange({ ...roteiro, etapas }); setSel(null);
   };
 
   const etapaSel = sel?.startsWith("e") ? Number(sel.slice(1)) : null;
@@ -426,7 +436,7 @@ function Editor(p: FluxoRoteiroVozProps) {
         {!menu && <FloatingAddBlockButton onClick={() => setMenu(true)} />}
         <ReactFlow
           nodes={nodes} edges={edges} nodeTypes={TIPOS} fitView fitViewOptions={{ padding: 0.2, maxZoom: 1 }} minZoom={0.2}
-          onConnect={conectar} onEdgesDelete={apagarArestas} nodesConnectable={!travado} edgesFocusable={!travado}
+          onConnect={conectar} onDelete={({ nodes: ns, edges: es }) => (ns.length ? apagarNos(ns) : apagarArestas(es))} nodesConnectable={!travado} edgesFocusable={!travado}
           onNodeClick={(_, n) => { setSel(n.id); setPainel(true); setTestando(false); }} onPaneClick={() => setSel(null)}
           onNodeDragStop={(_, n) => n.id.startsWith("e") && onChange(moverPergunta(roteiro, Number(n.id.slice(1)), n.position))}
           onNodesChange={onNodesChange} proOptions={{ hideAttribution: true }} className="bg-background"
