@@ -152,7 +152,7 @@ export function novaPerguntaTipo(r: RoteiroSalvo, id: "simnao" | "opcoes" | "abe
   const etapa: EtapaEditavel =
     id === "opcoes" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "O senhor prefere opção 1 ou opção 2?", condicoes: [{ gatilho: "opção 1", acao: "avancar" }, { gatilho: "opção 2", acao: "avancar" }, pronta("nao_reconheceu"), pronta("silencio")] }
     : id === "venda" ? { ...base, titulo: "Venda & Negociação", fala: "Me diga qual produto o senhor precisa que eu confiro no estoque agora?", venda: { descontoMax: 5, similares: true, filtro: "" },
-      condicoes: [{ gatilho: "pode mandar, fecha, quero, pode separar, fechado", acao: "transferir", texto: "Repita itens, quantidades e preço combinados e diga que o atendente vai emitir o pedido." }, pronta("atendente"), { gatilho: "não tenho interesse, não preciso, não quero", acao: "encerrar", texto: "Agradeça e diga que fica à disposição." }, pronta("silencio")] }
+      condicoes: [] }
     : id === "aberta" ? { ...base, titulo: `Pergunta ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }, pronta("silencio")] }
     : { ...base, titulo: `Aviso ${n + 1}`, fala: "", condicoes: [{ gatilho: "qualquer resposta", acao: "avancar" }] };
   return { ...r, etapas: [...r.etapas, etapa] };
