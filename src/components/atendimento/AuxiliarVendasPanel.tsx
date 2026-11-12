@@ -3,6 +3,7 @@ import { AlertTriangle, CalendarClock, CalendarPlus, Copy, FileText, Lightbulb, 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PainelAtendimentoHeader } from "./PainelAtendimentoHeader";
+import { taticasParaCliente } from "@/lib/atendimento/taticasVenda";
 import { analisarHabitos, carregarComprasJuntas, carregarHabitosCliente, roteiroAbordagem, type AnaliseHabitos } from "@/lib/atendimento/auxiliarVendas";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export function AuxiliarVendasPanel({ clienteId, nome, onClose, onNovoOrcamento,
   }, [clienteId]);
 
   const roteiro = useMemo(() => (analise ? roteiroAbordagem(nome, analise) : ""), [analise, nome]);
+  const taticas = useMemo(() => (analise ? taticasParaCliente(nome, analise) : []), [analise, nome]);
   const maxMes = analise ? Math.max(1, ...analise.serieMensal.map((m) => m.valor)) : 1;
 
   const indicadores = analise ? [
@@ -97,6 +99,21 @@ export function AuxiliarVendasPanel({ clienteId, nome, onClose, onNovoOrcamento,
               <Button size="sm" variant="outline" className="mt-2" onClick={() => { void navigator.clipboard.writeText(roteiro).then(() => toast.success("Roteiro copiado")); }}>
                 <Copy className="mr-1 h-4 w-4" /> Copiar
               </Button>
+            </Secao>
+
+            <Secao titulo="Táticas de negociação para este cliente" icon={Lightbulb}>
+              <div className="grid gap-2 md:grid-cols-2">
+                {taticas.map((t) => (
+                  <div key={t.id} className="min-w-0 space-y-1 rounded-md border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-foreground">{t.nome}</p>
+                      <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2" onClick={() => { void navigator.clipboard.writeText(t.frase).then(() => toast.success("Frase copiada")); }}><Copy className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{t.quando}</p>
+                    <p className="break-words text-sm italic text-foreground">"{t.frase}"</p>
+                  </div>
+                ))}
+              </div>
             </Secao>
 
             <div className="grid gap-4 lg:grid-cols-2">

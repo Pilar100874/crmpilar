@@ -83,7 +83,10 @@ Regras:
 
 - Nunca invente preços, prazos ou estoque que não estejam no contexto
 
-Baseado no histórico, sugira 3 respostas curtas e diferentes (ex.: confirmar pedido, esclarecer prazo, negociar).
+Baseado no histórico, sugira 3 respostas curtas e diferentes, nesta ordem:
+1. Direta: responde objetivamente a dúvida ou o último pedido do cliente.
+2. Fechamento com duas opções: conduz à decisão oferecendo duas alternativas positivas (ex.: entrega quinta ou sexta; boleto ou Pix), nunca "quer fechar?".
+3. Negociação: se o cliente hesitou ou achou caro, acolha a preocupação com palavras próprias (sem repetir a frase dele) e cite a referência antes da condição; se ele recusou, ofereça um plano B menor (lote menor, proposta pelo WhatsApp, retorno em outra data).
 Responda SOMENTE em JSON: {"sugestoes":[{"titulo":"até 4 palavras","texto":"mensagem pronta"}]}`
           },
           ...messageHistory
