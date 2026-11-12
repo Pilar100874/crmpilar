@@ -135,7 +135,7 @@ export function EditorRoteirosVoz({ estabelecimentoId, agentes }: { estabelecime
     setExcluir(false); setExcluindoCard(null); void carregar();
   };
   const novo = () => abrir({ chave: `custom_${Date.now().toString(36)}`, departamento: "comercial", nome: "", descricao: "", campos: ["condicao", "desconto"], ativo: true,
-    etapas: [{ titulo: "Abertura", fala: "Diga o motivo da ligação em uma frase.", condicoes: [] }, { titulo: "Pergunta", fala: "", condicoes: [{ gatilho: "demonstrou interesse", acao: "transferir" }] }] });
+    etapas: [] });
   const [instalando, setInstalando] = useState(false);
   const instalarModelos = async () => {
     if (!estabelecimentoId) return;
