@@ -130,6 +130,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [ambienteCelular, setAmbienteCelular] = useState<string>("");
   const [ambienteTablet, setAmbienteTablet] = useState<string>("");
+  const [usaEpi, setUsaEpi] = useState(false);
   const [ambientesAutomacao, setAmbientesAutomacao] = useState<{ id: string; nome: string; dispositivo: string | null }[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
@@ -190,6 +191,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         pilarfone_abas,
         automacao_ambiente_celular,
         automacao_ambiente_tablet,
+        usa_epi,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
@@ -408,6 +410,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
       automacao_ambiente_celular: ambienteCelular || null,
       automacao_ambiente_tablet: ambienteTablet || null,
+      usa_epi: usaEpi,
     };
 
     if (editingId) {
@@ -743,6 +746,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setAbasPilarFone([]);
     setAmbienteCelular("");
     setAmbienteTablet("");
+    setUsaEpi(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -778,6 +782,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setAmbienteCelular(((usuario as any).automacao_ambiente_celular as string) || "");
     setAmbienteTablet(((usuario as any).automacao_ambiente_tablet as string) || "");
+    setUsaEpi(!!(usuario as any).usa_epi);
     setEditingId(usuario.id);
     setFormOpen(true);
 
@@ -1252,6 +1257,18 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
           </div>
 
+        </Card>
+
+        {/* EPI */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">🦺 EPI</h3>
+          <div className="flex items-start gap-2">
+            <Checkbox id="usuario-usa-epi" checked={usaEpi} onCheckedChange={(v) => setUsaEpi(v === true)} />
+            <div>
+              <Label htmlFor="usuario-usa-epi">Usa EPI</Label>
+              <p className="text-xs text-muted-foreground">Marcado, o usuário aparece no Controle de EPI para receber entregas.</p>
+            </div>
+          </div>
         </Card>
 
         {/* Vinculações */}

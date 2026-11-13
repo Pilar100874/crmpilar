@@ -1,1 +1,2 @@
 - Pure EPI rules (CA, vida útil, estoque) live here; stock is adjusted by a DB trigger on epi_entregas, so UI and database agree.
+- EPI recipients are usuarios flagged usa_epi (Cadastro de Usuários → EPI); entregas reference usuario_id.

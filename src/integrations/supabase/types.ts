@@ -9636,13 +9636,14 @@ export type Database = {
           empresa_id: string
           entregue_por: string | null
           epi_id: string
-          funcionario_id: string
+          funcionario_id: string | null
           id: string
           motivo: string
           motivo_devolucao: string | null
           observacoes: string | null
           quantidade: number
           troca_prevista: string | null
+          usuario_id: string | null
         }
         Insert: {
           assinatura?: string | null
@@ -9653,13 +9654,14 @@ export type Database = {
           empresa_id: string
           entregue_por?: string | null
           epi_id: string
-          funcionario_id: string
+          funcionario_id?: string | null
           id?: string
           motivo?: string
           motivo_devolucao?: string | null
           observacoes?: string | null
           quantidade?: number
           troca_prevista?: string | null
+          usuario_id?: string | null
         }
         Update: {
           assinatura?: string | null
@@ -9670,13 +9672,14 @@ export type Database = {
           empresa_id?: string
           entregue_por?: string | null
           epi_id?: string
-          funcionario_id?: string
+          funcionario_id?: string | null
           id?: string
           motivo?: string
           motivo_devolucao?: string | null
           observacoes?: string | null
           quantidade?: number
           troca_prevista?: string | null
+          usuario_id?: string | null
         }
         Relationships: [
           {
@@ -9705,6 +9708,13 @@ export type Database = {
             columns: ["funcionario_id"]
             isOneToOne: false
             referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_entregas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
@@ -29714,6 +29724,7 @@ export type Database = {
           tipo: string
           unidade_id: string | null
           updated_at: string | null
+          usa_epi: boolean
           usar_autenticacao: boolean | null
           usuario_sip: string | null
           vendedor_empresa_id: string | null
@@ -29762,6 +29773,7 @@ export type Database = {
           tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
+          usa_epi?: boolean
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
           vendedor_empresa_id?: string | null
@@ -29810,6 +29822,7 @@ export type Database = {
           tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
+          usa_epi?: boolean
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
           vendedor_empresa_id?: string | null

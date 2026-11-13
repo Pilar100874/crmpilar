@@ -22,8 +22,8 @@ const hojeISO = () => new Date().toISOString().slice(0, 10);
 const br = (d?: string | null) => (d ? d.split("-").reverse().join("/") : "—");
 
 type Epi = { id: string; nome: string; categoria: string | null; ca_numero: string | null; ca_validade: string | null; fabricante: string | null; tamanho: string | null; vida_util_dias: number | null; estoque: number; estoque_minimo: number; ativo: boolean };
-type Func = { id: string; nome: string; sobrenome: string | null; cpf: string | null; cargo: string | null; matricula: string | null; admissao: string | null };
-type Entrega = { id: string; funcionario_id: string; epi_id: string; quantidade: number; data_entrega: string; motivo: string; ca_numero: string | null; troca_prevista: string | null; data_devolucao: string | null; motivo_devolucao: string | null; assinatura: string | null; observacoes: string | null };
+type Func = { id: string; nome: string; email: string | null };
+type Entrega = { id: string; usuario_id: string; epi_id: string; quantidade: number; data_entrega: string; motivo: string; ca_numero: string | null; troca_prevista: string | null; data_devolucao: string | null; motivo_devolucao: string | null; assinatura: string | null; observacoes: string | null };
 
 const epiVazio = { nome: "", categoria: "", ca_numero: "", ca_validade: "", fabricante: "", tamanho: "", vida_util_dias: "", estoque: "0", estoque_minimo: "0" };
 
@@ -67,7 +67,7 @@ export default function ControleEpi() {
     if (!empresaId) return;
     const [a, b, c] = await Promise.all([
       sb.from("epi_itens").select("*").eq("empresa_id", empresaId).order("nome"),
-      sb.from("ponto_funcionarios").select("id, nome, sobrenome, cpf, cargo, matricula, admissao").eq("empresa_id", empresaId).is("demissao", null).order("nome"),
+      sb.from("usuarios").select("id, nome, email").eq("usa_epi", true).eq("ativo", true).order("nome"),
       sb.from("epi_entregas").select("*").eq("empresa_id", empresaId).order("data_entrega", { ascending: false }),
     ]);
     setEpis(a.data || []); setFuncs(b.data || []); setEntregas(c.data || []);
@@ -76,7 +76,7 @@ export default function ControleEpi() {
 
   const epiMap = useMemo(() => new Map(epis.map((e) => [e.id, e])), [epis]);
   const funcMap = useMemo(() => new Map(funcs.map((f) => [f.id, f])), [funcs]);
-  const nomeFunc = (id: string) => { const f = funcMap.get(id); return f ? `${f.nome} ${f.sobrenome ?? ""}`.trim() : "—"; };
+  const nomeFunc = (id: string) => { const f = funcMap.get(id); return f ? f.nome : "—"; };
 
   const alertas = useMemo(() => {
     const trocas = entregas.filter((e) => ["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)));
@@ -110,7 +110,7 @@ export default function ControleEpi() {
     const { data: auth } = await supabase.auth.getUser();
     const { data: u } = await sb.from("usuarios").select("id").eq("auth_user_id", auth.user?.id).maybeSingle();
     const r = await sb.from("epi_entregas").insert({
-      empresa_id: empresaId, funcionario_id: nova.funcionario_id, epi_id: epi.id, quantidade: qtd,
+      empresa_id: empresaId, usuario_id: nova.funcionario_id, epi_id: epi.id, quantidade: qtd,
       data_entrega: nova.data_entrega, motivo: nova.motivo, ca_numero: epi.ca_numero,
       troca_prevista: trocaPrevista(nova.data_entrega, epi.vida_util_dias), assinatura: nova.assinatura,
       observacoes: nova.observacoes || null, entregue_por: u?.id ?? null,
@@ -136,9 +136,9 @@ export default function ControleEpi() {
 
   const entregasFiltradas = entregas.filter((e) => {
     const t = busca.toLowerCase();
-    return !t || nomeFunc(e.funcionario_id).toLowerCase().includes(t) || (epiMap.get(e.epi_id)?.nome ?? "").toLowerCase().includes(t);
+    return !t || nomeFunc(e.usuario_id).toLowerCase().includes(t) || (epiMap.get(e.epi_id)?.nome ?? "").toLowerCase().includes(t);
   });
-  const ficha = entregas.filter((e) => e.funcionario_id === fichaFunc).sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
+  const ficha = entregas.filter((e) => e.usuario_id === fichaFunc).sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
   const fFicha = funcMap.get(fichaFunc);
 
   if (!empresaId) return <div className="p-6 text-muted-foreground">Cadastre uma empresa no Controle de Ponto para usar o controle de EPI.</div>;
@@ -150,7 +150,7 @@ export default function ControleEpi() {
           <HardHat className="h-6 w-6 text-primary" />
           <div>
             <h1 className="text-xl font-semibold">Controle de EPI</h1>
-            <p className="text-sm text-muted-foreground">Entrega, devolução e ficha de EPI dos funcionários (NR-6)</p>
+            <p className="text-sm text-muted-foreground">Entrega, devolução e ficha de EPI dos usuários marcados com "Usa EPI" (NR-6)</p>
           </div>
         </div>
         <Button onClick={() => setNova({ funcionario_id: "", epi_id: "", quantidade: "1", data_entrega: hoje, motivo: "primeira_entrega", observacoes: "", assinatura: null })}>
@@ -183,7 +183,7 @@ export default function ControleEpi() {
             {entregasFiltradas.map((e) => (
               <Card key={e.id}><CardContent className="p-3 flex flex-wrap items-center gap-3 justify-between">
                 <div className="min-w-0">
-                  <p className="font-medium truncate">{nomeFunc(e.funcionario_id)}</p>
+                  <p className="font-medium truncate">{nomeFunc(e.usuario_id)}</p>
                   <p className="text-sm text-muted-foreground">{e.quantidade}× {epiMap.get(e.epi_id)?.nome} · CA {e.ca_numero ?? "—"} · {MOTIVOS_ENTREGA[e.motivo] ?? e.motivo}</p>
                   <p className="text-xs text-muted-foreground">Entregue {br(e.data_entrega)} · Troca {br(e.troca_prevista)}{e.data_devolucao ? ` · Devolvido ${br(e.data_devolucao)}` : ""}</p>
                 </div>
@@ -233,9 +233,7 @@ export default function ControleEpi() {
             <Card><CardHeader><CardTitle className="text-base">Ficha de Controle de Entrega de EPI</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="grid sm:grid-cols-2 gap-1">
-                  <p><b>Funcionário:</b> {nomeFunc(fFicha.id)}</p><p><b>CPF:</b> {fFicha.cpf ?? "—"}</p>
-                  <p><b>Matrícula:</b> {fFicha.matricula ?? "—"}</p><p><b>Cargo:</b> {fFicha.cargo ?? "—"}</p>
-                  <p><b>Admissão:</b> {br(fFicha.admissao)}</p>
+                  <p><b>Funcionário:</b> {nomeFunc(fFicha.id)}</p><p><b>E-mail:</b> {fFicha.email ?? "—"}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">Declaro ter recebido gratuitamente os EPIs abaixo, ter sido treinado quanto ao uso, guarda e conservação, e estar ciente da obrigatoriedade de uso conforme a NR-6 e o art. 158 da CLT, comprometendo-me a devolvê-los quando solicitado.</p>
                 <div className="space-y-2">
@@ -256,7 +254,7 @@ export default function ControleEpi() {
 
         <TabsContent value="alertas" className="space-y-3">
           {[
-            ["Trocas vencidas ou nos próximos 15 dias", alertas.trocas.map((e) => `${nomeFunc(e.funcionario_id)} — ${epiMap.get(e.epi_id)?.nome} (troca ${br(e.troca_prevista)})`)],
+            ["Trocas vencidas ou nos próximos 15 dias", alertas.trocas.map((e) => `${nomeFunc(e.usuario_id)} — ${epiMap.get(e.epi_id)?.nome} (troca ${br(e.troca_prevista)})`)],
             ["EPIs com CA vencido ou sem CA", alertas.ca.map((i) => `${i.nome} — CA ${i.ca_numero ?? "ausente"} ${i.ca_validade ? `(validade ${br(i.ca_validade)})` : ""}`)],
             ["EPIs com estoque baixo", alertas.estoque.map((i) => `${i.nome} — ${i.estoque} em estoque (mínimo ${i.estoque_minimo})`)],
           ].map(([t, l]) => (

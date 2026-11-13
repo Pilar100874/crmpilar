@@ -169,6 +169,13 @@
       "when": 1794595151829,
       "tag": "0023_epi_controle",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794595677461,
+      "tag": "0024_usuarios_usa_epi",
+      "breakpoints": true
     }
   ]
 }
