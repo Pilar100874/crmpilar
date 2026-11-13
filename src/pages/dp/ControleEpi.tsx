@@ -233,10 +233,11 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="alertas" className="space-y-3">
-          <Button variant="outline" onClick={() => gerarPdfVencimentos(alertas.trocas.map((e) => {
+          <Button variant="outline" onClick={() => gerarPdfVencimentos(entregas.filter((e) => !e.data_devolucao && (["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)) || caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje))).map((e) => {
+            const caVenc = caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje);
             const f = funcMap.get(e.usuario_id);
-            return { unidade: f?.unidades?.nome ?? "Sem unidade", funcionario: nomeFunc(e.usuario_id), epi: epiMap.get(e.epi_id)?.nome ?? "—", ca: e.ca_numero ?? "—", entrega: e.data_entrega, vencimento: e.troca_prevista ?? "", situacao: situacaoEntrega(e, hoje) === "vencida" ? "Vencido" : "Vencendo" };
-          }), "EPIs vencidos e vencendo (próximos 15 dias) por unidade")}><FileDown className="h-4 w-4 mr-1" />PDF de vencimentos por unidade</Button>
+            return { unidade: f?.unidades?.nome ?? "Sem unidade", funcionario: nomeFunc(e.usuario_id), epi: epiMap.get(e.epi_id)?.nome ?? "—", ca: e.ca_numero ?? "—", entrega: e.data_entrega, vencimento: e.troca_prevista ?? "", situacao: [situacaoEntrega(e, hoje) === "vencida" ? "Troca vencida" : situacaoEntrega(e, hoje) === "vence_em_breve" ? "Troca vencendo" : "", caVenc ? `CA vencido em ${(epiMap.get(e.epi_id)?.ca_validade ?? "").split("-").reverse().join("/")}` : ""].filter(Boolean).join(" · ") };
+          }), "EPIs vencidos, vencendo (15 dias) e com CA vencido, por unidade")}><FileDown className="h-4 w-4 mr-1" />PDF de vencimentos por unidade</Button>
           {[
             ["Trocas vencidas ou nos próximos 15 dias", alertas.trocas.map((e) => `${nomeFunc(e.usuario_id)} — ${epiMap.get(e.epi_id)?.nome} (troca ${br(e.troca_prevista)})`)],
             ["EPIs com CA vencido ou sem CA", alertas.ca.map((i) => `${i.nome} — CA ${i.ca_numero ?? "ausente"} ${i.ca_validade ? `(validade ${br(i.ca_validade)})` : ""}`)],
