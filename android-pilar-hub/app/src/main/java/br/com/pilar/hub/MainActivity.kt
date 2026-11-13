@@ -185,11 +185,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnAutomacao).text =
             if (Prefs.automacaoAtiva(this)) "Automação ligada" else "Automação desligada"
         val status = findViewById<TextView>(R.id.txtStatus)
-        status.text = if (ColetorEstado.rodando) "Em funcionamento" else "Parado"
-        status.setTextColor(getColor(if (ColetorEstado.rodando) R.color.iso_success else R.color.iso_danger))
-        status.setBackgroundResource(if (ColetorEstado.rodando) R.drawable.iso_pill_online else R.drawable.iso_pill_warning)
+        val vozAtiva = br.com.pilar.hub.voz.Monitor.servico != "Parado"
+        val ativo = ColetorEstado.rodando || vozAtiva
+        status.text = if (ativo) "Em funcionamento" else "Parado"
+        status.setTextColor(getColor(if (ativo) R.color.iso_success else R.color.iso_danger))
+        status.setBackgroundResource(if (ativo) R.drawable.iso_pill_online else R.drawable.iso_pill_warning)
         findViewById<TextView>(R.id.txtResumo).text = buildString {
-            append(if (ColetorEstado.rodando) "Serviços ativos em segundo plano" else "A coleta está interrompida")
+            append(if (ColetorEstado.rodando) "Serviços ativos em segundo plano" else if (vozAtiva) "Pilar Voz ativo em segundo plano" else "A coleta está interrompida")
             if (ColetorEstado.ultimoErro.isNotBlank()) append("\nÚltimo aviso: ${ColetorEstado.ultimoErro}")
         }
         findViewById<TextView>(R.id.txtMarcacoes).text = ColetorEstado.marcacoesEnviadas.toString()

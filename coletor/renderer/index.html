@@ -675,10 +675,12 @@
       document.getElementById('camsTotal').textContent = cams.length;
 
       // Status global consolidado
-      if (s.pontoRunning || s.camerasRunning){
+      let vozAtiva = false;
+      try { const vz = await window.coletor.vozStatus(); vozAtiva = !!vz && vz.servico && vz.servico !== 'Parado'; } catch {}
+      if (s.pontoRunning || s.camerasRunning || s.portariaRunning || vozAtiva){
         pillStatus('on', 'Coletor ativo');
         document.getElementById('globalHint').textContent =
-          `${s.pontoRunning ? 'Ponto rodando' : 'Ponto parado'} · ${s.camerasRunning ? 'Câmeras rodando' : 'Câmeras paradas'}`;
+          `${s.pontoRunning ? 'Ponto rodando' : 'Ponto parado'} · ${s.camerasRunning ? 'Câmeras rodando' : 'Câmeras paradas'} · ${s.portariaRunning ? 'Automação rodando' : 'Automação parada'} · ${vozAtiva ? 'Voz ligada' : 'Voz parada'}`;
       } else {
         pillStatus('off', 'Parado');
         document.getElementById('globalHint').textContent = 'Ative um dos módulos abaixo para começar.';
