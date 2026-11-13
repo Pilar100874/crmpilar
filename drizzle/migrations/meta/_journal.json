@@ -183,6 +183,13 @@
       "when": 1794596584981,
       "tag": "0025_epi_ficha_recebida",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794597416553,
+      "tag": "0026_rls_usuario_interno_ferr_push_strategy",
+      "breakpoints": true
     }
   ]
 }
