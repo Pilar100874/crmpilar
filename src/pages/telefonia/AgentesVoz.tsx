@@ -276,9 +276,16 @@ export default function AgentesVoz({ embedded = false }: { embedded?: boolean })
                 <Label>Transferir para o ramal</Label>
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">Sempre o ramal do seu usuário (cadastro de usuários). A IA transfere as ligações para ele automaticamente.</p>
               </div>
-              <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground md:col-span-2">
-                Saudação, contexto da empresa e o que a IA fala ficam no <strong>roteiro</strong>. Aqui você define só o perfil e a telefonia do agente.
-              </p>
+              <div className="space-y-1 md:col-span-2">
+                <Label>Saudação ao atender</Label>
+                <Input value={atual.saudacao ?? ""} onChange={(e) => setAtual({ ...atual, saudacao: e.target.value })} placeholder="Ex.: Olá! Aqui é a Pilar, em que posso ajudar?" />
+                <p className="text-xs text-muted-foreground">Primeira frase dita quando o agente atende uma ligação. Nas ligações feitas pelo roteiro, vale a abertura do roteiro.</p>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <Label>Instruções gerais e informações da empresa</Label>
+                <Textarea rows={4} value={atual.prompt ?? ""} onChange={(e) => setAtual({ ...atual, prompt: e.target.value })} placeholder="Ex.: horário de atendimento, endereço, formas de pagamento, o que não prometer." />
+                <p className="text-xs text-muted-foreground">Valem em todas as ligações deste agente, junto com o roteiro.</p>
+              </div>
               {atual.modos?.includes("ligar") && (() => {
                 const c = lerConduta(atual.config);
                 const set = (p: Partial<CondutaAgente>) => setAtual({ ...atual, config: { ...(atual.config ?? {}), conduta: { ...c, ...p } } });
