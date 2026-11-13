@@ -31935,6 +31935,7 @@ export type Database = {
         Returns: boolean
       }
       is_system_admin: { Args: never; Returns: boolean }
+      is_usuario_interno: { Args: { _uid: string }; Returns: boolean }
       limpar_historico_logistica: {
         Args: { p_data_fim: string; p_data_inicio: string; p_tipo: string }
         Returns: Json

@@ -155,6 +155,13 @@
       "when": 1794424225481,
       "tag": "0021_voz_escuta_geral",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794594547833,
+      "tag": "0022_restringir_politicas_usuario_interno",
+      "breakpoints": true
     }
   ]
 }
