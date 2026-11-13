@@ -46,3 +46,4 @@
 - Insert newly introduced menu programs into their existing origin category in effective customization, preserving explicitly placed programs and saved settings, so new screens remain discoverable in their intended menu.
 - Use PainelAtendimentoHeader for attendance panels and shared task details to keep title, icon, spacing and close actions consistent.
 - One voice agent per function/dept; per-client scripts.
+- EPI control (/controle-epi) reuses ponto_empresas/ponto_funcionarios; pure rules (CA, vida útil, estoque) live in src/lib/epi/regrasEpi.ts and stock is adjusted by a DB trigger, so UI and database agree.

@@ -9626,6 +9626,148 @@ export type Database = {
           },
         ]
       }
+      epi_entregas: {
+        Row: {
+          assinatura: string | null
+          ca_numero: string | null
+          created_at: string
+          data_devolucao: string | null
+          data_entrega: string
+          empresa_id: string
+          entregue_por: string | null
+          epi_id: string
+          funcionario_id: string
+          id: string
+          motivo: string
+          motivo_devolucao: string | null
+          observacoes: string | null
+          quantidade: number
+          troca_prevista: string | null
+        }
+        Insert: {
+          assinatura?: string | null
+          ca_numero?: string | null
+          created_at?: string
+          data_devolucao?: string | null
+          data_entrega?: string
+          empresa_id: string
+          entregue_por?: string | null
+          epi_id: string
+          funcionario_id: string
+          id?: string
+          motivo?: string
+          motivo_devolucao?: string | null
+          observacoes?: string | null
+          quantidade?: number
+          troca_prevista?: string | null
+        }
+        Update: {
+          assinatura?: string | null
+          ca_numero?: string | null
+          created_at?: string
+          data_devolucao?: string | null
+          data_entrega?: string
+          empresa_id?: string
+          entregue_por?: string | null
+          epi_id?: string
+          funcionario_id?: string
+          id?: string
+          motivo?: string
+          motivo_devolucao?: string | null
+          observacoes?: string | null
+          quantidade?: number
+          troca_prevista?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_entregas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_entregas_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epi_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_entregas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "epi_entregas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_itens: {
+        Row: {
+          ativo: boolean
+          ca_numero: string | null
+          ca_validade: string | null
+          categoria: string | null
+          created_at: string
+          empresa_id: string
+          estoque: number
+          estoque_minimo: number
+          fabricante: string | null
+          id: string
+          nome: string
+          tamanho: string | null
+          updated_at: string
+          vida_util_dias: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          ca_numero?: string | null
+          ca_validade?: string | null
+          categoria?: string | null
+          created_at?: string
+          empresa_id: string
+          estoque?: number
+          estoque_minimo?: number
+          fabricante?: string | null
+          id?: string
+          nome: string
+          tamanho?: string | null
+          updated_at?: string
+          vida_util_dias?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          ca_numero?: string | null
+          ca_validade?: string | null
+          categoria?: string | null
+          created_at?: string
+          empresa_id?: string
+          estoque?: number
+          estoque_minimo?: number
+          fabricante?: string | null
+          id?: string
+          nome?: string
+          tamanho?: string | null
+          updated_at?: string
+          vida_util_dias?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_itens_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estabelecimentos: {
         Row: {
           automacao_vendas_config: Json | null

@@ -126,6 +126,7 @@ const PontoColetorDownload = React.lazy(() => import("./pages/ponto/PontoColetor
 const AdminApps = React.lazy(() => import("./pages/AdminApps"));
 const AppsLayout = React.lazy(() => import("./pages/admin/AppsLayout"));
 const PoliticasInternas = React.lazy(() => import("./pages/PoliticasInternas"));
+const ControleEpi = React.lazy(() => import("./pages/dp/ControleEpi"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
 const RelatoriosVozSnapshots = React.lazy(() => import("./pages/RelatoriosVozSnapshots"));
@@ -719,6 +720,7 @@ const App = () => (
               <Route path="/admin/versoes-apps" element={<Navigate to="/admin/apps" replace />} />
               <Route path="/admin/telas-customizadas" element={<TelasCustomizadas />} />
               <Route path="/politicas-internas" element={<PoliticasInternas />} />
+              <Route path="/controle-epi" element={<ControleEpi />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
               <Route path="/admin/relatorios-voz" element={<RelatoriosVozConfig />} />
               <Route path="/admin/relatorios-voz/snapshots" element={<RelatoriosVozSnapshots />} />

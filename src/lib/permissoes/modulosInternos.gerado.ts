@@ -376,6 +376,24 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Pergunte à IA"
     }
   ],
+  "Controle de EPI": [
+    {
+      "id": "entregas",
+      "label": "Entregas"
+    },
+    {
+      "id": "epis",
+      "label": "EPIs cadastrados"
+    },
+    {
+      "id": "ficha",
+      "label": "Ficha do funcionário"
+    },
+    {
+      "id": "alertas",
+      "label": "Alertas"
+    }
+  ],
   "Logística": [
     {
       "id": "dashboard",

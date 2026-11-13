@@ -231,6 +231,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/macros", titulo: "Macros" },
   { path: "/softphone", titulo: "Softphone", aliases: ["telefone", "ramal"] },
   { path: "/politicas-internas", titulo: "Políticas Internas" },
+  { path: "/controle-epi", titulo: "Controle de EPI", aliases: ["epi", "entrega de epi", "ficha de epi"] },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
 

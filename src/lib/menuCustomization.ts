@@ -339,6 +339,7 @@ const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds
     programIds: [
       "Controle de Ponto",
       "Politicas Internas",
+      "Controle de EPI",
     ],
   },
   {

@@ -209,6 +209,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
       { id: "Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
+      { id: "Controle de EPI", title: "Controle de EPI", url: "/controle-epi", icon: LucideIcons.HardHat },
     ],
   },
 

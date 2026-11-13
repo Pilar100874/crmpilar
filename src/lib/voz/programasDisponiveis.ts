@@ -74,6 +74,7 @@ export const PROGRAMAS_DISPONIVEIS: ProgramaDisponivel[] = [
   // Ponto
   { path: "/ponto/dashboard", label: "Ponto - Dashboard RH", categoria: "Ponto" },
   { path: "/ponto/funcionarios", label: "Ponto - Funcionários", categoria: "Ponto" },
+  { path: "/controle-epi", label: "DP - Controle de EPI", categoria: "Ponto" },
   { path: "/ponto/tratamento", label: "Ponto - Tratamento", categoria: "Ponto" },
   { path: "/ponto/alertas", label: "Ponto - Antifraude", categoria: "Ponto" },
   { path: "/ponto/auditoria", label: "Ponto - Auditoria", categoria: "Ponto" },
