@@ -1,0 +1,1 @@
+- Pure EPI rules (CA, vida útil, estoque) live here; stock is adjusted by a DB trigger on epi_entregas, so UI and database agree.
