@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { gerarPdfVencimentos } from "@/lib/epi/relatorioEpi";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { HardHat, Plus, Pencil, Trash2, Printer, Undo2, AlertTriangle } from "lucide-react";
+import { HardHat, FileDown, Plus, Pencil, Trash2, Printer, Undo2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "@/pages/ponto/usePontoEmpresa";
 import {
@@ -22,32 +24,10 @@ const hojeISO = () => new Date().toISOString().slice(0, 10);
 const br = (d?: string | null) => (d ? d.split("-").reverse().join("/") : "—");
 
 type Epi = { id: string; nome: string; categoria: string | null; ca_numero: string | null; ca_validade: string | null; fabricante: string | null; tamanho: string | null; vida_util_dias: number | null; estoque: number; estoque_minimo: number; ativo: boolean };
-type Func = { id: string; nome: string; email: string | null };
-type Entrega = { id: string; usuario_id: string; epi_id: string; quantidade: number; data_entrega: string; motivo: string; ca_numero: string | null; troca_prevista: string | null; data_devolucao: string | null; motivo_devolucao: string | null; assinatura: string | null; observacoes: string | null };
+type Func = { id: string; nome: string; email: string | null; unidade_id: string | null; unidades?: { nome: string } | null };
+type Entrega = { id: string; usuario_id: string; epi_id: string; quantidade: number; data_entrega: string; motivo: string; ca_numero: string | null; troca_prevista: string | null; data_devolucao: string | null; motivo_devolucao: string | null; ficha_recebida: boolean; observacoes: string | null };
 
 const epiVazio = { nome: "", categoria: "", ca_numero: "", ca_validade: "", fabricante: "", tamanho: "", vida_util_dias: "", estoque: "0", estoque_minimo: "0" };
-
-function Assinatura({ onChange }: { onChange: (v: string | null) => void }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const desenhando = useRef(false);
-  const pos = (e: React.PointerEvent) => {
-    const r = ref.current!.getBoundingClientRect();
-    return [((e.clientX - r.left) * ref.current!.width) / r.width, ((e.clientY - r.top) * ref.current!.height) / r.height];
-  };
-  const cor = () => getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
-  return (
-    <div className="space-y-1">
-      <canvas
-        ref={ref} width={500} height={140}
-        className="w-full h-28 rounded-md border bg-background touch-none"
-        onPointerDown={(e) => { desenhando.current = true; const c = ref.current!.getContext("2d")!; c.strokeStyle = `hsl(${cor()})`; c.lineWidth = 2; const [x, y] = pos(e); c.beginPath(); c.moveTo(x, y); }}
-        onPointerMove={(e) => { if (!desenhando.current) return; const c = ref.current!.getContext("2d")!; const [x, y] = pos(e); c.lineTo(x, y); c.stroke(); }}
-        onPointerUp={() => { desenhando.current = false; onChange(ref.current!.toDataURL("image/png")); }}
-      />
-      <Button type="button" variant="ghost" size="sm" onClick={() => { ref.current!.getContext("2d")!.clearRect(0, 0, 500, 140); onChange(null); }}>Limpar assinatura</Button>
-    </div>
-  );
-}
 
 export default function ControleEpi() {
   const { empresaId } = usePontoEmpresa();
@@ -67,7 +47,7 @@ export default function ControleEpi() {
     if (!empresaId) return;
     const [a, b, c] = await Promise.all([
       sb.from("epi_itens").select("*").eq("empresa_id", empresaId).order("nome"),
-      sb.from("usuarios").select("id, nome, email").eq("usa_epi", true).eq("ativo", true).order("nome"),
+      sb.from("usuarios").select("id, nome, email, unidade_id, unidades(nome)").eq("usa_epi", true).eq("ativo", true).order("nome"),
       sb.from("epi_entregas").select("*").eq("empresa_id", empresaId).order("data_entrega", { ascending: false }),
     ]);
     setEpis(a.data || []); setFuncs(b.data || []); setEntregas(c.data || []);
@@ -106,13 +86,13 @@ export default function ControleEpi() {
     const qtd = Number(nova.quantidade || 0);
     const erro = validarEntrega(epi, qtd, hoje);
     if (erro) return toast.error(erro);
-    if (!nova.assinatura) return toast.error("Colete a assinatura do funcionário.");
+    if (!nova.ficha_recebida) return toast.error("Confirme que recebeu a ficha de EPI preenchida e assinada.");
     const { data: auth } = await supabase.auth.getUser();
     const { data: u } = await sb.from("usuarios").select("id").eq("auth_user_id", auth.user?.id).maybeSingle();
     const r = await sb.from("epi_entregas").insert({
       empresa_id: empresaId, usuario_id: nova.funcionario_id, epi_id: epi.id, quantidade: qtd,
       data_entrega: nova.data_entrega, motivo: nova.motivo, ca_numero: epi.ca_numero,
-      troca_prevista: trocaPrevista(nova.data_entrega, epi.vida_util_dias), assinatura: nova.assinatura,
+      troca_prevista: trocaPrevista(nova.data_entrega, epi.vida_util_dias), ficha_recebida: true,
       observacoes: nova.observacoes || null, entregue_por: u?.id ?? null,
     });
     if (r.error) return toast.error(r.error.message);
@@ -153,7 +133,7 @@ export default function ControleEpi() {
             <p className="text-sm text-muted-foreground">Entrega, devolução e ficha de EPI dos usuários marcados com "Usa EPI" (NR-6)</p>
           </div>
         </div>
-        <Button onClick={() => setNova({ funcionario_id: "", epi_id: "", quantidade: "1", data_entrega: hoje, motivo: "primeira_entrega", observacoes: "", assinatura: null })}>
+        <Button onClick={() => setNova({ funcionario_id: "", epi_id: "", quantidade: "1", data_entrega: hoje, motivo: "primeira_entrega", observacoes: "", ficha_recebida: false })}>
           <Plus className="h-4 w-4 mr-1" /> Nova entrega
         </Button>
       </div>
@@ -235,7 +215,7 @@ export default function ControleEpi() {
                 <div className="grid sm:grid-cols-2 gap-1">
                   <p><b>Funcionário:</b> {nomeFunc(fFicha.id)}</p><p><b>E-mail:</b> {fFicha.email ?? "—"}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Declaro ter recebido gratuitamente os EPIs abaixo, ter sido treinado quanto ao uso, guarda e conservação, e estar ciente da obrigatoriedade de uso conforme a NR-6 e o art. 158 da CLT, comprometendo-me a devolvê-los quando solicitado.</p>
+                <p className="text-xs text-muted-foreground">Registro interno do DP. O comprovante legal é a ficha em papel assinada pelo funcionário (NR-6 e art. 158 da CLT).</p>
                 <div className="space-y-2">
                   {ficha.map((e) => (
                     <div key={e.id} className="border rounded-md p-2 grid sm:grid-cols-[1fr_auto] gap-2 items-center">
@@ -243,7 +223,7 @@ export default function ControleEpi() {
                         <p>{br(e.data_entrega)} · {e.quantidade}× {epiMap.get(e.epi_id)?.nome} · CA {e.ca_numero ?? "—"}</p>
                         <p className="text-xs text-muted-foreground">{MOTIVOS_ENTREGA[e.motivo] ?? e.motivo}{e.data_devolucao ? ` · Devolvido ${br(e.data_devolucao)}${e.motivo_devolucao ? ` (${e.motivo_devolucao})` : ""}` : ""}</p>
                       </div>
-                      {e.assinatura && <img src={e.assinatura} alt="Assinatura" className="h-10 bg-background" />}
+                      <Badge variant={e.ficha_recebida ? "secondary" : "destructive"}>{e.ficha_recebida ? "Ficha em papel recebida" : "Sem ficha"}</Badge>
                     </div>
                   ))}
                   {!ficha.length && <p className="text-muted-foreground">Nenhuma entrega para este funcionário.</p>}
@@ -253,6 +233,10 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="alertas" className="space-y-3">
+          <Button variant="outline" onClick={() => gerarPdfVencimentos(alertas.trocas.map((e) => {
+            const f = funcMap.get(e.usuario_id);
+            return { unidade: f?.unidades?.nome ?? "Sem unidade", funcionario: nomeFunc(e.usuario_id), epi: epiMap.get(e.epi_id)?.nome ?? "—", ca: e.ca_numero ?? "—", entrega: e.data_entrega, vencimento: e.troca_prevista ?? "", situacao: situacaoEntrega(e, hoje) === "vencida" ? "Vencido" : "Vencendo" };
+          }), "EPIs vencidos e vencendo (próximos 15 dias) por unidade")}><FileDown className="h-4 w-4 mr-1" />PDF de vencimentos por unidade</Button>
           {[
             ["Trocas vencidas ou nos próximos 15 dias", alertas.trocas.map((e) => `${nomeFunc(e.usuario_id)} — ${epiMap.get(e.epi_id)?.nome} (troca ${br(e.troca_prevista)})`)],
             ["EPIs com CA vencido ou sem CA", alertas.ca.map((i) => `${i.nome} — CA ${i.ca_numero ?? "ausente"} ${i.ca_validade ? `(validade ${br(i.ca_validade)})` : ""}`)],
@@ -293,7 +277,10 @@ export default function ControleEpi() {
             <div><Label>Motivo</Label><Select value={nova.motivo} onValueChange={(v) => setNova({ ...nova, motivo: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(MOTIVOS_ENTREGA).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
             {nova.epi_id && <p className="text-xs text-muted-foreground">Troca prevista: {br(trocaPrevista(nova.data_entrega, epiMap.get(nova.epi_id)?.vida_util_dias))}</p>}
             <div><Label>Observações</Label><Textarea value={nova.observacoes} onChange={(e) => setNova({ ...nova, observacoes: e.target.value })} /></div>
-            <div><Label>Assinatura do funcionário</Label><Assinatura onChange={(v) => setNova((n: any) => ({ ...n, assinatura: v }))} /></div>
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <Checkbox id="ficha-recebida" checked={nova.ficha_recebida} onCheckedChange={(v) => setNova({ ...nova, ficha_recebida: v === true })} />
+              <Label htmlFor="ficha-recebida" className="leading-snug">Recebi a ficha de EPI em papel, preenchida e assinada pelo funcionário <span className="text-destructive">*</span></Label>
+            </div>
           </div>}
           <DialogFooter><Button variant="outline" onClick={() => setNova(null)}>Cancelar</Button><Button onClick={registrarEntrega}>Registrar entrega</Button></DialogFooter>
         </DialogContent>

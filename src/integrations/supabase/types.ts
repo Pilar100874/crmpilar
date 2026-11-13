@@ -9636,6 +9636,7 @@ export type Database = {
           empresa_id: string
           entregue_por: string | null
           epi_id: string
+          ficha_recebida: boolean
           funcionario_id: string | null
           id: string
           motivo: string
@@ -9654,6 +9655,7 @@ export type Database = {
           empresa_id: string
           entregue_por?: string | null
           epi_id: string
+          ficha_recebida?: boolean
           funcionario_id?: string | null
           id?: string
           motivo?: string
@@ -9672,6 +9674,7 @@ export type Database = {
           empresa_id?: string
           entregue_por?: string | null
           epi_id?: string
+          ficha_recebida?: boolean
           funcionario_id?: string | null
           id?: string
           motivo?: string

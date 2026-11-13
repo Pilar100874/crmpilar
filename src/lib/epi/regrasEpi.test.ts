@@ -22,3 +22,13 @@ describe("regras de EPI", () => {
     expect(estoqueBaixo({ estoque: 3, estoque_minimo: 2 })).toBe(false);
   });
 });
+
+import { agruparPorUnidade } from "./relatorioEpi";
+describe("relatório por unidade", () => {
+  it("agrupa por unidade e ordena pelo vencimento", () => {
+    const l = (unidade: string, vencimento: string) => ({ unidade, funcionario: "x", epi: "y", ca: "1", entrega: "", vencimento, situacao: "" });
+    const g = agruparPorUnidade([l("Sul", "2026-02-01"), l("Norte", "2026-03-01"), l("Sul", "2026-01-01")]);
+    expect(g.map(([u]) => u)).toEqual(["Norte", "Sul"]);
+    expect(g[1][1].map((x) => x.vencimento)).toEqual(["2026-01-01", "2026-02-01"]);
+  });
+});

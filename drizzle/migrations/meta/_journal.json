@@ -176,6 +176,13 @@
       "when": 1794595677461,
       "tag": "0024_usuarios_usa_epi",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794596584981,
+      "tag": "0025_epi_ficha_recebida",
+      "breakpoints": true
     }
   ]
 }

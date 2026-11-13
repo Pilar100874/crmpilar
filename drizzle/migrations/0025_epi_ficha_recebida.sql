@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_entregas ADD COLUMN IF NOT EXISTS ficha_recebida boolean NOT NULL DEFAULT false;
