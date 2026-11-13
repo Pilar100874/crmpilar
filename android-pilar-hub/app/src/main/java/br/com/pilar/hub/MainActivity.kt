@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -97,8 +99,12 @@ class MainActivity : AppCompatActivity() {
         mostrar()
     }
 
+    private val relogio = Handler(Looper.getMainLooper())
+    private val atualizarStatus = object : Runnable { override fun run() { mostrar(); relogio.postDelayed(this, 2000) } }
+
     override fun onResume() {
         super.onResume()
+        relogio.post(atualizarStatus)
         ContextCompat.registerReceiver(
             this,
             aoAtualizar,
@@ -114,6 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        relogio.removeCallbacks(atualizarStatus)
         runCatching { unregisterReceiver(aoAtualizar) }
         super.onPause()
     }
