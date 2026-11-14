@@ -225,6 +225,13 @@
       "when": 1794619665986,
       "tag": "0031_produto_estoque_minimo",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794673367339,
+      "tag": "0032_validar_larguras_ficha_producao",
+      "breakpoints": true
     }
   ]
 }
