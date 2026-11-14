@@ -1689,6 +1689,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </div>
                   )}
 
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Estoque mínimo</h4>
+                  <EstoqueMinimoCampos
+                    produtoId={editingProduto?.id}
+                    minimo={formData.estoque_minimo}
+                    prazo={formData.prazo_reposicao_dias}
+                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
+                  />
+                  </div>
                 </div>
               </TabsContent>
 
@@ -2003,12 +2012,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       />
                     </div>
                   </div>
-                  <EstoqueMinimoCampos
-                    produtoId={editingProduto?.id}
-                    minimo={formData.estoque_minimo}
-                    prazo={formData.prazo_reposicao_dias}
-                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
-                  />
                 </div>
 
                 {/* Detalhes */}
