@@ -232,6 +232,13 @@
       "when": 1794673367339,
       "tag": "0032_validar_larguras_ficha_producao",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794673750803,
+      "tag": "0033_validar_regras_materia_prima_maquina",
+      "breakpoints": true
     }
   ]
 }

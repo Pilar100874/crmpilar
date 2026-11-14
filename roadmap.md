@@ -1,5 +1,6 @@
 # Roadmap — Atendimento
 ## Produtos e produção
+- [x] Substituir regras de largura por compatibilidade e produção simultânea por matéria-prima/máquina; validar gravação e cálculo
 - [x] Configurar larguras, rendimento simultâneo e restrições de matéria-prima por máquina; validar cálculo e persistência no celular
 - [x] Ficha de produção com quantidade-base, materiais e substitutos com consumo próprio
 - [x] Etapas sequenciais com máquinas alternativas, capacidade e cálculo de consumo/tempo

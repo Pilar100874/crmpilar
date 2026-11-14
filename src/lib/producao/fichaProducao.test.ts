@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcularProducao, validarFicha, type FichaProducao } from './fichaProducao';
+import { calcularProducao, validarFicha, lerFicha, type FichaProducao } from './fichaProducao';
 const ficha: FichaProducao = {
   quantidade_base: 10, unidade_produto: 'un',
   materiais: [
@@ -57,59 +57,69 @@ describe('tempo de setup', () => {
   });
 });
 
-describe('exceções por largura da bobina', () => {
+describe('exceções por matéria-prima e máquina', () => {
   const bobina: FichaProducao = {
-    quantidade_base: 1, unidade_produto: 'un', largura_produto_cm: 40,
+    quantidade_base: 1, unidade_produto: 'un',
     materiais: [{ id: 'bobina', nome: 'Bobina', opcoes: [
-      { id: '80', produto_id: 'mp80', quantidade: 2, unidade: 'kg', largura_cm: 80 },
-      { id: '40', produto_id: 'mp40', quantidade: 2, unidade: 'kg', largura_cm: 40 },
+      { id: '80', produto_id: 'mp80', quantidade: 2, unidade: 'kg' },
+      { id: '40', produto_id: 'mp40', quantidade: 2, unidade: 'kg' },
     ] }],
-    etapas: [{ id: 'corte', nome: 'Corte', material_largura_id: 'bobina', opcoes: [
-      { id: 'a', maquina_id: 'a', capacidade_minuto: 5, setup_minutos: 10 },
-      { id: 'b', maquina_id: 'b', capacidade_minuto: 5, largura_min_cm: 40, largura_max_cm: 40 },
-      { id: 'c', maquina_id: 'c', capacidade_minuto: 8 },
+    etapas: [{ id: 'corte', nome: 'Corte', material_regra_id: 'bobina', opcoes: [
+      { id: 'a', maquina_id: 'a', capacidade_minuto: 5, setup_minutos: 10, regras_materiais: [{ material_opcao_id: '80', permitida: true, simultaneos: 2 }] },
+      { id: 'b', maquina_id: 'b', capacidade_minuto: 5, regras_materiais: [{ material_opcao_id: '80', permitida: false, simultaneos: 1 }] },
+      { id: 'c', maquina_id: 'c', capacidade_minuto: 8, regras_materiais: [{ material_opcao_id: '80', permitida: true, simultaneos: 2 }] },
     ] }],
   };
-  it('produz duas bobinas de 40 cm por vez com matéria-prima de 80 cm', () => {
+  it('produz 2 por vez pela matéria-prima sem informar largura', () => {
     const r = calcularProducao(bobina, 100);
     expect(r?.etapas[0].simultaneos).toBe(2);
     expect(r?.etapas[0].capacidade).toBe(10);
     expect(r?.minutosSequenciais).toBe(20);
     expect(r?.materiais[0].quantidade).toBe(200);
   });
-  it('não permite entrada de 80 cm na máquina B limitada a 40 cm', () => {
+  it('bloqueia a máquina B para a matéria-prima não aceita', () => {
     const r = calcularProducao(bobina, 100, { corte: 'b' });
     expect(r?.incompativel).toBe(true);
-    expect(r?.etapas[0].minutos).toBeNull();
     expect(r?.minutosSequenciais).toBeNull();
     expect(r?.capacidadeLinha).toBeNull();
     expect(r?.etapas[0].maquina_id).toBe('b');
   });
-  it('permite a máquina B com o substituto de 40 cm e uma unidade por vez', () => {
+  it('permite B com outra matéria-prima e 1 por vez', () => {
     const r = calcularProducao(bobina, 100, { corte: 'b', bobina: '40' });
     expect(r?.incompativel).toBe(false);
     expect(r?.etapas[0].simultaneos).toBe(1);
     expect(r?.minutosSequenciais).toBe(20);
   });
-  it('aplica a capacidade própria da máquina alternativa C com duas faixas', () => {
+  it('preserva capacidade própria da máquina C', () => {
     expect(calcularProducao(bobina, 100, { corte: 'c' })?.etapas[0].capacidade).toBe(16);
   });
-  it('não arredonda a largura para cima e informa sobra', () => {
-    const f = structuredClone(bobina); f.materiais[0].opcoes[0].largura_cm = 90;
-    const r = calcularProducao(f, 100);
-    expect(r?.etapas[0].simultaneos).toBe(2);
-    expect(r?.etapas[0].sobraLargura).toBe(10);
-  });
-  it('bloqueia matéria-prima mais estreita que os 40 cm do produto', () => {
-    const f = structuredClone(bobina); f.materiais[0].opcoes[0].largura_cm = 30;
-    expect(calcularProducao(f, 100)?.incompativel).toBe(true);
-  });
-  it('exige largura em todas as alternativas quando a etapa calcula por largura', () => {
-    const f = structuredClone(bobina); delete f.materiais[0].opcoes[1].largura_cm;
-    expect(validarFicha(f)).toMatch(/alternativas/);
-  });
-  it('não multiplica etapas posteriores sem regra de largura', () => {
+  it('não multiplica outras etapas da sequência', () => {
     const f = structuredClone(bobina); f.etapas.push({ id: 'embalar', nome: 'Embalar', opcoes: [{ id: 'p', maquina_id: 'p', capacidade_minuto: 3 }] });
     expect(calcularProducao(f, 100)?.capacidadeLinha).toBe(3);
+  });
+  it('rejeita quantidade por vez fracionada ou zero', () => {
+    const f = structuredClone(bobina);
+    const regra = f.etapas[0].opcoes[0].regras_materiais?.[0];
+    if (!regra) throw new Error('Regra ausente');
+    regra.simultaneos = 0;
+    expect(validarFicha(f)).toMatch(/inteira/);
+    regra.simultaneos = 1.5;
+    expect(validarFicha(f)).toMatch(/inteira/);
+  });
+  it('rejeita regra vinculada a opção de outro grupo', () => {
+    const f = structuredClone(bobina); f.etapas[0].material_regra_id = 'outro';
+    expect(validarFicha(f)).toMatch(/existente/);
+  });
+  it('converte fichas antigas preservando rendimento e bloqueio', () => {
+    const f = lerFicha({ quantidade_base: 1, unidade_produto: 'un', largura_produto_cm: 40,
+      materiais: [{ id: 'm', nome: 'Bobina', opcoes: [{ id: '80', produto_id: 'mp80', quantidade: 2, unidade: 'kg', largura_cm: 80 }] }],
+      etapas: [{ id: 'e', nome: 'Corte', material_largura_id: 'm', opcoes: [
+        { id: 'a', maquina_id: 'a', capacidade_minuto: 5 },
+        { id: 'b', maquina_id: 'b', capacidade_minuto: 5, largura_max_cm: 40 },
+      ] }],
+    });
+    expect(calcularProducao(f, 100)?.etapas[0].capacidade).toBe(10);
+    expect(calcularProducao(f, 100, { e: 'b' })?.incompativel).toBe(true);
+    expect(lerFicha(f)).toEqual(f);
   });
 });

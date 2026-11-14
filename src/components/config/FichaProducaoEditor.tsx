@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
@@ -14,9 +15,6 @@ function Numero({ label, valor, onChange }: { label: string; valor: number; onCh
 }
 function Unidade({ valor, onChange, label }: { valor: string; onChange: (v: string) => void; label: string }) {
   return <div className="space-y-1 min-w-0"><Label className="text-xs">{label}</Label><Select value={valor} onValueChange={onChange}><SelectTrigger aria-label={label}><SelectValue /></SelectTrigger><SelectContent>{unidadesConsumo.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select></div>;
-}
-function Largura({ label, valor, onChange }: { label: string; valor?: number; onChange: (v: number | undefined) => void }) {
-  return <div className="min-w-0 space-y-1"><Label className="text-xs">{label}</Label><Input aria-label={label} type="number" min="0.000001" step="any" placeholder="Não definida" value={valor ?? ''} onChange={e => onChange(e.target.value === '' ? undefined : Number(e.target.value))} /></div>;
 }
 
 export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
@@ -40,7 +38,6 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <Numero label="Quantidade-base produzida" valor={ficha.quantidade_base} onChange={v => onChange({ ...ficha, quantidade_base: v })} />
       <Unidade label="Unidade do produto acabado" valor={ficha.unidade_produto} onChange={v => onChange({ ...ficha, unidade_produto: v })} />
-      <Largura label="Largura do produto acabado (cm)" valor={ficha.largura_produto_cm} onChange={v => onChange({ ...ficha, largura_produto_cm: v })} />
     </div>
     <section className="space-y-3">
       <div className="flex flex-wrap justify-between items-center gap-2 border-b pb-2"><h4 className="font-medium">Matérias-primas necessárias</h4><Button type="button" variant="outline" size="sm" onClick={() => onChange({ ...ficha, materiais: [...ficha.materiais, { id: crypto.randomUUID(), nome: `Material ${ficha.materiais.length + 1}`, opcoes: [{ id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: 'kg' }] }] })}><Plus className="h-4 w-4 mr-1" />Adicionar material</Button></div>
@@ -50,7 +47,6 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
           <div className="min-w-0 space-y-1"><Label className="text-xs">{i === 0 ? 'Matéria-prima principal' : `OU substituto ${i}`}</Label><Select value={o.produto_id} onValueChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, produto_id: v } : x) })}><SelectTrigger aria-label={`Matéria-prima ${index + 1} opção ${i + 1}`} className="min-w-0 [&>span]:truncate"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{materias.filter(m => m.ativo || m.id === o.produto_id).map(m => <SelectItem key={m.id} value={m.id}>{m.nome}{!m.ativo && ' (inativa)'}</SelectItem>)}</SelectContent></Select></div>
           <Numero label={`Consumo material ${index + 1} opção ${i + 1}`} valor={o.quantidade} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, quantidade: v } : x) })} />
           <Unidade label={`Unidade material ${index + 1} opção ${i + 1}`} valor={o.unidade} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, unidade: v } : x) })} />
-          <Largura label={`Largura material ${index + 1} opção ${i + 1} (cm)`} valor={o.largura_cm} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, largura_cm: v } : x) })} />
           <Button type="button" variant="ghost" size="icon" aria-label={`Excluir opção ${i + 1} do material ${index + 1}`} title="Excluir opção" onClick={() => setRemocao({ nome: i === 0 ? 'matéria-prima principal' : 'substituto', executar: () => atualizarMaterial({ ...g, opcoes: g.opcoes.filter(x => x.id !== o.id) }) })}><Trash2 className="h-4 w-4" /></Button>
         </div>)}
         <Button type="button" variant="ghost" size="sm" onClick={() => atualizarMaterial({ ...g, opcoes: [...g.opcoes, { id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: 'kg' }] })}><Plus className="h-4 w-4 mr-1" />Adicionar substituto</Button>
@@ -64,15 +60,20 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
           <Button type="button" variant="ghost" size="icon" title="Mover etapa para baixo" aria-label={`Descer etapa ${index + 1}`} disabled={index === ficha.etapas.length - 1} onClick={() => mover(index, 1)}><ArrowDown className="h-4 w-4" /></Button>
           <Button type="button" variant="ghost" size="icon" title="Excluir etapa" aria-label={`Excluir etapa ${index + 1}`} onClick={() => setRemocao({ nome: e.nome, executar: () => onChange({ ...ficha, etapas: ficha.etapas.filter(x => x.id !== e.id) }) })}><Trash2 className="h-4 w-4" /></Button>
         </div></div>
-        <div className="space-y-1 min-w-0"><Label className="text-xs">Material para produção simultânea por largura</Label><Select value={e.material_largura_id || 'nenhum'} onValueChange={v => atualizarEtapa({ ...e, material_largura_id: v === 'nenhum' ? undefined : v, opcoes: v === 'nenhum' ? e.opcoes.map(o => ({ ...o, largura_min_cm: undefined, largura_max_cm: undefined })) : e.opcoes })}><SelectTrigger aria-label={`Material por largura etapa ${index + 1}`} className="[&>span]:truncate"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="nenhum">Sem regra de largura</SelectItem>{ficha.materiais.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}</SelectContent></Select></div>
+        <div className="space-y-1 min-w-0"><Label className="text-xs">Matéria-prima para regras da máquina</Label><Select value={e.material_regra_id || 'nenhum'} onValueChange={v => atualizarEtapa({ ...e, material_regra_id: v === 'nenhum' ? undefined : v, opcoes: e.opcoes.map(o => ({ ...o, regras_materiais: [] })) })}><SelectTrigger aria-label={`Material das regras etapa ${index + 1}`} className="[&>span]:truncate"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="nenhum">Sem regra por matéria-prima</SelectItem>{ficha.materiais.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}</SelectContent></Select></div>
         {e.opcoes.map((o, i) => <div key={o.id} className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-end border-b pb-3">
           <div className="min-w-0 space-y-1"><Label className="text-xs">{i === 0 ? 'Máquina principal' : `OU máquina alternativa ${i}`}</Label><Select value={o.maquina_id} onValueChange={v => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, maquina_id: v } : x) })}><SelectTrigger aria-label={`Máquina etapa ${index + 1} opção ${i + 1}`} className="[&>span]:truncate"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{maquinas.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}{m.em_manutencao ? ' (em manutenção)' : !m.ativo ? ' (inativa)' : ''}</SelectItem>)}</SelectContent></Select></div>
-          <Numero label={`Capacidade etapa ${index + 1} opção ${i + 1} (${ficha.unidade_produto}/min${e.material_largura_id ? ' por faixa' : ''})`} valor={o.capacidade_minuto} onChange={v => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, capacidade_minuto: v } : x) })} />
+          <Numero label={`Capacidade etapa ${index + 1} opção ${i + 1} (${ficha.unidade_produto}/min${e.material_regra_id ? ' por unidade simultânea' : ''})`} valor={o.capacidade_minuto} onChange={v => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, capacidade_minuto: v } : x) })} />
           <div className="min-w-0 space-y-1"><Label className="text-xs">Setup (min)</Label><Input type="number" min="0" step="any" aria-label={`Setup etapa ${index + 1} opção ${i + 1} (min)`} value={o.setup_minutos ?? 0} onChange={ev => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, setup_minutos: Math.max(0, Number(ev.target.value) || 0) } : x) })} /></div>
-          {e.material_largura_id && <>
-            <Largura label={`Largura mínima etapa ${index + 1} máquina ${i + 1} (cm)`} valor={o.largura_min_cm} onChange={v => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, largura_min_cm: v } : x) })} />
-            <Largura label={`Largura máxima etapa ${index + 1} máquina ${i + 1} (cm)`} valor={o.largura_max_cm} onChange={v => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, largura_max_cm: v } : x) })} />
-          </>}
+          {ficha.materiais.find(g => g.id === e.material_regra_id)?.opcoes.map(m => {
+            const regra = o.regras_materiais?.find(r => r.material_opcao_id === m.id) || { material_opcao_id: m.id, permitida: true, simultaneos: 1 };
+            const mudar = (valores: Partial<typeof regra>) => atualizarEtapa({ ...e, opcoes: e.opcoes.map(x => x.id === o.id ? { ...x, regras_materiais: [...(x.regras_materiais || []).filter(r => r.material_opcao_id !== m.id), { ...regra, ...valores }] } : x) });
+            return <div key={m.id} className="sm:col-span-2 min-w-0 space-y-2 border-t pt-2">
+              <p className="text-sm font-medium break-words">{nomeMateria(m.produto_id)}</p>
+              <label className="flex items-center gap-2 text-sm"><Checkbox aria-label={`Aceita material ${m.id} máquina ${o.id}`} checked={regra.permitida} onCheckedChange={v => mudar({ permitida: v === true })} />Aceita esta matéria-prima</label>
+              {regra.permitida && <div className="min-w-0 space-y-1"><Label className="text-xs">Quantidade produzida por vez</Label><Input aria-label={`Produzidos por vez material ${m.id} máquina ${o.id}`} type="number" min="1" step="1" value={regra.simultaneos} onChange={ev => mudar({ simultaneos: Number(ev.target.value) })} /></div>}
+            </div>;
+          })}
           <Button type="button" variant="ghost" size="icon" title="Excluir opção" aria-label={`Excluir máquina ${i + 1} da etapa ${index + 1}`} onClick={() => setRemocao({ nome: 'opção de máquina', executar: () => atualizarEtapa({ ...e, opcoes: e.opcoes.filter(x => x.id !== o.id) }) })}><Trash2 className="h-4 w-4" /></Button>
         </div>)}
         <Button type="button" variant="ghost" size="sm" onClick={() => atualizarEtapa({ ...e, opcoes: [...e.opcoes, { id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] })}><Plus className="h-4 w-4 mr-1" />Adicionar máquina alternativa</Button>
@@ -85,7 +86,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
       {ficha.etapas.filter(e => e.opcoes.length > 1).map(e => <div key={e.id} className="space-y-1"><Label>{e.nome}</Label><Select value={escolhas[e.id] || e.opcoes[0]?.id} onValueChange={v => setEscolhas({ ...escolhas, [e.id]: v })}><SelectTrigger aria-label={`Escolha para ${e.nome}`}><SelectValue /></SelectTrigger><SelectContent>{e.opcoes.map(o => <SelectItem key={o.id} value={o.id}>{nomeMaquina(o.maquina_id)}</SelectItem>)}</SelectContent></Select></div>)}
       {resultado && <div className="space-y-2 text-sm break-words">
         {resultado.materiais.map(m => <p key={m.grupo_id}>{nomeMateria(m.produto_id)}: <strong>{formatar(m.quantidade)} {m.unidade}</strong></p>)}
-        {resultado.etapas.map((e, i) => <div key={e.etapa_id}><p>{i + 1}. {nomeMaquina(e.maquina_id)}: {e.minutos != null && <strong>{formatar(e.minutos)} min</strong>}{e.setup > 0 && e.minutosProducao != null && <span className="text-muted-foreground"> (setup {formatar(e.setup)} + produção {formatar(e.minutosProducao)})</span>}{e.indisponivel && <span className="text-destructive"> · Indisponível</span>}</p>{e.largura != null && <p className="text-muted-foreground">Entrada {formatar(e.largura)} cm · {e.simultaneos} por vez · {formatar(e.capacidade)} {ficha.unidade_produto}/min · Sobra de largura: {formatar(e.sobraLargura)} cm</p>}{e.erro && <p className="text-destructive">{e.erro}</p>}</div>)}
+        {resultado.etapas.map((e, i) => <div key={e.etapa_id}><p>{i + 1}. {nomeMaquina(e.maquina_id)}: {e.minutos != null && <strong>{formatar(e.minutos)} min</strong>}{e.setup > 0 && e.minutosProducao != null && <span className="text-muted-foreground"> (setup {formatar(e.setup)} + produção {formatar(e.minutosProducao)})</span>}{e.indisponivel && <span className="text-destructive"> · Indisponível</span>}</p>{e.material_id && <p className="text-muted-foreground">{nomeMateria(e.material_id)} · {e.simultaneos} por vez · {formatar(e.capacidade)} {ficha.unidade_produto}/min</p>}{e.erro && <p className="text-destructive">{e.erro}</p>}</div>)}
         {resultado.etapas.length > 0 && !resultado.incompativel && <><p>Tempo do lote, etapas sem sobreposição: <strong>{formatar(resultado.minutosSequenciais ?? 0)} min</strong></p><p>Capacidade máxima da linha (gargalo): <strong>{formatar(resultado.capacidadeLinha || 0)} {ficha.unidade_produto}/min</strong></p>{resultado.setupTotal > 0 && <p>Setup total das máquinas: <strong>{formatar(resultado.setupTotal)} min</strong></p>}</>}
         {resultado.indisponivel && <p className="text-destructive">Previsão indisponível: há máquina incompatível, inativa ou em manutenção na seleção.</p>}
       </div>}
