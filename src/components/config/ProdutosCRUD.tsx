@@ -262,6 +262,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [filterCategoria, setFilterCategoria] = useState<string>("all");
   const [filterGrupo, setFilterGrupo] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterProduzido, setFilterProduzido] = useState<string>("all");
+  const [filterMateriaPrima, setFilterMateriaPrima] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   
   // Custom field filter states
@@ -378,6 +380,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     if (filterStatus !== "all") {
       result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
     }
+    if (filterProduzido !== "all") result = result.filter(p => !!(p as any).produzido === (filterProduzido === "sim"));
+    if (filterMateriaPrima !== "all") result = result.filter(p => !!(p as any).materia_prima === (filterMateriaPrima === "sim"));
     
     // Apply custom field filters
     filterCamposCustomizados.forEach(campo => {
@@ -477,7 +481,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     });
     
     return result;
-  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection, customFieldFilters, filterCamposCustomizados]);
+  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, filterProduzido, filterMateriaPrima, sortField, sortDirection, customFieldFilters, filterCamposCustomizados]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -500,10 +504,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFilterCategoria("all");
     setFilterGrupo("all");
     setFilterStatus("all");
+    setFilterProduzido("all");
+    setFilterMateriaPrima("all");
     setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   };
 
-  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || hasCustomFilters;
+  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || filterProduzido !== "all" || filterMateriaPrima !== "all" || hasCustomFilters;
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -1159,6 +1165,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 <SelectItem value="all">Todos status</SelectItem>
                 <SelectItem value="ativo">Ativo</SelectItem>
                 <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterProduzido} onValueChange={setFilterProduzido}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Produzido" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Produzido: todos</SelectItem>
+                <SelectItem value="sim">Produzido: sim</SelectItem>
+                <SelectItem value="nao">Produzido: não</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterMateriaPrima} onValueChange={setFilterMateriaPrima}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Matéria-prima" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Matéria-prima: todos</SelectItem>
+                <SelectItem value="sim">Matéria-prima: sim</SelectItem>
+                <SelectItem value="nao">Matéria-prima: não</SelectItem>
               </SelectContent>
             </Select>
           </div>
