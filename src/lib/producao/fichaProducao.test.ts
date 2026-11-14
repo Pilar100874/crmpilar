@@ -41,6 +41,31 @@ describe('ficha de produção', () => {
   });
 });
 
+describe('funcionários extras', () => {
+  it('preserva quantidades e serviços ao reabrir a ficha, sem alterar a produção', () => {
+    const f: FichaProducao = { ...ficha, funcionarios_extras: [
+      { id: 'embalagem', quantidade: 2, servico: 'Embalar produtos' },
+      { id: 'abastecimento', quantidade: 1, servico: 'Abastecer a máquina' },
+    ] };
+    const reaberta = lerFicha(JSON.parse(JSON.stringify(f)));
+    expect(reaberta.funcionarios_extras).toEqual(f.funcionarios_extras);
+    expect(validarFicha(reaberta)).toBeNull();
+    expect(calcularProducao(reaberta, 100)?.minutosSequenciais).toBe(25);
+  });
+  it('exige quantidade inteira positiva por serviço', () => {
+    for (const quantidade of [0, -1, 1.5]) {
+      expect(validarFicha({ ...ficha, funcionarios_extras: [{ id: 'a', quantidade, servico: 'Embalar' }] })).toMatch(/inteira/);
+    }
+  });
+  it('exige o serviço quando há funcionários extras', () => {
+    expect(validarFicha({ ...ficha, funcionarios_extras: [{ id: 'a', quantidade: 2, servico: '  ' }] })).toMatch(/serviço/);
+  });
+  it('aceita fichas antigas sem funcionários extras', () => {
+    expect(validarFicha(lerFicha(ficha))).toBeNull();
+    expect(lerFicha(ficha).funcionarios_extras).toBeUndefined();
+  });
+});
+
 describe('metas por matéria-prima', () => {
   it('usa a meta da matéria-prima escolhida, inclusive do substituto', () => {
     const f = structuredClone(ficha);

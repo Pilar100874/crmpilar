@@ -3,7 +3,8 @@ export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial
 export interface RegraMaterialMaquina { material_opcao_id: string; permitida: boolean; simultaneos: number }
 export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; regras_materiais?: RegraMaterialMaquina[] }
 export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[]; material_regra_id?: string }
-export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[] }
+export interface ApoioProducao { id: string; quantidade: number; servico: string }
+export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[]; funcionarios_extras?: ApoioProducao[] }
 export const unidadesConsumo = ['un', 'kg', 'g', 'L', 'mL', 'm', 'm²', 'm³'] as const;
 export const fichaVazia = (): FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [] });
 export function lerFicha(valor: unknown): FichaProducao {
@@ -13,6 +14,7 @@ export function lerFicha(valor: unknown): FichaProducao {
   const f = valor as Legada;
   return {
     quantidade_base: f.quantidade_base, unidade_produto: f.unidade_produto,
+    ...(f.funcionarios_extras ? { funcionarios_extras: f.funcionarios_extras.map(a => ({ id: a.id, quantidade: a.quantidade, servico: a.servico })) } : {}),
     materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao })) })),
     etapas: f.etapas.map(e => {
       const grupo = f.materiais.find(g => g.id === e.material_largura_id);
@@ -29,6 +31,10 @@ export function lerFicha(valor: unknown): FichaProducao {
 export function validarFicha(f: FichaProducao): string | null {
   if (!Number.isFinite(f.quantidade_base) || f.quantidade_base <= 0) return 'Informe uma quantidade-base maior que zero';
   if (!f.unidade_produto) return 'Informe a unidade do produto';
+  for (const apoio of f.funcionarios_extras ?? []) {
+    if (!Number.isInteger(apoio.quantidade) || apoio.quantidade <= 0) return 'Informe uma quantidade inteira maior que zero de funcionários extras';
+    if (!apoio.servico.trim()) return 'Informe o serviço realizado pelos funcionários extras';
+  }
   for (const g of f.materiais) {
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
     if (new Set(g.opcoes.map(o => o.produto_id)).size !== g.opcoes.length) return 'Não repita a mesma matéria-prima no grupo';

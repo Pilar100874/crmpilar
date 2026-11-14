@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, Users } from 'lucide-react';
 import { calcularProducao, validarFicha, unidadesConsumo, type FichaProducao, type GrupoMaterial, type EtapaProducao } from '@/lib/producao/fichaProducao';
 import type { MaquinaOpcao } from './ProdutoProducaoTabs';
 
@@ -81,6 +82,20 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
         </div>)}
         <Button type="button" variant="ghost" size="sm" onClick={() => atualizarEtapa({ ...e, opcoes: [...e.opcoes, { id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] })}><Plus className="h-4 w-4 mr-1" />Adicionar máquina alternativa</Button>
       </div>)}
+    </section>
+    <section className="space-y-3">
+      <div className="flex flex-wrap justify-between items-center gap-2 border-b pb-2">
+        <h4 className="font-medium flex items-center gap-2"><Users className="h-4 w-4 shrink-0" />Funcionários extras</h4>
+        <Button type="button" variant="outline" size="sm" onClick={() => onChange({ ...ficha, funcionarios_extras: [...(ficha.funcionarios_extras ?? []), { id: crypto.randomUUID(), quantidade: 1, servico: '' }] })}><Plus className="h-4 w-4 mr-1" />Adicionar serviço</Button>
+      </div>
+      {(ficha.funcionarios_extras ?? []).map((apoio, index) => <div key={apoio.id} className="border rounded-md p-3 space-y-3 min-w-0">
+        <div className="flex items-end gap-2">
+          <div className="min-w-0 flex-1 space-y-1"><Label htmlFor={`apoio-quantidade-${apoio.id}`} className="text-xs">Quantidade de funcionários extras</Label><Input id={`apoio-quantidade-${apoio.id}`} aria-label={`Quantidade de funcionários extras serviço ${index + 1}`} type="number" min="1" step="1" value={apoio.quantidade || ''} onChange={ev => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.map(a => a.id === apoio.id ? { ...a, quantidade: Number(ev.target.value) } : a) })} /></div>
+          <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label={`Excluir serviço extra ${index + 1}`} title="Excluir serviço extra" onClick={() => setRemocao({ nome: apoio.servico || 'serviço de funcionários extras', executar: () => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.filter(a => a.id !== apoio.id) }) })}><Trash2 className="h-4 w-4" /></Button>
+        </div>
+        <div className="space-y-1"><Label htmlFor={`apoio-servico-${apoio.id}`} className="text-xs">Serviço realizado</Label><Textarea id={`apoio-servico-${apoio.id}`} aria-label={`Serviço realizado pelos funcionários extras ${index + 1}`} placeholder="Ex.: embalar, abastecer a máquina ou separar materiais" value={apoio.servico} onChange={ev => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.map(a => a.id === apoio.id ? { ...a, servico: ev.target.value } : a) })} /></div>
+      </div>)}
+      <p className="text-sm text-muted-foreground">Total além dos operadores de máquina: <strong>{(ficha.funcionarios_extras ?? []).reduce((total, a) => total + (a.quantidade || 0), 0)}</strong></p>
     </section>
     <section className="space-y-3 border-t pt-4">
       <h4 className="font-medium">Previsão de produção</h4>
