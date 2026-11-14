@@ -10,6 +10,8 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/lib/toast-config';
 import type { Tables } from '@/integrations/supabase/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MaquinaUsuariosCRUD } from './MaquinaUsuariosCRUD';
 
 type Maquina = Tables<'producao_maquinas'>;
 const vazio = { nome: '', codigo: '', fabricante: '', modelo: '', observacoes: '', ativo: true, em_manutencao: false };
@@ -30,10 +32,12 @@ export function MaquinasCRUD({ estabelecimentoId }: { estabelecimentoId: string 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault(); setOcupado(true);
     const dados = { ...form, nome: form.nome.trim(), codigo: form.codigo.trim(), estabelecimento_id: estabelecimentoId };
-    const r = editando ? await supabase.from('producao_maquinas').update(dados).eq('id', editando) : await supabase.from('producao_maquinas').insert(dados);
+    const r = editando ? await supabase.from('producao_maquinas').update(dados).eq('id', editando).select('id').single() : await supabase.from('producao_maquinas').insert(dados).select('id').single();
     setOcupado(false);
     if (r.error) { toast.error(r.error.code === '23505' ? 'Já existe uma máquina com este código' : 'Não foi possível salvar a máquina'); return; }
-    toast.success('Máquina salva'); setAberto(false); void carregar();
+    toast.success('Máquina salva');
+    if (!editando && r.data) setEditando(r.data.id); else setAberto(false);
+    void carregar();
   };
   const remover = async () => {
     if (!excluir) return;
@@ -51,13 +55,17 @@ export function MaquinasCRUD({ estabelecimentoId }: { estabelecimentoId: string 
       <div className="min-w-0 break-words"><p className="font-medium">{m.nome}</p><p className="text-sm text-muted-foreground">{m.codigo} · {m.modelo || 'Sem modelo'} · {m.ativo ? 'Ativa' : 'Inativa'} · {m.em_manutencao ? 'Em manutenção' : 'Fora de manutenção'}</p></div>
       <div className="flex shrink-0"><Button variant="ghost" size="icon" aria-label={`Editar ${m.nome}`} onClick={() => { setEditando(m.id); setForm({ nome: m.nome, codigo: m.codigo, fabricante: m.fabricante || '', modelo: m.modelo || '', observacoes: m.observacoes || '', ativo: m.ativo, em_manutencao: m.em_manutencao }); setAberto(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label={`Excluir ${m.nome}`} onClick={() => setExcluir(m)}><Trash2 className="h-4 w-4" /></Button></div>
     </div>)}
-    <Dialog open={aberto} onOpenChange={setAberto}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editando ? 'Editar máquina' : 'Nova máquina'}</DialogTitle></DialogHeader><form onSubmit={salvar} className="space-y-4">
+    <Dialog open={aberto} onOpenChange={setAberto}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{editando ? `Editar máquina: ${form.nome}` : 'Nova máquina'}</DialogTitle></DialogHeader>
+      <Tabs defaultValue="dados"><TabsList className="grid w-full grid-cols-2"><TabsTrigger value="dados">Dados da máquina</TabsTrigger><TabsTrigger value="usuarios" disabled={!editando}>Usuários e conhecimento</TabsTrigger></TabsList>
+      <TabsContent value="dados"><form onSubmit={salvar} className="space-y-4">
       {(['nome', 'codigo', 'fabricante', 'modelo'] as const).map(k => <div key={k} className="space-y-2"><Label htmlFor={`maquina-${k}`}>{({ nome: 'Nome', codigo: 'Código', fabricante: 'Fabricante', modelo: 'Modelo' })[k]}{(k === 'nome' || k === 'codigo') && ' *'}</Label><Input id={`maquina-${k}`} required={k === 'nome' || k === 'codigo'} value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })} /></div>)}
       <Label className="flex items-center gap-2"><Checkbox checked={form.ativo} onCheckedChange={v => setForm({ ...form, ativo: v === true })} />Máquina ativa</Label>
       <Label htmlFor="maquina-manutencao" className="flex items-center gap-2"><Checkbox id="maquina-manutencao" checked={form.em_manutencao} onCheckedChange={v => setForm({ ...form, em_manutencao: v === true })} />Em manutenção</Label>
       <div className="space-y-2"><Label htmlFor="maquina-obs">Observações</Label><Textarea id="maquina-obs" value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} /></div>
       <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setAberto(false)}>Cancelar</Button><Button disabled={ocupado}>Salvar</Button></div>
-    </form></DialogContent></Dialog>
+    </form></TabsContent>
+    <TabsContent value="usuarios">{editando && <MaquinaUsuariosCRUD estabelecimentoId={estabelecimentoId} maquinaId={editando} />}</TabsContent>
+    </Tabs></DialogContent></Dialog>
     <DeleteConfirmDialog open={!!excluir} onOpenChange={v => { if (!v) setExcluir(null); }} onConfirm={remover} itemName={excluir?.nome} description="Excluir esta máquina também remove seus vínculos com produtos e usuários. Deseja continuar?" isLoading={ocupado} />
   </section>;
 }
