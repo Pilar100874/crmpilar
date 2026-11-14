@@ -1,6 +1,6 @@
 export interface OpcaoMaterial { id: string; produto_id: string; quantidade: number; unidade: string }
 export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[] }
-export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number }
+export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number }
 export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[] }
 export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[] }
 export const unidadesConsumo = ['un', 'kg', 'g', 'L', 'mL', 'm', 'm²', 'm³'] as const;
@@ -21,6 +21,7 @@ export function validarFicha(f: FichaProducao): string | null {
     if (!e.nome.trim() || !e.opcoes.length) return 'Cada etapa precisa de nome e pelo menos uma máquina';
     if (new Set(e.opcoes.map(o => o.maquina_id)).size !== e.opcoes.length) return 'Não repita a mesma máquina na etapa';
     for (const o of e.opcoes) if (!o.maquina_id || !Number.isFinite(o.capacidade_minuto) || o.capacidade_minuto <= 0) return 'Selecione a máquina e sua capacidade por minuto';
+    for (const o of e.opcoes) if (o.setup_minutos != null && (!Number.isFinite(o.setup_minutos) || o.setup_minutos < 0)) return 'O tempo de setup não pode ser negativo';
   }
   return null;
 }
@@ -32,8 +33,8 @@ export function calcularProducao(f: FichaProducao, quantidade: number, escolhas:
   });
   const etapas = f.etapas.map(e => {
     const o = e.opcoes.find(o => o.id === escolhas[e.id]) || e.opcoes[0];
-    return { etapa_id: e.id, maquina_id: o.maquina_id, capacidade: o.capacidade_minuto, minutos: quantidade / o.capacidade_minuto, indisponivel: indisponiveis.includes(o.maquina_id) };
+    return { etapa_id: e.id, maquina_id: o.maquina_id, capacidade: o.capacidade_minuto, setup: o.setup_minutos || 0, minutosProducao: quantidade / o.capacidade_minuto, minutos: (o.setup_minutos || 0) + quantidade / o.capacidade_minuto, indisponivel: indisponiveis.includes(o.maquina_id) };
   });
   const gargalo = etapas.length ? Math.min(...etapas.map(e => e.capacidade)) : null;
-  return { materiais, etapas, minutosSequenciais: etapas.reduce((s, e) => s + e.minutos, 0), capacidadeLinha: gargalo, minutosLinha: gargalo ? quantidade / gargalo : null, indisponivel: etapas.some(e => e.indisponivel) };
+  return { materiais, etapas, minutosSequenciais: etapas.reduce((s, e) => s + e.minutos, 0), capacidadeLinha: gargalo, setupTotal: etapas.reduce((s, e) => s + e.setup, 0), minutosLinha: gargalo ? etapas.reduce((s, e) => s + e.setup, 0) + quantidade / gargalo : null, indisponivel: etapas.some(e => e.indisponivel) };
 }

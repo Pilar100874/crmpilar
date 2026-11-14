@@ -40,3 +40,19 @@ describe('ficha de produção', () => {
     expect(validarFicha({ ...ficha, etapas: [{ id: 'e', nome: 'Etapa', opcoes: [{ id: 'm', maquina_id: 'm', capacidade_minuto: 0 }] }] })).toBeTruthy();
   });
 });
+
+describe('tempo de setup', () => {
+  it('soma o setup de cada máquina ao tempo da etapa e ao total', () => {
+    const f = { quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [
+      { id: 'e1', nome: 'Corte', opcoes: [{ id: 'o1', maquina_id: 'm1', capacidade_minuto: 10, setup_minutos: 15 }] },
+      { id: 'e2', nome: 'Dobra', opcoes: [{ id: 'o2', maquina_id: 'm2', capacidade_minuto: 5, setup_minutos: 5 }] },
+    ] };
+    const r = calcularProducao(f, 50);
+    expect(r?.etapas.map(e => e.minutos)).toEqual([20, 15]);
+    expect(r?.minutosSequenciais).toBe(35);
+    expect(r?.setupTotal).toBe(20);
+  });
+  it('setup negativo é recusado', () => {
+    expect(validarFicha({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'X', opcoes: [{ id: 'o', maquina_id: 'm', capacidade_minuto: 1, setup_minutos: -1 }] }] })).toMatch(/setup/);
+  });
+});
