@@ -218,6 +218,13 @@
       "when": 1794619118534,
       "tag": "0030_usuario_operador_maquina_setor_produtivo",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794619665986,
+      "tag": "0031_produto_estoque_minimo",
+      "breakpoints": true
     }
   ]
 }

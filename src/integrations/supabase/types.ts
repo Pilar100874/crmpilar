@@ -23763,6 +23763,7 @@ export type Database = {
           empilhamento_maximo: number | null
           estabelecimento_id: string | null
           estoque: number | null
+          estoque_minimo: number
           faixa_etaria: string | null
           ficha_producao: Json | null
           foto_url: string | null
@@ -23788,6 +23789,7 @@ export type Database = {
           origem: string | null
           peso_frete_tipo: string | null
           peso_unitario: number | null
+          prazo_reposicao_dias: number
           preco_ativo: boolean | null
           preco_minimo: number | null
           preco_tabela: number | null
@@ -23826,6 +23828,7 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          estoque_minimo?: number
           faixa_etaria?: string | null
           ficha_producao?: Json | null
           foto_url?: string | null
@@ -23851,6 +23854,7 @@ export type Database = {
           origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          prazo_reposicao_dias?: number
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null
@@ -23889,6 +23893,7 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          estoque_minimo?: number
           faixa_etaria?: string | null
           ficha_producao?: Json | null
           foto_url?: string | null
@@ -23914,6 +23919,7 @@ export type Database = {
           origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          prazo_reposicao_dias?: number
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null

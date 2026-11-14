@@ -1,3 +1,4 @@
+import { EstoqueMinimoCampos } from './EstoqueMinimoCampos';
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
@@ -143,6 +144,8 @@ interface FormData {
   descricao: string;
   marca: string;
   estoque: string;
+  estoque_minimo: string;
+  prazo_reposicao_dias: string;
   garantia: string;
   origem: string;
   condicao: string;
@@ -208,6 +211,8 @@ const initialFormData: FormData = {
   descricao: "",
   marca: "",
   estoque: "0",
+  estoque_minimo: "0",
+  prazo_reposicao_dias: "15",
   garantia: "",
   origem: "nacional",
   condicao: "novo",
@@ -804,6 +809,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         descricao: formData.descricao || null,
         marca: formData.marca || null,
         estoque: formData.estoque ? parseInt(formData.estoque) : 0,
+        estoque_minimo: formData.estoque_minimo ? Number(formData.estoque_minimo) : 0,
+        prazo_reposicao_dias: formData.prazo_reposicao_dias ? parseInt(formData.prazo_reposicao_dias) : 15,
         garantia: formData.garantia || null,
         origem: formData.origem || "nacional",
         condicao: formData.condicao || "novo",
@@ -1009,6 +1016,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       descricao: p.descricao || "",
       marca: p.marca || "",
       estoque: p.estoque?.toString() || "0",
+      estoque_minimo: p.estoque_minimo?.toString() || "0",
+      prazo_reposicao_dias: p.prazo_reposicao_dias?.toString() || "15",
       garantia: p.garantia || "",
       origem: p.origem || "nacional",
       condicao: p.condicao || "novo",
@@ -1994,6 +2003,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       />
                     </div>
                   </div>
+                  <EstoqueMinimoCampos
+                    produtoId={editingProduto?.id}
+                    minimo={formData.estoque_minimo}
+                    prazo={formData.prazo_reposicao_dias}
+                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
+                  />
                 </div>
 
                 {/* Detalhes */}
