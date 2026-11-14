@@ -54,6 +54,9 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from './ProdutoProducaoTabs';
 import { abasProducao } from '@/lib/producao/regrasProduto';
+import { FichaProducaoEditor } from './FichaProducaoEditor';
+import { fichaVazia, lerFicha, validarFicha, type FichaProducao } from '@/lib/producao/fichaProducao';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -235,8 +238,9 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [activeTab, setActiveTab] = useState("basico");
   const [maquinas, setMaquinas] = useState<MaquinaOpcao[]>([]);
   const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
+  const [ficha, setFicha] = useState<FichaProducao>(fichaVazia);
   useEffect(() => {
-    supabase.from('producao_maquinas').select('id,nome,codigo,ativo').eq('estabelecimento_id', estabelecimentoId).order('nome').then(r => {
+    supabase.from('producao_maquinas').select('id,nome,codigo,ativo,em_manutencao').eq('estabelecimento_id', estabelecimentoId).order('nome').then(r => {
       if (r.error) toast.error('Não foi possível carregar as máquinas'); else setMaquinas(r.data || []);
     });
   }, [estabelecimentoId, showDialog]);
@@ -673,6 +677,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleSave = async () => {
+    if (formData.produzido) {
+      const erroFicha = validarFicha(ficha);
+      if (erroFicha) { toast.error(erroFicha); setActiveTab('producao'); return; }
+    }
     // Validações obrigatórias
     if (!formData.nome.trim()) {
       toast.error("Nome do produto é obrigatório");
@@ -746,6 +754,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       const selectedNcm = ncmCodigos.find(n => n.id === formData.ncm_id);
 
       const produtoData = {
+        ficha_producao: ficha as unknown as Json,
         materia_prima: formData.materia_prima,
         produzido: formData.produzido,
         comercializavel: formData.comercializavel,
@@ -855,7 +864,9 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
       // === Sincroniza galeria produto_imagens ===
       if (produtoId && formData.produzido) {
-        const { error } = await supabase.rpc('salvar_maquinas_produto', { p_produto: produtoId, p_maquinas: maquinasSelecionadas });
+        const maquinasDaFicha = ficha.etapas.flatMap(e => e.opcoes.map(o => o.maquina_id));
+        const todasMaquinas = [...new Set([...maquinasSelecionadas, ...maquinasDaFicha])];
+        const { error } = await supabase.rpc('salvar_maquinas_produto', { p_produto: produtoId, p_maquinas: todasMaquinas });
         if (error) { toast.error('Produto salvo, mas não foi possível salvar as máquinas'); return; }
       }
       if (produtoId) {
@@ -916,6 +927,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleEdit = async (produto: Produto) => {
+    setFicha(lerFicha(produto.ficha_producao));
     setActiveTab('basico');
     const vinculos = await supabase.from('produto_maquinas').select('maquina_id').eq('produto_id', produto.id);
     if (vinculos.error) { toast.error('Não foi possível carregar as máquinas do produto'); return; }
@@ -1034,6 +1046,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const openNewDialog = () => {
+    setFicha(fichaVazia());
     setMaquinasSelecionadas([]);
     setEditingProduto(null);
     setSelectedFile(null);
@@ -1500,7 +1513,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </TabsList>
 
               {formData.produzido && <>
-                <TabsContent value="producao"><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.materia_prima && p.id !== editingProduto?.id)} maquinas={maquinas} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
                 <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
               </>}
 

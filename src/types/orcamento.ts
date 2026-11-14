@@ -21,6 +21,7 @@ export interface Produto {
   comercializavel?: boolean;
   producao_observacoes?: string | null;
   producao_tempo_minutos?: number | null;
+  ficha_producao?: unknown;
   id: string;
   estabelecimento_id: string;
   codigo?: string;

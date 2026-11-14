@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
-export interface MaquinaOpcao { id: string; nome: string; codigo: string; ativo: boolean }
+export interface MaquinaOpcao { id: string; nome: string; codigo: string; ativo: boolean; em_manutencao?: boolean }
 
 export function ProdutoProducaoCampos({ tempo, observacoes, onChange }: {
   tempo: string; observacoes: string; onChange: (campo: 'producao_tempo_minutos' | 'producao_observacoes', valor: string) => void;

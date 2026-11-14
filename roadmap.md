@@ -1,5 +1,8 @@
 # Roadmap — Atendimento
 ## Produtos e produção
+- [x] Ficha de produção com quantidade-base, materiais e substitutos com consumo próprio
+- [x] Etapas sequenciais com máquinas alternativas, capacidade e cálculo de consumo/tempo
+- [x] Validar gravação e reabertura da ficha de produção
 - [x] Classificações de matéria-prima, produzido e comercializável e abas condicionais de produção/máquinas
 - [x] Cadastros de máquinas e conhecimento dos usuários
 - [x] Filtrar e bloquear produtos não comercializáveis nos orçamentos e validar o fluxo
