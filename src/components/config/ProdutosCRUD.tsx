@@ -51,6 +51,9 @@ import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
 import { normalizeImageToSquare } from "@/lib/imageNormalize";
 import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
+import { Checkbox } from '@/components/ui/checkbox';
+import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from './ProdutoProducaoTabs';
+import { abasProducao } from '@/lib/producao/regrasProduto';
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -89,6 +92,11 @@ interface CustomFieldFilters {
 }
 
 interface FormData {
+  materia_prima: boolean;
+  produzido: boolean;
+  comercializavel: boolean;
+  producao_observacoes: string;
+  producao_tempo_minutos: string;
   nome: string;
   codigo: string;
   largura: string;
@@ -149,6 +157,11 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
+  materia_prima: false,
+  produzido: false,
+  comercializavel: true,
+  producao_observacoes: '',
+  producao_tempo_minutos: '',
   nome: "",
   codigo: "",
   largura: "",
@@ -220,6 +233,16 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("basico");
+  const [maquinas, setMaquinas] = useState<MaquinaOpcao[]>([]);
+  const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
+  useEffect(() => {
+    supabase.from('producao_maquinas').select('id,nome,codigo,ativo').eq('estabelecimento_id', estabelecimentoId).order('nome').then(r => {
+      if (r.error) toast.error('Não foi possível carregar as máquinas'); else setMaquinas(r.data || []);
+    });
+  }, [estabelecimentoId, showDialog]);
+  useEffect(() => {
+    if (!formData.produzido && ['producao', 'maquinas'].includes(activeTab)) setActiveTab('basico');
+  }, [formData.produzido, activeTab]);
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -723,6 +746,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       const selectedNcm = ncmCodigos.find(n => n.id === formData.ncm_id);
 
       const produtoData = {
+        materia_prima: formData.materia_prima,
+        produzido: formData.produzido,
+        comercializavel: formData.comercializavel,
+        producao_observacoes: formData.producao_observacoes || null,
+        producao_tempo_minutos: formData.producao_tempo_minutos ? Number(formData.producao_tempo_minutos) : null,
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome.trim(),
         codigo: formData.codigo.trim(),
@@ -826,6 +854,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       }
 
       // === Sincroniza galeria produto_imagens ===
+      if (produtoId && formData.produzido) {
+        const { error } = await supabase.rpc('salvar_maquinas_produto', { p_produto: produtoId, p_maquinas: maquinasSelecionadas });
+        if (error) { toast.error('Produto salvo, mas não foi possível salvar as máquinas'); return; }
+      }
       if (produtoId) {
         // 1. Remove os ids que não estão mais na galeria
         const keepIds = uploadedImages.map((i) => i.id).filter(Boolean) as string[];
@@ -884,6 +916,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleEdit = async (produto: Produto) => {
+    setActiveTab('basico');
+    const vinculos = await supabase.from('produto_maquinas').select('maquina_id').eq('produto_id', produto.id);
+    if (vinculos.error) { toast.error('Não foi possível carregar as máquinas do produto'); return; }
+    setMaquinasSelecionadas((vinculos.data || []).map(v => v.maquina_id));
     setEditingProduto(produto);
     setSelectedFile(null);
     // carrega galeria do produto
@@ -914,6 +950,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     const p = produto as any;
     setFormData({
       nome: produto.nome,
+      materia_prima: produto.materia_prima ?? false,
+      produzido: produto.produzido ?? false,
+      comercializavel: produto.comercializavel ?? true,
+      producao_observacoes: produto.producao_observacoes || '',
+      producao_tempo_minutos: produto.producao_tempo_minutos?.toString() || '',
       codigo: p.codigo || "",
       largura: produto.largura?.toString() || "",
       altura: p.altura?.toString() || "",
@@ -993,6 +1034,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const openNewDialog = () => {
+    setMaquinasSelecionadas([]);
     setEditingProduto(null);
     setSelectedFile(null);
     setFormData(initialFormData);
@@ -1406,7 +1448,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
           <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
@@ -1454,11 +1496,20 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <span className="hidden sm:inline">Marketplace</span>
                   <span className="sm:hidden">MKT</span>
                 </TabsTrigger>
+                {abasProducao(formData).map(aba => <TabsTrigger key={aba} value={aba} className="text-xs sm:text-sm py-2">{aba === 'producao' ? 'Produção' : 'Máquinas'}</TabsTrigger>)}
               </TabsList>
+
+              {formData.produzido && <>
+                <TabsContent value="producao"><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
+              </>}
 
               <TabsContent value="basico" className="mt-4 sm:mt-6">
                 <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-b pb-4">
+                    {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'produzido', nome: 'Produto produzido' }, { campo: 'comercializavel', nome: 'Pode ser comercializado' }] as const).map(flag => <Label key={flag.campo} className="flex items-center gap-2 text-sm"><Checkbox checked={formData[flag.campo]} onCheckedChange={v => setFormData(prev => ({ ...prev, [flag.campo]: v === true }))} />{flag.nome}</Label>)}
+                  </div>
                   <div className="space-y-3 sm:space-y-4">
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

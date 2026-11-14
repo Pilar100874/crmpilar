@@ -1,4 +1,9 @@
 # Roadmap — Atendimento
+## Produtos e produção
+- [x] Classificações de matéria-prima, produzido e comercializável e abas condicionais de produção/máquinas
+- [x] Cadastros de máquinas e conhecimento dos usuários
+- [x] Filtrar e bloquear produtos não comercializáveis nos orçamentos e validar o fluxo
+
 - [x] Corrigir avanço após respostas curtas no roteiro de orçamento e limitar repetição por silêncio
 - [ ] Validar captura de respostas curtas em ligação real — depende de instalar novos aparelhos compilados e atender o teste
 - [x] Padronizar cabeçalhos e organização visual dos painéis do Atendimento

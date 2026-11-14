@@ -85,6 +85,8 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/config/regras-formulario-visita", titulo: "Regras de Formulário de Visita", aliases: ["regras de formulario"] },
   { path: "/pedidos-perdidos", titulo: "Pedidos perdidos", aliases: ["orcamentos perdidos", "vendas perdidas", "motivos de perda"] },
   { path: "/vendas-config", titulo: "Configuração de Vendas", aliases: ["configuracoes de vendas", "config de vendas", "config vendas"] },
+  { path: "/vendas-config?tab=maquinas", titulo: "Máquinas", aliases: ["cadastro de maquinas", "maquinas de producao"] },
+  { path: "/vendas-config?tab=conhecimento-maquinas", titulo: "Conhecimento em máquinas", aliases: ["usuarios das maquinas", "operadores de maquinas"] },
 
   // ============ Menu Principal - Assistente ============
   { path: "/contagem", titulo: "Contagem Inteligente", aliases: ["contagem"] },

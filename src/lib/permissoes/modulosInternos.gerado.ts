@@ -162,6 +162,14 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Produtos"
     },
     {
+      "id": "maquinas",
+      "label": "Máquinas"
+    },
+    {
+      "id": "conhecimento-maquinas",
+      "label": "Conhecimento em máquinas"
+    },
+    {
       "id": "categorias",
       "label": "Categorias"
     },

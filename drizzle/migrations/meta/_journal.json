@@ -190,6 +190,13 @@
       "when": 1794597416553,
       "tag": "0026_rls_usuario_interno_ferr_push_strategy",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794617431480,
+      "tag": "0027_produtos_producao_maquinas",
+      "breakpoints": true
     }
   ]
 }

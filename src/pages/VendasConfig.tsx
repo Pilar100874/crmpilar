@@ -32,6 +32,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProdutosCRUD } from '@/components/config/ProdutosCRUD';
+import { MaquinasCRUD } from '@/components/config/MaquinasCRUD';
+import { MaquinaUsuariosCRUD } from '@/components/config/MaquinaUsuariosCRUD';
 import { ProdutoCategoriasCRUD } from '@/components/config/ProdutoCategoriasCRUD';
 import { ProdutoGruposCRUD } from '@/components/config/ProdutoGruposCRUD';
 import { ProdutoCamposCustomizadosCRUD } from '@/components/config/ProdutoCamposCustomizadosCRUD';
@@ -60,6 +62,8 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'produtos', label: 'Produtos', icon: Package },
+  { id: 'maquinas', label: 'Máquinas', icon: Settings },
+  { id: 'conhecimento-maquinas', label: 'Conhecimento em máquinas', icon: Layers },
   { id: 'categorias', label: 'Categorias', icon: Layers },
   { id: 'grupos', label: 'Grupos', icon: FolderOpen },
   { id: 'campos', label: 'Campos Customizados', icon: Settings },
@@ -185,6 +189,8 @@ export default function VendasConfig() {
           </div>
 
           <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+            <TabsContent value="maquinas" className="mt-0">{estabelecimentoId && <MaquinasCRUD estabelecimentoId={estabelecimentoId} />}</TabsContent>
+            <TabsContent value="conhecimento-maquinas" className="mt-0">{estabelecimentoId && <MaquinaUsuariosCRUD estabelecimentoId={estabelecimentoId} />}</TabsContent>
             <TabsContent value="produtos" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
