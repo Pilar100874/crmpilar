@@ -45,7 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -1540,7 +1540,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <span className="hidden sm:inline">Marketplace</span>
                   <span className="sm:hidden">MKT</span>
                 </TabsTrigger>
-                {abasProducao(formData).map(aba => <TabsTrigger key={aba} value={aba} className="text-xs sm:text-sm py-2">{aba === 'producao' ? 'Produção' : 'Máquinas'}</TabsTrigger>)}
+                {abasProducao(formData).map(aba => {
+                  const Icone = aba === 'producao' ? Factory : Cog;
+                  return <TabsTrigger key={aba} value={aba} className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"><Icone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span>{aba === 'producao' ? 'Produção' : 'Máquinas'}</span></TabsTrigger>;
+                })}
               </TabsList>
 
               {formData.produzido && <>

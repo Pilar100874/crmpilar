@@ -41,6 +41,21 @@ describe('ficha de produção', () => {
   });
 });
 
+describe('metas por matéria-prima', () => {
+  it('usa a meta da matéria-prima escolhida, inclusive do substituto', () => {
+    const f = structuredClone(ficha);
+    f.materiais[0].opcoes[0].meta_producao = 500;
+    f.materiais[0].opcoes[1].meta_producao = 800;
+    expect(calcularProducao(f, 100)?.materiais[0].meta_producao).toBe(500);
+    expect(calcularProducao(f, 100, { x: 'a1' })?.materiais[0].meta_producao).toBe(800);
+  });
+  it('exige meta positiva quando informada', () => {
+    const f = structuredClone(ficha);
+    f.materiais[0].opcoes[0].meta_producao = 0;
+    expect(validarFicha(f)).toMatch(/meta de produção/i);
+  });
+});
+
 describe('tempo de setup', () => {
   it('soma o setup de cada máquina ao tempo da etapa e ao total', () => {
     const f = { quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [
@@ -54,6 +69,16 @@ describe('tempo de setup', () => {
   });
   it('setup negativo é recusado', () => {
     expect(validarFicha({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'X', opcoes: [{ id: 'o', maquina_id: 'm', capacidade_minuto: 1, setup_minutos: -1 }] }] })).toMatch(/setup/);
+  });
+  it('informa o setup de cada reposição sem somá-lo ao setup inicial', () => {
+    const f: FichaProducao = { quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'Corte', opcoes: [{ id: 'o', maquina_id: 'm', capacidade_minuto: 10, setup_minutos: 15, setup_troca_material_minutos: 4 }] }] };
+    const r = calcularProducao(f, 100);
+    expect(r?.etapas[0].minutos).toBe(25);
+    expect(r?.etapas[0].setupTrocaMaterial).toBe(4);
+    expect(r?.setupTotal).toBe(15);
+  });
+  it('recusa tempo de reposição negativo', () => {
+    expect(validarFicha({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'X', opcoes: [{ id: 'o', maquina_id: 'm', capacidade_minuto: 1, setup_troca_material_minutos: -1 }] }] })).toMatch(/reposição/);
   });
 });
 

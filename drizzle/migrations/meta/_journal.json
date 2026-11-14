@@ -239,6 +239,13 @@
       "when": 1794673750803,
       "tag": "0033_validar_regras_materia_prima_maquina",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794686489487,
+      "tag": "0034_metas_e_setup_reposicao_producao",
+      "breakpoints": true
     }
   ]
 }
