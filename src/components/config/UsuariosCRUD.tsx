@@ -131,6 +131,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [ambienteCelular, setAmbienteCelular] = useState<string>("");
   const [ambienteTablet, setAmbienteTablet] = useState<string>("");
   const [usaEpi, setUsaEpi] = useState(false);
+  const [operadorMaquina, setOperadorMaquina] = useState(false);
+  const [setorProdutivo, setSetorProdutivo] = useState(false);
   const [ambientesAutomacao, setAmbientesAutomacao] = useState<{ id: string; nome: string; dispositivo: string | null }[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
@@ -192,6 +194,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         automacao_ambiente_celular,
         automacao_ambiente_tablet,
         usa_epi,
+        operador_maquina,
+        setor_produtivo,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
@@ -411,6 +415,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       automacao_ambiente_celular: ambienteCelular || null,
       automacao_ambiente_tablet: ambienteTablet || null,
       usa_epi: usaEpi,
+      operador_maquina: operadorMaquina,
+      setor_produtivo: setorProdutivo,
     };
 
     if (editingId) {
@@ -747,6 +753,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setAmbienteCelular("");
     setAmbienteTablet("");
     setUsaEpi(false);
+    setOperadorMaquina(false);
+    setSetorProdutivo(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -783,6 +791,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setAmbienteCelular(((usuario as any).automacao_ambiente_celular as string) || "");
     setAmbienteTablet(((usuario as any).automacao_ambiente_tablet as string) || "");
     setUsaEpi(!!(usuario as any).usa_epi);
+    setOperadorMaquina(!!(usuario as any).operador_maquina);
+    setSetorProdutivo(!!(usuario as any).setor_produtivo);
     setEditingId(usuario.id);
     setFormOpen(true);
 
@@ -1267,6 +1277,27 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <div>
               <Label htmlFor="usuario-usa-epi">Usa EPI</Label>
               <p className="text-xs text-muted-foreground">Marcado, o usuário aparece no Controle de EPI para receber entregas.</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Produção */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">🏭 Produção</h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Checkbox id="usuario-operador-maquina" checked={operadorMaquina} onCheckedChange={(v) => setOperadorMaquina(v === true)} />
+              <div>
+                <Label htmlFor="usuario-operador-maquina">Operador de máquina</Label>
+                <p className="text-xs text-muted-foreground">Marcado, o usuário aparece no vínculo de máquinas e conhecimento (cadastro de máquinas).</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox id="usuario-setor-produtivo" checked={setorProdutivo} onCheckedChange={(v) => setSetorProdutivo(v === true)} />
+              <div>
+                <Label htmlFor="usuario-setor-produtivo">Pertence ao setor produtivo</Label>
+                <p className="text-xs text-muted-foreground">Identifica o usuário como parte da equipe de produção.</p>
+              </div>
             </div>
           </div>
         </Card>

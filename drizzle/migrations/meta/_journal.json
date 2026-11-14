@@ -211,6 +211,13 @@
       "when": 1794617976332,
       "tag": "0029_ficha_producao_materiais_etapas",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794619118534,
+      "tag": "0030_usuario_operador_maquina_setor_produtivo",
+      "breakpoints": true
     }
   ]
 }

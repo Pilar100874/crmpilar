@@ -29843,6 +29843,7 @@ export type Database = {
           imap: string | null
           is_porteiro: boolean
           nome: string
+          operador_maquina: boolean
           pilarfone_abas: string[] | null
           pode_usar_interfone: boolean
           pop: string | null
@@ -29856,6 +29857,7 @@ export type Database = {
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
+          setor_produtivo: boolean
           sip_porta: number | null
           sip_porta_alternativa: number | null
           sip_servidor: string | null
@@ -29892,6 +29894,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome: string
+          operador_maquina?: boolean
           pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
@@ -29905,6 +29908,7 @@ export type Database = {
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
+          setor_produtivo?: boolean
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null
@@ -29941,6 +29945,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome?: string
+          operador_maquina?: boolean
           pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
@@ -29954,6 +29959,7 @@ export type Database = {
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
+          setor_produtivo?: boolean
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null

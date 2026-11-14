@@ -27,7 +27,7 @@ export function MaquinaUsuariosCRUD({ estabelecimentoId, maquinaId }: { estabele
   const carregar = async () => {
     const [m, u, v] = await Promise.all([
       supabase.from('producao_maquinas').select('*').eq('estabelecimento_id', estabelecimentoId).order('nome'),
-      supabase.from('usuarios').select('id,nome').eq('estabelecimento_id', estabelecimentoId).order('nome'),
+      supabase.from('usuarios').select('id,nome').eq('estabelecimento_id', estabelecimentoId).eq('operador_maquina', true).order('nome'),
       maquinaId
         ? supabase.from('producao_maquina_usuarios').select('*').eq('maquina_id', maquinaId).order('created_at')
         : supabase.from('producao_maquina_usuarios').select('*').order('created_at'),
@@ -55,6 +55,7 @@ export function MaquinaUsuariosCRUD({ estabelecimentoId, maquinaId }: { estabele
     <div className="flex flex-wrap justify-between items-center gap-3"><h2 className="text-lg font-semibold">{maquinaId ? 'Usuários que sabem usar esta máquina' : 'Conhecimento em máquinas'}</h2><Button onClick={() => { setEditando(null); setForm({ ...vazio, maquina_id: maquinaId || '' }); setAberto(true); }}><Plus className="h-4 w-4 mr-2" />Vincular usuário</Button></div>
     <Input aria-label="Buscar conhecimentos" placeholder="Buscar usuário ou máquina" value={busca} onChange={e => setBusca(e.target.value)} />
     {!items.length && <p className="text-sm text-muted-foreground">Nenhum usuário vinculado.</p>}
+    {!usuarios.length && <p className="text-sm text-muted-foreground">Nenhum usuário marcado como operador de máquina. Marque o flag "Operador de máquina" no cadastro do usuário.</p>}
     {items.filter(v => `${nomeUsuario(v.usuario_id)} ${nomeMaquina(v.maquina_id)}`.toLowerCase().includes(busca.toLowerCase())).map(v => <div key={v.id} className="flex justify-between items-center gap-2 border-b py-3"><div className="min-w-0 break-words"><p className="font-medium">{nomeUsuario(v.usuario_id)}</p><p className="text-sm text-muted-foreground">{nomeMaquina(v.maquina_id)} · {grausConhecimento.find(g => g.valor === v.grau_conhecimento)?.nome}</p>{v.observacoes && <p className="text-sm">{v.observacoes}</p>}</div><div className="shrink-0 flex"><Button variant="ghost" size="icon" aria-label={`Editar conhecimento de ${nomeUsuario(v.usuario_id)}`} onClick={() => { setEditando(v.id); setForm({ maquina_id: v.maquina_id, usuario_id: v.usuario_id, grau_conhecimento: v.grau_conhecimento, observacoes: v.observacoes || '' }); setAberto(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label="Excluir vínculo" onClick={() => setExcluir(v)}><Trash2 className="h-4 w-4" /></Button></div></div>)}
     <Dialog open={aberto} onOpenChange={setAberto}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editando ? 'Editar conhecimento' : 'Vincular usuário à máquina'}</DialogTitle></DialogHeader><form onSubmit={salvar} className="space-y-4">
       {!maquinaId && <div className="space-y-2"><Label>Máquina *</Label><Select value={form.maquina_id} onValueChange={v => setForm({ ...form, maquina_id: v })}><SelectTrigger aria-label="Máquina"><SelectValue placeholder="Selecione a máquina" /></SelectTrigger><SelectContent>{maquinas.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}{!m.ativo && ' (inativa)'}</SelectItem>)}</SelectContent></Select></div>}
