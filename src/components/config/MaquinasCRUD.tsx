@@ -12,7 +12,7 @@ import { toast } from '@/lib/toast-config';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Maquina = Tables<'producao_maquinas'>;
-const vazio = { nome: '', codigo: '', fabricante: '', modelo: '', observacoes: '', ativo: true };
+const vazio = { nome: '', codigo: '', fabricante: '', modelo: '', observacoes: '', ativo: true, em_manutencao: false };
 
 export function MaquinasCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [items, setItems] = useState<Maquina[]>([]);
@@ -48,12 +48,13 @@ export function MaquinasCRUD({ estabelecimentoId }: { estabelecimentoId: string 
     <Input aria-label="Buscar máquinas" placeholder="Buscar por nome ou código" value={busca} onChange={e => setBusca(e.target.value)} />
     {!items.length && <p className="text-muted-foreground text-sm">Nenhuma máquina cadastrada.</p>}
     {items.filter(m => `${m.nome} ${m.codigo}`.toLowerCase().includes(busca.toLowerCase())).map(m => <div key={m.id} className="flex items-center justify-between gap-2 border-b py-3">
-      <div className="min-w-0 break-words"><p className="font-medium">{m.nome}</p><p className="text-sm text-muted-foreground">{m.codigo} · {m.modelo || 'Sem modelo'} · {m.ativo ? 'Ativa' : 'Inativa'}</p></div>
-      <div className="flex shrink-0"><Button variant="ghost" size="icon" aria-label={`Editar ${m.nome}`} onClick={() => { setEditando(m.id); setForm({ nome: m.nome, codigo: m.codigo, fabricante: m.fabricante || '', modelo: m.modelo || '', observacoes: m.observacoes || '', ativo: m.ativo }); setAberto(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label={`Excluir ${m.nome}`} onClick={() => setExcluir(m)}><Trash2 className="h-4 w-4" /></Button></div>
+      <div className="min-w-0 break-words"><p className="font-medium">{m.nome}</p><p className="text-sm text-muted-foreground">{m.codigo} · {m.modelo || 'Sem modelo'} · {m.ativo ? 'Ativa' : 'Inativa'} · {m.em_manutencao ? 'Em manutenção' : 'Fora de manutenção'}</p></div>
+      <div className="flex shrink-0"><Button variant="ghost" size="icon" aria-label={`Editar ${m.nome}`} onClick={() => { setEditando(m.id); setForm({ nome: m.nome, codigo: m.codigo, fabricante: m.fabricante || '', modelo: m.modelo || '', observacoes: m.observacoes || '', ativo: m.ativo, em_manutencao: m.em_manutencao }); setAberto(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label={`Excluir ${m.nome}`} onClick={() => setExcluir(m)}><Trash2 className="h-4 w-4" /></Button></div>
     </div>)}
     <Dialog open={aberto} onOpenChange={setAberto}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editando ? 'Editar máquina' : 'Nova máquina'}</DialogTitle></DialogHeader><form onSubmit={salvar} className="space-y-4">
       {(['nome', 'codigo', 'fabricante', 'modelo'] as const).map(k => <div key={k} className="space-y-2"><Label htmlFor={`maquina-${k}`}>{({ nome: 'Nome', codigo: 'Código', fabricante: 'Fabricante', modelo: 'Modelo' })[k]}{(k === 'nome' || k === 'codigo') && ' *'}</Label><Input id={`maquina-${k}`} required={k === 'nome' || k === 'codigo'} value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })} /></div>)}
       <Label className="flex items-center gap-2"><Checkbox checked={form.ativo} onCheckedChange={v => setForm({ ...form, ativo: v === true })} />Máquina ativa</Label>
+      <Label htmlFor="maquina-manutencao" className="flex items-center gap-2"><Checkbox id="maquina-manutencao" checked={form.em_manutencao} onCheckedChange={v => setForm({ ...form, em_manutencao: v === true })} />Em manutenção</Label>
       <div className="space-y-2"><Label htmlFor="maquina-obs">Observações</Label><Textarea id="maquina-obs" value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} /></div>
       <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setAberto(false)}>Cancelar</Button><Button disabled={ocupado}>Salvar</Button></div>
     </form></DialogContent></Dialog>

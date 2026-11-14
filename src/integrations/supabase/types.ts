@@ -23464,6 +23464,7 @@ export type Database = {
           ativo: boolean
           codigo: string
           created_at: string
+          em_manutencao: boolean
           estabelecimento_id: string
           fabricante: string | null
           id: string
@@ -23475,6 +23476,7 @@ export type Database = {
           ativo?: boolean
           codigo: string
           created_at?: string
+          em_manutencao?: boolean
           estabelecimento_id: string
           fabricante?: string | null
           id?: string
@@ -23486,6 +23488,7 @@ export type Database = {
           ativo?: boolean
           codigo?: string
           created_at?: string
+          em_manutencao?: boolean
           estabelecimento_id?: string
           fabricante?: string | null
           id?: string

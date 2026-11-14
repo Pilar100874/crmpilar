@@ -197,6 +197,13 @@
       "when": 1794617431480,
       "tag": "0027_produtos_producao_maquinas",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794617856710,
+      "tag": "0028_maquina_em_manutencao",
+      "breakpoints": true
     }
   ]
 }
