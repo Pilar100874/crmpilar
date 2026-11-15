@@ -288,6 +288,13 @@
       "when": 1794713998091,
       "tag": "0040_estoque_movimento_mesma_empresa",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794714258589,
+      "tag": "0041_notas_fiscais_emissao_sefaz",
+      "breakpoints": true
     }
   ]
 }

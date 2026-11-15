@@ -9233,6 +9233,7 @@ export type Database = {
           faturamento_estimado: string | null
           funcionarios_estimado: string | null
           id: string
+          inscricao_estadual: string | null
           ja_respondeu_whatsapp: boolean
           latitude: number | null
           longitude: number | null
@@ -9300,6 +9301,7 @@ export type Database = {
           faturamento_estimado?: string | null
           funcionarios_estimado?: string | null
           id?: string
+          inscricao_estadual?: string | null
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -9367,6 +9369,7 @@ export type Database = {
           faturamento_estimado?: string | null
           funcionarios_estimado?: string | null
           id?: string
+          inscricao_estadual?: string | null
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -14882,12 +14885,17 @@ export type Database = {
       }
       notas_fiscais: {
         Row: {
+          ambiente: string | null
+          caminho_danfe: string | null
+          caminho_xml: string | null
           chave: string | null
           created_at: string
           data_emissao: string | null
+          emitida_em: string | null
           empresa_id: string | null
           estabelecimento_id: string
           id: string
+          mensagem_sefaz: string | null
           natureza_operacao: string | null
           numero: string | null
           observacoes: string | null
@@ -14896,8 +14904,11 @@ export type Database = {
           participante_cnpj: string | null
           participante_nome: string | null
           participante_uf: string | null
+          protocolo: string | null
+          ref_externa: string | null
           serie: string | null
           status: string
+          status_sefaz: string | null
           tipo: string
           unidade_id: string | null
           updated_at: string
@@ -14914,12 +14925,17 @@ export type Database = {
           xml: string | null
         }
         Insert: {
+          ambiente?: string | null
+          caminho_danfe?: string | null
+          caminho_xml?: string | null
           chave?: string | null
           created_at?: string
           data_emissao?: string | null
+          emitida_em?: string | null
           empresa_id?: string | null
           estabelecimento_id: string
           id?: string
+          mensagem_sefaz?: string | null
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
@@ -14928,8 +14944,11 @@ export type Database = {
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          protocolo?: string | null
+          ref_externa?: string | null
           serie?: string | null
           status?: string
+          status_sefaz?: string | null
           tipo: string
           unidade_id?: string | null
           updated_at?: string
@@ -14946,12 +14965,17 @@ export type Database = {
           xml?: string | null
         }
         Update: {
+          ambiente?: string | null
+          caminho_danfe?: string | null
+          caminho_xml?: string | null
           chave?: string | null
           created_at?: string
           data_emissao?: string | null
+          emitida_em?: string | null
           empresa_id?: string | null
           estabelecimento_id?: string
           id?: string
+          mensagem_sefaz?: string | null
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
@@ -14960,8 +14984,11 @@ export type Database = {
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          protocolo?: string | null
+          ref_externa?: string | null
           serie?: string | null
           status?: string
+          status_sefaz?: string | null
           tipo?: string
           unidade_id?: string | null
           updated_at?: string

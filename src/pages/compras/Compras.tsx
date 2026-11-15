@@ -56,8 +56,8 @@ function NecessidadeCompra({ onGerou }: { onGerou: () => void }) {
     const desde = new Date(Date.now() - 90 * 864e5).toISOString();
     const [p, f, o, m, u, nf] = await Promise.all([
       sb.from("produtos").select("id, nome, codigo, unidade, estoque, estoque_minimo, prazo_reposicao_dias, produzido, ficha_producao").eq("estabelecimento_id", estabelecimentoId).eq("ativo", true),
-      sb.from("produto_fornecedores").select("produto_id, empresa_id, principal, sku_fornecedor, nome_comercial, unidade_compra, fator_conversao, empresas(nome_fantasia, razao_social, whatsapp, telefone, email)").eq("estabelecimento_id", estabelecimentoId),
-      sb.from("orcamentos").select("id, etapa, created_at, empresas(nome_fantasia, razao_social), orcamento_itens(produto_id, quantidade)").eq("estabelecimento_id", estabelecimentoId).in("etapa", [...ETAPAS_ABERTAS, "finalizado"]),
+      sb.from("produto_fornecedores").select("produto_id, empresa_id, principal, sku_fornecedor, nome_comercial, unidade_compra, fator_conversao, empresas(nome_fantasia, nome, whatsapp, telefone, email)").eq("estabelecimento_id", estabelecimentoId),
+      sb.from("orcamentos").select("id, etapa, created_at, empresas(nome_fantasia, nome), orcamento_itens(produto_id, quantidade)").eq("estabelecimento_id", estabelecimentoId).in("etapa", [...ETAPAS_ABERTAS, "finalizado"]),
       sb.from("estoque_movimentos").select("produto_id, quantidade").eq("estabelecimento_id", estabelecimentoId).eq("tipo", "saida").gte("created_at", desde),
       sb.from("notas_fiscais_itens").select("produto_id, valor_unitario, fator_conversao, notas_fiscais!inner(empresa_id, data_emissao, tipo, status)").eq("estabelecimento_id", estabelecimentoId).eq("notas_fiscais.tipo", "entrada").eq("notas_fiscais.status", "lancada"),
       sb.from("notas_fiscais").select("orcamento_id").eq("estabelecimento_id", estabelecimentoId).eq("tipo", "saida").in("status", ["pronta", "emitida"]),
@@ -209,7 +209,7 @@ function Cotacoes() {
   const [excluir, setExcluir] = useState<any | null>(null);
   const carregar = async () => {
     if (!estabelecimentoId) return;
-    const { data } = await sb.from("compras_cotacoes").select("*, empresas(nome_fantasia, razao_social, whatsapp, telefone, email), compras_cotacao_itens(*, produtos(nome, codigo))").eq("estabelecimento_id", estabelecimentoId).order("created_at", { ascending: false }).limit(200);
+    const { data } = await sb.from("compras_cotacoes").select("*, empresas(nome_fantasia, nome, whatsapp, telefone, email), compras_cotacao_itens(*, produtos(nome, codigo))").eq("estabelecimento_id", estabelecimentoId).order("created_at", { ascending: false }).limit(200);
     setLista(data ?? []);
   };
   useEffect(() => { carregar(); }, [estabelecimentoId]);

@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Receipt, FileCheck2, Ban } from "lucide-react";
+import { Receipt, FileCheck2, Ban, Send, RefreshCw, FileText, FileCode } from "lucide-react";
 import { toast } from "sonner";
 import { OPERACOES, calcularImpostos, destinoOperacao, escolherRegra } from "@/lib/fiscal/regrasFiscais";
 import { rotuloRegime } from "@/lib/fiscal/regimeTributario";
@@ -22,7 +24,7 @@ export default function Faturamento() {
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
     const [o, n, u, r] = await Promise.all([
-      sb.from("orcamentos").select("id, created_at, valor_total, unidade_id, empresas(id, nome_fantasia, razao_social, cnpj, estado), orcamento_itens(produto_id, quantidade, preco_unitario, subtotal, produtos(nome, ncm, unidade))").eq("estabelecimento_id", ctx.estabelecimentoId).eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(200),
+      sb.from("orcamentos").select("id, created_at, valor_total, unidade_id, empresas(id, nome_fantasia, nome, cnpj, estado), orcamento_itens(produto_id, quantidade, preco_unitario, subtotal, produtos(nome, ncm, unidade))").eq("estabelecimento_id", ctx.estabelecimentoId).eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(200),
       sb.from("notas_fiscais").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("tipo", "saida").order("created_at", { ascending: false }).limit(300),
       sb.from("unidades").select("id, nome, uf, cnpj, regime_tributario, certificado_valido_ate").eq("estabelecimento_id", ctx.estabelecimentoId).order("nome"),
       sb.from("regras_fiscais").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true),
@@ -64,23 +66,69 @@ export default function Faturamento() {
   };
   const confirmarCancelamento = async () => {
     const n = cancelar;
+    if (n.status === "emitida") {
+      if (justificativa.trim().length < 15) return toast.error("A justificativa precisa ter pelo menos 15 caracteres");
+      try { await chamar({ acao: "cancelar", nota_id: n.id, justificativa: justificativa.trim() }); } catch (e: any) { return toast.error(e.message); }
+    }
     const { data: movs } = await sb.from("estoque_movimentos").select("produto_id, quantidade").eq("nota_fiscal_id", n.id).eq("tipo", "saida");
     await sb.from("notas_fiscais").update({ status: "cancelada", updated_at: new Date().toISOString() }).eq("id", n.id);
     if (movs?.length) await sb.from("estoque_movimentos").insert(movs.map((m: any) => ({ estabelecimento_id: ctx.estabelecimentoId, produto_id: m.produto_id, tipo: "entrada", origem: "devolucao", quantidade: m.quantidade, nota_fiscal_id: n.id, documento: "Cancelamento do faturamento", usuario_id: ctx.usuarioId })));
     toast.success("Faturamento cancelado e estoque devolvido"); setCancelar(null); carregar();
   };
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [justificativa, setJustificativa] = useState("");
+  const chamar = async (body: any) => {
+    const { data, error } = await supabase.functions.invoke("nfe-focus", { body });
+    if (error) {
+      let msg = error.message;
+      if (error instanceof FunctionsHttpError) { try { const j = await error.context.json(); msg = j.error + (j.detalhes ? ` — ${typeof j.detalhes === "string" ? j.detalhes : JSON.stringify(j.detalhes)}` : ""); } catch { /* corpo não JSON */ } }
+      throw new Error(msg);
+    }
+    return data;
+  };
+  const consultar = async (n: any, silencioso = false) => {
+    try { const r = await chamar({ acao: "consultar", nota_id: n.id }); if (!silencioso) toast.info(`Situação: ${r.status_sefaz}${r.mensagem_sefaz ? ` — ${r.mensagem_sefaz}` : ""}`); await carregar(); return r.status_sefaz; }
+    catch (e: any) { if (!silencioso) toast.error(e.message); return null; }
+  };
+  const emitir = async (n: any) => {
+    setOcupado(n.id);
+    try {
+      await chamar({ acao: "emitir", nota_id: n.id });
+      toast.info("Nota enviada à SEFAZ, aguardando autorização…");
+      for (let i = 0; i < 6; i++) {
+        await new Promise((r) => setTimeout(r, 4000));
+        const st = await consultar(n, true);
+        if (st === "autorizado") { toast.success("NF-e autorizada"); break; }
+        if (st && st.startsWith("erro")) { toast.error("SEFAZ rejeitou a nota — veja a mensagem no pedido"); break; }
+      }
+    } catch (e: any) { toast.error(e.message); }
+    setOcupado(null); carregar();
+  };
+  const baixar = async (n: any, tipo: "xml" | "danfe") => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const resp = await fetch(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/nfe-focus`, { method: "POST", headers: { Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ acao: "arquivo", nota_id: n.id, tipo }) });
+    if (!resp.ok) return toast.error("Arquivo indisponível");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(await resp.blob()); a.download = `NFe-${n.numero || n.id}.${tipo === "danfe" ? "pdf" : "xml"}`; a.click();
+  };
   const calc = prep ? calcular(prep.pedido, prep.unidadeId, prep.operacao) : null;
   return (
     <div className="space-y-4 p-3 sm:p-6">
       <div className="flex items-center gap-2"><Receipt className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Faturamento</h1></div>
-      <p className="text-sm text-muted-foreground">Pedidos finalizados viram notas de saída com CFOP e impostos pelas regras fiscais, e o estoque é baixado. A transmissão para a SEFAZ (autorização, DANFE e XML) será ativada quando o serviço de emissão de NF-e for contratado.</p>
+      <p className="text-sm text-muted-foreground">Pedidos finalizados viram notas de saída com CFOP e impostos pelas regras fiscais, e o estoque é baixado. Depois de faturar, use "Emitir NF-e" para transmitir à SEFAZ pelo Focus NFe e baixar o DANFE e o XML autorizado. O CNPJ da unidade precisa estar cadastrado no Focus NFe com o certificado digital.</p>
       {!pedidos.length && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum pedido finalizado.</p>}
       <div className="space-y-2">
         {pedidos.map((p) => { const n = notaDo(p.id); return (
           <Card key={p.id}><CardContent className="flex flex-wrap items-center gap-2 p-3 text-sm">
             <span className="min-w-0 flex-1"><b>{nomeEmpresa(p.empresas)}</b> <span className="text-xs text-muted-foreground">{dataBr(p.created_at)} • {(p.orcamento_itens ?? []).length} item(ns)</span></span>
             <span>{brl(p.valor_total)}</span>
-            {n ? <><Badge>{n.status === "emitida" ? "Emitida" : "Faturado — aguardando emissão"}</Badge><Button size="sm" variant="outline" onClick={() => setCancelar(n)}><Ban className="mr-1 h-4 w-4" />Cancelar</Button></>
+            {n ? <>
+              <Badge variant={n.status === "emitida" ? "default" : "outline"}>{n.status === "emitida" ? `NF-e ${n.numero} autorizada${n.ambiente === "homologacao" ? " (teste)" : ""}` : n.status_sefaz ? `SEFAZ: ${n.status_sefaz}` : "Faturado — falta emitir"}</Badge>
+              {n.status !== "emitida" && <Button size="sm" disabled={ocupado === n.id} onClick={() => emitir(n)}><Send className="mr-1 h-4 w-4" />{ocupado === n.id ? "Emitindo…" : "Emitir NF-e"}</Button>}
+              {n.ref_externa && <Button size="sm" variant="outline" onClick={() => consultar(n)}><RefreshCw className="mr-1 h-4 w-4" />Situação</Button>}
+              {n.status === "emitida" && <><Button size="sm" variant="outline" onClick={() => baixar(n, "danfe")}><FileText className="mr-1 h-4 w-4" />DANFE</Button><Button size="sm" variant="outline" onClick={() => baixar(n, "xml")}><FileCode className="mr-1 h-4 w-4" />XML</Button></>}
+              <Button size="sm" variant="outline" onClick={() => { setJustificativa(""); setCancelar(n); }}><Ban className="mr-1 h-4 w-4" />Cancelar</Button>
+              {n.mensagem_sefaz && n.status !== "emitida" && <p className="w-full text-xs text-destructive">{n.mensagem_sefaz}</p>}
+            </>
               : <Button size="sm" onClick={() => setPrep({ pedido: p, unidadeId: p.unidade_id ?? unidades[0]?.id ?? "", operacao: "venda" })}><FileCheck2 className="mr-1 h-4 w-4" />Faturar</Button>}
           </CardContent></Card>); })}
       </div>
@@ -104,7 +152,8 @@ export default function Faturamento() {
         </DialogContent>
       </Dialog>
       <Dialog open={!!cancelar} onOpenChange={(o) => !o && setCancelar(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Cancelar faturamento?</DialogTitle></DialogHeader><p className="text-sm">A nota será cancelada e os itens voltam para o estoque.</p>
+        <DialogContent><DialogHeader><DialogTitle>Cancelar faturamento?</DialogTitle></DialogHeader><p className="text-sm">{cancelar?.status === "emitida" ? "A NF-e será cancelada na SEFAZ (prazo legal de 24 horas na maioria dos estados) e os itens voltam para o estoque." : "O faturamento será cancelado e os itens voltam para o estoque."}</p>
+          {cancelar?.status === "emitida" && <div><Label>Justificativa (mínimo 15 caracteres)</Label><Textarea value={justificativa} onChange={(e) => setJustificativa(e.target.value)} /></div>}
           <DialogFooter><Button variant="outline" onClick={() => setCancelar(null)}>Voltar</Button><Button variant="destructive" onClick={confirmarCancelamento}>Cancelar faturamento</Button></DialogFooter></DialogContent>
       </Dialog>
     </div>

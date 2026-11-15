@@ -19,7 +19,7 @@ export function useContextoInterno() {
 export const brl = (n?: number | null) => (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 export const qtd = (n?: number | null) => (Number(n) || 0).toLocaleString("pt-BR", { maximumFractionDigits: 3 });
 export const dataBr = (d?: string | null) => (d ? d.slice(0, 10).split("-").reverse().join("/") : "—");
-export const nomeEmpresa = (e?: { nome_fantasia?: string | null; razao_social?: string | null } | null) => e?.nome_fantasia || e?.razao_social || "—";
+export const nomeEmpresa = (e?: { nome_fantasia?: string | null; nome?: string | null } | null) => e?.nome_fantasia || e?.nome || "—";
 
 export function baixarCsv(nome: string, linhas: (string | number)[][]) {
   const csv = linhas.map((l) => l.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");

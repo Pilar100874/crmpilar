@@ -125,8 +125,8 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
     const [n, f] = await Promise.all([
-      sb.from("notas_fiscais").select("*, empresas(nome_fantasia, razao_social)").eq("estabelecimento_id", ctx.estabelecimentoId).eq("tipo", "entrada").order("created_at", { ascending: false }).limit(200),
-      sb.from("empresas").select("id, nome_fantasia, razao_social, cnpj, estado").eq("estabelecimento_id", ctx.estabelecimentoId).eq("eh_fornecedor", true).order("nome_fantasia"),
+      sb.from("notas_fiscais").select("*, empresas(nome_fantasia, nome)").eq("estabelecimento_id", ctx.estabelecimentoId).eq("tipo", "entrada").order("created_at", { ascending: false }).limit(200),
+      sb.from("empresas").select("id, nome_fantasia, nome, cnpj, estado").eq("estabelecimento_id", ctx.estabelecimentoId).eq("eh_fornecedor", true).order("nome_fantasia"),
     ]);
     setNotas(n.data ?? []); setFornecedores(f.data ?? []);
   };
