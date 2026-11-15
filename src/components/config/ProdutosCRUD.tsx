@@ -1476,7 +1476,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur shrink-0 self-start">
+                <div className="flex items-center gap-2 shrink-0 self-start">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
+                  <Switch
+                    checked={formData.produzido}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, produzido: checked }))}
+                  />
+                  <Label className="text-xs sm:text-sm cursor-pointer">Produzido</Label>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
                   <Switch
                     checked={formData.ativo}
                     onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
@@ -1484,6 +1492,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <Label className="text-xs sm:text-sm cursor-pointer">
                     {formData.ativo ? "Ativo" : "Inativo"}
                   </Label>
+                </div>
                 </div>
               </div>
             </DialogHeader>
@@ -1555,7 +1564,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-b pb-4">
-                    {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'produzido', nome: 'Produto produzido' }, { campo: 'comercializavel', nome: 'Pode ser comercializado' }] as const).map(flag => <Label key={flag.campo} className="flex items-center gap-2 text-sm"><Checkbox checked={formData[flag.campo]} onCheckedChange={v => setFormData(prev => ({ ...prev, [flag.campo]: v === true }))} />{flag.nome}</Label>)}
+                    {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Pode ser comercializado' }] as const).map(flag => <Label key={flag.campo} className="flex items-center gap-2 text-sm"><Checkbox checked={formData[flag.campo]} onCheckedChange={v => setFormData(prev => ({ ...prev, [flag.campo]: v === true }))} />{flag.nome}</Label>)}
                   </div>
                   <div className="space-y-3 sm:space-y-4">
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
