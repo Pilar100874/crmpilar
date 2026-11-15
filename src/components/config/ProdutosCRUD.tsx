@@ -1446,160 +1446,69 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         </div>
       )}
 
-      {/* Mobile: Card layout */}
-      <div className="block lg:hidden space-y-3">
-        {filteredAndSortedProdutos.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
-          </div>
-        ) : (
-          filteredAndSortedProdutos.map((produto) => (
-            <div key={produto.id} className="border rounded-lg p-3 bg-card">
-              <div className="flex items-start gap-3">
-                {produto.foto_url ? (
-                  <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded flex-shrink-0" />
-                ) : (
-                  <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                    <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-sm truncate">{produto.nome}</p>
-                    <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${produto.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
-                      {produto.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-mono">{(produto as any).codigo || "-"}</p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
-                    <span>{produto.categoria?.nome || "-"}</span>
-                    <span>•</span>
-                    <span>{produto.grupo?.nome || "-"}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-1 mt-2 pt-2 border-t">
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(produto)}>
-                  <Pencil className="w-4 h-4 mr-1" />
-                  Editar
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDuplicate(produto)}>
-                  <Copy className="w-4 h-4 mr-1" />
-                  Duplicar
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(produto.id)} className="text-destructive">
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Excluir
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Desktop: Table layout */}
-      <div className="hidden lg:block overflow-x-auto border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-16">Foto</TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => handleSort("codigo")}
-              >
-                <div className="flex items-center">
-                  SKU
-                  <SortIcon field="codigo" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => handleSort("nome")}
-              >
-                <div className="flex items-center">
-                  Nome
-                  <SortIcon field="nome" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => handleSort("categoria")}
-              >
-                <div className="flex items-center">
-                  Categoria
-                  <SortIcon field="categoria" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => handleSort("grupo")}
-              >
-                <div className="flex items-center">
-                  Grupo
-                  <SortIcon field="grupo" />
-                </div>
-              </TableHead>
-              <TableHead>NCM</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAndSortedProdutos.map((produto) => (
-              <TableRow key={produto.id} className="hover:bg-muted/30">
-                <TableCell>
+      {/* Cartões em todas as larguras, no padrão de clientes/empresas */}
+      {filteredAndSortedProdutos.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground text-sm border rounded-2xl">
+          {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
+          {filteredAndSortedProdutos.map((produto) => {
+            const p = produto as any;
+            const estoque = Number(p.estoque ?? 0);
+            const minimo = Number(p.estoque_minimo ?? 0);
+            const baixo = minimo > 0 && estoque < minimo;
+            const preco = p.preco_tabela != null ? Number(p.preco_tabela).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "-";
+            return (
+              <div key={produto.id} role="button" tabIndex={0} onClick={() => handleEdit(produto)}
+                onKeyDown={(ev) => { if (ev.key === "Enter") handleEdit(produto); }}
+                className="rounded-2xl border border-border/50 bg-card shadow-sm p-3 flex flex-col gap-3 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all min-w-0">
+                <div className="flex items-start gap-3 min-w-0">
                   {produto.foto_url ? (
-                    <img src={produto.foto_url} alt={produto.nome} className="w-10 h-10 object-cover rounded" />
+                    <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded-lg shrink-0" />
                   ) : (
-                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                    <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
                     </div>
                   )}
-                </TableCell>
-                <TableCell className="font-mono text-sm">{(produto as any).codigo || "-"}</TableCell>
-                <TableCell className="font-medium">{produto.nome}</TableCell>
-                <TableCell>
-                  {produto.categoria?.nome && (
-                    <Badge variant="outline" className="font-normal">{produto.categoria.nome}</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {produto.grupo?.nome && (
-                    <Badge variant="secondary" className="font-normal">{produto.grupo.nome}</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="font-mono text-xs">{(produto as any).ncm_ref?.codigo || (produto as any).ncm || "-"}</TableCell>
-                <TableCell>
-                  <Badge variant={produto.ativo ? "default" : "secondary"} className={cn(
-                    "font-normal",
-                    produto.ativo ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" : ""
-                  )}>
-                    {produto.ativo ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)} className="h-8 w-8" title="Editar">
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDuplicate(produto)} className="h-8 w-8" title="Duplicar">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(produto.id)} className="h-8 w-8 text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredAndSortedProdutos.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-primary break-words leading-snug">{produto.nome}</div>
+                    <div className="text-xs text-muted-foreground font-mono break-all mt-0.5">{p.codigo || "-"}</div>
+                  </div>
+                  <Badge variant={produto.ativo ? "default" : "secondary"} className="shrink-0 font-normal">{produto.ativo ? "Ativo" : "Inativo"}</Badge>
+                </div>
+                {(p.produzido || p.materia_prima || p.comercializavel) && (
+                  <div className="flex flex-wrap gap-1">
+                    {p.produzido && <Badge variant="outline" className="font-normal text-[10px]">Produzido</Badge>}
+                    {p.materia_prima && <Badge variant="outline" className="font-normal text-[10px]">Matéria-prima</Badge>}
+                    {p.comercializavel && <Badge variant="outline" className="font-normal text-[10px]">Comercializável</Badge>}
+                  </div>
+                )}
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  {[
+                    ["Categoria", produto.categoria?.nome || "-"],
+                    ["Grupo", produto.grupo?.nome || "-"],
+                    ["Estoque", `${estoque}${p.unidade ? " " + p.unidade : ""}${minimo > 0 ? ` (mín. ${minimo})` : ""}`],
+                    ["Preço", preco],
+                    ["NCM", p.ncm_ref?.codigo || p.ncm || "-"],
+                    ["Unidade", p.unidade || "-"],
+                  ].map(([label, valor]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{label}</dt>
+                      <dd className={cn("text-xs break-words", label === "Estoque" && baixo ? "text-destructive font-medium" : "text-foreground")}>{valor}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="flex flex-wrap justify-end gap-1 pt-2 border-t border-border/40 mt-auto" onClick={(ev) => ev.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleEdit(produto)}><Pencil className="w-4 h-4 mr-1" />Editar</Button>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleDuplicate(produto)}><Copy className="w-4 h-4 mr-1" />Duplicar</Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive" onClick={() => handleDelete(produto.id)}><Trash2 className="w-4 h-4 mr-1" />Excluir</Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) setDuplicandoDe(null); }}>
         <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
