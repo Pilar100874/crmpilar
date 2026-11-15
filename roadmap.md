@@ -51,7 +51,8 @@
 ## Compras, Estoque, Fiscal e Faturamento
 - [x] Necessidade de compra (mínimo, vendas, produção, data ideal) e cotações por fornecedor
 - [x] Estoque: saldos, ajustes, movimentações e entrada de NF-e por XML/manual com de-para
-- [x] Regras fiscais (CFOP, CST/CSOSN, alíquotas) e faturamento de pedidos finalizados com baixa de estoque
+- [x] Tributação via motor Systax (tela de token/licença, campos fiscais nos cadastros) e faturamento de pedidos finalizados com baixa de estoque
 - [x] Emissão real via Focus NFe (homologação): emitir, consultar, DANFE, XML, cancelar
 - [ ] Testar emissão — depende do token Focus NFe e do CNPJ da unidade cadastrado no Focus com certificado
 - [ ] Baixar notas de entrada da Receita (manifestação) via Focus NFe
+- [ ] Validar integração Systax — depende do endereço da API, token e licença contratados (formato do retorno a confirmar com a documentação Systax)

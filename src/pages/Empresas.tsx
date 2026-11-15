@@ -1,4 +1,5 @@
 import { REGIMES_TRIBUTARIOS, normalizarRegime } from "@/lib/fiscal/regimeTributario";
+import { CONTRIBUINTE_ICMS } from "@/lib/fiscal/motorFiscal";
 import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import { KeyRound } from "lucide-react";
@@ -759,6 +760,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       eh_vendedor: (empresa as any).eh_vendedor ?? false,
       eh_transportadora: (empresa as any).eh_transportadora ?? false,
       regime_tributario: (empresa as any).regime_tributario || "",
+      inscricao_estadual: (empresa as any).inscricao_estadual || "",
+      contribuinte_icms: (empresa as any).contribuinte_icms || "",
+      consumidor_final: (empresa as any).consumidor_final ?? false,
+      inscricao_suframa: (empresa as any).inscricao_suframa || "",
+      cnae_fiscal: (empresa as any).cnae_fiscal || "",
     };
 
     
@@ -1262,6 +1268,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         eh_vendedor: variant === "vendedor" ? true : !!formData.eh_vendedor,
         eh_transportadora: variant === "transportadora" ? true : !!formData.eh_transportadora,
         regime_tributario: formData.regime_tributario || null,
+        inscricao_estadual: formData.inscricao_estadual?.trim() || null,
+        contribuinte_icms: formData.contribuinte_icms || null,
+        consumidor_final: !!formData.consumidor_final,
+        inscricao_suframa: formData.inscricao_suframa?.trim() || null,
+        cnae_fiscal: formData.cnae_fiscal?.replace(/\D/g, "") || null,
         ...(variant === "vendedor" ? { tipo_vendedor: formData.tipo_vendedor || "representante" } : {}),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
@@ -2672,6 +2683,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </SelectContent>
                 </Select>
               </label>
+            </div>
+            <div className="mb-6 grid gap-3 rounded-md border p-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição estadual</Label><Input className="h-8" value={formData.inscricao_estadual || ""} onChange={(e) => setFormData({ ...formData, inscricao_estadual: e.target.value })} placeholder="Ou ISENTO" /></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Contribuinte de ICMS</Label>
+                <Select value={formData.contribuinte_icms || "auto"} onValueChange={(v) => setFormData({ ...formData, contribuinte_icms: v === "auto" ? "" : v })}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="auto">Pela inscrição estadual</SelectItem>{CONTRIBUINTE_ICMS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição SUFRAMA</Label><Input className="h-8" value={formData.inscricao_suframa || ""} onChange={(e) => setFormData({ ...formData, inscricao_suframa: e.target.value })} placeholder="Zona Franca, se houver" /></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">CNAE principal</Label><Input className="h-8" value={formData.cnae_fiscal || ""} onChange={(e) => setFormData({ ...formData, cnae_fiscal: e.target.value })} /></div>
+              <label className="flex items-center gap-2 text-sm lg:mt-5"><Checkbox checked={!!formData.consumidor_final} onCheckedChange={(v) => setFormData({ ...formData, consumidor_final: v === true })} />Consumidor final</label>
             </div>
             <div className="space-y-8">
               <section>

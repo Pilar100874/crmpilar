@@ -302,6 +302,13 @@
       "when": 1794714547287,
       "tag": "0042_nfe_config_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794715444548,
+      "tag": "0043_systax_motor_fiscal",
+      "breakpoints": true
     }
   ]
 }

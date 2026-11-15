@@ -129,7 +129,7 @@ const PoliticasInternas = React.lazy(() => import("./pages/PoliticasInternas"));
 const ControleEpi = React.lazy(() => import("./pages/dp/ControleEpi"));
 const Compras = React.lazy(() => import("./pages/compras/Compras"));
 const Estoque = React.lazy(() => import("./pages/estoque/Estoque"));
-const RegrasFiscais = React.lazy(() => import("./pages/fiscal/RegrasFiscais"));
+const ConfigSystax = React.lazy(() => import("./pages/fiscal/ConfigSystax"));
 const Faturamento = React.lazy(() => import("./pages/fiscal/Faturamento"));
 const ConfigNfe = React.lazy(() => import("./pages/fiscal/ConfigNfe"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
@@ -733,7 +733,8 @@ const App = () => (
               <Route path="/estoque/saldos" element={<Estoque />} />
               <Route path="/estoque/movimentacoes" element={<Estoque />} />
               <Route path="/estoque/entrada" element={<Estoque />} />
-              <Route path="/fiscal/regras" element={<RegrasFiscais />} />
+              <Route path="/fiscal/regras" element={<Navigate to="/fiscal/configuracao-systax" replace />} />
+              <Route path="/fiscal/configuracao-systax" element={<ConfigSystax />} />
               <Route path="/faturamento" element={<Faturamento />} />
               <Route path="/fiscal/configuracao-nfe" element={<ConfigNfe />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />

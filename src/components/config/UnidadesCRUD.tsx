@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { CertificadoUnidade } from "@/components/config/CertificadoUnidade";
 import { REGIMES_TRIBUTARIOS, rotuloRegime } from "@/lib/fiscal/regimeTributario";
+import { CRT } from "@/lib/fiscal/motorFiscal";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -28,6 +29,8 @@ interface Unidade {
   cnpj?: string | null;
   inscricao_estadual?: string | null;
   regime_tributario?: string | null;
+  crt?: string | null;
+  cnae_fiscal?: string | null;
   certificado_path?: string | null;
   certificado_nome_arquivo?: string | null;
   certificado_titular?: string | null;
@@ -51,6 +54,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [cnpj, setCnpj] = useState("");
   const [inscricaoEstadual, setInscricaoEstadual] = useState("");
   const [regime, setRegime] = useState("");
+  const [crt, setCrt] = useState("");
+  const [cnae, setCnae] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
@@ -155,6 +160,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       cnpj: cnpj.replace(/\D/g, "") || null,
       inscricao_estadual: inscricaoEstadual.trim() || null,
       regime_tributario: regime || null,
+      crt: crt || null,
+      cnae_fiscal: cnae.replace(/\D/g, "") || null,
     };
 
     if (editingId) {
@@ -233,6 +240,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setCnpj(unidade.cnpj || "");
     setInscricaoEstadual(unidade.inscricao_estadual || "");
     setRegime(unidade.regime_tributario || "");
+    setCrt(unidade.crt || "");
+    setCnae(unidade.cnae_fiscal || "");
     setEditingId(unidade.id);
     setFormOpen(true);
   };
@@ -249,6 +258,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setCnpj("");
     setInscricaoEstadual("");
     setRegime("");
+    setCrt("");
+    setCnae("");
     setEditingId(null);
     setFormOpen(false);
   };
@@ -483,6 +494,20 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
                 {REGIMES_TRIBUTARIOS.map((r) => <SelectItem key={r.valor} value={r.valor}>{r.rotulo}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label>CRT (código de regime da NF-e)</Label>
+            <Select value={crt || "auto"} onValueChange={(v) => setCrt(v === "auto" ? "" : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Pelo regime tributário</SelectItem>
+                {CRT.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="unidade-cnae">CNAE principal</Label>
+            <Input id="unidade-cnae" value={cnae} onChange={(e) => setCnae(e.target.value)} placeholder="Ex.: 2222-6/00" />
           </div>
         </div>
 

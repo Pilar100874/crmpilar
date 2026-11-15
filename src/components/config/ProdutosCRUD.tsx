@@ -55,6 +55,7 @@ import { gerarCopiaDeProduto } from '@/lib/produtos/duplicarProduto';
 import { colarDadosProduto } from '@/lib/produtos/colarDadosProduto';
 import { validarMateriaisCadastro } from '@/lib/producao/validarMateriaisCadastro';
 import type { Json } from '@/integrations/supabase/types';
+import { TIPOS_ITEM_FISCAL } from '@/lib/fiscal/motorFiscal';
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -146,6 +147,10 @@ interface FormData {
   prazo_reposicao_dias: string;
   garantia: string;
   origem: string;
+  cest: string;
+  ex_tipi: string;
+  tipo_item_fiscal: string;
+  codigo_beneficio_fiscal: string;
   condicao: string;
   foto_url_2: string;
   foto_url_3: string;
@@ -214,6 +219,10 @@ const initialFormData: FormData = {
   prazo_reposicao_dias: "15",
   garantia: "",
   origem: "nacional",
+  cest: "",
+  ex_tipi: "",
+  tipo_item_fiscal: "",
+  codigo_beneficio_fiscal: "",
   condicao: "novo",
   foto_url_2: "",
   foto_url_3: "",
@@ -839,6 +848,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         prazo_reposicao_dias: formData.prazo_reposicao_dias ? parseInt(formData.prazo_reposicao_dias) : 15,
         garantia: formData.garantia || null,
         origem: formData.origem || "nacional",
+        cest: formData.cest?.replace(/\D/g, "") || null,
+        ex_tipi: formData.ex_tipi || null,
+        tipo_item_fiscal: formData.tipo_item_fiscal || null,
+        codigo_beneficio_fiscal: formData.codigo_beneficio_fiscal || null,
         condicao: formData.condicao || "novo",
         foto_url_2: formData.foto_url_2 || null,
         foto_url_3: formData.foto_url_3 || null,
@@ -1048,6 +1061,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       prazo_reposicao_dias: p.prazo_reposicao_dias?.toString() || "15",
       garantia: p.garantia || "",
       origem: p.origem || "nacional",
+      cest: p.cest || "",
+      ex_tipi: p.ex_tipi || "",
+      tipo_item_fiscal: p.tipo_item_fiscal || "",
+      codigo_beneficio_fiscal: p.codigo_beneficio_fiscal || "",
       condicao: p.condicao || "novo",
       foto_url_2: p.foto_url_2 || "",
       foto_url_3: p.foto_url_3 || "",
@@ -1778,10 +1795,39 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                           <SelectValue placeholder="Selecione a origem" />
                         </SelectTrigger>
                         <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                          <SelectItem value="nacional">Nacional</SelectItem>
-                          <SelectItem value="importado">Importado</SelectItem>
+                          <SelectItem value="nacional">0 - Nacional</SelectItem>
+                          <SelectItem value="1">1 - Estrangeira, importação direta</SelectItem>
+                          <SelectItem value="importado">2 - Estrangeira, adquirida no mercado interno</SelectItem>
+                          <SelectItem value="3">3 - Nacional, conteúdo importado acima de 40% até 70%</SelectItem>
+                          <SelectItem value="4">4 - Nacional, processo produtivo básico</SelectItem>
+                          <SelectItem value="5">5 - Nacional, conteúdo importado até 40%</SelectItem>
+                          <SelectItem value="6">6 - Estrangeira direta, sem similar (CAMEX)</SelectItem>
+                          <SelectItem value="7">7 - Estrangeira interna, sem similar (CAMEX)</SelectItem>
+                          <SelectItem value="8">8 - Nacional, conteúdo importado acima de 70%</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Tipo do item (fiscal)</Label>
+                      <Select value={formData.tipo_item_fiscal || "auto"} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_item_fiscal: v === "auto" ? "" : v }))}>
+                        <SelectTrigger className="h-9 sm:h-10 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectItem value="auto">Não informado (revenda)</SelectItem>
+                          {TIPOS_ITEM_FISCAL.map((t) => <SelectItem key={t.valor} value={t.valor}>{t.rotulo}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">CEST</Label>
+                      <Input value={formData.cest} onChange={(e) => setFormData({ ...formData, cest: e.target.value })} placeholder="7 dígitos (produtos com ST)" className="h-9 sm:h-10 text-sm" />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Ex-TIPI</Label>
+                      <Input value={formData.ex_tipi} onChange={(e) => setFormData({ ...formData, ex_tipi: e.target.value })} placeholder="Opcional" className="h-9 sm:h-10 text-sm" />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Código de benefício fiscal</Label>
+                      <Input value={formData.codigo_beneficio_fiscal} onChange={(e) => setFormData({ ...formData, codigo_beneficio_fiscal: e.target.value })} placeholder="cBenef, quando houver" className="h-9 sm:h-10 text-sm" />
                     </div>
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-xs sm:text-sm font-medium">Garantia</Label>

@@ -82,7 +82,7 @@ export const PROGRAMAS_DISPONIVEIS: ProgramaDisponivel[] = [
   { path: "/estoque/entrada", label: "Estoque - Entrada de NF-e", categoria: "Estoque" },
   { path: "/faturamento", label: "Fiscal - Faturamento", categoria: "Fiscal" },
   { path: "/fiscal/configuracao-nfe", label: "Fiscal - Configuração NF-e", categoria: "Fiscal" },
-  { path: "/fiscal/regras", label: "Fiscal - Regras Fiscais", categoria: "Fiscal" },
+  { path: "/fiscal/configuracao-systax", label: "Fiscal - Configuração Systax", categoria: "Fiscal" },
   { path: "/ponto/tratamento", label: "Ponto - Tratamento", categoria: "Ponto" },
   { path: "/ponto/alertas", label: "Ponto - Antifraude", categoria: "Ponto" },
   { path: "/ponto/auditoria", label: "Ponto - Auditoria", categoria: "Ponto" },

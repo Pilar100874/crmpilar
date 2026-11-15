@@ -9209,14 +9209,17 @@ export type Database = {
           cep: string | null
           cidade: string | null
           cnae_descricao: string | null
+          cnae_fiscal: string | null
           cnae_principal: string | null
           cnaes_secundarios: string[] | null
           cnpj: string | null
           complemento: string | null
+          consumidor_final: boolean
           contato_cargo: string | null
           contato_email: string | null
           contato_nome: string | null
           contato_telefone: string | null
+          contribuinte_icms: string | null
           created_at: string | null
           credito_obs: string | null
           custom_fields: Json | null
@@ -9234,6 +9237,7 @@ export type Database = {
           funcionarios_estimado: string | null
           id: string
           inscricao_estadual: string | null
+          inscricao_suframa: string | null
           ja_respondeu_whatsapp: boolean
           latitude: number | null
           longitude: number | null
@@ -9277,14 +9281,17 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnae_descricao?: string | null
+          cnae_fiscal?: string | null
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
           complemento?: string | null
+          consumidor_final?: boolean
           contato_cargo?: string | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
+          contribuinte_icms?: string | null
           created_at?: string | null
           credito_obs?: string | null
           custom_fields?: Json | null
@@ -9302,6 +9309,7 @@ export type Database = {
           funcionarios_estimado?: string | null
           id?: string
           inscricao_estadual?: string | null
+          inscricao_suframa?: string | null
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -9345,14 +9353,17 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnae_descricao?: string | null
+          cnae_fiscal?: string | null
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
           complemento?: string | null
+          consumidor_final?: boolean
           contato_cargo?: string | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
+          contribuinte_icms?: string | null
           created_at?: string | null
           credito_obs?: string | null
           custom_fields?: Json | null
@@ -9370,6 +9381,7 @@ export type Database = {
           funcionarios_estimado?: string | null
           id?: string
           inscricao_estadual?: string | null
+          inscricao_suframa?: string | null
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -15056,6 +15068,7 @@ export type Database = {
           nota_id: string
           produto_id: string | null
           quantidade: number
+          tributacao: Json | null
           unidade: string | null
           valor_cofins: number
           valor_icms: number
@@ -15081,6 +15094,7 @@ export type Database = {
           nota_id: string
           produto_id?: string | null
           quantidade?: number
+          tributacao?: Json | null
           unidade?: string | null
           valor_cofins?: number
           valor_icms?: number
@@ -15106,6 +15120,7 @@ export type Database = {
           nota_id?: string
           produto_id?: string | null
           quantidade?: number
+          tributacao?: Json | null
           unidade?: string | null
           valor_cofins?: number
           valor_icms?: number
@@ -24222,7 +24237,9 @@ export type Database = {
           campos_customizados: Json | null
           categoria_google: string | null
           categoria_id: string | null
+          cest: string | null
           codigo: string | null
+          codigo_beneficio_fiscal: string | null
           comercializavel: boolean
           comprimento: number | null
           condicao: string | null
@@ -24244,6 +24261,7 @@ export type Database = {
           estabelecimento_id: string | null
           estoque: number | null
           estoque_minimo: number
+          ex_tipi: string | null
           faixa_etaria: string | null
           ficha_producao: Json | null
           foto_url: string | null
@@ -24277,6 +24295,7 @@ export type Database = {
           producao_tempo_minutos: number | null
           produzido: boolean
           tamanho: string | null
+          tipo_item_fiscal: string | null
           tipo_preco: string | null
           unidade: string | null
           updated_at: string | null
@@ -24288,7 +24307,9 @@ export type Database = {
           campos_customizados?: Json | null
           categoria_google?: string | null
           categoria_id?: string | null
+          cest?: string | null
           codigo?: string | null
+          codigo_beneficio_fiscal?: string | null
           comercializavel?: boolean
           comprimento?: number | null
           condicao?: string | null
@@ -24310,6 +24331,7 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           estoque_minimo?: number
+          ex_tipi?: string | null
           faixa_etaria?: string | null
           ficha_producao?: Json | null
           foto_url?: string | null
@@ -24343,6 +24365,7 @@ export type Database = {
           producao_tempo_minutos?: number | null
           produzido?: boolean
           tamanho?: string | null
+          tipo_item_fiscal?: string | null
           tipo_preco?: string | null
           unidade?: string | null
           updated_at?: string | null
@@ -24354,7 +24377,9 @@ export type Database = {
           campos_customizados?: Json | null
           categoria_google?: string | null
           categoria_id?: string | null
+          cest?: string | null
           codigo?: string | null
+          codigo_beneficio_fiscal?: string | null
           comercializavel?: boolean
           comprimento?: number | null
           condicao?: string | null
@@ -24376,6 +24401,7 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           estoque_minimo?: number
+          ex_tipi?: string | null
           faixa_etaria?: string | null
           ficha_producao?: Json | null
           foto_url?: string | null
@@ -24409,6 +24435,7 @@ export type Database = {
           producao_tempo_minutos?: number | null
           produzido?: boolean
           tamanho?: string | null
+          tipo_item_fiscal?: string | null
           tipo_preco?: string | null
           unidade?: string | null
           updated_at?: string | null
@@ -28310,6 +28337,36 @@ export type Database = {
           },
         ]
       }
+      systax_config: {
+        Row: {
+          ambiente: string
+          estabelecimento_id: string
+          licenca: string | null
+          token: string | null
+          updated_at: string
+          url_api: string | null
+          usuario: string | null
+        }
+        Insert: {
+          ambiente?: string
+          estabelecimento_id: string
+          licenca?: string | null
+          token?: string | null
+          updated_at?: string
+          url_api?: string | null
+          usuario?: string | null
+        }
+        Update: {
+          ambiente?: string
+          estabelecimento_id?: string
+          licenca?: string | null
+          token?: string | null
+          updated_at?: string
+          url_api?: string | null
+          usuario?: string | null
+        }
+        Relationships: []
+      }
       system_visual_config: {
         Row: {
           created_at: string
@@ -29969,9 +30026,11 @@ export type Database = {
           certificado_titular: string | null
           certificado_valido_ate: string | null
           cidade: string | null
+          cnae_fiscal: string | null
           cnpj: string | null
           complemento: string | null
           created_at: string | null
+          crt: string | null
           estabelecimento_id: string | null
           id: string
           inscricao_estadual: string | null
@@ -29998,9 +30057,11 @@ export type Database = {
           certificado_titular?: string | null
           certificado_valido_ate?: string | null
           cidade?: string | null
+          cnae_fiscal?: string | null
           cnpj?: string | null
           complemento?: string | null
           created_at?: string | null
+          crt?: string | null
           estabelecimento_id?: string | null
           id?: string
           inscricao_estadual?: string | null
@@ -30027,9 +30088,11 @@ export type Database = {
           certificado_titular?: string | null
           certificado_valido_ate?: string | null
           cidade?: string | null
+          cnae_fiscal?: string | null
           cnpj?: string | null
           complemento?: string | null
           created_at?: string | null
+          crt?: string | null
           estabelecimento_id?: string | null
           id?: string
           inscricao_estadual?: string | null
@@ -33305,6 +33368,27 @@ export type Database = {
       }
       semear_minhas_regras_sistema: { Args: never; Returns: undefined }
       semear_regras_sistema: { Args: { _estab: string }; Returns: undefined }
+      systax_config_salvar: {
+        Args: {
+          p_ambiente: string
+          p_licenca: string
+          p_token: string
+          p_url_api: string
+          p_usuario: string
+        }
+        Returns: undefined
+      }
+      systax_config_status: {
+        Args: never
+        Returns: {
+          ambiente: string
+          tem_licenca: boolean
+          tem_token: boolean
+          updated_at: string
+          url_api: string
+          usuario: string
+        }[]
+      }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
       verificar_regras_sem_contato: { Args: never; Returns: number }
       visita_haversine_metros: {
