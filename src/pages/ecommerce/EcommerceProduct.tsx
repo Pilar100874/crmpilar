@@ -123,7 +123,7 @@ export default function EcommerceProduct() {
     setLoading(true);
     const { data, error } = await supabase
       .from("produtos")
-      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque:estoque_saldo, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
       .eq("id", productId)
       .maybeSingle();
 
@@ -141,7 +141,7 @@ export default function EcommerceProduct() {
       // Load related products and volume tiers in parallel
       const relatedPromise = catId
         ? supabase.from("produtos")
-            .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+            .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque:estoque_saldo, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
             .eq("categoria_id", catId).eq("ativo", true).neq("id", productId).limit(4)
         : null;
 

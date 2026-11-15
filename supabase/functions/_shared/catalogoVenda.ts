@@ -24,8 +24,8 @@ export async function catalogoVenda(sb: SB, empresa: string, cfg: ConfigVenda): 
   const chave = `${empresa}:${cfg.filtro}`;
   const c = cache.get(chave);
   if (c && Date.now() - c.t < 5 * 60_000) return c.v;
-  const { data } = await sb.from("produtos").select("nome, marca, estoque, preco_tabela, preco_minimo, tipo_preco")
-    .eq("estabelecimento_id", empresa).neq("ativo", false).order("estoque", { ascending: false, nullsFirst: false }).limit(2000);
+  const { data } = await sb.from("produtos").select("nome, marca, estoque:estoque_saldo, preco_tabela, preco_minimo, tipo_preco")
+    .eq("estabelecimento_id", empresa).neq("ativo", false).order("estoque_saldo", { ascending: false, nullsFirst: false }).limit(2000);
   const termos = cfg.filtro.toLowerCase().split(",").map((x) => x.trim()).filter(Boolean);
   const lista = (data ?? []).filter((p: SB) => !termos.length || termos.some((t) => `${p.nome} ${p.marca ?? ""}`.toLowerCase().includes(t))).slice(0, 150);
   const linhas = lista.map((p: SB) => {

@@ -30,7 +30,7 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
         if (type === 'estoque') {
           const { data: rows } = await supabase
             .from('produtos')
-            .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
+            .select('nome, codigo, marca, gramatura, largura, comprimento, estoque:estoque_saldo, preco_tabela, preco_minimo, material, ativo')
             .eq('estabelecimento_id', estabelecimentoId)
             .limit(200);
           const d = rows || [];

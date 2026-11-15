@@ -72,7 +72,7 @@ export function EstoqueSearchDialog({ open, onOpenChange, onInsert }: Props) {
       const q = query.trim().replace(/[,()]/g, " ");
       let req = supabase
         .from("produtos")
-        .select("id,nome,codigo,estoque,tipo_preco,preco_minimo,preco_tabela,categoria_id")
+        .select("id,nome,codigo,estoque:estoque_saldo,tipo_preco,preco_minimo,preco_tabela,categoria_id")
         .eq("ativo", true)
         .limit(40);
       if (q) {

@@ -59,7 +59,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     (async () => {
       const { data } = await supabase
         .from("produtos")
-        .select("id,nome,codigo,descricao,preco_tabela,preco_minimo,ean_13,ean_14_1,ean_14_2,gtin,marca,cor,tamanho,material,ncm,peso_unitario,estoque,foto_url")
+        .select("id,nome,codigo,descricao,preco_tabela,preco_minimo,ean_13,ean_14_1,ean_14_2,gtin,marca,cor,tamanho,material,ncm,peso_unitario,estoque:estoque_saldo,foto_url")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("ativo", true)
         .order("nome")

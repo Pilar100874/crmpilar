@@ -152,7 +152,7 @@ export default function EcommerceCatalog() {
 
       let query = supabase
         .from("produtos")
-        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque:estoque_saldo, marca, tipo_preco, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
         .eq("ativo", true);
 
       if (estabId) {

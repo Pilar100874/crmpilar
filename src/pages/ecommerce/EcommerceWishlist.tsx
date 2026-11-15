@@ -17,7 +17,7 @@ export default function EcommerceWishlist() {
   useEffect(() => {
     if (items.length === 0) return;
     const ids = items.map(i => i.productId);
-    supabase.from("produtos").select("id, estoque").in("id", ids).then(({ data }) => {
+    supabase.from("produtos").select("id, estoque:estoque_saldo").in("id", ids).then(({ data }) => {
       if (data) {
         const map: Record<string, number> = {};
         data.forEach(p => { map[p.id] = p.estoque ?? 0; });

@@ -24394,6 +24394,7 @@ export type Database = {
           estabelecimento_id: string | null
           estoque: number | null
           estoque_minimo: number
+          estoque_saldo: number | null
           ex_tipi: string | null
           faixa_etaria: string | null
           ficha_producao: Json | null
@@ -24464,6 +24465,7 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           estoque_minimo?: number
+          estoque_saldo?: number | null
           ex_tipi?: string | null
           faixa_etaria?: string | null
           ficha_producao?: Json | null
@@ -24534,6 +24536,7 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           estoque_minimo?: number
+          estoque_saldo?: number | null
           ex_tipi?: string | null
           faixa_etaria?: string | null
           ficha_producao?: Json | null

@@ -136,7 +136,7 @@ var list_produtos_default = defineTool3({
       return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
     }
     const sb = supabaseForUser3(ctx);
-    let q = sb.from("produtos").select("id, nome, codigo, marca, estoque, preco_tabela, preco_minimo, ativo").order("nome").limit(limit ?? 25);
+    let q = sb.from("produtos").select("id, nome, codigo, marca, estoque:estoque_saldo, preco_tabela, preco_minimo, ativo").order("nome").limit(limit ?? 25);
     if (search && search.trim()) {
       const s = `%${search.trim()}%`;
       q = q.or(`nome.ilike.${s},codigo.ilike.${s},marca.ilike.${s}`);

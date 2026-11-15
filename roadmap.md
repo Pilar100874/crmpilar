@@ -1,4 +1,7 @@
 # Roadmap — Atendimento
+## Precisão do estoque
+- [x] Saldo decimal aditivo e consumidores de produtos atualizados sem recalcular históricos
+- [x] Validar entradas fracionadas, saída/devolução e leitura pela tela
 ## Navegação em formulários por etapas
 - [x] Revisar assistentes restantes e proteger trocas internas em Marketing, Listas, Configurações e Atendimento; cancelar/descarte/reinício validado no Marketing
 - [x] Avisar antes de trocar de módulo com preenchimento pendente, inclusive navegação por botões

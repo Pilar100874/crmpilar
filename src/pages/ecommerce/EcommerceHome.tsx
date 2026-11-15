@@ -128,8 +128,8 @@ export default function EcommerceHome() {
 
     const [productsRes, countRes] = await Promise.all([
       estabId
-        ? supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12)
-        : supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("ativo", true).limit(12),
+        ? supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque:estoque_saldo, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12)
+        : supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque:estoque_saldo, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("ativo", true).limit(12),
       estabId
         ? supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true)
         : supabase.from("produtos").select("id", { count: "exact", head: true }).eq("ativo", true),

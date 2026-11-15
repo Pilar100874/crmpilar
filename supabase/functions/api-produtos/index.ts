@@ -56,7 +56,7 @@ serve(async (req) => {
         descricao,
         preco,
         unidade,
-        estoque_atual,
+        estoque_atual:estoque_saldo,
         codigo_barras,
         ncm,
         marca,

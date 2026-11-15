@@ -370,7 +370,7 @@ async function syncEstoque(supabase: any, conta: any, accessToken: string) {
     // Buscar produtos vinculados que têm produto interno
     const { data: produtos, error: prodError } = await supabase
       .from('marketplace_produtos')
-      .select('*, produto:produto_interno_id(id, preco, estoque)')
+      .select('*, produto:produto_interno_id(id, preco, estoque:estoque_saldo)')
       .eq('conta_marketplace_id', conta.id)
       .not('produto_interno_id', 'is', null);
 

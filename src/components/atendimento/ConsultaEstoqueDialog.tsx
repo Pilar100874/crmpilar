@@ -139,7 +139,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
     try {
       const [prodRes, grupoRes, catRes] = await Promise.all([
         supabase.from('produtos')
-          .select('id, nome, codigo, estoque, grupo_id, categoria_id, marca, preco_tabela, campos_customizados')
+          .select('id, nome, codigo, estoque:estoque_saldo, grupo_id, categoria_id, marca, preco_tabela, campos_customizados')
           .eq('estabelecimento_id', estabelecimentoId).eq('ativo', true).order('nome'),
         supabase.from('produto_grupos').select('id, nome')
           .eq('estabelecimento_id', estabelecimentoId).order('nome'),

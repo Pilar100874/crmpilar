@@ -25,7 +25,7 @@ export default defineTool({
     const sb = supabaseForUser(ctx);
     let q = sb
       .from("produtos")
-      .select("id, nome, codigo, marca, estoque, preco_tabela, preco_minimo, ativo")
+      .select("id, nome, codigo, marca, estoque:estoque_saldo, preco_tabela, preco_minimo, ativo")
       .order("nome")
       .limit(limit ?? 25);
     if (search && search.trim()) {

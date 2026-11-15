@@ -5,6 +5,11 @@ const hoje = new Date("2026-11-15T12:00:00Z");
 const base = { estoque_minimo: 0, prazo_reposicao_dias: 0 };
 
 describe("necessidade de compra", () => {
+  it("mantém saldo fracionado ao calcular necessidade de kg", () => {
+    const [n] = calcularNecessidades([{ id: "a", nome: "A", estoque: 12.4, ...base, estoque_minimo: 15 }], [], {}, hoje);
+    expect(n.produto.estoque).toBe(12.4);
+    expect(n.porMinimo).toBeCloseTo(2.6);
+  });
   it("abaixo do mínimo sugere recompor o mínimo", () => {
     const [n] = calcularNecessidades([{ id: "a", nome: "A", estoque: 2, ...base, estoque_minimo: 10 }], [], {}, hoje);
     expect(n.quantidadeSugerida).toBe(8);

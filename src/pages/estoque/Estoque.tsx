@@ -30,7 +30,7 @@ export default function Estoque() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const carregarProdutos = async () => {
     if (!ctx.estabelecimentoId) return;
-    const { data } = await sb.from("produtos").select("id, nome, codigo, unidade, estoque, estoque_minimo, ean_13, gtin, ncm, cest, origem, tipo_item_fiscal, preco_tabela").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome");
+    const { data } = await sb.from("produtos").select("id, nome, codigo, unidade, estoque:estoque_saldo, estoque_minimo, ean_13, gtin, ncm, cest, origem, tipo_item_fiscal, preco_tabela").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome");
     setProdutos(data ?? []);
   };
   useEffect(() => { carregarProdutos(); }, [ctx.estabelecimentoId]);
@@ -81,7 +81,7 @@ function Saldos({ produtos, ctx, onMudou }: any) {
             <div><Label>Motivo</Label><Select value={mov.origem} onValueChange={(v) => setMov({ ...mov, origem: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
               {(mov.tipo === "entrada" ? ["ajuste", "producao_entrada", "devolucao", "inventario"] : ["ajuste", "producao_consumo", "perda", "inventario"]).map((o) => <SelectItem key={o} value={o}>{ORIGENS[o]}</SelectItem>)}
             </SelectContent></Select></div>
-            <div><Label>Quantidade ({mov.produto.unidade})</Label><Input type="number" value={mov.quantidade ?? ""} onChange={(e) => setMov({ ...mov, quantidade: e.target.value })} /></div>
+            <div><Label>Quantidade ({mov.produto.unidade})</Label><Input type="number" step="any" value={mov.quantidade ?? ""} onChange={(e) => setMov({ ...mov, quantidade: e.target.value })} /></div>
             {mov.tipo === "entrada" && <div><Label>Custo unitário</Label><Input type="number" step="0.01" value={mov.custo ?? ""} onChange={(e) => setMov({ ...mov, custo: e.target.value })} /></div>}
             <div className="sm:col-span-2"><Label>Observação *</Label><Input value={mov.observacao ?? ""} onChange={(e) => setMov({ ...mov, observacao: e.target.value })} /></div>
           </div>}

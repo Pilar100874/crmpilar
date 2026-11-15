@@ -561,7 +561,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       const [produtosRes, categoriasRes, gruposRes, ncmRes] = await Promise.all([
         supabase
           .from('produtos')
-          .select('*, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome), ncm_ref:ncm_codigos(id, codigo, descricao)')
+          .select('*, estoque:estoque_saldo, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome), ncm_ref:ncm_codigos(id, codigo, descricao)')
           .eq('estabelecimento_id', estabelecimentoId)
           .order('nome'),
         supabase
@@ -846,7 +846,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         // Campos para Marketplace
         descricao: formData.descricao || null,
         marca: formData.marca || null,
-        estoque: formData.estoque ? parseInt(formData.estoque) : 0,
+        ...(!editingProduto ? { estoque_saldo: Number(formData.estoque || 0) } : {}),
         estoque_minimo: formData.estoque_minimo ? Number(formData.estoque_minimo) : 0,
         prazo_reposicao_dias: formData.prazo_reposicao_dias ? parseInt(formData.prazo_reposicao_dias) : 15,
         garantia: formData.garantia || null,
@@ -1811,6 +1811,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       <Input
                         type="number"
                         min="0"
+                        step="any"
+                        disabled={!!editingProduto}
                         value={formData.estoque}
                         onChange={(e) => setFormData({ ...formData, estoque: e.target.value })}
                         placeholder="Quantidade em estoque"

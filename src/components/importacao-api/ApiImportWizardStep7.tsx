@@ -66,7 +66,7 @@ export function ApiImportWizardStep7({
           if (existing) {
             const { error: updateError } = await supabase
               .from("produtos")
-              .update({ estoque: estoque })
+              .update({ estoque_saldo: estoque })
               .eq("id", existing.id);
 
             if (!updateError) updated++;
@@ -115,7 +115,7 @@ export function ApiImportWizardStep7({
                 standardFields.unidade = value;
                 break;
               case "estoque":
-                standardFields.estoque = value ? Number(value) : null;
+                standardFields.estoque_saldo = value ? Number(value) : null;
                 break;
               case "codigo_barras":
                 standardFields.codigo_barras = value;

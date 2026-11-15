@@ -393,7 +393,7 @@ serve(async (req) => {
       try {
         const { data: produtos } = await supabase
           .from("produtos")
-          .select("nome, codigo, ean_13, preco_tabela, estoque, marca, descricao, categoria, unidade, foto_url")
+          .select("nome, codigo, ean_13, preco_tabela, estoque:estoque_saldo, marca, descricao, categoria, unidade, foto_url")
           .eq("estabelecimento_id", agent.estabelecimento_id)
           .limit(500);
 
@@ -625,9 +625,10 @@ serve(async (req) => {
           } else if (b.fonte_tipo === "sistema" && b.tabela_sistema && b.coluna_sistema) {
             // Resolver de tabela do sistema (best-effort)
             try {
+              const coluna = b.tabela_sistema === "produtos" && b.coluna_sistema === "estoque" ? "estoque:estoque_saldo" : b.coluna_sistema;
               const { data: sysData } = await supabase
                 .from(b.tabela_sistema as any)
-                .select(b.coluna_sistema)
+                .select(coluna)
                 .eq("estabelecimento_id", agent.estabelecimento_id)
                 .limit(20);
               if (sysData && sysData.length > 0) {
