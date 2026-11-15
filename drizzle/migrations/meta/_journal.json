@@ -267,6 +267,13 @@
       "when": 1794711748402,
       "tag": "0037_empresa_papeis_produto_fornecedores",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794713231273,
+      "tag": "0038_unidades_fiscal_certificado",
+      "breakpoints": true
     }
   ]
 }

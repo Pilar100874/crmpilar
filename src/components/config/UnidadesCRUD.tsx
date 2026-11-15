@@ -9,6 +9,8 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { CertificadoUnidade } from "@/components/config/CertificadoUnidade";
+import { REGIMES_TRIBUTARIOS, rotuloRegime } from "@/lib/fiscal/regimeTributario";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -22,6 +24,14 @@ interface Unidade {
   bairro?: string;
   cidade?: string;
   uf?: string;
+  estabelecimento_id?: string | null;
+  cnpj?: string | null;
+  inscricao_estadual?: string | null;
+  regime_tributario?: string | null;
+  certificado_path?: string | null;
+  certificado_nome_arquivo?: string | null;
+  certificado_titular?: string | null;
+  certificado_valido_ate?: string | null;
 }
 
 interface UnidadesCRUDProps {
@@ -38,6 +48,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [inscricaoEstadual, setInscricaoEstadual] = useState("");
+  const [regime, setRegime] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
@@ -139,6 +152,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       bairro: bairro || null,
       cidade: cidade || null,
       uf: uf || null,
+      cnpj: cnpj.replace(/\D/g, "") || null,
+      inscricao_estadual: inscricaoEstadual.trim() || null,
+      regime_tributario: regime || null,
     };
 
     if (editingId) {
@@ -214,6 +230,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro(unidade.bairro || "");
     setCidade(unidade.cidade || "");
     setUf(unidade.uf || "");
+    setCnpj(unidade.cnpj || "");
+    setInscricaoEstadual(unidade.inscricao_estadual || "");
+    setRegime(unidade.regime_tributario || "");
     setEditingId(unidade.id);
     setFormOpen(true);
   };
@@ -227,6 +246,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro("");
     setCidade("");
     setUf("");
+    setCnpj("");
+    setInscricaoEstadual("");
+    setRegime("");
     setEditingId(null);
     setFormOpen(false);
   };
@@ -443,6 +465,36 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="unidade-cnpj">CNPJ da unidade</Label>
+            <Input id="unidade-cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="unidade-ie">Inscrição estadual</Label>
+            <Input id="unidade-ie" value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label>Regime tributário</Label>
+            <Select value={regime || "nao_informado"} onValueChange={(v) => setRegime(v === "nao_informado" ? "" : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nao_informado">Não informado</SelectItem>
+                {REGIMES_TRIBUTARIOS.map((r) => <SelectItem key={r.valor} value={r.valor}>{r.rotulo}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {editingId ? (
+          (() => {
+            const atual = unidades.find((u) => u.id === editingId);
+            return atual ? <CertificadoUnidade unidade={atual} onAlterado={fetchUnidades} /> : null;
+          })()
+        ) : (
+          <p className="text-xs text-muted-foreground">Salve a unidade para poder importar o certificado digital.</p>
+        )}
+
         <div className="flex gap-2">
           <Button type="submit">
             {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
@@ -471,7 +523,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           <CadastroCardList items={filteredUnidades.map((unidade) => ({
             id: unidade.id,
             title: unidade.nome,
-            subtitle: [unidade.cidade, unidade.uf].filter(Boolean).join(" - ") || "Endereço não informado",
+            subtitle: [[unidade.cidade, unidade.uf].filter(Boolean).join(" - ") || "Endereço não informado", unidade.regime_tributario ? rotuloRegime(unidade.regime_tributario) : "", unidade.certificado_path ? "Certificado A1" : ""].filter(Boolean).join(" · "),
             fields: [{ label: "Bairro", value: unidade.bairro || "-" }, { label: "CEP", value: unidade.cep || "-" }],
             actions: actionButtons(unidade),
           }))} />

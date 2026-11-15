@@ -1,0 +1,1 @@
+- Fiscal regime options and certificate-validity rules live in src/lib/fiscal; A1 certificates are parsed in-browser, stored in the private certificados-digitais bucket per estabelecimento/unidade, and passwords go to unidade_certificado_senhas (write-only for clients) so they are never read back in the UI.

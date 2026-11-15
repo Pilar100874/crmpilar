@@ -29462,21 +29462,58 @@ export type Database = {
           },
         ]
       }
+      unidade_certificado_senhas: {
+        Row: {
+          estabelecimento_id: string
+          senha: string
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          estabelecimento_id: string
+          senha: string
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          estabelecimento_id?: string
+          senha?: string
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidade_certificado_senhas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: true
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           bairro: string | null
           cep: string | null
+          certificado_enviado_em: string | null
+          certificado_nome_arquivo: string | null
+          certificado_path: string | null
+          certificado_titular: string | null
+          certificado_valido_ate: string | null
           cidade: string | null
+          cnpj: string | null
           complemento: string | null
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          inscricao_estadual: string | null
           latitude: number | null
           logradouro: string | null
           longitude: number | null
           nome: string
           numero: string | null
           ramal_portaria: string | null
+          regime_tributario: string | null
           sip_porta: number | null
           sip_porta_alternativa: number | null
           sip_servidor: string | null
@@ -29487,17 +29524,25 @@ export type Database = {
         Insert: {
           bairro?: string | null
           cep?: string | null
+          certificado_enviado_em?: string | null
+          certificado_nome_arquivo?: string | null
+          certificado_path?: string | null
+          certificado_titular?: string | null
+          certificado_valido_ate?: string | null
           cidade?: string | null
+          cnpj?: string | null
           complemento?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          inscricao_estadual?: string | null
           latitude?: number | null
           logradouro?: string | null
           longitude?: number | null
           nome: string
           numero?: string | null
           ramal_portaria?: string | null
+          regime_tributario?: string | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null
@@ -29508,17 +29553,25 @@ export type Database = {
         Update: {
           bairro?: string | null
           cep?: string | null
+          certificado_enviado_em?: string | null
+          certificado_nome_arquivo?: string | null
+          certificado_path?: string | null
+          certificado_titular?: string | null
+          certificado_valido_ate?: string | null
           cidade?: string | null
+          cnpj?: string | null
           complemento?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          inscricao_estadual?: string | null
           latitude?: number | null
           logradouro?: string | null
           longitude?: number | null
           nome?: string
           numero?: string | null
           ramal_portaria?: string | null
+          regime_tributario?: string | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null

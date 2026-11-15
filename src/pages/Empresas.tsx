@@ -1,3 +1,4 @@
+import { REGIMES_TRIBUTARIOS, normalizarRegime } from "@/lib/fiscal/regimeTributario";
 import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import { KeyRound } from "lucide-react";
@@ -757,6 +758,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       eh_fornecedor: (empresa as any).eh_fornecedor ?? false,
       eh_vendedor: (empresa as any).eh_vendedor ?? false,
       eh_transportadora: (empresa as any).eh_transportadora ?? false,
+      regime_tributario: (empresa as any).regime_tributario || "",
     };
 
     
@@ -1039,7 +1041,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         porte: result.porte || prev.porte,
         natureza_juridica: up(result.naturezaJuridica || prev.natureza_juridica),
         capital_social: result.capitalSocial ?? prev.capital_social,
-        regime_tributario: result.regimeTributario || prev.regime_tributario,
+        regime_tributario: normalizarRegime(result.regimeTributario) || prev.regime_tributario,
         optante_mei: result.optanteMei ?? prev.optante_mei,
         optante_simples: result.optanteSimples ?? prev.optante_simples,
         pais: result.pais || prev.pais || "Brasil",
@@ -1259,6 +1261,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         eh_fornecedor: formData.eh_fornecedor ?? filtroPapel === "fornecedores",
         eh_vendedor: variant === "vendedor" ? true : !!formData.eh_vendedor,
         eh_transportadora: variant === "transportadora" ? true : !!formData.eh_transportadora,
+        regime_tributario: formData.regime_tributario || null,
         ...(variant === "vendedor" ? { tipo_vendedor: formData.tipo_vendedor || "representante" } : {}),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
@@ -2659,6 +2662,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </label>
                 );
               })}
+              <label className="flex items-center gap-2 text-sm sm:ml-auto">
+                <span className="text-xs font-medium text-muted-foreground">Regime tributário:</span>
+                <Select value={formData.regime_tributario || "nao_informado"} onValueChange={(v) => setFormData({ ...formData, regime_tributario: v === "nao_informado" ? "" : v })}>
+                  <SelectTrigger className="h-8 w-[190px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao_informado">Não informado</SelectItem>
+                    {REGIMES_TRIBUTARIOS.map((r) => <SelectItem key={r.valor} value={r.valor}>{r.rotulo}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </label>
             </div>
             <div className="space-y-8">
               <section>
