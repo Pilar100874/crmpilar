@@ -56,7 +56,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from './ProdutoProducaoTabs';
 import { abasProducao } from '@/lib/producao/regrasProduto';
 import { FichaProducaoEditor } from './FichaProducaoEditor';
-import { fichaVazia, lerFicha, validarFicha, type FichaProducao } from '@/lib/producao/fichaProducao';
+import { fichaVazia, lerFicha, validarFicha, unidadesCadastro, type FichaProducao } from '@/lib/producao/fichaProducao';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
@@ -103,6 +103,7 @@ interface FormData {
   producao_tempo_minutos: string;
   nome: string;
   codigo: string;
+  unidade: string;
   largura: string;
   altura: string;
   gramatura: string;
@@ -170,6 +171,7 @@ const initialFormData: FormData = {
   producao_tempo_minutos: '',
   nome: "",
   codigo: "",
+  unidade: "",
   largura: "",
   altura: "",
   gramatura: "",
@@ -774,6 +776,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome.trim(),
         codigo: formData.codigo.trim(),
+        unidade: formData.unidade.trim() || null,
         largura: formData.largura ? parseFloat(formData.largura) : null,
         altura: formData.altura ? parseFloat(formData.altura) : null,
         gramatura: formData.gramatura ? parseFloat(formData.gramatura) : null,
@@ -981,6 +984,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       producao_observacoes: produto.producao_observacoes || '',
       producao_tempo_minutos: produto.producao_tempo_minutos?.toString() || '',
       codigo: p.codigo || "",
+      unidade: p.unidade || "",
       largura: produto.largura?.toString() || "",
       altura: p.altura?.toString() || "",
       gramatura: produto.gramatura?.toString() || "",
@@ -1565,7 +1569,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </TabsList>
 
               {formData.produzido && <>
-                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.materia_prima && p.id !== editingProduto?.id)} maquinas={maquinas} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.materia_prima && p.id !== editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
                 <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
               </>}
 
@@ -1592,6 +1596,24 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                           placeholder="Nome do produto"
                           className="h-9 sm:h-10 text-sm"
                         />
+                      </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Unidade</Label>
+                        <Select
+                          value={formData.unidade || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, unidade: value === "none" ? "" : value })}
+                        >
+                          <SelectTrigger aria-label="Unidade do produto" className="h-9 sm:h-10 text-sm">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Selecione...</SelectItem>
+                            {unidadesCadastro.map((u) => (
+                              <SelectItem key={u} value={u}>{u}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Usada como unidade desta matéria-prima na ficha de produção.</p>
                       </div>
                     </div>
                   </div>

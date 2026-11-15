@@ -23798,6 +23798,7 @@ export type Database = {
           produzido: boolean
           tamanho: string | null
           tipo_preco: string | null
+          unidade: string | null
           updated_at: string | null
           valor_seguro: number | null
         }
@@ -23863,6 +23864,7 @@ export type Database = {
           produzido?: boolean
           tamanho?: string | null
           tipo_preco?: string | null
+          unidade?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
         }
@@ -23928,6 +23930,7 @@ export type Database = {
           produzido?: boolean
           tamanho?: string | null
           tipo_preco?: string | null
+          unidade?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
         }

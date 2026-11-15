@@ -184,3 +184,28 @@ describe('perda máxima por matéria-prima', () => {
     expect(validarFicha({ ...f, materiais: [{ ...f.materiais[0], opcoes: [{ ...f.materiais[0].opcoes[0], perda_max_percentual: 100 }] }] })).toBeTruthy();
   });
 });
+
+describe('unidade da matéria-prima vem do cadastro do produto', () => {
+  it('usa a unidade cadastrada em cada matéria-prima e no produto acabado', async () => {
+    const { sincronizarUnidades } = await import('./fichaProducao');
+    const s = sincronizarUnidades(ficha, { x: 'm', a: 'kg', y: 'rolo' }, 'caixa');
+    expect(s.materiais[0].opcoes.map(o => o.unidade)).toEqual(['m', 'kg']);
+    expect(s.materiais[1].opcoes[0].unidade).toBe('rolo');
+    expect(s.unidade_produto).toBe('caixa');
+  });
+  it('mantém a unidade salva quando o produto ainda não tem unidade no cadastro', async () => {
+    const { sincronizarUnidades } = await import('./fichaProducao');
+    const s = sincronizarUnidades(ficha, { x: '', y: null }, '');
+    expect(s.materiais[0].opcoes.map(o => o.unidade)).toEqual(['kg', 'kg']);
+    expect(s.unidade_produto).toBe('un');
+  });
+  it('não gera ficha nova quando nada muda', async () => {
+    const { sincronizarUnidades } = await import('./fichaProducao');
+    expect(sincronizarUnidades(ficha, { x: 'kg', a: 'kg', y: 'un' }, 'un')).toBe(ficha);
+  });
+  it('aceita a unidade cadastrada mesmo com espaços', async () => {
+    const { unidadeCadastrada } = await import('./fichaProducao');
+    expect(unidadeCadastrada({ x: ' kg ' }, 'x')).toBe('kg');
+    expect(unidadeCadastrada({ x: null }, 'x')).toBe('');
+  });
+});

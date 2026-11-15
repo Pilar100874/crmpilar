@@ -6,7 +6,36 @@ export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[
 export interface ApoioProducao { id: string; quantidade: number; servico: string }
 export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[]; funcionarios_extras?: ApoioProducao[] }
 export const unidadesConsumo = ['un', 'kg', 'g', 'L', 'mL', 'm', 'm²', 'm³'] as const;
+export const unidadesCadastro = ['un', 'kg', 'g', 't', 'L', 'mL', 'm', 'cm', 'm²', 'm³', 'caixa', 'pote', 'saco', 'balde', 'rolo', 'par', 'cento', 'milheiro'] as const;
 export const fichaVazia = (): FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [] });
+
+/** Unidades de medida cadastradas em cada produto (chave = id do produto). */
+export type UnidadesCadastroPorProduto = Record<string, string | null | undefined>;
+
+/** Unidade registrada no cadastro do produto, ou vazio quando ele ainda não tem. */
+export function unidadeCadastrada(unidades: UnidadesCadastroPorProduto, produtoId: string): string {
+  return (unidades[produtoId] || '').trim();
+}
+
+/**
+ * A unidade de cada matéria-prima (e do produto acabado) vem do cadastro do próprio produto.
+ * Retorna a mesma ficha quando nada muda, para não disparar re-render sem necessidade.
+ * Quando o produto ainda não tem unidade cadastrada, mantém a unidade já salva na ficha.
+ */
+export function sincronizarUnidades(f: FichaProducao, unidades: UnidadesCadastroPorProduto, unidadeDoProdutoAtual?: string | null): FichaProducao {
+  let mudou = false;
+  const atual = (unidadeDoProdutoAtual || '').trim();
+  const unidade_produto = atual && atual !== f.unidade_produto ? (mudou = true, atual) : f.unidade_produto;
+  const materiais = f.materiais.map(g => ({
+    ...g,
+    opcoes: g.opcoes.map(o => {
+      const u = unidadeCadastrada(unidades, o.produto_id);
+      if (u && u !== o.unidade) { mudou = true; return { ...o, unidade: u }; }
+      return o;
+    }),
+  }));
+  return mudou ? { ...f, unidade_produto, materiais } : f;
+}
 export function lerFicha(valor: unknown): FichaProducao {
   if (!valor || typeof valor !== 'object' || !('quantidade_base' in valor) || !('materiais' in valor) || !('etapas' in valor)) return fichaVazia();
   // Translate previously saved width rules once, preserving their result without exposing width fields.
@@ -39,7 +68,7 @@ export function validarFicha(f: FichaProducao): string | null {
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
     if (new Set(g.opcoes.map(o => o.produto_id)).size !== g.opcoes.length) return 'Não repita a mesma matéria-prima no grupo';
     for (const o of g.opcoes) {
-      if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima, quantidade positiva e unidade';
+      if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima e uma quantidade positiva; a unidade vem do cadastro do produto';
       if (o.perda_max_percentual != null && (!Number.isFinite(o.perda_max_percentual) || o.perda_max_percentual < 0 || o.perda_max_percentual >= 100)) return 'A perda máxima deve ficar entre 0% e 99,9%';
       if (o.meta_producao != null && (!Number.isFinite(o.meta_producao) || o.meta_producao <= 0)) return 'A meta de produção deve ser maior que zero';
     }

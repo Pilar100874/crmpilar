@@ -1,0 +1,2 @@
+ALTER TABLE public.produtos ADD COLUMN IF NOT EXISTS unidade text;
+COMMENT ON COLUMN public.produtos.unidade IS 'Unidade de medida do produto (ex.: un, kg, L, m, m2). Usada como unidade da materia-prima na ficha de producao.';

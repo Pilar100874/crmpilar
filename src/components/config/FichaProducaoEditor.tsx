@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,20 +7,35 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Plus, Trash2, ArrowUp, ArrowDown, Users } from 'lucide-react';
-import { calcularProducao, validarFicha, unidadesConsumo, type FichaProducao, type GrupoMaterial, type EtapaProducao } from '@/lib/producao/fichaProducao';
+import { calcularProducao, validarFicha, unidadesConsumo, sincronizarUnidades, unidadeCadastrada, type FichaProducao, type GrupoMaterial, type EtapaProducao, type UnidadesCadastroPorProduto } from '@/lib/producao/fichaProducao';
 import type { MaquinaOpcao } from './ProdutoProducaoTabs';
 
-type Materia = { id: string; nome: string; ativo: boolean };
+type Materia = { id: string; nome: string; ativo: boolean; unidade?: string | null };
 function Numero({ label, valor, onChange }: { label: string; valor: number; onChange: (v: number) => void }) {
   return <div className="min-w-0 space-y-1"><Label className="text-xs">{label}</Label><Input aria-label={label} type="number" min="0.000001" step="any" value={valor || ''} onChange={e => onChange(Number(e.target.value))} /></div>;
 }
 function Unidade({ valor, onChange, label }: { valor: string; onChange: (v: string) => void; label: string }) {
   return <div className="space-y-1 min-w-0"><Label className="text-xs">{label}</Label><Select value={valor} onValueChange={onChange}><SelectTrigger aria-label={label}><SelectValue /></SelectTrigger><SelectContent>{unidadesConsumo.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select></div>;
 }
+/** Unidade que vem do cadastro do próprio produto: aqui é apenas mostrada, nunca digitada. */
+function UnidadeDoCadastro({ label, produtoId, unidades }: { label: string; produtoId: string; unidades: UnidadesCadastroPorProduto }) {
+  const unidade = unidadeCadastrada(unidades, produtoId);
+  return <div className="space-y-1 min-w-0"><Label className="text-xs">{label}</Label>
+    {!produtoId ? <p className="flex h-9 items-center rounded-md border border-dashed px-3 text-xs text-muted-foreground">Selecione a matéria-prima</p>
+      : unidade ? <p aria-label={label} className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm font-medium">{unidade}</p>
+        : <p className="flex h-9 items-center rounded-md border border-destructive/40 px-3 text-xs text-destructive">Sem unidade no cadastro deste produto</p>}
+  </div>;
+}
 
-export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
-  ficha: FichaProducao; onChange: (f: FichaProducao) => void; materias: Materia[]; maquinas: MaquinaOpcao[];
+export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unidadeDoProdutoAtual }: {
+  ficha: FichaProducao; onChange: (f: FichaProducao) => void; materias: Materia[]; maquinas: MaquinaOpcao[]; unidadeDoProdutoAtual?: string | null;
 }) {
+  const unidades: UnidadesCadastroPorProduto = useMemo(() => Object.fromEntries(materias.map(m => [m.id, m.unidade])), [materias]);
+  // A unidade de cada matéria-prima (e do produto acabado) é sempre a do cadastro do produto.
+  useEffect(() => {
+    const sincronizada = sincronizarUnidades(ficha, unidades, unidadeDoProdutoAtual);
+    if (sincronizada !== ficha) onChange(sincronizada);
+  }, [ficha, unidades, unidadeDoProdutoAtual, onChange]);
   const [remocao, setRemocao] = useState<{ nome: string; executar: () => void } | null>(null);
   const [quantidade, setQuantidade] = useState(1);
   const [escolhas, setEscolhas] = useState<Record<string, string>>({});
@@ -38,22 +53,24 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas }: {
   return <div className="space-y-6 min-w-0">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <Numero label="Quantidade-base produzida" valor={ficha.quantidade_base} onChange={v => onChange({ ...ficha, quantidade_base: v })} />
-      <Unidade label="Unidade do produto acabado" valor={ficha.unidade_produto} onChange={v => onChange({ ...ficha, unidade_produto: v })} />
+      {(unidadeDoProdutoAtual || '').trim()
+        ? <div className="space-y-1 min-w-0"><Label className="text-xs">Unidade do produto acabado (do cadastro)</Label><p aria-label="Unidade do produto acabado (do cadastro)" className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm font-medium">{(unidadeDoProdutoAtual || '').trim()}</p></div>
+        : <Unidade label="Unidade do produto acabado" valor={ficha.unidade_produto} onChange={v => onChange({ ...ficha, unidade_produto: v })} />}
     </div>
     <section className="space-y-3">
-      <div className="flex flex-wrap justify-between items-center gap-2 border-b pb-2"><h4 className="font-medium">Matérias-primas necessárias</h4><Button type="button" variant="outline" size="sm" onClick={() => onChange({ ...ficha, materiais: [...ficha.materiais, { id: crypto.randomUUID(), nome: `Material ${ficha.materiais.length + 1}`, opcoes: [{ id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: 'kg' }] }] })}><Plus className="h-4 w-4 mr-1" />Adicionar material</Button></div>
+      <div className="flex flex-wrap justify-between items-center gap-2 border-b pb-2"><h4 className="font-medium">Matérias-primas necessárias</h4><Button type="button" variant="outline" size="sm" onClick={() => onChange({ ...ficha, materiais: [...ficha.materiais, { id: crypto.randomUUID(), nome: `Material ${ficha.materiais.length + 1}`, opcoes: [{ id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: '' }] }] })}><Plus className="h-4 w-4 mr-1" />Adicionar material</Button></div>
       <p className="text-xs text-muted-foreground">A meta é opcional e pode ser diferente em cada matéria-prima ou substituto. Na previsão, use a meta da opção escolhida.</p>
       {ficha.materiais.map((g, index) => <div key={g.id} className="border rounded-md p-3 space-y-3 min-w-0">
         <div className="flex items-center gap-2"><Input aria-label={`Nome do material ${index + 1}`} value={g.nome} onChange={e => atualizarMaterial({ ...g, nome: e.target.value })} /><Button type="button" variant="ghost" size="icon" title="Excluir material" aria-label={`Excluir material ${index + 1}`} onClick={() => setRemocao({ nome: g.nome, executar: () => onChange({ ...ficha, materiais: ficha.materiais.filter(x => x.id !== g.id) }) })}><Trash2 className="h-4 w-4" /></Button></div>
         {g.opcoes.map((o, i) => <div key={o.id} className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-end border-b pb-3">
-          <div className="min-w-0 space-y-1"><Label className="text-xs">{i === 0 ? 'Matéria-prima principal' : `OU substituto ${i}`}</Label><Select value={o.produto_id} onValueChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, produto_id: v } : x) })}><SelectTrigger aria-label={`Matéria-prima ${index + 1} opção ${i + 1}`} className="min-w-0 [&>span]:truncate"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{materias.filter(m => m.ativo || m.id === o.produto_id).map(m => <SelectItem key={m.id} value={m.id}>{m.nome}{!m.ativo && ' (inativa)'}</SelectItem>)}</SelectContent></Select></div>
+          <div className="min-w-0 space-y-1"><Label className="text-xs">{i === 0 ? 'Matéria-prima principal' : `OU substituto ${i}`}</Label><Select value={o.produto_id} onValueChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, produto_id: v, unidade: unidadeCadastrada(unidades, v) || x.unidade } : x) })}><SelectTrigger aria-label={`Matéria-prima ${index + 1} opção ${i + 1}`} className="min-w-0 [&>span]:truncate"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{materias.filter(m => m.ativo || m.id === o.produto_id).map(m => <SelectItem key={m.id} value={m.id}>{m.nome}{!m.ativo && ' (inativa)'}</SelectItem>)}</SelectContent></Select></div>
           <Numero label={`Consumo material ${index + 1} opção ${i + 1}`} valor={o.quantidade} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, quantidade: v } : x) })} />
-          <Unidade label={`Unidade material ${index + 1} opção ${i + 1}`} valor={o.unidade} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, unidade: v } : x) })} />
+          <UnidadeDoCadastro label={`Unidade material ${index + 1} opção ${i + 1}`} produtoId={o.produto_id} unidades={unidades} />
           <Numero label={`Meta de produção material ${index + 1} opção ${i + 1} (${ficha.unidade_produto})`} valor={o.meta_producao ?? 0} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, meta_producao: v > 0 ? v : undefined } : x) })} />
           <Numero label={`Perda máxima (%) material ${index + 1} opção ${i + 1}`} valor={o.perda_max_percentual ?? 0} onChange={v => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? { ...x, perda_max_percentual: v > 0 ? v : undefined } : x) })} />
           <Button type="button" variant="ghost" size="icon" aria-label={`Excluir opção ${i + 1} do material ${index + 1}`} title="Excluir opção" onClick={() => setRemocao({ nome: i === 0 ? 'matéria-prima principal' : 'substituto', executar: () => atualizarMaterial({ ...g, opcoes: g.opcoes.filter(x => x.id !== o.id) }) })}><Trash2 className="h-4 w-4" /></Button>
         </div>)}
-        <Button type="button" variant="ghost" size="sm" onClick={() => atualizarMaterial({ ...g, opcoes: [...g.opcoes, { id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: 'kg' }] })}><Plus className="h-4 w-4 mr-1" />Adicionar substituto</Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => atualizarMaterial({ ...g, opcoes: [...g.opcoes, { id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: '' }] })}><Plus className="h-4 w-4 mr-1" />Adicionar substituto</Button>
       </div>)}
     </section>
     <section className="space-y-3">
