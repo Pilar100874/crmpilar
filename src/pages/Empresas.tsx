@@ -303,7 +303,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Lista final de campos para renderização (prioriza configurações do banco)
   const formFieldsToRender = React.useMemo(() => {
     if (fieldConfigsFromDB && fieldConfigsFromDB.length > 0) {
-      const mapped = fieldConfigsFromDB.map((cfg: any): CustomField => {
+      // Regime tributário fica só na aba Inf. fiscal
+      const mapped = fieldConfigsFromDB.filter((cfg: any) => cfg.field_id !== "tipo_de_tributacao").map((cfg: any): CustomField => {
         let optionsParsed: any = cfg.options;
         try {
           if (typeof optionsParsed === 'string') {
@@ -1047,7 +1048,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         porte: result.porte || prev.porte,
         natureza_juridica: up(result.naturezaJuridica || prev.natureza_juridica),
         capital_social: result.capitalSocial ?? prev.capital_social,
-        regime_tributario: normalizarRegime(result.regimeTributario) || prev.regime_tributario,
+        regime_tributario: (result.optanteMei ? "mei" : result.optanteSimples ? "simples_nacional" : normalizarRegime(result.regimeTributario)) || prev.regime_tributario,
         optante_mei: result.optanteMei ?? prev.optante_mei,
         optante_simples: result.optanteSimples ?? prev.optante_simples,
         pais: result.pais || prev.pais || "Brasil",

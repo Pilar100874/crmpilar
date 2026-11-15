@@ -1,3 +1,4 @@
+import { normalizarRegime } from "@/lib/fiscal/regimeTributario";
 import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -260,7 +261,7 @@ export function EmpresaFormSheet({ centralizado = false, open, onOpenChange, onS
           natureza_juridica: data.naturezaJuridica || prev.natureza_juridica,
           capital_social: data.capitalSocial != null ? String(data.capitalSocial) : prev.capital_social,
           porte: data.porte || prev.porte,
-          regime_tributario: data.regimeTributario || prev.regime_tributario,
+          regime_tributario: (data.optanteMei ? "mei" : data.optanteSimples ? "simples_nacional" : normalizarRegime(data.regimeTributario)) || prev.regime_tributario,
           optante_mei: data.optanteMei ?? prev.optante_mei,
           optante_simples: data.optanteSimples ?? prev.optante_simples,
           cnae_principal: data.cnaePrincipal || prev.cnae_principal,
