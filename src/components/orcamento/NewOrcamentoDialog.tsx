@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { somenteFornecedor } from "@/lib/empresas/papeis";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -68,12 +69,12 @@ export default function NewOrcamentoDialog({
       const estabelecimentoId = await getEstabelecimentoId();
       const { data, error } = await supabase
         .from('empresas')
-        .select('id, nome_fantasia, nome, cnpj')
+        .select('id, nome_fantasia, nome, cnpj, eh_cliente, eh_fornecedor, eh_vendedor, eh_transportadora')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome_fantasia');
 
       if (error) throw error;
-      setEmpresas(data || []);
+      setEmpresas(((data || []) as any[]).filter((e) => !somenteFornecedor(e)));
       setEmpresasFiltradas(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar empresas:', error);

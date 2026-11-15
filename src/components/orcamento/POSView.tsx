@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { somenteFornecedor } from "@/lib/empresas/papeis";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
@@ -738,12 +739,12 @@ export default function POSView({
     try {
       const { data, error } = await supabase
         .from('empresas')
-        .select('id, nome_fantasia, cnpj')
+        .select('id, nome_fantasia, cnpj, eh_cliente, eh_fornecedor, eh_vendedor, eh_transportadora')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome_fantasia');
 
       if (error) throw error;
-      setEmpresas(data || []);
+      setEmpresas(((data || []) as any[]).filter((e) => !somenteFornecedor(e)));
     } catch (error: any) {
       console.error('Erro ao carregar empresas:', error);
     }

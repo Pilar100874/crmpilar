@@ -1,4 +1,5 @@
 import { meusRamaisIa, podeLigarComIa } from "@/lib/voz/ramaisUsuario";
+import { somenteFornecedor } from "@/lib/empresas/papeis";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, ChevronDown, Loader2, Mail, MessageCircle, Phone,
@@ -168,7 +169,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
 
       const [emp, vincC, vincE, orc] = await Promise.all([
         empresaIds.length
-          ? supabase.from("empresas").select("id, nome, nome_fantasia, cidade, estado, tipo_cliente, status_comercial, segmentos:segmento_id ( nome )").in("id", empresaIds)
+          ? supabase.from("empresas").select("id, nome, nome_fantasia, cidade, estado, tipo_cliente, status_comercial, eh_cliente, eh_fornecedor, eh_vendedor, eh_transportadora, segmentos:segmento_id ( nome )").in("id", empresaIds)
           : Promise.resolve({ data: [] as any[] }),
         idsTodos.length ? supabase.from("customer_vinculos").select("customer_id, usuario_id").in("customer_id", idsTodos) : Promise.resolve({ data: [] as any[] }),
         empresaIds.length ? supabase.from("empresa_vinculos").select("empresa_id, usuario_id, vendedor_id").in("empresa_id", empresaIds) : Promise.resolve({ data: [] as any[] }),
@@ -193,7 +194,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
       });
 
       const emailsSet = new Set(emails);
-      const lista: Contato[] = lotes.map((c: any) => {
+      const lista: Contato[] = lotes.filter((c: any) => { const eid = empresaDe(c); return !somenteFornecedor(eid ? empMap.get(eid) : null); }).map((c: any) => {
         const eid = empresaDe(c);
         const e = eid ? empMap.get(eid) : null;
         const tel = soDigitos(c.telefone);
