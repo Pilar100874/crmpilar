@@ -203,7 +203,7 @@ export default function VendasConfig() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6 min-w-0">
-                  <Tabs defaultValue="cadastro" className="w-full">
+                  <Tabs defaultValue="cadastro" className="w-full [&:has(.produto-editor)>[role=tablist]]:hidden">
                     <TabsList className="mb-4 grid w-full grid-cols-3 h-auto gap-1 p-1">
                       <TabsTrigger value="cadastro" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm">
                         <Package className="h-4 w-4 shrink-0" />
