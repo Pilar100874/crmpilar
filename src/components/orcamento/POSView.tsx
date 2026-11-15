@@ -705,6 +705,7 @@ export default function POSView({
         .from('produtos')
         .select(`
           *,
+          estoque:estoque_saldo,
           grupo:produto_grupos(id, nome)
         `)
         .eq('estabelecimento_id', estabelecimentoId)
@@ -760,7 +761,7 @@ export default function POSView({
           *,
           itens:orcamento_itens(
             *,
-            produto:produtos(*)
+            produto:produtos(*, estoque:estoque_saldo)
           )
         `)
         .eq('id', id)

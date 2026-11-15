@@ -60,7 +60,7 @@ export function ConjuntoItensEditor({ conjuntoId, onClose }: ConjuntoItensEditor
         .from("orcamento_conjuntos_itens")
         .select(`
           *,
-          produto:produtos(*)
+          produto:produtos(*, estoque:estoque_saldo)
         `)
         .eq("conjunto_id", conjuntoId)
         .order("ordem", { ascending: true });
@@ -80,7 +80,7 @@ export function ConjuntoItensEditor({ conjuntoId, onClose }: ConjuntoItensEditor
 
       const { data: produtosData, error: produtosError } = await supabase
         .from("produtos")
-        .select("*")
+        .select("*, estoque:estoque_saldo")
         .eq("estabelecimento_id", userData?.estabelecimento_id)
         .eq("ativo", true)
         .eq("comercializavel", true)

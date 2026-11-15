@@ -37,7 +37,7 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
     try {
       let query = supabase
         .from('produtos')
-        .select('*')
+        .select('*, estoque:estoque_saldo')
         .eq('ativo', true)
         .eq('comercializavel', true)
         .order('nome');

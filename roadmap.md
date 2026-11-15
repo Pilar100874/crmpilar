@@ -1,5 +1,6 @@
 # Roadmap — Atendimento
 ## Precisão do estoque
+- [x] Revisar consultas genéricas e catálogo de voz; validar saldo fracionado nas rotas alternativas
 - [x] Saldo decimal aditivo e consumidores de produtos atualizados sem recalcular históricos
 - [x] Validar entradas fracionadas, saída/devolução e leitura pela tela
 ## Navegação em formulários por etapas

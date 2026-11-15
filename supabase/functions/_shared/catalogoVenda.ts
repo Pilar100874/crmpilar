@@ -24,14 +24,14 @@ export async function catalogoVenda(sb: SB, empresa: string, cfg: ConfigVenda): 
   const chave = `${empresa}:${cfg.filtro}`;
   const c = cache.get(chave);
   if (c && Date.now() - c.t < 5 * 60_000) return c.v;
-  const { data } = await sb.from("produtos").select("nome, marca, estoque:estoque_saldo, preco_tabela, preco_minimo, tipo_preco")
+  const { data } = await sb.from("produtos").select("nome, marca, unidade, estoque:estoque_saldo, preco_tabela, preco_minimo, tipo_preco")
     .eq("estabelecimento_id", empresa).neq("ativo", false).order("estoque_saldo", { ascending: false, nullsFirst: false }).limit(2000);
   const termos = cfg.filtro.toLowerCase().split(",").map((x) => x.trim()).filter(Boolean);
   const lista = (data ?? []).filter((p: SB) => !termos.length || termos.some((t) => `${p.nome} ${p.marca ?? ""}`.toLowerCase().includes(t))).slice(0, 150);
   const linhas = lista.map((p: SB) => {
     const preco = Number(p.preco_tabela) || 0;
     const piso = Math.max(Number(p.preco_minimo) || 0, preco * (1 - cfg.desconto / 100));
-    const un = String(p.tipo_preco ?? "").trim() || "unidade";
+    const un = String(p.unidade ?? "").trim() || "unidade não informada";
     return `${p.nome}${p.marca ? ` (${p.marca})` : ""} | estoque: ${Number(p.estoque) || 0} ${un} | preço: ${preco ? brl(preco) : "consultar"}${preco && piso < preco ? ` | mínimo: ${brl(piso)}` : ""}`;
   });
   const v = linhas.length ? linhas.join("\n") : "(nenhum produto cadastrado)";
