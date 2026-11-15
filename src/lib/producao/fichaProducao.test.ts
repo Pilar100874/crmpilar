@@ -240,3 +240,21 @@ describe('conversões compatíveis na produção', () => {
     expect(unidadesCompativeis('caixa')).toEqual(['caixa']);
   });
 });
+
+describe('rendimento por matéria-prima', () => {
+  it('consumo segue o rendimento e insumos sem rendimento acompanham as unidades', async () => {
+    const f = structuredClone(ficha);
+    f.quantidade_base = 1;
+    f.materiais[0].opcoes[0].quantidade = 10; f.materiais[0].opcoes[0].rendimento = 1;
+    f.materiais[0].opcoes[1].quantidade = 20; f.materiais[0].opcoes[1].rendimento = 2;
+    f.materiais[1].opcoes[0].quantidade = 1;
+    const a = calcularProducao(f, 4)!; const b = calcularProducao(f, 4, { x: 'a1' })!;
+    expect(a.materiais[0].quantidade).toBe(40); expect(a.materiais[0].ciclos).toBe(4);
+    expect(b.materiais[0].quantidade).toBe(40); expect(b.materiais[0].ciclos).toBe(2);
+    expect(b.materiais[1].quantidade).toBe(4);
+  });
+  it('rejeita rendimento zero ou negativo', () => {
+    const f = structuredClone(ficha); f.materiais[0].opcoes[0].rendimento = -1;
+    expect(validarFicha(f)).toMatch(/rendimento/i);
+  });
+});
