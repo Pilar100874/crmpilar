@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   // execução
   const [processing, setProcessing] = useState(false);
+
+  useEtapasPendentes("ajustar-imagens", selectedIds.size > 0 || !!uploadFile || !!bulkExtra, "Ajuste de imagens em lote", () => { cancelGenRef.current = true; setStep(1); setSelectedIds(new Set()); setUploadFile(null); setIaItems([]); });
 
   // catálogo de modelos disponíveis no Lovable AI Gateway
   const IMAGE_MODELS: { value: string; label: string; cost: number; supportsRef: boolean }[] = [

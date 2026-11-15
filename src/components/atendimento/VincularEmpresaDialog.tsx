@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -59,6 +60,7 @@ export function VincularEmpresaDialog({
   const [dadosCNPJ, setDadosCNPJ] = useState<CNPJData | null>(null);
   const [documentoParaCadastro, setDocumentoParaCadastro] = useState("");
   
+  useEtapasPendentes("vincular-empresa", open && !!documento, "Vincular empresa", () => { resetState(); onOpenChange(false); });
   const { lookupCNPJ, loading: loadingCNPJ } = useCNPJLookup();
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,6 +130,8 @@ export function APIImportDialogEmpresas({
   const [previewRecords, setPreviewRecords] = useState<PreviewRecord[]>([]);
   const [existingCNPJs, setExistingCNPJs] = useState<Set<string>>(new Set());
   const [previewStatusFilter, setPreviewStatusFilter] = useState<"all" | "valid" | "duplicate" | "invalid">("all");
+
+  useEtapasPendentes("importar-api-empresas", open && (apiData.length > 0 || step > 1), "Importação de empresas por API", () => onOpenChange(false));
 
   // Resetar ao abrir
   useEffect(() => {

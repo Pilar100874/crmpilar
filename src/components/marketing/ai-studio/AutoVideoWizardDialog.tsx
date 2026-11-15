@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -321,6 +322,8 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     ),
     [products, productSearch],
   );
+
+  useEtapasPendentes("criacao-video", open && !resultVideoUrl && (!!briefing || !!selectedProduct || !!script), "Criação de vídeo", () => { setBriefing(""); setScript(""); setSelectedProduct(null); setSelectedInfluencer(null); setStep(1); onOpenChange(false); });
 
   // ---------- reset ao abrir ----------
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
   const [apiEndpoint, setApiEndpoint] = useState<string>("");
   const [relatorioId, setRelatorioId] = useState<string | null>(null);
 
+  useEtapasPendentes("importar-terceiros", view === "wizard" && (!!reportName || excelData.length > 0 || currentStep > 0), "Importação de terceiros", () => { resetWizard(); setView("list"); });
   const totalSteps = 7;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 

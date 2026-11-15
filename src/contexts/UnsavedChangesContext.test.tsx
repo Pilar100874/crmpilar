@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter, Link, Route, Routes, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { UnsavedChangesProvider, useEtapasPendentes } from "./UnsavedChangesContext";
+import { UnsavedChangesProvider, useEtapasPendentes, useConfirmarSaidaEtapas } from "./UnsavedChangesContext";
 import { lerRascunhoVistoria, useRascunhoVistoria } from "@/lib/cv/rascunhoVistoria";
 import { instalarProtecaoHistorico, instalarProtecaoNavegacao } from "@/lib/navigationGuard";
 
@@ -26,6 +26,27 @@ function preencher() {
 }
 
 describe("Saída de telas por etapas", () => {
+  it("Troca interna preserva ao cancelar e descarta só o assistente escolhido", () => {
+    function Painel() {
+      const confirmar = useConfirmarSaidaEtapas();
+      const [dados, setDados] = useState("12345");
+      const [outros, setOutros] = useState("999");
+      const [etapa, setEtapa] = useState(2);
+      useEtapasPendentes("alvo", !!dados, "Importação", () => { setDados(""); setEtapa(0); });
+      useEtapasPendentes("outros", !!outros, "Outro formulário", () => setOutros(""));
+      return <><output data-testid="dados">{dados}</output><output data-testid="outros">{outros}</output><output data-testid="fase">{etapa}</output><button onClick={() => { confirmar(() => {}, ["alvo"]); }}>Trocar painel</button></>;
+    }
+    render(<BrowserRouter><UnsavedChangesProvider><Painel /></UnsavedChangesProvider></BrowserRouter>);
+    fireEvent.click(screen.getByText("Trocar painel"));
+    fireEvent.click(screen.getByText("Cancelar"));
+    expect(screen.getByTestId("dados")).toHaveTextContent("12345");
+    expect(screen.getByTestId("fase")).toHaveTextContent("2");
+    fireEvent.click(screen.getByText("Trocar painel"));
+    fireEvent.click(screen.getByText("Sair sem salvar"));
+    expect(screen.getByTestId("dados")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("fase")).toHaveTextContent("0");
+    expect(screen.getByTestId("outros")).toHaveTextContent("999");
+  });
   it("Proteção de Voltar pode interromper o evento antes de desmontar o formulário", () => {
     const posterior = vi.fn();
     const remover = instalarProtecaoHistorico(event => event.stopImmediatePropagation());

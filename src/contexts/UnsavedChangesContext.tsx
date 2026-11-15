@@ -22,6 +22,7 @@ type GuardEntry = {
 };
 
 type Ctx = {
+  confirmarSaida: (continuar: () => void, ids?: string[]) => boolean;
   registerGuard: (id: string, entry: GuardEntry) => void;
   unregisterGuard: (id: string) => void;
 };
@@ -48,12 +49,17 @@ export function useEtapasPendentes(id: string, pendente: boolean, label: string,
   useUnsavedChanges(id, pendente, undefined, label, onDiscard, true);
 }
 
+export function useConfirmarSaidaEtapas() {
+  const ctx = useContext(UnsavedChangesContext);
+  return ctx?.confirmarSaida ?? (() => false);
+}
+
 export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode }) => {
   const guardsRef = useRef<Map<string, GuardEntry>>(new Map());
   const navigate = useNavigate();
   const location = useLocation();
   const { navigator } = useContext(UNSAFE_NavigationContext);
-  const [pending, setPending] = useState<{ continuar: () => void; entry: GuardEntry } | null>(null);
+  const [pending, setPending] = useState<{ continuar: () => void; entry: GuardEntry; ids?: string[] } | null>(null);
   const liberadoRef = useRef(false);
   const locationRef = useRef(location);
   locationRef.current = location;
@@ -71,6 +77,14 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
     for (const entry of guardsRef.current.values()) if (entry.isDirty) return entry;
     return null;
   };
+
+  const confirmarSaida = useCallback((continuar: () => void, ids?: string[]) => {
+    if (liberadoRef.current) return false;
+    const entry = [...guardsRef.current.entries()].find(([id, guard]) => guard.isDirty && (!ids || ids.includes(id)))?.[1];
+    if (!entry) return false;
+    setPending({ continuar, entry, ids });
+    return true;
+  }, []);
 
   useLayoutEffect(() => instalarProtecaoNavegacao(navigator, (continuar, destino) => {
     if (liberadoRef.current) return false;
@@ -163,7 +177,8 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
     if (!pending) return;
     const continuar = pending.continuar;
     // Mark all guards as clean to allow navigation without re-prompting
-    for (const entry of guardsRef.current.values()) {
+    for (const [id, entry] of guardsRef.current.entries()) {
+      if (pending.ids && !pending.ids.includes(id)) continue;
       if (entry.isDirty) entry.onDiscard?.();
       entry.isDirty = false;
     }
@@ -173,7 +188,7 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
     liberadoRef.current = false;
   };
 
-  const value = useMemo(() => ({ registerGuard, unregisterGuard }), [registerGuard, unregisterGuard]);
+  const value = useMemo(() => ({ registerGuard, unregisterGuard, confirmarSaida }), [registerGuard, unregisterGuard, confirmarSaida]);
 
   return (
     <UnsavedChangesContext.Provider value={value}>

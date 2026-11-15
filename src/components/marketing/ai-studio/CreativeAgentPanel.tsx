@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,8 @@ const CreativeAgentPanel: React.FC<Props> = ({ open, onClose, onCreateWorkflow }
   const [scenes, setScenes] = useState<StoryboardScene[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedScene, setExpandedScene] = useState<string | null>(null);
+
+  useEtapasPendentes("criacao-storyboard", open && (!!theme || !!additionalNotes || scenes.length > 0), "Criação de storyboard", () => { setStep("input"); setTheme(""); setAdditionalNotes(""); setScenes([]); onClose(); });
 
   const generateStoryboard = useCallback(async () => {
     if (!theme.trim()) {

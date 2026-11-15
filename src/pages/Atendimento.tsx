@@ -1,3 +1,4 @@
+import { useConfirmarSaidaEtapas } from "@/contexts/UnsavedChangesContext";
 import { ganchoPotencial, ganchosPotenciais, carregarDadosPublico } from "@/lib/voz/publicoInteligente";
 import { campanhaInteligente, objetivoDoCliente, roteiroDoCliente, rotuloEscolha } from "@/lib/voz/roteirosLigacao";
 import MeusPedidosPanel from "@/components/atendimento/MeusPedidosPanel";
@@ -648,6 +649,8 @@ export default function Atendimento() {
   // Cada navegação troca apenas o conteúdo visual; ligações e pendências continuam vivas.
   const [jornadaAberta, setJornadaAberta] = useState(false);
   const [pedidosAberto, setPedidosAberto] = useState(false);
+  const confirmarSaidaEtapas = useConfirmarSaidaEtapas();
+  const protegerTrocaCentral = (acao: () => void) => confirmarSaidaEtapas(acao, ["envio-massa-panel", "envio-massa-content", "agenda-envio-panel", "agenda-envio-dialog"]);
   type ConteudoCentral = 'historico' | 'orcamentos' | 'agendaContato' | 'extras' | 'disparo' | 'envio' | 'buscaTarefa' | 'buscaChat' | 'buscaEmail' | 'buscaOrcamento' | 'orcamento' | 'recado' | 'jornada' | 'vendas' | 'pedidos';
   function fecharConteudoCentral(destino?: ConteudoCentral) {
     if (destino !== 'jornada') setJornadaAberta(false);
@@ -677,18 +680,22 @@ export default function Atendimento() {
     }
   }
   function setActiveTab(aba: string) {
+    if (protegerTrocaCentral(() => setActiveTab(aba))) return;
     fecharConteudoCentral();
     setActiveTabState(aba);
   }
   function setHistoricoCliente(valor: typeof historicoCliente) {
+    if (valor && protegerTrocaCentral(() => setHistoricoCliente(valor))) return;
     if (valor) fecharConteudoCentral('historico');
     setHistoricoClienteState(valor);
   }
   function setVendasCliente(valor: typeof vendasCliente) {
+    if (valor && protegerTrocaCentral(() => setVendasCliente(valor))) return;
     if (valor) fecharConteudoCentral('vendas');
     setVendasClienteState(valor);
   }
   function setOrcamentosCliente(valor: typeof orcamentosCliente) {
+    if (valor && protegerTrocaCentral(() => setOrcamentosCliente(valor))) return;
     if (valor) fecharConteudoCentral('orcamentos');
     setOrcamentosClienteState(valor);
   }
@@ -701,42 +708,52 @@ export default function Atendimento() {
     return true;
   }
   function setAgendaContato(valor: typeof agendaContato) {
+    if (valor && protegerTrocaCentral(() => setAgendaContato(valor))) return;
     if (valor) fecharConteudoCentral('agendaContato');
     setAgendaContatoState(valor);
   }
   function setExtrasEmpresa(valor: typeof extrasEmpresa) {
+    if (valor && protegerTrocaCentral(() => setExtrasEmpresa(valor))) return;
     if (valor) fecharConteudoCentral('extras');
     setExtrasEmpresaState(valor);
   }
   function setShowDisparoMassa(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowDisparoMassa(valor))) return;
     if (valor) fecharConteudoCentral('disparo');
     setShowDisparoMassaState(valor);
   }
   function setShowEnvioMassaWizard(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowEnvioMassaWizard(valor))) return;
     if (valor) fecharConteudoCentral('envio');
     setShowEnvioMassaWizardState(valor);
   }
   function setShowCustomerSearchForTask(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowCustomerSearchForTask(valor))) return;
     if (valor) fecharConteudoCentral('buscaTarefa');
     setShowCustomerSearchForTaskState(valor);
   }
   function setShowCustomerSearchForChat(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowCustomerSearchForChat(valor))) return;
     if (valor) fecharConteudoCentral('buscaChat');
     setShowCustomerSearchForChatState(valor);
   }
   function setShowCustomerSearchForEmail(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowCustomerSearchForEmail(valor))) return;
     if (valor) fecharConteudoCentral('buscaEmail');
     setShowCustomerSearchForEmailState(valor);
   }
   function setShowCustomerSearchForOrcamento(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setShowCustomerSearchForOrcamento(valor))) return;
     if (valor) fecharConteudoCentral('buscaOrcamento');
     setShowCustomerSearchForOrcamentoState(valor);
   }
   function setOrcamentoSheetOpen(valor: boolean) {
+    if (valor && protegerTrocaCentral(() => setOrcamentoSheetOpen(valor))) return;
     if (valor) fecharConteudoCentral('orcamento');
     setOrcamentoSheetOpenState(valor);
   }
   function abrirRecado(contato: { id: string; nome: string } = { id: "", nome: "" }) {
+    if (protegerTrocaCentral(() => abrirRecado(contato))) return;
     fecharConteudoCentral('recado');
     setRecadoContato(contato);
     setMobileView('main');
@@ -5115,8 +5132,8 @@ ${recentMessages}
   }), [contatosVinculados, filteredTasks, idsContatosVinculados, conversasRecebidasAgrupadas, emailsRecebidosAgrupados, potenciais]);
 
   const acoesContatos = <div className="flex shrink-0 items-center gap-0.5" data-tour="fila-cadastro-filtro">
-    <Button size="icon" variant="ghost" className="h-7 w-7 text-info" aria-label="Minha jornada" title="Minha jornada" data-tour="abrir-jornada" onClick={() => { fecharConteudoCentral('jornada'); setJornadaAberta(true); setMobileView('main'); }}><Activity className="h-4 w-4" /></Button>
-    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Meus pedidos" title="Meus pedidos" onClick={() => { fecharConteudoCentral('pedidos'); setPedidosAberto(true); setMobileView('main'); }}><Receipt className="h-4 w-4" /></Button>
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-info" aria-label="Minha jornada" title="Minha jornada" data-tour="abrir-jornada" onClick={() => { if (protegerTrocaCentral(() => { fecharConteudoCentral('jornada'); setJornadaAberta(true); setMobileView('main'); })) return; fecharConteudoCentral('jornada'); setJornadaAberta(true); setMobileView('main'); }}><Activity className="h-4 w-4" /></Button>
+    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Meus pedidos" title="Meus pedidos" onClick={() => { if (protegerTrocaCentral(() => { fecharConteudoCentral('pedidos'); setPedidosAberto(true); setMobileView('main'); })) return; fecharConteudoCentral('pedidos'); setPedidosAberto(true); setMobileView('main'); }}><Receipt className="h-4 w-4" /></Button>
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Puxar ou criar cadastro" title="Puxar ou criar cadastro" onClick={() => { setShowCustomerSearchForTask(true); if (isMobile) setMobileView("main"); }}><UserPlus className="h-4 w-4" /></Button>
     <GlobalClientFilter activeFilter={globalFilter} onFilterChange={filtrarESelecionarCartao} compact />
     <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" aria-label="Encaminhar recado" title="Encaminhar recado" onClick={() => abrirRecado()}><MessageSquare className="h-4 w-4" /></Button>
@@ -5203,6 +5220,7 @@ ${recentMessages}
 
   // Abre o conteúdo do canal escolhido para o cliente (cabeçalho central ou botões do cartão).
   const abrirCanalDoContato = (clienteId: string, aba: string) => {
+    if (protegerTrocaCentral(() => abrirCanalDoContato(clienteId, aba))) return;
     fecharConteudoCentral();
     setContatoMobileSelecionado(true);
     if (aba === activeTab) { aplicarClienteNaAba(clienteId, aba); return; }
@@ -5411,6 +5429,7 @@ ${recentMessages}
   // Ligação sequencial a partir dos contatos selecionados na lista da aba atual
 
   const abrirDisparoMassa = () => {
+    if (protegerTrocaCentral(() => abrirDisparoMassa())) return;
     // Anota a tela de contatos de onde o disparo foi aberto.
     disparoOrigemRef.current = { mobileView, activeTab, showConversationsList };
     setHistoricoCliente(null);
@@ -5543,6 +5562,7 @@ ${recentMessages}
   abrirFichaForaDaFilaRef.current = (c) => abrirContatoBinado({ id: c.id, nome: c.nome, tel: c.tel ?? "", telefone: c.telefone ?? "", email: c.email ?? "" } as any, false);
 
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
+    if (protegerTrocaCentral(() => handleRadialMenuSelect(item))) return;
     if (typeof item.id === "string" && item.id.startsWith("fila-")) {
       setFiltroFila(item.id.replace("fila-", "") as typeof filtroFila);
       setShowConversationsList(true);
@@ -7057,6 +7077,7 @@ ${recentMessages}
                 const ativo = t.kind === "view" ? mobileView === t.id : t.kind === "agenda" ? activeTab === "agenda" : false;
                 const desabilitado = t.kind === "view" && t.id !== "list" && !contatoMobileSelecionado;
                 const onClick = () => {
+                  if (protegerTrocaCentral(onClick)) return;
                   // Ao trocar de aba, fecha o que estiver aberto (painéis centrais e detalhes).
                   fecharConteudoCentral();
                   setShowClientDetailsChat(false);

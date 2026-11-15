@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +92,8 @@ export function APIImportDialog() {
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
+
+  useEtapasPendentes("importar-api-contatos", !!apiUrl, "Importação por API", () => { setStep("url"); setApiUrl(""); setApiRecords([]); setFieldMappings([]); setApiFields([]); });
 
   const fetchAPIData = async () => {
     if (!apiUrl) {

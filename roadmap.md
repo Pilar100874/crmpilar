@@ -1,5 +1,6 @@
 # Roadmap — Atendimento
 ## Navegação em formulários por etapas
+- [x] Revisar assistentes restantes e proteger trocas internas em Marketing, Listas, Configurações e Atendimento; cancelar/descarte/reinício validado no Marketing
 - [x] Avisar antes de trocar de módulo com preenchimento pendente, inclusive navegação por botões
 - [x] Limpar rascunhos de entrada/saída de veículos ao sair e revisar demais assistentes
 - [x] Testar permanência, descarte e reinício em celular e desktop

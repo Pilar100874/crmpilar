@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -45,6 +46,8 @@ export function VincularContatoDialog({
   const [contatoSelecionado, setContatoSelecionado] = useState<Contato | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
+  useEtapasPendentes("vincular-contato", open && !!busca, "Vincular contato", () => { resetState(); onOpenChange(false); });
+
   // Dialog de cadastro de contato
   const [showCadastro, setShowCadastro] = useState(false);
 

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -59,6 +60,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
   const routePollRef = useRef<number | null>(null);
 
 
+
+  useEtapasPendentes("ticket-suporte", !recording && step !== "video-ready" && (!!titulo || !!descricao || videos.length > 0 || anexos.length > 0), "Ticket de suporte", () => { resetAll(); onOpenChange(false); });
 
   // my tickets
   const [myTickets, setMyTickets] = useState<any[]>([]);

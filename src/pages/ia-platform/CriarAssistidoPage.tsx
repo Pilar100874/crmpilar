@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { ModeloSelect } from "@/components/ia-platform/ModeloSelect";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -363,6 +364,9 @@ export default function CriarAssistidoPage() {
   const { items: receitas, create: criarReceita, update: atualizarReceita, remove: removerReceita } =
     useAipTable<AipReceita>("aip_receitas", { orderBy: "updated_at" });
 
+  const [concluido, setConcluido] = useState(false);
+  useEtapasPendentes("criar-assistido", !concluido && (!!tipoId || !!nome || !!objetivo || referencias.length > 0), "Criação assistida");
+
   const categoriasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     if (!termo) return CATEGORIAS;
@@ -719,13 +723,15 @@ export default function CriarAssistidoPage() {
         if (erroRotina) throw new Error(erroRotina.message);
         await registrarReceita(rotina?.id ?? null);
         toast.success("Criado! A rotina foi salva desativada — faça um teste antes de ativar.");
-        navigate("/ia-platform/rotinas");
+        setConcluido(true);
+        setTimeout(() => navigate("/ia-platform/rotinas"), 0);
         return;
       }
 
       await registrarReceita();
       toast.success("Agente criado com sucesso!");
-      navigate("/ia-platform/agentes");
+      setConcluido(true);
+        setTimeout(() => navigate("/ia-platform/agentes"), 0);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -126,6 +127,8 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
   const [postUrl, setPostUrl] = useState('');
   const [publishing, setPublishing] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  useEtapasPendentes("publicar-midia", open && (!!channel || !!postUrl), "Publicação de mídia", () => { reset(); onClose(); });
 
   const isVideo = mediaType === 'video';
 

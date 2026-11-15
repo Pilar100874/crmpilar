@@ -1,3 +1,4 @@
+import { useConfirmarSaidaEtapas } from "@/contexts/UnsavedChangesContext";
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -95,9 +96,14 @@ const MarketingHub: React.FC = () => {
   const tabParam = searchParams.get('tab');
   const validTabs = tabItems.map((tab) => tab.id);
 
-  const [activeTab, setActiveTab] = useState(() => (
+  const [activeTab, setActiveTabState] = useState(() => (
     tabParam && validTabs.includes(tabParam) ? tabParam : 'ai-studio'
   ));
+  const confirmarSaida = useConfirmarSaidaEtapas();
+  const setActiveTab = (valor: string) => {
+    if (valor === activeTab) return;
+    if (!confirmarSaida(() => setActiveTabState(valor))) setActiveTabState(valor);
+  };
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const { itensPermitidos: tabsPermitidas } = useModulosPermitidos('Desenho', tabItems, activeTab, setActiveTab);
 

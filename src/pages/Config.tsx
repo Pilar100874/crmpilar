@@ -1,3 +1,4 @@
+import { useConfirmarSaidaEtapas } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,11 +152,14 @@ const GLOBAL_SUBMENU_IDS = ["recuperar-senha", "email-config", "notificacoes-sis
 
 export default function Config() {
   const { openSubmenu } = useLayout();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParamsOriginal] = useSearchParams();
+  const setSearchParams: typeof setSearchParamsOriginal = (params, options) => {
+    if (!confirmarSaida(() => setSearchParamsOriginal(params, options))) setSearchParamsOriginal(params, options);
+  };
   const secaoParam = searchParams.get('secao');
   const estabParam = searchParams.get('estab');
 
-  const [activeSection, setActiveSection] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
+  const [activeSection, setActiveSectionState] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [expandedEstabId, setExpandedEstabId] = useState<string | null>(estabParam);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
@@ -193,8 +197,14 @@ export default function Config() {
     }
   }, [estabParam]);
 
+  const confirmarSaida = useConfirmarSaidaEtapas();
+  const setActiveSection = (valor: string | null) => {
+    if (valor === activeSection) return;
+    if (!confirmarSaida(() => setActiveSectionState(valor))) setActiveSectionState(valor);
+  };
   const handleSectionClick = (sectionId: string, keepEstab?: string | null) => {
-    setActiveSection(sectionId);
+    if (confirmarSaida(() => handleSectionClick(sectionId, keepEstab))) return;
+    setActiveSectionState(sectionId);
     if (keepEstab) {
       setSearchParams({ secao: sectionId, estab: keepEstab });
     } else {

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,6 +83,9 @@ export default function SkillAssistentePage() {
   const [resumo, setResumo] = useState("");
   const [ajuste, setAjuste] = useState("");
   const [salvando, setSalvando] = useState(false);
+
+  const [concluido, setConcluido] = useState(false);
+  useEtapasPendentes("criar-skill", !concluido && (Object.values(valores).some(Boolean) || historico.length > 0 || !!rascunho || !!ajuste), "Criação assistida");
 
   const chamar = useCallback(
     async (payload: Record<string, unknown>) => {
@@ -173,7 +177,8 @@ export default function SkillAssistentePage() {
       if (anexos.length) await enviarArquivosSkill(data.id, estabelecimentoId, anexos);
 
       toast.success("Skill criada! Abrindo a lista de skills.");
-      navigate("/ia-platform/skills");
+      setConcluido(true);
+        setTimeout(() => navigate("/ia-platform/skills"), 0);
     } catch (err: any) {
       toast.error(err?.message ?? "Falha ao salvar a skill");
     } finally {

@@ -1,3 +1,4 @@
+import { useConfirmarSaidaEtapas } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -132,11 +133,16 @@ const ListasHub: React.FC = () => {
   const tabParam = searchParams.get('tab');
 
   const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : (t === 'vendedores' || t === 'transportadoras' || t === 'fornecedores') ? 'empresas' : t);
-  const [activeTab, setActiveTab] = useState(() => {
+  const [activeTab, setActiveTabState] = useState(() => {
     const validTabs = tabItems.map(t => t.id);
     const resolved = resolveTab(tabParam);
     return resolved && validTabs.includes(resolved) ? resolved : 'contatos';
   });
+  const confirmarSaida = useConfirmarSaidaEtapas();
+  const setActiveTab = (valor: string) => {
+    if (valor === activeTab) return;
+    if (!confirmarSaida(() => setActiveTabState(valor))) setActiveTabState(valor);
+  };
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
 import { useAgentDataBindings } from '@/hooks/useAgentDataBindings';
@@ -112,6 +113,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
+
+  useEtapasPendentes("agente-dados", !saved && (currentStep > 0 || !!customUrl || !!selectedApiId || manualRows.some(row => Object.values(row).some(Boolean))), "Dados do agente", () => { resetWizardState(); setCurrentStep(0); onClose(); });
 
   // Active fields = all agent fields (all must be used)
   const activeFields = agentFields;

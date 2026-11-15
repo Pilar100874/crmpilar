@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,8 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [selectedSegmentoId, setSelectedSegmentoId] = useState<string>("");
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<string>("");
+
+  useEtapasPendentes("importar-contatos", !!file && !importResults, "Importação de contatos", onClose);
 
   // Carregar segmentos e usuários ao montar
   const loadSelectData = useCallback(async () => {

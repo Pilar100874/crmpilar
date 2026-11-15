@@ -1,3 +1,4 @@
+import { useConfirmarSaidaEtapas } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from 'react';
 import { 
   MessageSquareQuote,
@@ -419,7 +420,9 @@ export default function AtendimentoConfig() {
     }
   });
 
+  const confirmarSaida = useConfirmarSaidaEtapas();
   const handleTabChange = (value: string) => {
+    if (confirmarSaida(() => handleTabChange(value))) return;
     if (value === currentTab) return;
     setCurrentTab(value);
     const nextParams = new URLSearchParams(window.location.search);
