@@ -49,4 +49,5 @@
 <!-- LOVABLE:BEGIN -->
 - Product data transfer uses a tenant-scoped in-memory snapshot, independent photo uploads and existing save validation while preserving destination identity, barcodes and stock; recipe validation rejects repeated materials across all groups.
 - Store additional production staffing as optional quantity/service groups in the existing product recipe and preserve them in its shared reader; this keeps helpers separate from machine-operator qualifications without changing production timing.
+- Product editor layout uses a scoped width container for its grids and wrapping selectors, so embedded desktop panels and mobile tabs remain legible without horizontal clipping.
 <!-- LOVABLE:END -->

@@ -1,5 +1,6 @@
 # Roadmap — Atendimento
 ## Produtos e produção
+- [x] Alinhar edição de produtos aos contatos e conferir todas as abas em celular, tablet e desktop
 - [x] Revisar seleção, previsão, duplicação, colagem, importações e validações salvas das matérias-primas
 - [x] Corrigir a rejeição genérica de matéria-prima na gravação e ao colar uma ficha
 - [x] Impedir matérias-primas repetidas e permitir copiar/colar dados entre produtos

@@ -323,8 +323,8 @@ export function EmbalagemTab({
     isCalculated?: boolean;
     isValid?: boolean | null;
   }) => (
-    <div className="border rounded-lg p-4 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="min-w-0 border rounded-lg p-3 sm:p-4 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Label className="text-base font-medium">{label}</Label>
         {!isCalculated && isValid !== null && (
           <span className={`flex items-center gap-1 text-sm ${isValid ? "text-green-600" : "text-red-600"}`}>
@@ -341,16 +341,16 @@ export function EmbalagemTab({
         )}
       </div>
 
-      <div className="flex gap-4 items-start">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_5rem_auto] items-start">
         {/* Campo EAN + Dígito Verificador */}
-        <div className="flex-1">
+        <div className="col-span-2 min-w-0 sm:col-span-1">
           <div className="flex gap-2 items-center">
             <Input
               value={value}
               onChange={(e) => onChange?.(e.target.value)}
               placeholder={isCalculated ? "Calculado automaticamente" : "Digite 12 ou 13 dígitos"}
               readOnly={isCalculated}
-              className={`font-mono flex-1 ${isCalculated ? "bg-muted/50" : ""}`}
+              className={`font-mono flex-1 min-w-0 ${isCalculated ? "bg-muted/50" : ""}`}
               maxLength={isCalculated ? 14 : 13}
             />
             <div className="flex flex-col items-center">
@@ -407,7 +407,7 @@ export function EmbalagemTab({
         </div>
 
         {/* Botões de imprimir */}
-        <div className="flex flex-col gap-1.5 self-start mt-1">
+        <div className="flex flex-wrap gap-2 self-end sm:flex-col sm:self-start sm:mt-1">
           <Button
             type="button"
             variant="outline"

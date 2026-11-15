@@ -41,7 +41,7 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
     switch (campo.tipo) {
       case 'texto':
         return (
-          <div key={campo.id}>
+          <div key={campo.id} className="min-w-0 space-y-1.5">
             <Label>
               {campo.nome}
               {campo.obrigatorio && <span className="text-destructive ml-1">*</span>}
@@ -57,7 +57,7 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
       
       case 'numero':
         return (
-          <div key={campo.id}>
+          <div key={campo.id} className="min-w-0 space-y-1.5">
             <Label>
               {campo.nome}
               {campo.obrigatorio && <span className="text-destructive ml-1">*</span>}
@@ -75,7 +75,7 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
       
       case 'textarea':
         return (
-          <div key={campo.id} className="col-span-2">
+          <div key={campo.id} className="min-w-0 space-y-1.5 sm:col-span-2">
             <Label>
               {campo.nome}
               {campo.obrigatorio && <span className="text-destructive ml-1">*</span>}
@@ -105,7 +105,7 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
       
       case 'selecao':
         return (
-          <div key={campo.id}>
+          <div key={campo.id} className="min-w-0 space-y-1.5">
             <Label>
               {campo.nome}
               {campo.obrigatorio && <span className="text-destructive ml-1">*</span>}
@@ -131,7 +131,7 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
       
       case 'data':
         return (
-          <div key={campo.id}>
+          <div key={campo.id} className="min-w-0 space-y-1.5">
             <Label>
               {campo.nome}
               {campo.obrigatorio && <span className="text-destructive ml-1">*</span>}
@@ -150,11 +150,11 @@ export function DynamicProductFields({ campos, values, onChange }: DynamicProduc
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/30">
+    <div className="min-w-0 border-t pt-3">
       <h4 className="text-sm font-medium mb-3 text-muted-foreground">
         Campos do Grupo
       </h4>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {activeCampos.map(renderField)}
       </div>
     </div>

@@ -146,7 +146,7 @@ export function ProductPhotoTab({ productName, images, onChange }: Props) {
     <div className="space-y-6">
       {/* Galeria */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
           <h4 className="text-xs sm:text-sm font-medium text-muted-foreground">
             Galeria de Fotos ({images.length})
           </h4>
@@ -263,7 +263,7 @@ export function ProductPhotoTab({ productName, images, onChange }: Props) {
               <RadioGroupItem value="none" id="ref-none" />
               <Label htmlFor="ref-none" className="text-xs cursor-pointer">Sem referência</Label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <RadioGroupItem value="principal" id="ref-principal" disabled={!principal} />
               <Label
                 htmlFor="ref-principal"

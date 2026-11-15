@@ -1,3 +1,4 @@
+import "./produto-editor.css";
 import { EstoqueMinimoCampos } from './EstoqueMinimoCampos';
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -1215,58 +1216,20 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
   const formularioProduto = (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
-                <TabsTrigger 
-                  value="basico" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden md:inline">Dados Básicos</span>
-                  <span className="md:hidden">Básicos</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="foto" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span>Foto</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="preco" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span>Preço</span>
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="frete" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden md:inline">Dados Frete</span>
-                  <span className="md:hidden">Frete</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="embalagem" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <Barcode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Embalagem</span>
-                  <span className="sm:hidden">EAN</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="marketplace" 
-                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Marketplace</span>
-                  <span className="sm:hidden">MKT</span>
-                </TabsTrigger>
-                {abasProducao(formData).map(aba => {
-                  const Icone = aba === 'producao' ? Factory : Cog;
-                  return <TabsTrigger key={aba} value={aba} className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"><Icone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span>{aba === 'producao' ? 'Produção' : 'Máquinas'}</span></TabsTrigger>;
-                })}
+              <TabsList className="produto-editor-abas grid w-full grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 h-auto gap-1 rounded-lg border border-border/40 bg-muted/30 p-1">
+                {[
+                  { value: 'basico', nome: 'Dados básicos', icone: Package },
+                  { value: 'foto', nome: 'Fotos', icone: Camera },
+                  { value: 'preco', nome: 'Preço', icone: DollarSign },
+                  { value: 'frete', nome: 'Frete', icone: Truck },
+                  { value: 'embalagem', nome: 'Embalagem', icone: Barcode },
+                  { value: 'marketplace', nome: 'Marketplace', icone: Store },
+                  ...abasProducao(formData).map(aba => ({ value: aba, nome: aba === 'producao' ? 'Produção' : 'Máquinas', icone: aba === 'producao' ? Factory : Cog })),
+                ].map(({ value, nome, icone: Icone }) => (
+                  <TabsTrigger key={value} value={value} className="min-w-0 gap-1.5 whitespace-normal rounded-md px-2 py-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Icone className="h-4 w-4 shrink-0" /><span className="break-words">{nome}</span>
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               {formData.produzido && <>
@@ -1382,7 +1345,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                             className="w-full justify-between font-normal h-9 sm:h-10 text-xs sm:text-sm"
                           >
                             {selectedNcmDisplay 
-                              ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 30)}${selectedNcmDisplay.descricao.length > 30 ? '...' : ''}`
+                              ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao}`
                               : "Selecione o NCM..."}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
@@ -1997,84 +1960,40 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   // Cadastro aberto: ocupa a tela inteira no lugar da lista, como o cadastro de clientes.
   if (showDialog) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
-            <div className="flex flex-col gap-3">
-              <div className="min-w-0">
-                <div className="text-base sm:text-lg font-semibold flex items-center gap-2 pr-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => { setShowDialog(false); setDuplicandoDe(null); }}
-                    disabled={uploading}
-                    aria-label="Voltar para a lista"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
-                    <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <span className="break-words">{editingProduto ? "Editar Produto" : duplicandoDe ? "Duplicar Produto" : "Novo Produto"}</span>
-                </div>
-                {formData.nome && (
-                  <p className="text-sm sm:text-base font-medium text-foreground mt-1 break-words">{formData.nome}</p>
-                )}
-                {formData.codigo && (
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
-                    SKU: <span className="font-mono">{formData.codigo}</span>
-                  </p>
-                )}
-                {duplicandoDe && !editingProduto && (
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                    Cópia de <span className="font-medium">{duplicandoDe}</span> — confira nome e SKU antes de salvar.
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Comercializável' }] as const).map(flag => (
-                  <div key={flag.campo} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                    <Switch checked={formData[flag.campo]} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} />
-                    <Label className="text-xs sm:text-sm cursor-pointer">{flag.nome}</Label>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                  <Switch
-                    checked={formData.produzido}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, produzido: checked }))}
-                  />
-                  <Label className="text-xs sm:text-sm cursor-pointer">Produzido</Label>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                  <Switch
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                  />
-                  <Label className="text-xs sm:text-sm cursor-pointer">
-                    {formData.ativo ? "Ativo" : "Inativo"}
-                  </Label>
-                </div>
-              </div>
+      <div className="produto-editor flex w-full min-w-0 flex-col bg-background">
+        <header className="border-b border-border/40 bg-card/80 px-3 py-4 sm:px-6 sm:py-5">
+          <div className="flex items-start gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => { setShowDialog(false); setDuplicandoDe(null); }} disabled={uploading} aria-label="Voltar para a lista">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-0 flex-1">
+              <h1 className="flex items-center gap-2 text-xl font-light sm:text-2xl"><Package className="h-5 w-5 shrink-0 text-primary" />{editingProduto ? 'Editar Produto' : duplicandoDe ? 'Duplicar Produto' : 'Novo Produto'}</h1>
+              {formData.nome && <p className="mt-1 break-words text-sm font-medium sm:text-base">{formData.nome}</p>}
+              {formData.codigo && <p className="mt-1 break-all text-xs text-muted-foreground sm:text-sm">SKU: <span className="font-mono">{formData.codigo}</span></p>}
+              {duplicandoDe && !editingProduto && <p className="mt-1 break-words text-xs text-muted-foreground">Cópia de {duplicandoDe}</p>}
             </div>
           </div>
-
-          <div className="px-3 sm:px-6 py-3 sm:py-4">
-            {formularioProduto}
+          <div className="produto-editor-flags mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:gap-x-6">
+            {([
+              { campo: 'materia_prima', nome: 'Matéria-prima' },
+              { campo: 'comercializavel', nome: 'Comercializável' },
+              { campo: 'produzido', nome: 'Produzido' },
+              { campo: 'ativo', nome: formData.ativo ? 'Ativo' : 'Inativo' },
+            ] as const).map(flag => (
+              <div key={flag.campo} className="flex min-w-0 items-center gap-2">
+                <Switch id={`produto-${flag.campo}`} checked={formData[flag.campo]} onCheckedChange={checked => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} className="shrink-0" />
+                <Label htmlFor={`produto-${flag.campo}`} className="break-words text-xs font-normal sm:text-sm">{flag.nome}</Label>
+              </div>
+            ))}
           </div>
-
-          <div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/20 flex-shrink-0">
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-2 sm:justify-end">
-              <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
-                {uploading ? "Salvando..." : "Salvar"}
-              </Button>
-            </div>
-          </div>
+        </header>
+        <div className="min-w-0 px-3 py-4 sm:px-6 sm:py-6">
+          {formularioProduto}
         </div>
+        <footer className="flex flex-wrap justify-end gap-2 border-t border-border/40 bg-background px-3 py-4 sm:px-6">
+          <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={uploading}>{uploading ? 'Salvando...' : 'Salvar'}</Button>
+        </footer>
       </div>
     );
   }
