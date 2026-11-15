@@ -15,13 +15,7 @@ import { useContextoInterno } from "@/lib/estoque/contexto";
 
 const sb = supabase as any;
 const vazio = { nome: "", operacao_base: "venda", natureza_operacao: "", finalidade_nfe: 1, movimenta_estoque: true, gera_financeiro: true, ativo: true };
-const SUGESTOES = [
-  { nome: "Venda de produção própria", operacao_base: "venda_producao", natureza_operacao: "Venda de produção do estabelecimento", finalidade_nfe: 1, movimenta_estoque: true, gera_financeiro: true },
-  { nome: "Venda de mercadoria de revenda", operacao_base: "venda", natureza_operacao: "Venda de mercadoria adquirida de terceiros", finalidade_nfe: 1, movimenta_estoque: true, gera_financeiro: true },
-  { nome: "Bonificação", operacao_base: "bonificacao", natureza_operacao: "Remessa em bonificação", finalidade_nfe: 1, movimenta_estoque: true, gera_financeiro: false },
-  { nome: "Remessa para conserto", operacao_base: "remessa_conserto", natureza_operacao: "Remessa para conserto", finalidade_nfe: 1, movimenta_estoque: false, gera_financeiro: false },
-  { nome: "Devolução de compra", operacao_base: "devolucao_compra", natureza_operacao: "Devolução de compra", finalidade_nfe: 4, movimenta_estoque: true, gera_financeiro: false },
-];
+const SUGESTOES = OPERACOES.map((o) => ({ nome: o.rotulo, operacao_base: o.valor, natureza_operacao: o.natureza, finalidade_nfe: o.finalidade, movimenta_estoque: o.estoque, gera_financeiro: o.financeiro, ativo: true }));
 
 export default function TiposOperacao() {
   const ctx = useContextoInterno();
@@ -43,15 +37,19 @@ export default function TiposOperacao() {
     toast.success("Tipo de operação salvo"); setForm(null); carregar();
   };
   const criarSugestoes = async () => {
-    const r = await sb.from("fiscal_tipos_operacao").insert(SUGESTOES.map((s) => ({ ...s, estabelecimento_id: ctx.estabelecimentoId })));
+    const existentes = new Set(lista.map((t) => t.operacao_base));
+    const novos = SUGESTOES.filter((s) => !existentes.has(s.operacao_base));
+    if (!novos.length) return toast.info("Todos os tipos já estão cadastrados");
+    const r = await sb.from("fiscal_tipos_operacao").insert(novos.map((s) => ({ ...s, estabelecimento_id: ctx.estabelecimentoId })));
     if (r.error) return toast.error(r.error.message);
-    toast.success("Tipos sugeridos criados"); carregar();
+    toast.success(`${novos.length} tipos de operação criados`); carregar();
   };
   const set = (k: string, v: unknown) => setForm({ ...form, [k]: v });
   return (
     <div className="space-y-4 p-3 sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
         <ListChecks className="h-6 w-6 text-primary" /><h1 className="flex-1 text-xl font-semibold sm:text-2xl">Tipos de operação</h1>
+        {!form && lista.length > 0 && <Button variant="outline" onClick={criarSugestoes}>Adicionar tipos que faltam</Button>}
         {!form && <Button onClick={() => setForm({ ...vazio })}><Plus className="mr-1 h-4 w-4" />Novo tipo</Button>}
       </div>
       <p className="text-sm text-muted-foreground">Cada tipo define o que a nota representa. O Systax usa a operação base para devolver CFOP e impostos; a natureza vai impressa na NF-e.</p>
@@ -67,7 +65,7 @@ export default function TiposOperacao() {
         </div>
         <div className="flex gap-2 sm:col-span-2"><Button onClick={salvar}>Salvar</Button><Button variant="outline" onClick={() => setForm(null)}>Cancelar</Button></div>
       </CardContent></Card>}
-      {!lista.length && !form && <Card><CardContent className="space-y-2 p-6 text-center text-sm text-muted-foreground"><p>Nenhum tipo cadastrado.</p><Button variant="outline" onClick={criarSugestoes}>Criar tipos sugeridos</Button></CardContent></Card>}
+      {!lista.length && !form && <Card><CardContent className="space-y-2 p-6 text-center text-sm text-muted-foreground"><p>Nenhum tipo cadastrado.</p><Button variant="outline" onClick={criarSugestoes}>Criar todos os tipos de operação</Button></CardContent></Card>}
       <div className="grid gap-2 sm:grid-cols-2">
         {lista.map((t) => <Card key={t.id}><CardContent className="flex items-start gap-2 p-3 text-sm">
           <div className="min-w-0 flex-1">
