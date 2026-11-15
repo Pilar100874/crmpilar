@@ -9,6 +9,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CertificadoUnidade } from "@/components/config/CertificadoUnidade";
 import { REGIMES_TRIBUTARIOS, rotuloRegime } from "@/lib/fiscal/regimeTributario";
 import { CRT } from "@/lib/fiscal/motorFiscal";
@@ -362,6 +363,12 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           <Building2 className="h-5 w-5 text-primary" />
           <h4 className="font-semibold">{editingId ? "Editar unidade" : "Nova unidade"}</h4>
         </div>
+        <Tabs defaultValue="dados" className="w-full">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="dados">Dados da unidade</TabsTrigger>
+          <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
+        </TabsList>
+        <TabsContent value="dados" forceMount className="data-[state=inactive]:hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <Label htmlFor="unidade-nome">Nome da Filial *</Label>
@@ -475,7 +482,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
             </Select>
           </div>
         </div>
+        </TabsContent>
 
+        <TabsContent value="fiscal" forceMount className="space-y-4 data-[state=inactive]:hidden">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="min-w-0 space-y-2">
             <Label htmlFor="unidade-cnpj">CNPJ da unidade</Label>
@@ -519,6 +528,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
         ) : (
           <p className="text-xs text-muted-foreground">Salve a unidade para poder importar o certificado digital.</p>
         )}
+        </TabsContent>
+        </Tabs>
 
         <div className="flex gap-2">
           <Button type="submit">
