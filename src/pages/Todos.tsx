@@ -157,7 +157,7 @@ export default function Todos() {
         .order('nome_fantasia');
 
       if (empresasData) {
-        const clientes = empresasData.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente));
+        const clientes = empresasData.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente) && e.eh_cliente !== false);
         const vends = empresasData.filter((e: any) => e.tipo_cliente === 'vendedor');
         const transps = empresasData.filter((e: any) => e.tipo_cliente === 'transportadora');
         setEmpresas(clientes);

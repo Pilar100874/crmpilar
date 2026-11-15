@@ -66,7 +66,7 @@ const MapaClientesView: React.FC = () => {
     setSelectedVendedorId
   } = useMapLayers();
 
-  const empresasClientes = allEmpresas.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente));
+  const empresasClientes = allEmpresas.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente) && e.eh_cliente !== false);
 
   const geocodeEmpresas = async () => {
     const empresasSemCoordenadas = allEmpresas.filter(e => 

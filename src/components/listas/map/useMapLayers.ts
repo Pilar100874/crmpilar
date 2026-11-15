@@ -53,7 +53,7 @@ export const useMapLayers = () => {
     setLoading(true);
     try {
       const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes, vendedoresRes] = await Promise.all([
-        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao, tipo_cliente'),
+        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao, tipo_cliente, eh_cliente'),
         supabase.from('usuarios').select('id, nome'),
         supabase.from('empresa_vinculos').select('empresa_id, usuario_id, vendedor_id'),
         supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude'),

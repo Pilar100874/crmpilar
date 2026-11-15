@@ -134,7 +134,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             q = q.eq("tipo_cliente", "vendedor");
           } else {
             // empresa = clientes/prospects (exclui vendedor e transportadora)
-            q = q.not("tipo_cliente", "in", "(vendedor,transportadora)");
+            q = q.not("tipo_cliente", "in", "(vendedor,transportadora)").eq("eh_cliente", true);
           }
           const { data } = await q;
           setAlvos(((data as any) || []).map((e: any) => ({
