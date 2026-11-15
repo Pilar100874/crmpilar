@@ -6,8 +6,9 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const dig = (s?: string | null) => (s ?? "").replace(/\D/g, "");
 const r2 = (n: unknown) => Math.round((Number(n) || 0) * 100) / 100;
 const Body = z.object({
-  acao: z.enum(["emitir", "consultar", "cancelar", "arquivo"]),
-  nota_id: z.string().uuid(),
+  acao: z.enum(["emitir", "consultar", "cancelar", "arquivo", "consultar_cnpj"]),
+  nota_id: z.string().uuid().optional(),
+  cnpj: z.string().max(20).optional(),
   justificativa: z.string().min(15).max(255).optional(),
   tipo: z.enum(["xml", "danfe"]).optional(),
 });
@@ -21,7 +22,27 @@ Deno.serve(async (req) => {
     if (authErr || !claims?.claims?.sub) return json({ error: "Não autenticado" }, 401);
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { acao, nota_id, justificativa, tipo } = parsed.data;
+    const { acao, justificativa, tipo } = parsed.data;
+
+    // Consulta cadastral do CNPJ pelo Focus NFe (base da Receita), usando o token da empresa do usuário.
+    if (acao === "consultar_cnpj") {
+      const cnpj = dig(parsed.data.cnpj);
+      if (cnpj.length !== 14) return json({ error: "Informe um CNPJ com 14 dígitos" }, 400);
+      const { data: estab } = await sb.rpc("get_auth_user_estabelecimento_id");
+      if (!estab) return json({ error: "Usuário sem empresa" }, 403);
+      const adm = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: c } = await adm.from("nfe_config").select("*").eq("estabelecimento_id", estab).maybeSingle();
+      const prod = (c?.ambiente ?? "homologacao") === "producao";
+      const tk = (prod ? c?.token_producao : c?.token_homologacao) ?? c?.token_producao ?? c?.token_homologacao;
+      if (!tk) return json({ error: "Token do Focus NFe não configurado (Fiscal → Configuração NF-e)" }, 400);
+      const resp = await fetch(`${prod ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br"}/v2/cnpjs/${cnpj}`, { headers: { Authorization: "Basic " + btoa(tk + ":") } });
+      const txt = await resp.text(); let r: any = {}; try { r = JSON.parse(txt); } catch { r = { mensagem: txt }; }
+      if (!resp.ok) { console.error(`Focus cnpj [${resp.status}]: ${txt}`); return json({ error: r.mensagem || "CNPJ não encontrado no Focus NFe", status: resp.status }, resp.status === 404 ? 404 : 422); }
+      return json({ ok: true, dados: r });
+    }
+
+    const nota_id = parsed.data.nota_id;
+    if (!nota_id) return json({ error: "nota_id obrigatório" }, 400);
 
     // Leitura pelo próprio usuário: as regras de acesso garantem que a nota é da empresa dele.
     const { data: nota, error } = await sb.from("notas_fiscais").select("*, notas_fiscais_itens(*, produtos(codigo, origem)), unidades(*), empresas(*)").eq("id", nota_id).single();
@@ -84,14 +105,14 @@ Deno.serve(async (req) => {
         return it;
       });
       const payload = {
-        natureza_operacao: nota.natureza_operacao || "Venda de mercadoria", data_emissao: new Date().toISOString(), tipo_documento: 1, finalidade_emissao: 1,
+        natureza_operacao: nota.natureza_operacao || "Venda de mercadoria", data_emissao: new Date().toISOString(), tipo_documento: 1, finalidade_emissao: nota.finalidade_emissao || 1,
         cnpj_emitente: dig(un.cnpj), local_destino: dest.estado?.toUpperCase() === un.uf?.toUpperCase() ? 1 : 2,
         [docDest.length === 14 ? "cnpj_destinatario" : "cpf_destinatario"]: docDest,
         nome_destinatario: homolog ? "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL" : (dest.nome || dest.nome_fantasia),
         logradouro_destinatario: dest.endereco, numero_destinatario: dest.numero || "S/N", complemento_destinatario: dest.complemento || undefined,
         bairro_destinatario: dest.bairro || "Centro", municipio_destinatario: dest.cidade, uf_destinatario: dest.estado.toUpperCase(), cep_destinatario: dig(dest.cep), pais_destinatario: "Brasil",
         indicador_inscricao_estadual_destinatario: ie ? 1 : 9, inscricao_estadual_destinatario: ie || undefined,
-        consumidor_final: ie ? 0 : 1, presenca_comprador: 9, modalidade_frete: 9,
+        consumidor_final: nota.consumidor_final === true ? 1 : nota.consumidor_final === false ? 0 : (ie ? 0 : 1), presenca_comprador: Number(nota.presenca_comprador) || 9, modalidade_frete: 9,
         valor_frete: r2(nota.valor_frete), valor_desconto: r2(nota.valor_desconto), items: itens,
       };
       const resp = await focus(`/v2/nfe?ref=${encodeURIComponent(ref)}`, { method: "POST", body: JSON.stringify(payload) });

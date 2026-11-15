@@ -15,3 +15,11 @@ describe("motor fiscal", () => {
   it("aponta NCM faltando", () => { expect(faltasConsulta({ ...base, itens: [{ ncm: "", valor: 1, quantidade: 1 }] })).toContain("NCM do item 1"); });
   it("lê retorno aninhado", () => { const t = lerTributacao({ cfop: "6101", icms: { cst: "00", aliquota: 12, valor: 24 } }); expect(t.cfop).toBe("6101"); expect(t.cst).toBe("00"); expect(t.valor_icms).toBe(24); });
 });
+
+import { consumidorFinalVenda } from "./motorFiscal";
+describe("consumidor final da venda", () => {
+  it("escolha do pedido vence o cadastro", () => { expect(consumidorFinalVenda(false, "uso_consumo", true, "9")).toBe(false); });
+  it("uso e consumo é consumidor final", () => { expect(consumidorFinalVenda(null, "uso_consumo", false, "1")).toBe(true); });
+  it("revenda não é consumidor final", () => { expect(consumidorFinalVenda(null, "revenda", true, "1")).toBe(false); });
+  it("sem dados do pedido usa não contribuinte", () => { expect(consumidorFinalVenda(null, null, false, "9")).toBe(true); });
+});

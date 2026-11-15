@@ -215,6 +215,7 @@ export const menuItems: MenuItem[] = [
     icon: LucideIcons.Landmark,
     subItems: [
       { id: "Faturamento", title: "Faturamento", url: "/faturamento", icon: LucideIcons.Receipt },
+      { id: "Tipos de operação", title: "Tipos de operação", url: "/fiscal/tipos-operacao", icon: LucideIcons.ListChecks },
       { id: "Configuração Systax", title: "Configuração Systax", url: "/fiscal/configuracao-systax", icon: LucideIcons.Scale },
       { id: "Configuração NF-e", title: "Configuração NF-e", url: "/fiscal/configuracao-nfe", icon: LucideIcons.KeyRound },
     ],

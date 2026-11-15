@@ -11194,6 +11194,56 @@ export type Database = {
           },
         ]
       }
+      fiscal_tipos_operacao: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          finalidade_nfe: number
+          gera_financeiro: boolean
+          id: string
+          movimenta_estoque: boolean
+          natureza_operacao: string | null
+          nome: string
+          operacao_base: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          finalidade_nfe?: number
+          gera_financeiro?: boolean
+          id?: string
+          movimenta_estoque?: boolean
+          natureza_operacao?: string | null
+          nome: string
+          operacao_base?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          finalidade_nfe?: number
+          gera_financeiro?: boolean
+          id?: string
+          movimenta_estoque?: boolean
+          natureza_operacao?: string | null
+          nome?: string
+          operacao_base?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_tipos_operacao_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flow_templates: {
         Row: {
           created_at: string
@@ -14925,11 +14975,14 @@ export type Database = {
           caminho_danfe: string | null
           caminho_xml: string | null
           chave: string | null
+          consumidor_final: boolean | null
           created_at: string
           data_emissao: string | null
+          destinacao_mercadoria: string | null
           emitida_em: string | null
           empresa_id: string | null
           estabelecimento_id: string
+          finalidade_emissao: number | null
           id: string
           mensagem_sefaz: string | null
           natureza_operacao: string | null
@@ -14940,12 +14993,14 @@ export type Database = {
           participante_cnpj: string | null
           participante_nome: string | null
           participante_uf: string | null
+          presenca_comprador: string | null
           protocolo: string | null
           ref_externa: string | null
           serie: string | null
           status: string
           status_sefaz: string | null
           tipo: string
+          tipo_operacao_id: string | null
           unidade_id: string | null
           updated_at: string
           usuario_id: string | null
@@ -14965,11 +15020,14 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          consumidor_final?: boolean | null
           created_at?: string
           data_emissao?: string | null
+          destinacao_mercadoria?: string | null
           emitida_em?: string | null
           empresa_id?: string | null
           estabelecimento_id: string
+          finalidade_emissao?: number | null
           id?: string
           mensagem_sefaz?: string | null
           natureza_operacao?: string | null
@@ -14980,12 +15038,14 @@ export type Database = {
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          presenca_comprador?: string | null
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
           status?: string
           status_sefaz?: string | null
           tipo: string
+          tipo_operacao_id?: string | null
           unidade_id?: string | null
           updated_at?: string
           usuario_id?: string | null
@@ -15005,11 +15065,14 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          consumidor_final?: boolean | null
           created_at?: string
           data_emissao?: string | null
+          destinacao_mercadoria?: string | null
           emitida_em?: string | null
           empresa_id?: string | null
           estabelecimento_id?: string
+          finalidade_emissao?: number | null
           id?: string
           mensagem_sefaz?: string | null
           natureza_operacao?: string | null
@@ -15020,12 +15083,14 @@ export type Database = {
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          presenca_comprador?: string | null
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
           status?: string
           status_sefaz?: string | null
           tipo?: string
+          tipo_operacao_id?: string | null
           unidade_id?: string | null
           updated_at?: string
           usuario_id?: string | null
@@ -15046,6 +15111,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_tipo_operacao_id_fkey"
+            columns: ["tipo_operacao_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_tipos_operacao"
             referencedColumns: ["id"]
           },
         ]
@@ -17143,10 +17215,12 @@ export type Database = {
         Row: {
           cliente_id: string | null
           condicao_pagamento_id: string | null
+          consumidor_final_venda: boolean | null
           created_at: string | null
           data_envio: string | null
           data_modificacao_cliente: string | null
           data_visualizacao: string | null
+          destinacao_mercadoria: string | null
           empresa_id: string | null
           estabelecimento_id: string | null
           etapa: string
@@ -17156,7 +17230,9 @@ export type Database = {
           orcamento_origem_id: string | null
           origem: string | null
           percentual_desconto: number | null
+          presenca_comprador: string | null
           status: string
+          tipo_operacao_id: string | null
           token_compartilhamento: string | null
           unidade_id: string | null
           updated_at: string | null
@@ -17167,10 +17243,12 @@ export type Database = {
         Insert: {
           cliente_id?: string | null
           condicao_pagamento_id?: string | null
+          consumidor_final_venda?: boolean | null
           created_at?: string | null
           data_envio?: string | null
           data_modificacao_cliente?: string | null
           data_visualizacao?: string | null
+          destinacao_mercadoria?: string | null
           empresa_id?: string | null
           estabelecimento_id?: string | null
           etapa?: string
@@ -17180,7 +17258,9 @@ export type Database = {
           orcamento_origem_id?: string | null
           origem?: string | null
           percentual_desconto?: number | null
+          presenca_comprador?: string | null
           status?: string
+          tipo_operacao_id?: string | null
           token_compartilhamento?: string | null
           unidade_id?: string | null
           updated_at?: string | null
@@ -17191,10 +17271,12 @@ export type Database = {
         Update: {
           cliente_id?: string | null
           condicao_pagamento_id?: string | null
+          consumidor_final_venda?: boolean | null
           created_at?: string | null
           data_envio?: string | null
           data_modificacao_cliente?: string | null
           data_visualizacao?: string | null
+          destinacao_mercadoria?: string | null
           empresa_id?: string | null
           estabelecimento_id?: string | null
           etapa?: string
@@ -17204,7 +17286,9 @@ export type Database = {
           orcamento_origem_id?: string | null
           origem?: string | null
           percentual_desconto?: number | null
+          presenca_comprador?: string | null
           status?: string
+          tipo_operacao_id?: string | null
           token_compartilhamento?: string | null
           unidade_id?: string | null
           updated_at?: string | null
@@ -17246,6 +17330,13 @@ export type Database = {
             columns: ["orcamento_origem_id"]
             isOneToOne: false
             referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_tipo_operacao_id_fkey"
+            columns: ["tipo_operacao_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_tipos_operacao"
             referencedColumns: ["id"]
           },
           {

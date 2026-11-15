@@ -81,6 +81,7 @@ export const PROGRAMAS_DISPONIVEIS: ProgramaDisponivel[] = [
   { path: "/estoque/movimentacoes", label: "Estoque - Movimentações", categoria: "Estoque" },
   { path: "/estoque/entrada", label: "Estoque - Entrada de NF-e", categoria: "Estoque" },
   { path: "/faturamento", label: "Fiscal - Faturamento", categoria: "Fiscal" },
+  { path: "/fiscal/tipos-operacao", label: "Fiscal - Tipos de operação", categoria: "Fiscal" },
   { path: "/fiscal/configuracao-nfe", label: "Fiscal - Configuração NF-e", categoria: "Fiscal" },
   { path: "/fiscal/configuracao-systax", label: "Fiscal - Configuração Systax", categoria: "Fiscal" },
   { path: "/ponto/tratamento", label: "Ponto - Tratamento", categoria: "Ponto" },

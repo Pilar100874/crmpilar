@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Receipt, FileCheck2, Ban, Send, RefreshCw, FileText, FileCode } from "lucide-react";
 import { toast } from "sonner";
-import { OPERACOES, destinoOperacao, faltasConsulta, lerTributacao, montarConsulta } from "@/lib/fiscal/motorFiscal";
+import { DESTINACOES, FINALIDADES_NFE, OPERACOES, PRESENCAS, destinoOperacao, faltasConsulta, lerTributacao, montarConsulta } from "@/lib/fiscal/motorFiscal";
 import { rotuloRegime } from "@/lib/fiscal/regimeTributario";
 import { brl, dataBr, nomeEmpresa, qtd, useContextoInterno } from "@/lib/estoque/contexto";
 
@@ -19,43 +19,48 @@ const sb = supabase as any;
 export default function Faturamento() {
   const ctx = useContextoInterno();
   const [pedidos, setPedidos] = useState<any[]>([]); const [notas, setNotas] = useState<any[]>([]);
-  const [unidades, setUnidades] = useState<any[]>([]);
+  const [unidades, setUnidades] = useState<any[]>([]); const [tipos, setTipos] = useState<any[]>([]);
+  const tipoDe = (id?: string | null) => tipos.find((t) => t.id === id) ?? null;
+  const dadosPedido = (pr: any) => ({ finalidade_nfe: tipoDe(pr.tipoId)?.finalidade_nfe ?? 1, consumidor_final: pr.consumidor === "sim" ? true : pr.consumidor === "nao" ? false : null, destinacao: pr.destinacao || null, presenca: pr.presenca || null });
+  const abrir = (p: any) => { const tp = tipoDe(p.tipo_operacao_id); setPrep({ pedido: p, unidadeId: p.unidade_id ?? unidades[0]?.id ?? "", tipoId: tp?.id ?? "", operacao: tp?.operacao_base ?? "venda",
+    consumidor: p.consumidor_final_venda === true ? "sim" : p.consumidor_final_venda === false ? "nao" : "auto", destinacao: p.destinacao_mercadoria ?? "", presenca: p.presenca_comprador ?? "9" }); };
   const [trib, setTrib] = useState<{ chave: string; itens?: any[]; erro?: string; carregando?: boolean } | null>(null);
   const [prep, setPrep] = useState<any | null>(null); const [cancelar, setCancelar] = useState<any | null>(null);
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
-    const [o, n, u] = await Promise.all([
-      sb.from("orcamentos").select("id, created_at, valor_total, unidade_id, empresas(id, nome_fantasia, nome, cnpj, estado, regime_tributario, inscricao_estadual, contribuinte_icms, consumidor_final, inscricao_suframa, cnae_fiscal), orcamento_itens(produto_id, quantidade, preco_unitario, subtotal, produtos(nome, ncm, unidade, cest, ex_tipi, origem, tipo_item_fiscal, codigo_beneficio_fiscal))").eq("estabelecimento_id", ctx.estabelecimentoId).eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(200),
+    const [o, n, u, t] = await Promise.all([
+      sb.from("orcamentos").select("id, created_at, valor_total, unidade_id, tipo_operacao_id, consumidor_final_venda, destinacao_mercadoria, presenca_comprador, empresas(id, nome_fantasia, nome, cnpj, estado, regime_tributario, inscricao_estadual, contribuinte_icms, consumidor_final, inscricao_suframa, cnae_fiscal), orcamento_itens(produto_id, quantidade, preco_unitario, subtotal, produtos(nome, ncm, unidade, cest, ex_tipi, origem, tipo_item_fiscal, codigo_beneficio_fiscal))").eq("estabelecimento_id", ctx.estabelecimentoId).eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(200),
       sb.from("notas_fiscais").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("tipo", "saida").order("created_at", { ascending: false }).limit(300),
       sb.from("unidades").select("id, nome, uf, cnpj, regime_tributario, crt, cnae_fiscal, certificado_valido_ate").eq("estabelecimento_id", ctx.estabelecimentoId).order("nome"),
+      sb.from("fiscal_tipos_operacao").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome"),
     ]);
-    setPedidos(o.data ?? []); setNotas(n.data ?? []); setUnidades(u.data ?? []);
+    setPedidos(o.data ?? []); setNotas(n.data ?? []); setUnidades(u.data ?? []); setTipos(t.data ?? []);
   };
   useEffect(() => { carregar(); }, [ctx.estabelecimentoId]);
 
   const notaDo = (id: string) => notas.find((n) => n.orcamento_id === id && n.status !== "cancelada");
-  const consulta = (p: any, unidadeId: string, operacao: string) => {
+  const consulta = (p: any, unidadeId: string, operacao: string, pedido?: any) => {
     const un = unidades.find((u) => u.id === unidadeId);
     const itens = (p.orcamento_itens ?? []).map((i: any) => ({ ...i, valor: Number(i.subtotal) || Number(i.quantidade) * Number(i.preco_unitario) }));
     const c = { operacao, emitente: { cnpj: un?.cnpj, uf: un?.uf, regime_tributario: un?.regime_tributario, crt: un?.crt, cnae_fiscal: un?.cnae_fiscal },
       destinatario: { cnpj: p.empresas?.cnpj, uf: p.empresas?.estado, regime_tributario: p.empresas?.regime_tributario, contribuinte_icms: p.empresas?.contribuinte_icms, inscricao_estadual: p.empresas?.inscricao_estadual, consumidor_final: p.empresas?.consumidor_final, inscricao_suframa: p.empresas?.inscricao_suframa, cnae_fiscal: p.empresas?.cnae_fiscal },
-      itens: itens.map((i: any) => ({ produto_id: i.produto_id, ncm: i.produtos?.ncm, cest: i.produtos?.cest, ex_tipi: i.produtos?.ex_tipi, origem: i.produtos?.origem, tipo_item_fiscal: i.produtos?.tipo_item_fiscal, codigo_beneficio_fiscal: i.produtos?.codigo_beneficio_fiscal, valor: i.valor, quantidade: Number(i.quantidade) })) };
+      itens: itens.map((i: any) => ({ produto_id: i.produto_id, ncm: i.produtos?.ncm, cest: i.produtos?.cest, ex_tipi: i.produtos?.ex_tipi, origem: i.produtos?.origem, tipo_item_fiscal: i.produtos?.tipo_item_fiscal, codigo_beneficio_fiscal: i.produtos?.codigo_beneficio_fiscal, valor: i.valor, quantidade: Number(i.quantidade) })), pedido };
     return { un, destino: destinoOperacao(un?.uf, p.empresas?.estado), itens, c };
   };
   const calcular = (p: any, unidadeId: string, operacao: string) => {
     const base = consulta(p, unidadeId, operacao);
-    const t = trib?.chave === `${p.id}|${unidadeId}|${operacao}` ? trib : null;
+    const t = trib?.chave === `${p.id}|${unidadeId}|${operacao}|${prep?.tipoId}|${prep?.consumidor}|${prep?.destinacao}|${prep?.presenca}` ? trib : null;
     return { ...base, itens: base.itens.map((i: any, k: number) => ({ ...i, t: t?.itens?.[k] ?? null })) };
   };
   useEffect(() => {
     if (!prep) return;
-    const chave = `${prep.pedido.id}|${prep.unidadeId}|${prep.operacao}`;
-    const { c } = consulta(prep.pedido, prep.unidadeId, prep.operacao);
+    const chave = `${prep.pedido.id}|${prep.unidadeId}|${prep.operacao}|${prep.tipoId}|${prep.consumidor}|${prep.destinacao}|${prep.presenca}`;
+    const { c } = consulta(prep.pedido, prep.unidadeId, prep.operacao, dadosPedido(prep));
     const faltas = faltasConsulta(c);
     if (faltas.length) { setTrib({ chave, erro: "Complete os cadastros: " + faltas.join(", ") }); return; }
     setTrib({ chave, carregando: true });
     chamarFn("systax-calcular", montarConsulta(c)).then((r) => setTrib({ chave, itens: r.itens.map(lerTributacao) })).catch((e) => setTrib({ chave, erro: e.message }));
-  }, [prep?.pedido?.id, prep?.unidadeId, prep?.operacao]);
+  }, [prep?.pedido?.id, prep?.unidadeId, prep?.operacao, prep?.tipoId, prep?.consumidor, prep?.destinacao, prep?.presenca]);
   const faturar = async () => {
     const { un, itens } = calcular(prep.pedido, prep.unidadeId, prep.operacao);
     if (!un) return toast.error("Escolha a unidade emissora");
@@ -63,9 +68,11 @@ export default function Faturamento() {
     if (!un.regime_tributario) return toast.error("Defina o regime tributário da unidade no cadastro de Unidades");
     const soma = (k: string) => itens.reduce((s: number, i: any) => s + (Number(i.t[`valor_${k}`]) || 0), 0);
     const valorProdutos = itens.reduce((s: number, i: any) => s + i.valor, 0);
-    const p = prep.pedido;
+    const p = prep.pedido; const tipo = tipoDe(prep.tipoId); const dp = dadosPedido(prep);
+    await sb.from("orcamentos").update({ tipo_operacao_id: tipo?.id ?? null, consumidor_final_venda: dp.consumidor_final, destinacao_mercadoria: dp.destinacao, presenca_comprador: dp.presenca }).eq("id", p.id);
     const r = await sb.from("notas_fiscais").insert({ estabelecimento_id: ctx.estabelecimentoId, unidade_id: un.id, tipo: "saida", status: "pronta", origem: "orcamento", orcamento_id: p.id, empresa_id: p.empresas?.id ?? null,
-      natureza_operacao: OPERACOES.find((o) => o.valor === prep.operacao)?.rotulo, participante_nome: nomeEmpresa(p.empresas), participante_cnpj: p.empresas?.cnpj, participante_uf: p.empresas?.estado,
+      natureza_operacao: tipo?.natureza_operacao || tipo?.nome || OPERACOES.find((o) => o.valor === prep.operacao)?.rotulo,
+      tipo_operacao_id: tipo?.id ?? null, finalidade_emissao: dp.finalidade_nfe, consumidor_final: dp.consumidor_final, presenca_comprador: dp.presenca, destinacao_mercadoria: dp.destinacao, participante_nome: nomeEmpresa(p.empresas), participante_cnpj: p.empresas?.cnpj, participante_uf: p.empresas?.estado,
       data_emissao: new Date().toISOString().slice(0, 10), valor_produtos: valorProdutos, valor_icms: soma("icms"), valor_ipi: soma("ipi"), valor_pis: soma("pis"), valor_cofins: soma("cofins"),
       valor_total: valorProdutos + soma("ipi") + soma("icms_st"), usuario_id: ctx.usuarioId }).select("id").single();
     if (r.error) return toast.error(r.error.message);
@@ -73,6 +80,7 @@ export default function Faturamento() {
       cfop: i.t.cfop, cst: i.t.cst, quantidade: i.quantidade, valor_unitario: i.preco_unitario, valor_total: i.valor,
       aliq_icms: i.t.aliq_icms, valor_icms: i.t.valor_icms, aliq_ipi: i.t.aliq_ipi, valor_ipi: i.t.valor_ipi, aliq_pis: i.t.aliq_pis, valor_pis: i.t.valor_pis, aliq_cofins: i.t.aliq_cofins, valor_cofins: i.t.valor_cofins, tributacao: i.t.bruto })));
     if (ri.error) return toast.error(ri.error.message);
+    if (tipo && !tipo.movimenta_estoque) { toast.success("Pedido faturado (operação sem movimento de estoque)"); setPrep(null); carregar(); return; }
     const rm = await sb.from("estoque_movimentos").insert(itens.filter((i: any) => i.produto_id).map((i: any) => ({ estabelecimento_id: ctx.estabelecimentoId, unidade_id: un.id, produto_id: i.produto_id, tipo: "saida", origem: "venda", quantidade: Number(i.quantidade), nota_fiscal_id: r.data.id, documento: "Faturamento", usuario_id: ctx.usuarioId })));
     if (rm.error) toast.error("Nota criada, mas a baixa do estoque falhou: " + rm.error.message); else toast.success("Pedido faturado e estoque baixado");
     setPrep(null); carregar();
@@ -143,7 +151,7 @@ export default function Faturamento() {
               <Button size="sm" variant="outline" onClick={() => { setJustificativa(""); setCancelar(n); }}><Ban className="mr-1 h-4 w-4" />Cancelar</Button>
               {n.mensagem_sefaz && n.status !== "emitida" && <p className="w-full text-xs text-destructive">{n.mensagem_sefaz}</p>}
             </>
-              : <Button size="sm" onClick={() => setPrep({ pedido: p, unidadeId: p.unidade_id ?? unidades[0]?.id ?? "", operacao: "venda" })}><FileCheck2 className="mr-1 h-4 w-4" />Faturar</Button>}
+              : <Button size="sm" onClick={() => abrir(p)}><FileCheck2 className="mr-1 h-4 w-4" />Faturar</Button>}
           </CardContent></Card>); })}
       </div>
       <Dialog open={!!prep} onOpenChange={(o) => !o && setPrep(null)}>
@@ -151,8 +159,14 @@ export default function Faturamento() {
           {prep && calc && <div className="space-y-3">
             <div className="grid gap-2 sm:grid-cols-2">
               <div><Label>Unidade emissora</Label><Select value={prep.unidadeId} onValueChange={(v) => setPrep({ ...prep, unidadeId: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}{u.uf ? ` (${u.uf})` : ""}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Operação</Label><Select value={prep.operacao} onValueChange={(v) => setPrep({ ...prep, operacao: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{OPERACOES.filter((o) => !o.valor.startsWith("compra")).map((o) => <SelectItem key={o.valor} value={o.valor}>{o.rotulo}</SelectItem>)}</SelectContent></Select></div>
+              {tipos.length
+                ? <div><Label>Tipo de operação</Label><Select value={prep.tipoId || undefined} onValueChange={(v) => setPrep({ ...prep, tipoId: v, operacao: tipoDe(v)?.operacao_base ?? "venda" })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{tipos.map((t) => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}</SelectContent></Select></div>
+                : <div><Label>Operação</Label><Select value={prep.operacao} onValueChange={(v) => setPrep({ ...prep, operacao: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{OPERACOES.filter((o) => !o.valor.startsWith("compra")).map((o) => <SelectItem key={o.valor} value={o.valor}>{o.rotulo}</SelectItem>)}</SelectContent></Select><p className="mt-1 text-xs text-muted-foreground">Cadastre seus tipos em Fiscal → Tipos de operação.</p></div>}
+              <div><Label>Destinação da mercadoria</Label><Select value={prep.destinacao || "auto"} onValueChange={(v) => setPrep({ ...prep, destinacao: v === "auto" ? "" : v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="auto">Pelo cadastro do cliente</SelectItem>{DESTINACOES.map((d) => <SelectItem key={d.valor} value={d.valor}>{d.rotulo}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Consumidor final</Label><Select value={prep.consumidor} onValueChange={(v) => setPrep({ ...prep, consumidor: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="auto">Automático (destinação / cadastro)</SelectItem><SelectItem value="sim">Sim</SelectItem><SelectItem value="nao">Não</SelectItem></SelectContent></Select></div>
+              <div><Label>Como a venda foi feita</Label><Select value={prep.presenca} onValueChange={(v) => setPrep({ ...prep, presenca: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PRESENCAS.map((x) => <SelectItem key={x.valor} value={x.valor}>{x.rotulo}</SelectItem>)}</SelectContent></Select></div>
             </div>
+            {tipoDe(prep.tipoId) && <p className="text-xs text-muted-foreground">Finalidade {FINALIDADES_NFE.find((f) => f.valor === tipoDe(prep.tipoId).finalidade_nfe)?.rotulo} • {tipoDe(prep.tipoId).movimenta_estoque ? "baixa estoque" : "não movimenta estoque"} • {tipoDe(prep.tipoId).gera_financeiro ? "gera cobrança" : "sem cobrança"}</p>}
             <p className="text-xs text-muted-foreground">{calc.un?.regime_tributario ? rotuloRegime(calc.un.regime_tributario) : "Unidade sem regime tributário"} • {calc.destino === "interna" ? "dentro do estado" : calc.destino === "interestadual" ? "fora do estado" : "exterior"}{!prep.pedido.empresas?.estado ? " (cliente sem UF cadastrada)" : ""}</p>
             {trib?.carregando && <p className="text-sm text-muted-foreground">Consultando tributação no Systax…</p>}
             {trib?.erro && <p className="text-sm text-destructive">{trib.erro}</p>}

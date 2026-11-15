@@ -27,6 +27,34 @@ export const CRT = [
   { valor: "4", rotulo: "4 - MEI" },
 ] as const;
 
+export const FINALIDADES_NFE = [
+  { valor: 1, rotulo: "1 - Normal" },
+  { valor: 2, rotulo: "2 - Complementar" },
+  { valor: 3, rotulo: "3 - Ajuste" },
+  { valor: 4, rotulo: "4 - Devolução / retorno" },
+] as const;
+export const DESTINACOES = [
+  { valor: "revenda", rotulo: "Revenda" },
+  { valor: "industrializacao", rotulo: "Industrialização" },
+  { valor: "uso_consumo", rotulo: "Uso e consumo" },
+  { valor: "ativo", rotulo: "Ativo imobilizado" },
+] as const;
+export const PRESENCAS = [
+  { valor: "1", rotulo: "Presencial" },
+  { valor: "2", rotulo: "Internet" },
+  { valor: "3", rotulo: "Telefone / teleatendimento" },
+  { valor: "4", rotulo: "Entrega a domicílio (NFC-e)" },
+  { valor: "5", rotulo: "Presencial fora do estabelecimento" },
+  { valor: "9", rotulo: "Outros (representante)" },
+] as const;
+/** Consumidor final da venda: escolha do pedido > uso/consumo ou ativo > cadastro do cliente > não contribuinte. */
+export function consumidorFinalVenda(escolha: boolean | null | undefined, destinacao: string | null | undefined, cadastro: boolean | null | undefined, indicadorIe: string): boolean {
+  if (escolha === true || escolha === false) return escolha;
+  if (destinacao === "uso_consumo" || destinacao === "ativo") return true;
+  if (destinacao === "revenda" || destinacao === "industrializacao") return false;
+  return !!cadastro || indicadorIe === "9";
+}
+
 const dig = (s?: string | null) => (s ?? "").replace(/\D/g, "");
 export const destinoOperacao = (ufOrigem?: string | null, ufDestino?: string | null): Destino =>
   ufDestino === "EX" ? "exterior" : !ufOrigem || !ufDestino || ufOrigem.toUpperCase() === ufDestino.toUpperCase() ? "interna" : "interestadual";
@@ -42,6 +70,8 @@ export interface ConsultaFiscal {
   emitente: { cnpj?: string | null; uf?: string | null; regime_tributario?: string | null; crt?: string | null; cnae_fiscal?: string | null };
   destinatario: { cnpj?: string | null; uf?: string | null; regime_tributario?: string | null; contribuinte_icms?: string | null; inscricao_estadual?: string | null; consumidor_final?: boolean | null; inscricao_suframa?: string | null; cnae_fiscal?: string | null };
   itens: ItemConsulta[];
+  /** Dados do pedido (opcionais). */
+  pedido?: { finalidade_nfe?: number | null; consumidor_final?: boolean | null; destinacao?: string | null; presenca?: string | null };
 }
 /** Lista o que falta nos cadastros para o motor fiscal calcular. */
 export function faltasConsulta(c: ConsultaFiscal): string[] {
@@ -57,10 +87,13 @@ export function faltasConsulta(c: ConsultaFiscal): string[] {
 export function montarConsulta(c: ConsultaFiscal) {
   return {
     operacao: c.operacao,
+    finalidade_nfe: c.pedido?.finalidade_nfe ?? 1,
+    destinacao: c.pedido?.destinacao || null,
+    presenca_comprador: c.pedido?.presenca || null,
     destino: destinoOperacao(c.emitente.uf, c.destinatario.uf),
     emitente: { cnpj: dig(c.emitente.cnpj), uf: c.emitente.uf?.toUpperCase(), regime: c.emitente.regime_tributario, crt: c.emitente.crt || null, cnae: dig(c.emitente.cnae_fiscal) || null },
     destinatario: { documento: dig(c.destinatario.cnpj), uf: c.destinatario.uf?.toUpperCase(), regime: c.destinatario.regime_tributario || null,
-      indicador_ie: indicadorContribuinte(c.destinatario), consumidor_final: !!c.destinatario.consumidor_final || indicadorContribuinte(c.destinatario) === "9",
+      indicador_ie: indicadorContribuinte(c.destinatario), consumidor_final: consumidorFinalVenda(c.pedido?.consumidor_final, c.pedido?.destinacao, c.destinatario.consumidor_final, indicadorContribuinte(c.destinatario)),
       suframa: c.destinatario.inscricao_suframa || null, cnae: dig(c.destinatario.cnae_fiscal) || null },
     itens: c.itens.map((i, k) => ({ item: k + 1, ncm: dig(i.ncm), cest: dig(i.cest) || null, ex_tipi: i.ex_tipi || null, origem: origemNfe(i.origem),
       finalidade: i.tipo_item_fiscal || "revenda", beneficio_fiscal: i.codigo_beneficio_fiscal || null, valor: i.valor, quantidade: i.quantidade })),
