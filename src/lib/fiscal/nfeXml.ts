@@ -1,7 +1,7 @@
 export interface ItemNfe {
   codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string;
   quantidade: number; valorUnitario: number; valorTotal: number;
-  aliqIcms: number; valorIcms: number; aliqIpi: number; valorIpi: number; aliqPis: number; valorPis: number; aliqCofins: number; valorCofins: number;
+  aliqIcms: number; valorIcms: number; aliqIpi: number; valorIpi: number; aliqPis: number; valorPis: number; aliqCofins: number; valorCofins: number; valorIcmsSt?: number;
 }
 export interface Nfe {
   chave: string; numero: string; serie: string; dataEmissao: string; naturezaOperacao: string;
@@ -27,7 +27,7 @@ export function lerNfeXml(xml: string): Nfe {
       ncm: txt(prod, "NCM"), cfop: txt(prod, "CFOP"), cst: txt(icms, "CST") || txt(icms, "CSOSN"), unidade: txt(prod, "uCom"),
       quantidade: num(txt(prod, "qCom")), valorUnitario: num(txt(prod, "vUnCom")), valorTotal: num(txt(prod, "vProd")),
       aliqIcms: num(txt(icms, "pICMS")), valorIcms: num(txt(icms, "vICMS")), aliqIpi: num(txt(ipi, "pIPI")), valorIpi: num(txt(ipi, "vIPI")),
-      aliqPis: num(txt(pis, "pPIS")), valorPis: num(txt(pis, "vPIS")), aliqCofins: num(txt(cof, "pCOFINS")), valorCofins: num(txt(cof, "vCOFINS")),
+      aliqPis: num(txt(pis, "pPIS")), valorPis: num(txt(pis, "vPIS")), aliqCofins: num(txt(cof, "pCOFINS")), valorCofins: num(txt(cof, "vCOFINS")), valorIcmsSt: num(txt(icms, "vICMSST")),
     };
   });
   return {

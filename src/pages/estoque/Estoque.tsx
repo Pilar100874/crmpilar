@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Boxes, Upload, Plus, ArrowDownCircle, ArrowUpCircle, Trash2, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { AuditoriaEntradaNfe } from "@/components/estoque/AuditoriaEntradaNfe";
 import { lerNfeXml } from "@/lib/fiscal/nfeXml";
 import { baixarCsv, brl, dataBr, nomeEmpresa, qtd, useContextoInterno } from "@/lib/estoque/contexto";
 
@@ -26,7 +27,7 @@ export default function Estoque() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const carregarProdutos = async () => {
     if (!ctx.estabelecimentoId) return;
-    const { data } = await sb.from("produtos").select("id, nome, codigo, unidade, estoque, estoque_minimo, ean_13, gtin, ncm, preco_tabela").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome");
+    const { data } = await sb.from("produtos").select("id, nome, codigo, unidade, estoque, estoque_minimo, ean_13, gtin, ncm, cest, origem, tipo_item_fiscal, preco_tabela").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome");
     setProdutos(data ?? []);
   };
   useEffect(() => { carregarProdutos(); }, [ctx.estabelecimentoId]);
@@ -114,7 +115,7 @@ function Movimentacoes({ produtos, ctx }: any) {
   );
 }
 
-type ItemEdit = { codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string; quantidade: number; valorUnitario: number; valorTotal: number; produto_id: string; fator: number; aliqIcms?: number; valorIcms?: number; aliqIpi?: number; valorIpi?: number; aliqPis?: number; valorPis?: number; aliqCofins?: number; valorCofins?: number };
+type ItemEdit = { codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string; quantidade: number; valorUnitario: number; valorTotal: number; produto_id: string; fator: number; aliqIcms?: number; valorIcms?: number; aliqIpi?: number; valorIpi?: number; aliqPis?: number; valorPis?: number; aliqCofins?: number; valorCofins?: number; valorIcmsSt?: number };
 
 function EntradaNfe({ produtos, ctx, onMudou }: any) {
   const [notas, setNotas] = useState<any[]>([]);
@@ -148,7 +149,7 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
       if (notas.some((n) => n.chave === nfe.chave && n.status !== "cancelada")) return toast.error("Esta NF-e já foi importada");
       const forn = fornecedores.find((f) => soDig(f.cnpj) === soDig(nfe.emitente.cnpj));
       setEdit({ origem: "xml", xml: await file.text(), chave: nfe.chave, numero: nfe.numero, serie: nfe.serie, data_emissao: nfe.dataEmissao, natureza_operacao: nfe.naturezaOperacao,
-        empresa_id: forn?.id ?? "", participante_nome: nfe.emitente.nome, participante_cnpj: nfe.emitente.cnpj, participante_uf: nfe.emitente.uf, totais: nfe.totais,
+        empresa_id: forn?.id ?? "", participante_nome: nfe.emitente.nome, participante_cnpj: nfe.emitente.cnpj, participante_uf: nfe.emitente.uf, destinatario_cnpj: nfe.destinatarioCnpj, totais: nfe.totais,
         itens: await dePara(forn?.id ?? null, nfe.itens) });
       if (!forn) toast.warning("Fornecedor do XML não está cadastrado como Fornecedor — escolha ou cadastre em Empresas");
     } catch (e: any) { toast.error(e.message); }
@@ -241,6 +242,7 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
               {edit.origem === "manual" && !somenteLeitura && <Button size="sm" variant="outline" onClick={() => setEdit({ ...edit, itens: [...edit.itens, { codigo: "", descricao: "", quantidade: 1, valorUnitario: 0, valorTotal: 0, produto_id: "", fator: 1 }] })}><Plus className="mr-1 h-4 w-4" />Item</Button>}
             </div>
             <p className="text-right font-medium">Total: {brl(edit.totais?.nota ?? total(edit))}</p>
+            {edit.origem === "xml" && <AuditoriaEntradaNfe edit={edit} produtos={produtos} estabelecimentoId={ctx.estabelecimentoId} />}
           </div>}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEdit(null)}>Fechar</Button>
