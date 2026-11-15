@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Boxes, Upload, Plus, Split, PackagePlus, X, ArrowDownCircle, ArrowUpCircle, Trash2, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { NotasRecebidasDfe } from "@/components/estoque/NotasRecebidasDfe";
 import { AuditoriaEntradaNfe } from "@/components/estoque/AuditoriaEntradaNfe";
 import { errosDesmembramento, expandirPartes, percentuaisIguais, type ParteEntrada } from "@/lib/compras/entradaNfe";
 import { lerNfeXml } from "@/lib/fiscal/nfeXml";
@@ -145,12 +146,13 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
     });
   };
 
-  const importarXml = async (file: File) => {
+  const importarXml = async (file: File) => importarTexto(await file.text());
+  const importarTexto = async (xmlTxt: string) => {
     try {
-      const nfe = lerNfeXml(await file.text());
+      const nfe = lerNfeXml(xmlTxt);
       if (notas.some((n) => n.chave === nfe.chave && n.status !== "cancelada")) return toast.error("Esta NF-e já foi importada");
       const forn = fornecedores.find((f) => soDig(f.cnpj) === soDig(nfe.emitente.cnpj));
-      setEdit({ origem: "xml", xml: await file.text(), chave: nfe.chave, numero: nfe.numero, serie: nfe.serie, data_emissao: nfe.dataEmissao, natureza_operacao: nfe.naturezaOperacao,
+      setEdit({ origem: "xml", xml: xmlTxt, chave: nfe.chave, numero: nfe.numero, serie: nfe.serie, data_emissao: nfe.dataEmissao, natureza_operacao: nfe.naturezaOperacao,
         empresa_id: forn?.id ?? "", participante_nome: nfe.emitente.nome, participante_cnpj: nfe.emitente.cnpj, participante_uf: nfe.emitente.uf, destinatario_cnpj: nfe.destinatarioCnpj, totais: nfe.totais,
         itens: await dePara(forn?.id ?? null, nfe.itens) });
       if (!forn) toast.warning("Fornecedor do XML não está cadastrado como Fornecedor — escolha ou cadastre em Empresas");
@@ -205,8 +207,8 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
         <input ref={arq} type="file" accept=".xml" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importarXml(f); e.target.value = ""; }} />
         <Button size="sm" onClick={() => arq.current?.click()}><Upload className="mr-1 h-4 w-4" />Importar XML</Button>
         <Button size="sm" variant="outline" onClick={manual}><Plus className="mr-1 h-4 w-4" />Entrada manual</Button>
+        <NotasRecebidasDfe chavesImportadas={notas.filter((n) => n.status !== "cancelada").map((n) => n.chave).filter(Boolean)} onImportarXml={importarTexto} />
       </div>
-      <p className="text-xs text-muted-foreground">A busca automática de notas na Receita (manifestação do destinatário) depende da contratação de um serviço de NF-e; até lá use o XML recebido do fornecedor ou a entrada manual.</p>
       {!notas.length && <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma nota de entrada.</p>}
       <div className="space-y-1.5">
         {notas.map((n) => (
