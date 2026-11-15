@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { uploadFerrFoto, FERR_BUCKET_LOANS } from "@/lib/ferramentas/storage";
 import { useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
@@ -112,6 +113,7 @@ export default function ReturnLoanPage() {
 
   // Photo recognition state
   const [showPhotoRecognition, setShowPhotoRecognition] = useState(false);
+  useEtapasPendentes("ferr-devolver", currentStep > 1 || !!scannedUser || !!qrInput || photoCaptures.length > 0, "Devolução de ferramentas");
 
   const canAccess = isAdmin || isAlmoxarifado;
 

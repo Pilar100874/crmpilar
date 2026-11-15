@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,6 +188,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   const [importOpen, setImportOpen] = useState(false);
   const [formulaOpen, setFormulaOpen] = useState(false);
   const [formulaEditIndex, setFormulaEditIndex] = useState<number>(-1);
+  useEtapasPendentes("vincular-dados", open && (step > 0 || !!cfg.tabela), "Vínculo de dados", () => { setStep(0); setOpen(false); });
 
   const importedDatasets = useSyncExternalStore(subscribeDatasets, getAllDatasets, getAllDatasets);
 

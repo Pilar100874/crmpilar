@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { Wand2, ArrowLeft, ArrowRight, Loader2, Copy, CheckCircle2, ExternalLink, Sparkles, Plus, X, Pencil, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,6 +99,7 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
   const [editValor, setEditValor] = useState('');
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
   const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
+  useEtapasPendentes("wizard-prospeccao", !result && JSON.stringify(form) !== JSON.stringify(initialState), "Prospecção", () => { setStep(0); setForm(initialState); setResult(null); });
 
   React.useEffect(() => {
     supabase.functions.invoke('wizard-prospeccao', { body: { modo: 'status' } })

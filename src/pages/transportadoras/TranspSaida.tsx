@@ -1,4 +1,5 @@
 import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,7 @@ export default function TranspSaida() {
   const [stepIdx, setStepIdx] = useState(0);
 
   const [params, setParams] = useSearchParams();
+  useEtapasPendentes("transp-saida", !!sel, "Saída de transportadoras");
 
   const load = async () => {
     setLoading(true);

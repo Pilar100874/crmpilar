@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
 import { PageHeader } from "@/components/ferramentas/ui/page-header";
@@ -77,6 +78,7 @@ export default function RelendPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAuthScanner, setShowAuthScanner] = useState(false);
+  useEtapasPendentes("ferr-reemprestar", currentStep > 1 || !!selectedUser || selectedLoans.size > 0, "Reempréstimo de ferramentas");
 
   const canAccess = isAdmin || isAlmoxarifado;
 

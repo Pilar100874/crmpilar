@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
@@ -97,6 +98,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
+  useEtapasPendentes("marketing-conteudo", open && !isPublished && (currentStepIndex > 0 || Object.keys(fieldValues).length > 0), "Criação de conteúdo", () => { setCurrentStepIndex(0); setFieldValues({}); onClose(); });
   
   // Preset states
   const [isSavingPreset, setIsSavingPreset] = useState(false);

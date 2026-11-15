@@ -1,4 +1,5 @@
 import { analisarHabitos } from "./auxiliarVendas";
+import { instalarProtecaoNavegacao } from "@/lib/navigationGuard";
 /**
  * Catálogo central dos recursos do Atendimento.
  * Fonte única para o Tutorial do atendente e para as Simulações do administrador:
@@ -63,6 +64,23 @@ const passo = (descricao: string, ok: boolean, detalhe?: string): PassoSimulacao
 const iso = (diasAtras: number, hoje: number) => new Date(hoje - diasAtras * DIA).toISOString();
 
 export const CATALOGO_ATENDIMENTO: RecursoAtendimento[] = [
+  {
+    id: "saida-etapas", modulo: "Disparo em massa", titulo: "Sair de um preenchimento por etapas",
+    oQueE: "Ao trocar de módulo durante a montagem de um disparo, o sistema avisa que os dados não salvos serão perdidos.",
+    regraNegocio: "Cancelar mantém os dados e a etapa atual; Sair sem salvar descarta a montagem e retornar começa no início. Registros já salvos não são apagados.",
+    comoUsar: ["Monte o disparo por etapas.", "Ao escolher outro módulo, leia o aviso.", "Escolha Cancelar para continuar ou Sair sem salvar para descartar."],
+    simular: () => {
+      let navegou = false;
+      let continuar: (() => void) | undefined;
+      const nav = { push: () => { navegou = true; }, replace: () => {}, go: () => {} };
+      const remover = instalarProtecaoNavegacao(nav, fn => { continuar = fn; return true; });
+      nav.push();
+      const bloqueou = !navegou;
+      continuar?.();
+      remover();
+      return [passo("Aguarda decisão antes de sair", bloqueou), passo("Confirmar permite a troca", navegou)];
+    },
+  },
   {
     id: "menu-radial", modulo: "Fila e organização", titulo: "Atalhos do Atendimento",
     oQueE: "Menu circular com atalhos de Contatos, Minha agenda, Disparo em massa, cadastro e ações do cliente selecionado.",

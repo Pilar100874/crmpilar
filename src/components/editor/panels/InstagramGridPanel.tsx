@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -72,6 +73,7 @@ const InstagramGridPanel = () => {
   const [generatedPieces, setGeneratedPieces] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  useEtapasPendentes("instagram-grade", !!uploadedImage && generatedPieces.length === 0, "Montagem da grade", () => { setStep("select-layout"); setUploadedImage(null); setSelectedLayout(null); });
 
   // Image positioning state
   const [imgScale, setImgScale] = useState(1);

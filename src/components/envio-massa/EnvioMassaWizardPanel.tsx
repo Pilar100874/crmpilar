@@ -1,4 +1,5 @@
 import { substituirVariaveis } from './emailMensagem';
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { enviarEmailMassa } from "./enviarEmailMassa";
 import { useExecucaoEnvio } from "./hooks/useExecucaoEnvio";
 import { useState, useEffect, useRef } from "react";
@@ -81,6 +82,7 @@ export function EnvioMassaWizardPanel({
   const [state, setState] = useState<EnvioMassaState>(() => ({ ...getInitialState(), step: canalInicial ? (contatosIniciais.length > 0 ? 'compose' : 'filter') : 'channel', canal: canalInicial ?? null, proximaDataContato: dataPadraoProximoContato(origemDoCanalMassa(canalInicial)) }));
   const pulouParaMontarRef = useRef(false);
   const { isSending, sendProgress, itensEnvio, executarEnvio, cancelarEnvio, cancelamentoSolicitado } = useExecucaoEnvio();
+  useEtapasPendentes("envio-massa-panel", state.step !== "channel" || state.contentItems.length > 0, "Disparo em massa", () => { cancelarEnvio(); onClose(); });
 
   // Load estabelecimento and usuario
   useEffect(() => {

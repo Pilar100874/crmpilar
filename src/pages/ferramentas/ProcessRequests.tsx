@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
 import { PageHeader } from "@/components/ferramentas/ui/page-header";
@@ -121,6 +122,7 @@ export default function ProcessRequestsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<LoanRequest | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  useEtapasPendentes("ferr-processar", !!selectedRequest || currentStep > 1, "Separação de ferramentas");
 
   useEffect(() => {
     fetchData();

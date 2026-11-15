@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export function ImportarArquivoPrecos() {
   const [step, setStep] = useState<'select' | 'upload' | 'mapping' | 'preview' | 'done'>('select');
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  useEtapasPendentes("importar-precos", step !== "done" && (!!selectedFonte || !!file), "Importação de preços");
 
   const { data: fontes } = useQuery({
     queryKey: ['fontes_arquivo'],

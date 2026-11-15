@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ export default function ImportacaoProdutos() {
   const [apiEndpoint, setApiEndpoint] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [relatorioId, setRelatorioId] = useState<string | null>(id || null);
+  const [concluido, setConcluido] = useState(false);
+  useEtapasPendentes("importacao-produtos", !concluido && (currentStep > 0 || !!reportName || excelData.length > 0), "Importação de produtos");
 
   const totalSteps = 7;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -118,7 +121,8 @@ export default function ImportacaoProdutos() {
         toast.success("Relatório salvo com sucesso!");
       }
 
-      navigate("/importacao-produtos");
+      setConcluido(true);
+      setTimeout(() => navigate("/importacao-produtos"), 0);
     } catch (error: any) {
       console.error("Erro ao salvar relatório:", error);
       toast.error(`Erro ao salvar relatório: ${error.message || "Erro desconhecido"}`);

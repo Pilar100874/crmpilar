@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Globe, GripVertical, Plus, Trash2, Eye, Code, Image, Video, Type, Play,
@@ -1504,6 +1505,7 @@ const AutoGeneratePage: React.FC<{
   const [productSearch, setProductSearch] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [savedPageRef, setSavedPageRef] = useState<SavedPage | null>(null);
+  useEtapasPendentes("gerar-pagina", open && step !== "done" && (!!selectedProject || step !== "select"), "Criação de página", () => { setStep("select"); setSelectedProject(""); setSelectedProduct(""); onOpenChange(false); });
 
   // Multi-step media states
   const [allAgentData, setAllAgentData] = useState<Record<string, any>>({});

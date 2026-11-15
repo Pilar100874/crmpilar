@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -126,6 +127,7 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
   const [excluir, setExcluir] = useState<any | null>(null);
   const [novoProd, setNovoProd] = useState<any | null>(null);
   const arq = useRef<HTMLInputElement>(null);
+  useEtapasPendentes("estoque-entrada-nfe", !!edit && edit.status !== "lancada", "Entrada de NF-e", () => { setEdit(null); setNovoProd(null); });
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
     const [n, f] = await Promise.all([

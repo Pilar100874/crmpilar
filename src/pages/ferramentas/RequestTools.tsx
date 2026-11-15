@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
@@ -127,6 +128,8 @@ export default function RequestToolsPage() {
   const [dueDays, setDueDays] = useState("7");
   const [customDate, setCustomDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [concluido, setConcluido] = useState(false);
+  useEtapasPendentes("ferr-solicitar", !concluido && (currentStep > 1 || selectedTools.length > 0 || !!notes || !!selectedUserId), "Solicitação de ferramentas");
 
   // Authentication state (for operator - quem está fazendo o pedido)
   const [authMode, setAuthMode] = useState<"qr" | "password">("qr");
@@ -619,7 +622,8 @@ export default function RequestToolsPage() {
         });
       }
 
-      navigate("/ferramentas");
+      setConcluido(true);
+      setTimeout(() => navigate("/ferramentas"), 0);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro", description: error.message });
     } finally {

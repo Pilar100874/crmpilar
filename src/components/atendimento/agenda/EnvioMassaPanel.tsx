@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ export function EnvioMassaPanel({
   const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("massa_whatsapp"));
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  useEtapasPendentes("agenda-envio-panel", selectedTasks.size > 0 || !!mensagem, "Disparo da agenda", () => { setStep("select"); setSelectedTasks(new Set()); setMensagem(""); onClose(); });
 
   useEffect(() => {
     if (estabelecimentoId) {

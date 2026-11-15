@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export function ImportSpreadsheetWizard({ open, onOpenChange, onImport }: Props)
     setStep(0); setFileName(""); setDatasetName("");
     setRawHeaders([]); setRawRows([]); setColConfig([]);
   };
+  useEtapasPendentes("importar-planilha", open && !!fileName, "Importação de planilha", () => { reset(); onOpenChange(false); });
 
   const parseFile = useCallback((file: File) => {
     const reader = new FileReader();

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect } from "react";
 import { dataPadraoProximoContato, origemDoCanalMassa } from "@/lib/atendimento/prazosProximoContato";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -69,6 +70,7 @@ export function EnvioMassaDialog({
   const [proximaData, setProximaData] = useState<Date>(dataPadraoProximoContato("massa_whatsapp"));
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  useEtapasPendentes("agenda-envio-dialog", open && (selectedTasks.size > 0 || !!mensagem), "Disparo da agenda", () => { setStep("select"); setSelectedTasks(new Set()); setMensagem(""); onOpenChange(false); });
 
   useEffect(() => {
     if (open && estabelecimentoId) {

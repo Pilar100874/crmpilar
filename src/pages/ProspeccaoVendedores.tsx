@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -658,6 +659,7 @@ function VendedorWizard({
   const [pais, setPais] = useState('Brasil');
   const [usarRaio, setUsarRaio] = useState(false);
   const [raio, setRaio] = useState(50);
+  useEtapasPendentes("prospeccao-vendedores", !!produto || !!segmento || step > 0, "Prospecção de vendedores", () => { setStep(0); setProduto(""); setSegmento(""); setRegiao(""); });
 
   React.useEffect(() => {
     let r = '';

@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,6 +114,7 @@ export default function MarketplaceProdutos() {
   // Seleção de produtos e marketplaces
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [selectedContas, setSelectedContas] = useState<Set<string>>(new Set());
+  useEtapasPendentes("marketplace-produtos", wizardStep < 3 && (selectedProducts.size > 0 || selectedContas.size > 0), "Publicação em marketplaces");
 
   // Filtros de campos customizados
   const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<CampoCustomizado[]>([]);

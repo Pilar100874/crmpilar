@@ -1,3 +1,4 @@
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,6 +85,7 @@ export default function WhatsAppCatalogo() {
   
   // Seleção de produtos
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  useEtapasPendentes("whatsapp-catalogo", wizardStep < 3 && selectedProducts.size > 0, "Catálogo do WhatsApp");
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');

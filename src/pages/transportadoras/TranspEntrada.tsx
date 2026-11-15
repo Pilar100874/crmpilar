@@ -1,4 +1,5 @@
 import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -72,6 +73,7 @@ export default function TranspEntrada() {
   });
 
   const entrega = form.tipo_operacao === "entrega" || form.tipo_operacao === "ambos";
+  useEtapasPendentes("transp-entrada", !!form.tipo_operacao || !!form.veiculo_id || photos.length > 0, "Entrada de transportadoras");
   const STEPS = useMemo(
     () => ["Operação", "Veículo", "Motorista", entrega ? "NF-e e setor" : "Detalhes", "Fotos"],
     [entrega],

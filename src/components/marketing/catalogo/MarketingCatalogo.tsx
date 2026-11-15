@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Save, BookOpen, Loader2 } from 'lucide-react';
 import { CatalogConfig, CatalogPage, WIZARD_STEPS, GroupFieldConfig } from './types';
@@ -47,6 +48,7 @@ const MarketingCatalogo: React.FC = () => {
     showPriceTable: true,
     groupFieldConfigs: [],
   });
+  useEtapasPendentes("marketing-catalogo", viewMode === "editor", "Montagem de catálogo", () => { setViewMode("list"); resetForm(); });
 
   const [coverPage, setCoverPage] = useState<CatalogPage>({
     id: 'cover',

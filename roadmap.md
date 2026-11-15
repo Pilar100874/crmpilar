@@ -1,4 +1,8 @@
 # Roadmap — Atendimento
+## Navegação em formulários por etapas
+- [ ] Avisar antes de trocar de módulo com preenchimento pendente, inclusive navegação por botões
+- [ ] Limpar rascunhos de entrada/saída de veículos ao sair e revisar demais assistentes
+- [ ] Testar permanência, descarte e reinício em celular e desktop
 ## Produtos e produção
 - [x] Alinhar edição de produtos aos contatos e conferir todas as abas em celular, tablet e desktop
 - [x] Revisar seleção, previsão, duplicação, colagem, importações e validações salvas das matérias-primas

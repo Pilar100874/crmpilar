@@ -60,7 +60,7 @@ export default function CVVehicleExit() {
   const [helperForm, setHelperForm] = useState({ name: "", phone: "", document: "" });
   const [helperBusy, setHelperBusy] = useState(false);
   const [photos, setPhotos] = useState<CapturedPhoto[]>(rascunho?.photos ?? []);
-  useRascunhoVistoria(RASCUNHO_CHAVE, { step, form, photos }, step > 0 && !!form.vehicle_id);
+  useRascunhoVistoria(RASCUNHO_CHAVE, { step, form, photos }, !!form.vehicle_id);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
@@ -235,6 +235,7 @@ export default function CVVehicleExit() {
     setPhotos([]);
 
     setStep(0);
+    setChecklistRecebido(false);
     load();
   };
 

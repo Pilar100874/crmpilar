@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { UNSAFE_NavigationContext, useLocation, useNavigate } from "react-router-dom";
+import { instalarProtecaoNavegacao } from "@/lib/navigationGuard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +17,8 @@ type GuardEntry = {
   isDirty: boolean;
   onSave?: () => Promise<boolean | void> | boolean | void;
   label?: string;
+  onDiscard?: () => void;
+  etapas?: boolean;
 };
 
 type Ctx = {
@@ -30,20 +33,32 @@ export const useUnsavedChanges = (
   isDirty: boolean,
   onSave?: () => Promise<boolean | void> | boolean | void,
   label?: string,
+  onDiscard?: () => void,
+  etapas = false,
 ) => {
   const ctx = useContext(UnsavedChangesContext);
   useEffect(() => {
     if (!ctx) return;
-    ctx.registerGuard(id, { isDirty, onSave, label });
+    ctx.registerGuard(id, { isDirty, onSave, label, onDiscard, etapas });
     return () => ctx.unregisterGuard(id);
-  }, [ctx, id, isDirty, onSave, label]);
+  }, [ctx, id, isDirty, onSave, label, onDiscard, etapas]);
 };
+
+export function useEtapasPendentes(id: string, pendente: boolean, label: string, onDiscard?: () => void) {
+  useUnsavedChanges(id, pendente, undefined, label, onDiscard, true);
+}
 
 export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode }) => {
   const guardsRef = useRef<Map<string, GuardEntry>>(new Map());
   const navigate = useNavigate();
   const location = useLocation();
-  const [pending, setPending] = useState<{ href: string; entry: GuardEntry } | null>(null);
+  const { navigator } = useContext(UNSAFE_NavigationContext);
+  const [pending, setPending] = useState<{ continuar: () => void; entry: GuardEntry } | null>(null);
+  const liberadoRef = useRef(false);
+  const locationRef = useRef(location);
+  locationRef.current = location;
+  const indiceRef = useRef<number>(window.history.state?.idx ?? 0);
+  const restaurandoRef = useRef(false);
 
   const registerGuard = useCallback((id: string, entry: GuardEntry) => {
     guardsRef.current.set(id, entry);
@@ -57,6 +72,43 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
     return null;
   };
 
+  useLayoutEffect(() => instalarProtecaoNavegacao(navigator, (continuar, destino) => {
+    if (liberadoRef.current) return false;
+    const atual = locationRef.current;
+    if (destino && typeof destino === "object") {
+      const d = destino as { pathname?: string; search?: string; hash?: string };
+      // Query updates inside the current module are not an exit.
+      if (d.pathname === atual.pathname) return false;
+    }
+    const entry = getDirtyEntry();
+    if (!entry) return false;
+    setPending({ continuar, entry });
+    return true;
+  }), [navigator]);
+
+  // Browser back/forward bypasses useNavigate: restore the current history entry
+  // before asking, then replay the requested movement only after confirmation.
+  useEffect(() => {
+    const handler = (event: PopStateEvent) => {
+      const indice = window.history.state?.idx;
+      if (typeof indice !== "number") return;
+      if (restaurandoRef.current) { event.stopImmediatePropagation(); restaurandoRef.current = false; return; }
+      const delta = indice - indiceRef.current;
+      const entry = getDirtyEntry();
+      if (delta && entry && !liberadoRef.current) {
+        event.stopImmediatePropagation();
+        restaurandoRef.current = true;
+        window.history.go(-delta);
+        setPending({ entry, continuar: () => window.history.go(delta) });
+      } else indiceRef.current = indice;
+    };
+    window.addEventListener("popstate", handler, true);
+    return () => window.removeEventListener("popstate", handler, true);
+  }, []);
+  useEffect(() => {
+    if (!restaurandoRef.current) indiceRef.current = window.history.state?.idx ?? indiceRef.current;
+  }, [location]);
+
   // Intercept anchor clicks (NavLink, Link)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -69,12 +121,12 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
       if (url.origin !== window.location.origin) return;
       const dest = url.pathname + url.search + url.hash;
       const current = location.pathname + location.search + location.hash;
-      if (dest === current) return;
+      if (dest === current || url.pathname === location.pathname) return;
       const entry = getDirtyEntry();
       if (!entry) return;
       e.preventDefault();
       e.stopPropagation();
-      setPending({ href: dest, entry });
+      setPending({ continuar: () => navigate(dest), entry });
     };
     document.addEventListener("click", handler, true);
     return () => document.removeEventListener("click", handler, true);
@@ -94,12 +146,15 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
 
   const handleSaveAndGo = async () => {
     if (!pending) return;
-    const { entry, href } = pending;
+    const { entry, continuar } = pending;
     try {
       const result = entry.onSave ? await entry.onSave() : true;
       if (result === false) return;
+      for (const guard of guardsRef.current.values()) guard.isDirty = false;
       setPending(null);
-      navigate(href);
+      liberadoRef.current = true;
+      continuar();
+      liberadoRef.current = false;
     } catch {
       // keep dialog open on error
     }
@@ -107,22 +162,31 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
 
   const handleDiscardAndGo = () => {
     if (!pending) return;
-    const href = pending.href;
+    const continuar = pending.continuar;
     // Mark all guards as clean to allow navigation without re-prompting
-    for (const entry of guardsRef.current.values()) entry.isDirty = false;
+    for (const entry of guardsRef.current.values()) {
+      if (entry.isDirty) entry.onDiscard?.();
+      entry.isDirty = false;
+    }
     setPending(null);
-    navigate(href);
+    liberadoRef.current = true;
+    continuar();
+    liberadoRef.current = false;
   };
 
+  const value = useMemo(() => ({ registerGuard, unregisterGuard }), [registerGuard, unregisterGuard]);
+
   return (
-    <UnsavedChangesContext.Provider value={{ registerGuard, unregisterGuard }}>
+    <UnsavedChangesContext.Provider value={value}>
       {children}
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
             <AlertDialogDescription>
-              {pending?.entry.label
+              {pending?.entry.etapas
+                ? `Ao sair de "${pending.entry.label}", os dados não salvos serão perdidos. Ao voltar, o preenchimento começará na primeira etapa. Deseja sair?`
+                : pending?.entry.label
                 ? `Você tem alterações não salvas em "${pending.entry.label}". Deseja salvar antes de sair?`
                 : "Você tem alterações não salvas. Deseja salvar antes de sair?"}
             </AlertDialogDescription>
@@ -132,9 +196,9 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
             <Button variant="destructive" onClick={handleDiscardAndGo}>
               Sair sem salvar
             </Button>
-            <AlertDialogAction onClick={handleSaveAndGo} disabled={!pending?.entry.onSave}>
+            {pending?.entry.onSave && <AlertDialogAction onClick={handleSaveAndGo}>
               Salvar e sair
-            </AlertDialogAction>
+            </AlertDialogAction>}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

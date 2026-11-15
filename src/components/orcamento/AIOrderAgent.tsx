@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -37,6 +38,7 @@ export default function AIOrderAgent({ estabelecimentoId, produtos, onItemsConfi
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"input" | "review">("input");
   const [matchedItems, setMatchedItems] = useState<MatchedItem[]>([]);
+  useEtapasPendentes("orcamento-assistente", open && !!text, "Montagem de pedido", () => { setText(""); setStep("input"); setMatchedItems([]); setOpen(false); });
 
   const searchProducts = (parsed: ParsedItem): { best: Produto | null; candidates: Produto[] } => {
     const allKeywords = [parsed.nome, ...parsed.keywords].map(k => k.toLowerCase());

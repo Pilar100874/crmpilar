@@ -94,7 +94,7 @@ export default function CVVehicleEntry() {
   };
   useEffect(() => { load(); }, []);
 
-  useRascunhoVistoria(RASCUNHO_CHAVE, { step, selected, form, photos }, !!selected && step > 0);
+  useRascunhoVistoria(RASCUNHO_CHAVE, { step, selected, form, photos }, !!selected);
 
   const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.unidade_id);
 
@@ -259,6 +259,7 @@ export default function CVVehicleEntry() {
     setSelected(null);
     setStep(0);
     setPhotos([]);
+    setForm({ entry_km: "", reported_defects: "", defect_type_id: "", damage_notes: "", inspected_all_sides: false });
     load();
   };
 

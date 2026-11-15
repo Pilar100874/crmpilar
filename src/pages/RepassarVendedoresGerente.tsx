@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { carregarGerentesEAdministradores, UsuarioGerente } from "@/lib/cadastros/gerentes";
@@ -34,6 +35,7 @@ export default function RepassarVendedoresGerente() {
   const [loadingEmp, setLoadingEmp] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [confirmar, setConfirmar] = useState(false);
+  useEtapasPendentes("repasse-gerentes", !!destino || etapa > 1, "Repasse de vendedores");
 
   useEffect(() => {
     (async () => {
@@ -136,6 +138,7 @@ export default function RepassarVendedoresGerente() {
       toast.success(`Repasse concluído para ${nomeGerente(destino)}`);
       setConfirmar(false);
       setEtapa(1);
+      setDestino("");
       setEmpresas([]);
       setEmpresasSel(new Set());
       await carregarVendedores(origem);

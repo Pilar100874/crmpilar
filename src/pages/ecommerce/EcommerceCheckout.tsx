@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useEtapasPendentes } from "@/contexts/UnsavedChangesContext";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft, Tag, Percent } from "lucide-react";
 import { useEcommerceRulesEngine } from "@/hooks/useEcommerceRulesEngine";
@@ -52,6 +53,8 @@ export default function EcommerceCheckout() {
   });
 
   const estId = localStorage.getItem("estabelecimentoId");
+  const [concluido, setConcluido] = useState(false);
+  useEtapasPendentes("checkout", !concluido && Object.values(formData).some(v => !!v), "Finalização da compra");
   const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -338,7 +341,8 @@ export default function EcommerceCheckout() {
 
       toast.success(`Pedido ${pedido.numero_pedido} realizado com sucesso! 🎉`);
       clearCart();
-      navigate(`/ecommerce/conta?tab=pedidos`);
+      setConcluido(true);
+      setTimeout(() => navigate(`/ecommerce/conta?tab=pedidos`), 0);
     } catch (err: any) {
       console.error("Erro ao criar pedido:", err);
       toast.error("Erro ao finalizar pedido. Tente novamente.");
