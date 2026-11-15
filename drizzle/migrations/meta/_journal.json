@@ -246,6 +246,13 @@
       "when": 1794686489487,
       "tag": "0034_metas_e_setup_reposicao_producao",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794704014104,
+      "tag": "0035_restringir_politicas_internas",
+      "breakpoints": true
     }
   ]
 }
