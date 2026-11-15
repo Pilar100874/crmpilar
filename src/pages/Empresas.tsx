@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye, NotebookPen } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye, NotebookPen, Landmark } from "lucide-react";
 import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
@@ -1207,6 +1207,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
       if (formData.contact_phone && !validateWhatsApp(formData.contact_phone)) {
         errors.contact_phone = "WhatsApp inválido";
+      }
+    }
+
+    // Dados fiscais obrigatórios para faturamento
+    if (variant === "empresa") {
+      const faltas: string[] = [];
+      const vazio = (v: unknown) => !String(v ?? "").trim();
+      if (vazio(formData.regime_tributario)) faltas.push("regime tributário");
+      if (vazio(formData.contribuinte_icms)) faltas.push("contribuinte de ICMS");
+      if (vazio(formData.inscricao_estadual) && formData.contribuinte_icms !== "9") faltas.push("inscrição estadual (ou ISENTO)");
+      if (vazio(formData.cpf_cnpj)) faltas.push("CPF/CNPJ");
+      if (isBrasil) for (const [c, n] of [["cep", "CEP"], ["address", "endereço"], ["numero", "número"], ["city", "cidade"], ["state", "UF"]] as const) if (vazio(formData[c])) { faltas.push(n); errors[c] = "Campo obrigatório"; }
+      if (faltas.length) {
+        setFieldErrors(errors);
+        toast.error(`Dados fiscais obrigatórios: ${faltas.join(", ")}`);
+        if (["regime tributário", "contribuinte de ICMS", "inscrição estadual (ou ISENTO)"].some(f => faltas.includes(f))) handleTabChange("fiscal");
+        return;
       }
     }
 
@@ -2614,6 +2631,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   <span className="hidden sm:inline">Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}</span>
                   <span className="sm:hidden">Dados</span>
                 </TabsTrigger>
+                {variant === "empresa" && (
+                  <TabsTrigger
+                    value="fiscal"
+                    className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                  >
+                    <Landmark className="w-4 h-4" />
+                    Inf. fiscal
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
                   value="localizacao"
                   className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
@@ -2673,27 +2699,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </label>
                 );
               })}
-              <label className="flex items-center gap-2 text-sm sm:ml-auto">
-                <span className="text-xs font-medium text-muted-foreground">Regime tributário:</span>
-                <Select value={formData.regime_tributario || "nao_informado"} onValueChange={(v) => setFormData({ ...formData, regime_tributario: v === "nao_informado" ? "" : v })}>
-                  <SelectTrigger className="h-8 w-[190px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nao_informado">Não informado</SelectItem>
-                    {REGIMES_TRIBUTARIOS.map((r) => <SelectItem key={r.valor} value={r.valor}>{r.rotulo}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </label>
-            </div>
-            <div className="mb-6 grid gap-3 rounded-md border p-3 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição estadual</Label><Input className="h-8" value={formData.inscricao_estadual || ""} onChange={(e) => setFormData({ ...formData, inscricao_estadual: e.target.value })} placeholder="Ou ISENTO" /></div>
-              <div className="min-w-0 space-y-1"><Label className="text-xs">Contribuinte de ICMS</Label>
-                <Select value={formData.contribuinte_icms || "auto"} onValueChange={(v) => setFormData({ ...formData, contribuinte_icms: v === "auto" ? "" : v })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="auto">Pela inscrição estadual</SelectItem>{CONTRIBUINTE_ICMS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
-                </Select></div>
-              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição SUFRAMA</Label><Input className="h-8" value={formData.inscricao_suframa || ""} onChange={(e) => setFormData({ ...formData, inscricao_suframa: e.target.value })} placeholder="Zona Franca, se houver" /></div>
-              <div className="min-w-0 space-y-1"><Label className="text-xs">CNAE principal</Label><Input className="h-8" value={formData.cnae_fiscal || ""} onChange={(e) => setFormData({ ...formData, cnae_fiscal: e.target.value })} /></div>
-              <label className="flex items-center gap-2 text-sm lg:mt-5"><Checkbox checked={!!formData.consumidor_final} onCheckedChange={(v) => setFormData({ ...formData, consumidor_final: v === true })} />Consumidor final</label>
             </div>
             <div className="space-y-8">
               <section>
@@ -2858,6 +2863,33 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </TabsContent>
 
 
+
+          <TabsContent value="fiscal" className="space-y-4 p-4 sm:p-8 mt-0">
+            <p className="text-xs text-muted-foreground">Campos com * são obrigatórios para faturar. CPF/CNPJ, CEP, endereço, número, cidade e UF também são exigidos.</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 text-sm ">
+                <span className="text-xs font-medium text-muted-foreground">Regime tributário *</span>
+                <Select value={formData.regime_tributario || "nao_informado"} onValueChange={(v) => setFormData({ ...formData, regime_tributario: v === "nao_informado" ? "" : v })}>
+                  <SelectTrigger className="h-8 w-[190px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao_informado" disabled>Não informado</SelectItem>
+                    {REGIMES_TRIBUTARIOS.map((r) => <SelectItem key={r.valor} value={r.valor}>{r.rotulo}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </label>
+            </div>
+            <div className="grid gap-3 rounded-md border p-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição estadual *</Label><Input className="h-8" value={formData.inscricao_estadual || ""} onChange={(e) => setFormData({ ...formData, inscricao_estadual: e.target.value })} placeholder="Ou ISENTO" /></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Contribuinte de ICMS *</Label>
+                <Select value={formData.contribuinte_icms || "auto"} onValueChange={(v) => setFormData({ ...formData, contribuinte_icms: v === "auto" ? "" : v })}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="auto" disabled>Selecione</SelectItem>{CONTRIBUINTE_ICMS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">Inscrição SUFRAMA</Label><Input className="h-8" value={formData.inscricao_suframa || ""} onChange={(e) => setFormData({ ...formData, inscricao_suframa: e.target.value })} placeholder="Zona Franca, se houver" /></div>
+              <div className="min-w-0 space-y-1"><Label className="text-xs">CNAE principal</Label><Input className="h-8" value={formData.cnae_fiscal || ""} onChange={(e) => setFormData({ ...formData, cnae_fiscal: e.target.value })} /></div>
+              <label className="flex items-center gap-2 text-sm lg:mt-5"><Checkbox checked={!!formData.consumidor_final} onCheckedChange={(v) => setFormData({ ...formData, consumidor_final: v === true })} />Consumidor final</label>
+            </div>
+          </TabsContent>
 
           <TabsContent value="localizacao" className="p-6">
             <EmpresaLocalizacaoTab

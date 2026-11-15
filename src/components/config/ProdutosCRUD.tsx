@@ -38,7 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste, Building2 } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste, Building2, Landmark } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -742,9 +742,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
 
     if (!formData.ncm_id) {
-      toast.error("NCM é obrigatório");
+      toast.error("NCM é obrigatório (aba Inf. fiscal)"); setActiveTab('fiscal');
       return;
     }
+    if (!formData.origem) { toast.error("Origem da mercadoria é obrigatória (aba Inf. fiscal)"); setActiveTab('fiscal'); return; }
+    if (!formData.tipo_item_fiscal) { toast.error("Tipo do item fiscal é obrigatório (aba Inf. fiscal)"); setActiveTab('fiscal'); return; }
+    if (formData.cest && formData.cest.replace(/\D/g, "").length !== 7) { toast.error("CEST deve ter 7 dígitos (aba Inf. fiscal)"); setActiveTab('fiscal'); return; }
 
     if (!formData.marca?.trim()) {
       toast.error("Marca é obrigatória (aba Marketplace)");
@@ -1236,6 +1239,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TabsList className="produto-editor-abas grid w-full grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 h-auto gap-1 rounded-lg border border-border/40 bg-muted/30 p-1">
                 {[
                   { value: 'basico', nome: 'Dados básicos', icone: Package },
+                  { value: 'fiscal', nome: 'Inf. fiscal', icone: Landmark },
                   { value: 'foto', nome: 'Fotos', icone: Camera },
                   { value: 'preco', nome: 'Preço', icone: DollarSign },
                   { value: 'frete', nome: 'Frete', icone: Truck },
@@ -1352,6 +1356,46 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </div>
 
                   {/* NCM */}
+
+                  {/* Campos Customizados do Grupo */}
+                  {camposCustomizados.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Campos do Grupo</h4>
+                      <DynamicProductFields
+                        campos={camposCustomizados}
+                        values={formData.campos_customizados}
+                        onChange={(key, value) => setFormData({
+                          ...formData,
+                          campos_customizados: {
+                            ...formData.campos_customizados,
+                            [key]: value,
+                          },
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {camposCustomizados.length === 0 && formData.grupo_id && (
+                    <div className="text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
+                      Nenhum campo customizado configurado para este grupo. 
+                      Configure os campos em "Campos Customizados por Grupo".
+                    </div>
+                  )}
+
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Estoque mínimo</h4>
+                  <EstoqueMinimoCampos
+                    produtoId={editingProduto?.id}
+                    minimo={formData.estoque_minimo}
+                    prazo={formData.prazo_reposicao_dias}
+                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
+                  />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="fiscal" className="mt-4 sm:mt-6">
+                <div className="space-y-4">
                   <div className="space-y-3 sm:space-y-4">
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Classificação Fiscal</h4>
                     <div className="space-y-1.5 sm:space-y-2">
@@ -1413,41 +1457,53 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       </Popover>
                     </div>
                   </div>
-
-                  {/* Campos Customizados do Grupo */}
-                  {camposCustomizados.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Campos do Grupo</h4>
-                      <DynamicProductFields
-                        campos={camposCustomizados}
-                        values={formData.campos_customizados}
-                        onChange={(key, value) => setFormData({
-                          ...formData,
-                          campos_customizados: {
-                            ...formData.campos_customizados,
-                            [key]: value,
-                          },
-                        })}
-                      />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Origem da mercadoria *</Label>
+                      <Select
+                        value={formData.origem || "nacional"}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, origem: value }))}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Selecione a origem" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectItem value="nacional">0 - Nacional</SelectItem>
+                          <SelectItem value="1">1 - Estrangeira, importação direta</SelectItem>
+                          <SelectItem value="importado">2 - Estrangeira, adquirida no mercado interno</SelectItem>
+                          <SelectItem value="3">3 - Nacional, conteúdo importado acima de 40% até 70%</SelectItem>
+                          <SelectItem value="4">4 - Nacional, processo produtivo básico</SelectItem>
+                          <SelectItem value="5">5 - Nacional, conteúdo importado até 40%</SelectItem>
+                          <SelectItem value="6">6 - Estrangeira direta, sem similar (CAMEX)</SelectItem>
+                          <SelectItem value="7">7 - Estrangeira interna, sem similar (CAMEX)</SelectItem>
+                          <SelectItem value="8">8 - Nacional, conteúdo importado acima de 70%</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-
-                  {camposCustomizados.length === 0 && formData.grupo_id && (
-                    <div className="text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
-                      Nenhum campo customizado configurado para este grupo. 
-                      Configure os campos em "Campos Customizados por Grupo".
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Tipo do item (fiscal) *</Label>
+                      <Select value={formData.tipo_item_fiscal || "auto"} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_item_fiscal: v === "auto" ? "" : v }))}>
+                        <SelectTrigger className="h-9 sm:h-10 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectItem value="auto" disabled>Selecione</SelectItem>
+                          {TIPOS_ITEM_FISCAL.map((t) => <SelectItem key={t.valor} value={t.valor}>{t.rotulo}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-
-                  <div className="space-y-3 sm:space-y-4">
-                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Estoque mínimo</h4>
-                  <EstoqueMinimoCampos
-                    produtoId={editingProduto?.id}
-                    minimo={formData.estoque_minimo}
-                    prazo={formData.prazo_reposicao_dias}
-                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
-                  />
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">CEST (obrigatório se houver ST)</Label>
+                      <Input value={formData.cest} onChange={(e) => setFormData({ ...formData, cest: e.target.value })} placeholder="7 dígitos (produtos com ST)" className="h-9 sm:h-10 text-sm" />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Ex-TIPI</Label>
+                      <Input value={formData.ex_tipi} onChange={(e) => setFormData({ ...formData, ex_tipi: e.target.value })} placeholder="Opcional" className="h-9 sm:h-10 text-sm" />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Código de benefício fiscal</Label>
+                      <Input value={formData.codigo_beneficio_fiscal} onChange={(e) => setFormData({ ...formData, codigo_beneficio_fiscal: e.target.value })} placeholder="cBenef, quando houver" className="h-9 sm:h-10 text-sm" />
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">Campos com * são obrigatórios para faturar. A unidade (Dados básicos) também é obrigatória.</p>
                 </div>
               </TabsContent>
 
@@ -1784,50 +1840,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                           <SelectItem value="recondicionado">Recondicionado</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">Origem</Label>
-                      <Select
-                        value={formData.origem || "nacional"}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, origem: value }))}
-                      >
-                        <SelectTrigger className="h-9 sm:h-10 text-sm">
-                          <SelectValue placeholder="Selecione a origem" />
-                        </SelectTrigger>
-                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                          <SelectItem value="nacional">0 - Nacional</SelectItem>
-                          <SelectItem value="1">1 - Estrangeira, importação direta</SelectItem>
-                          <SelectItem value="importado">2 - Estrangeira, adquirida no mercado interno</SelectItem>
-                          <SelectItem value="3">3 - Nacional, conteúdo importado acima de 40% até 70%</SelectItem>
-                          <SelectItem value="4">4 - Nacional, processo produtivo básico</SelectItem>
-                          <SelectItem value="5">5 - Nacional, conteúdo importado até 40%</SelectItem>
-                          <SelectItem value="6">6 - Estrangeira direta, sem similar (CAMEX)</SelectItem>
-                          <SelectItem value="7">7 - Estrangeira interna, sem similar (CAMEX)</SelectItem>
-                          <SelectItem value="8">8 - Nacional, conteúdo importado acima de 70%</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">Tipo do item (fiscal)</Label>
-                      <Select value={formData.tipo_item_fiscal || "auto"} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_item_fiscal: v === "auto" ? "" : v }))}>
-                        <SelectTrigger className="h-9 sm:h-10 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                          <SelectItem value="auto">Não informado (revenda)</SelectItem>
-                          {TIPOS_ITEM_FISCAL.map((t) => <SelectItem key={t.valor} value={t.valor}>{t.rotulo}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">CEST</Label>
-                      <Input value={formData.cest} onChange={(e) => setFormData({ ...formData, cest: e.target.value })} placeholder="7 dígitos (produtos com ST)" className="h-9 sm:h-10 text-sm" />
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">Ex-TIPI</Label>
-                      <Input value={formData.ex_tipi} onChange={(e) => setFormData({ ...formData, ex_tipi: e.target.value })} placeholder="Opcional" className="h-9 sm:h-10 text-sm" />
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label className="text-xs sm:text-sm font-medium">Código de benefício fiscal</Label>
-                      <Input value={formData.codigo_beneficio_fiscal} onChange={(e) => setFormData({ ...formData, codigo_beneficio_fiscal: e.target.value })} placeholder="cBenef, quando houver" className="h-9 sm:h-10 text-sm" />
                     </div>
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-xs sm:text-sm font-medium">Garantia</Label>
