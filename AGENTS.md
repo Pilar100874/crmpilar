@@ -51,3 +51,4 @@
 - Store additional production staffing as optional quantity/service groups in the existing product recipe and preserve them in its shared reader; this keeps helpers separate from machine-operator qualifications without changing production timing.
 - Product editor layout uses a scoped width container for its grids and wrapping selectors, so embedded desktop panels and mobile tabs remain legible without horizontal clipping.
 <!-- LOVABLE:END -->
+- Stock balance changes only through estoque_movimentos inserts (a trigger updates produtos.estoque and records before/after balances); purchase need, NF-e XML parsing and fiscal rule selection/tax calc are pure modules in src/lib/compras and src/lib/fiscal so screens and tests agree. SEFAZ transmission and DF-e download need a contracted NF-e gateway and are not implemented.

@@ -274,6 +274,20 @@
       "when": 1794713231273,
       "tag": "0038_unidades_fiscal_certificado",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794713611702,
+      "tag": "0039_compras_estoque_fiscal_faturamento",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794713998091,
+      "tag": "0040_estoque_movimento_mesma_empresa",
+      "breakpoints": true
     }
   ]
 }

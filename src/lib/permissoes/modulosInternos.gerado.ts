@@ -250,6 +250,68 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Ajuste de Imagem em Lote"
     }
   ],
+  "Necessidade de Compra": [
+    {
+      "id": "necessidade",
+      "label": "Necessidade de compra"
+    },
+    {
+      "id": "cotacoes",
+      "label": "Cotações"
+    }
+  ],
+  "Cotações de Compra": [
+    {
+      "id": "necessidade",
+      "label": "Necessidade de compra"
+    },
+    {
+      "id": "cotacoes",
+      "label": "Cotações"
+    }
+  ],
+  "Saldos de Estoque": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
+  "Movimentações de Estoque": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
+  "Entrada de NF-e": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
   "Conteúdos": [
     {
       "id": "contatos",

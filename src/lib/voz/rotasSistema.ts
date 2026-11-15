@@ -234,6 +234,13 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/softphone", titulo: "Softphone", aliases: ["telefone", "ramal"] },
   { path: "/politicas-internas", titulo: "Políticas Internas" },
   { path: "/controle-epi", titulo: "Controle de EPI", aliases: ["epi", "entrega de epi", "ficha de epi"] },
+  { path: "/compras/necessidade", titulo: "Necessidade de Compra", aliases: ["compras", "o que comprar"] },
+  { path: "/compras/cotacoes", titulo: "Cotações de Compra", aliases: ["cotações", "cotação de fornecedor"] },
+  { path: "/estoque/saldos", titulo: "Estoque", aliases: ["saldo de estoque", "ajuste de estoque"] },
+  { path: "/estoque/movimentacoes", titulo: "Movimentações de Estoque", aliases: ["kardex"] },
+  { path: "/estoque/entrada", titulo: "Entrada de NF-e", aliases: ["importar xml", "nota de entrada"] },
+  { path: "/faturamento", titulo: "Faturamento", aliases: ["faturar pedido", "nota de saída"] },
+  { path: "/fiscal/regras", titulo: "Regras Fiscais", aliases: ["cfop", "tributação", "impostos"] },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
 

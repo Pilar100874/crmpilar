@@ -47,3 +47,9 @@
 - [ ] Plantão fora do horário no WhatsApp — aguarda definir horário e texto da resposta
 - [ ] Tela de Orçamentos: recurso para repetir último pedido (removido do menu do cartão)
 - [x] Pedidos em aberto diários nos Agendados + motivo obrigatório na perda
+
+## Compras, Estoque, Fiscal e Faturamento
+- [x] Necessidade de compra (mínimo, vendas, produção, data ideal) e cotações por fornecedor
+- [x] Estoque: saldos, ajustes, movimentações e entrada de NF-e por XML/manual com de-para
+- [x] Regras fiscais (CFOP, CST/CSOSN, alíquotas) e faturamento de pedidos finalizados com baixa de estoque
+- [ ] Transmitir NF-e à SEFAZ e baixar notas da Receita — depende de contratar um serviço de emissão de NF-e

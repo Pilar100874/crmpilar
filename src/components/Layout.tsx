@@ -191,6 +191,34 @@ export const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: "Compras",
+    title: "Compras",
+    icon: LucideIcons.ShoppingCart,
+    subItems: [
+      { id: "Necessidade de Compra", title: "Necessidade de Compra", url: "/compras/necessidade", icon: LucideIcons.ClipboardList },
+      { id: "Cotações de Compra", title: "Cotações", url: "/compras/cotacoes", icon: LucideIcons.Send },
+    ],
+  },
+  {
+    id: "Estoque",
+    title: "Estoque",
+    icon: LucideIcons.Boxes,
+    subItems: [
+      { id: "Saldos de Estoque", title: "Saldos", url: "/estoque/saldos", icon: LucideIcons.Boxes },
+      { id: "Movimentações de Estoque", title: "Movimentações", url: "/estoque/movimentacoes", icon: LucideIcons.ArrowLeftRight },
+      { id: "Entrada de NF-e", title: "Entrada de NF-e", url: "/estoque/entrada", icon: LucideIcons.FileInput },
+    ],
+  },
+  {
+    id: "Fiscal",
+    title: "Fiscal",
+    icon: LucideIcons.Landmark,
+    subItems: [
+      { id: "Faturamento", title: "Faturamento", url: "/faturamento", icon: LucideIcons.Receipt },
+      { id: "Regras Fiscais", title: "Regras Fiscais", url: "/fiscal/regras", icon: LucideIcons.Scale },
+    ],
+  },
+  {
     id: "Assistente",
     title: "Assistente",
     icon: LucideIcons.ScanEye,

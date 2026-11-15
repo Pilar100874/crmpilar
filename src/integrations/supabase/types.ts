@@ -5815,6 +5815,104 @@ export type Database = {
           },
         ]
       }
+      compras_cotacao_itens: {
+        Row: {
+          cotacao_id: string
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          motivo: string | null
+          preco_unitario: number | null
+          produto_id: string
+          quantidade: number
+          sku_fornecedor: string | null
+          unidade: string | null
+        }
+        Insert: {
+          cotacao_id: string
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          motivo?: string | null
+          preco_unitario?: number | null
+          produto_id: string
+          quantidade: number
+          sku_fornecedor?: string | null
+          unidade?: string | null
+        }
+        Update: {
+          cotacao_id?: string
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string | null
+          preco_unitario?: number | null
+          produto_id?: string
+          quantidade?: number
+          sku_fornecedor?: string | null
+          unidade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_cotacao_itens_cotacao_id_fkey"
+            columns: ["cotacao_id"]
+            isOneToOne: false
+            referencedRelation: "compras_cotacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_cotacao_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras_cotacoes: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          fornecedor_id: string
+          id: string
+          observacoes: string | null
+          prazo_resposta: string | null
+          status: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          fornecedor_id: string
+          id?: string
+          observacoes?: string | null
+          prazo_resposta?: string | null
+          status?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          fornecedor_id?: string
+          id?: string
+          observacoes?: string | null
+          prazo_resposta?: string | null
+          status?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_cotacoes_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       condicoes_pagamento: {
         Row: {
           ativo: boolean | null
@@ -9822,6 +9920,68 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      estoque_movimentos: {
+        Row: {
+          created_at: string
+          custo_unitario: number | null
+          documento: string | null
+          estabelecimento_id: string
+          id: string
+          nota_fiscal_id: string | null
+          observacao: string | null
+          origem: string
+          produto_id: string
+          quantidade: number
+          saldo_anterior: number | null
+          saldo_posterior: number | null
+          tipo: string
+          unidade_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custo_unitario?: number | null
+          documento?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota_fiscal_id?: string | null
+          observacao?: string | null
+          origem?: string
+          produto_id: string
+          quantidade: number
+          saldo_anterior?: number | null
+          saldo_posterior?: number | null
+          tipo: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custo_unitario?: number | null
+          documento?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota_fiscal_id?: string | null
+          observacao?: string | null
+          origem?: string
+          produto_id?: string
+          quantidade?: number
+          saldo_anterior?: number | null
+          saldo_posterior?: number | null
+          tipo?: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_movimentos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       etiqueta_config: {
         Row: {
@@ -14719,6 +14879,206 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      notas_fiscais: {
+        Row: {
+          chave: string | null
+          created_at: string
+          data_emissao: string | null
+          empresa_id: string | null
+          estabelecimento_id: string
+          id: string
+          natureza_operacao: string | null
+          numero: string | null
+          observacoes: string | null
+          orcamento_id: string | null
+          origem: string
+          participante_cnpj: string | null
+          participante_nome: string | null
+          participante_uf: string | null
+          serie: string | null
+          status: string
+          tipo: string
+          unidade_id: string | null
+          updated_at: string
+          usuario_id: string | null
+          valor_cofins: number
+          valor_desconto: number
+          valor_frete: number
+          valor_icms: number
+          valor_icms_st: number
+          valor_ipi: number
+          valor_pis: number
+          valor_produtos: number
+          valor_total: number
+          xml: string | null
+        }
+        Insert: {
+          chave?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          empresa_id?: string | null
+          estabelecimento_id: string
+          id?: string
+          natureza_operacao?: string | null
+          numero?: string | null
+          observacoes?: string | null
+          orcamento_id?: string | null
+          origem?: string
+          participante_cnpj?: string | null
+          participante_nome?: string | null
+          participante_uf?: string | null
+          serie?: string | null
+          status?: string
+          tipo: string
+          unidade_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          valor_cofins?: number
+          valor_desconto?: number
+          valor_frete?: number
+          valor_icms?: number
+          valor_icms_st?: number
+          valor_ipi?: number
+          valor_pis?: number
+          valor_produtos?: number
+          valor_total?: number
+          xml?: string | null
+        }
+        Update: {
+          chave?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          empresa_id?: string | null
+          estabelecimento_id?: string
+          id?: string
+          natureza_operacao?: string | null
+          numero?: string | null
+          observacoes?: string | null
+          orcamento_id?: string | null
+          origem?: string
+          participante_cnpj?: string | null
+          participante_nome?: string | null
+          participante_uf?: string | null
+          serie?: string | null
+          status?: string
+          tipo?: string
+          unidade_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          valor_cofins?: number
+          valor_desconto?: number
+          valor_frete?: number
+          valor_icms?: number
+          valor_icms_st?: number
+          valor_ipi?: number
+          valor_pis?: number
+          valor_produtos?: number
+          valor_total?: number
+          xml?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_fiscais_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_fiscais_itens: {
+        Row: {
+          aliq_cofins: number
+          aliq_icms: number
+          aliq_ipi: number
+          aliq_pis: number
+          cfop: string | null
+          codigo_origem: string | null
+          created_at: string
+          cst: string | null
+          descricao: string
+          estabelecimento_id: string
+          fator_conversao: number
+          id: string
+          ncm: string | null
+          nota_id: string
+          produto_id: string | null
+          quantidade: number
+          unidade: string | null
+          valor_cofins: number
+          valor_icms: number
+          valor_ipi: number
+          valor_pis: number
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          aliq_cofins?: number
+          aliq_icms?: number
+          aliq_ipi?: number
+          aliq_pis?: number
+          cfop?: string | null
+          codigo_origem?: string | null
+          created_at?: string
+          cst?: string | null
+          descricao: string
+          estabelecimento_id: string
+          fator_conversao?: number
+          id?: string
+          ncm?: string | null
+          nota_id: string
+          produto_id?: string | null
+          quantidade?: number
+          unidade?: string | null
+          valor_cofins?: number
+          valor_icms?: number
+          valor_ipi?: number
+          valor_pis?: number
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Update: {
+          aliq_cofins?: number
+          aliq_icms?: number
+          aliq_ipi?: number
+          aliq_pis?: number
+          cfop?: string | null
+          codigo_origem?: string | null
+          created_at?: string
+          cst?: string | null
+          descricao?: string
+          estabelecimento_id?: string
+          fator_conversao?: number
+          id?: string
+          ncm?: string | null
+          nota_id?: string
+          produto_id?: string | null
+          quantidade?: number
+          unidade?: string | null
+          valor_cofins?: number
+          valor_icms?: number
+          valor_ipi?: number
+          valor_pis?: number
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_fiscais_itens_nota_id_fkey"
+            columns: ["nota_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notificacoes_config: {
         Row: {
@@ -25380,6 +25740,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      regras_fiscais: {
+        Row: {
+          aliq_cofins: number
+          aliq_icms: number
+          aliq_ipi: number
+          aliq_pis: number
+          ativo: boolean
+          cfop: string
+          created_at: string
+          cst: string | null
+          destino: string
+          estabelecimento_id: string
+          id: string
+          ncm_prefixo: string | null
+          nome: string
+          operacao: string
+          regime: string | null
+          updated_at: string
+        }
+        Insert: {
+          aliq_cofins?: number
+          aliq_icms?: number
+          aliq_ipi?: number
+          aliq_pis?: number
+          ativo?: boolean
+          cfop: string
+          created_at?: string
+          cst?: string | null
+          destino?: string
+          estabelecimento_id: string
+          id?: string
+          ncm_prefixo?: string | null
+          nome: string
+          operacao?: string
+          regime?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aliq_cofins?: number
+          aliq_icms?: number
+          aliq_ipi?: number
+          aliq_pis?: number
+          ativo?: boolean
+          cfop?: string
+          created_at?: string
+          cst?: string | null
+          destino?: string
+          estabelecimento_id?: string
+          id?: string
+          ncm_prefixo?: string | null
+          nome?: string
+          operacao?: string
+          regime?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       relatorio_jobs: {
         Row: {
