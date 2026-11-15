@@ -1,1 +1,2 @@
 - Stock balance changes only through estoque_movimentos inserts (trigger updates produtos.estoque); purchase need lives here and NF-e parsing/fiscal rules in src/lib/fiscal as pure modules. SEFAZ transmission/DF-e need a contracted NF-e gateway.
+- NF-e entry items can be split into several stock products (pure entradaNfe.ts: quantity per product + cost %) and are saved as one nota item row per product, so stock movements and supplier links stay per product.

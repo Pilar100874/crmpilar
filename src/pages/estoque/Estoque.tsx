@@ -10,9 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Boxes, Upload, Plus, ArrowDownCircle, ArrowUpCircle, Trash2, CheckCircle2, FileDown } from "lucide-react";
+import { Boxes, Upload, Plus, Split, PackagePlus, X, ArrowDownCircle, ArrowUpCircle, Trash2, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { AuditoriaEntradaNfe } from "@/components/estoque/AuditoriaEntradaNfe";
+import { errosDesmembramento, expandirPartes, percentuaisIguais, type ParteEntrada } from "@/lib/compras/entradaNfe";
 import { lerNfeXml } from "@/lib/fiscal/nfeXml";
 import { baixarCsv, brl, dataBr, nomeEmpresa, qtd, useContextoInterno } from "@/lib/estoque/contexto";
 
@@ -115,13 +116,14 @@ function Movimentacoes({ produtos, ctx }: any) {
   );
 }
 
-type ItemEdit = { codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string; quantidade: number; valorUnitario: number; valorTotal: number; produto_id: string; fator: number; aliqIcms?: number; valorIcms?: number; aliqIpi?: number; valorIpi?: number; aliqPis?: number; valorPis?: number; aliqCofins?: number; valorCofins?: number; valorIcmsSt?: number };
+type ItemEdit = { codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string; quantidade: number; valorUnitario: number; valorTotal: number; produto_id: string; fator: number; aliqIcms?: number; valorIcms?: number; aliqIpi?: number; valorIpi?: number; aliqPis?: number; valorPis?: number; aliqCofins?: number; valorCofins?: number; valorIcmsSt?: number; partes?: ParteEntrada[] };
 
 function EntradaNfe({ produtos, ctx, onMudou }: any) {
   const [notas, setNotas] = useState<any[]>([]);
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
   const [excluir, setExcluir] = useState<any | null>(null);
+  const [novoProd, setNovoProd] = useState<any | null>(null);
   const arq = useRef<HTMLInputElement>(null);
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
@@ -161,7 +163,9 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
   const salvar = async (lancar: boolean) => {
     if (!edit.empresa_id) return toast.error("Escolha o fornecedor");
     if (!edit.itens.length) return toast.error("Inclua ao menos um item");
-    if (lancar && edit.itens.some((i: ItemEdit) => !i.produto_id)) return toast.error("Vincule todos os itens a um produto antes de dar entrada");
+    for (const [k, i] of (edit.itens as ItemEdit[]).entries()) { if (i.partes?.length) { const er = errosDesmembramento(i.partes); if (er.length) return toast.error(`Item ${k + 1}: ${er[0]}`); } }
+    const linhas: ItemEdit[] = (edit.itens as ItemEdit[]).flatMap((i) => (i.partes?.length ? expandirPartes(i, i.partes).map((x) => ({ ...x, partes: undefined })) : [i]));
+    if (lancar && linhas.some((i) => !i.produto_id)) return toast.error("Vincule todos os itens a um produto antes de dar entrada");
     const t = edit.totais ?? {};
     const vp = total(edit);
     const cab = { estabelecimento_id: ctx.estabelecimentoId, tipo: "entrada", status: lancar ? "lancada" : "rascunho", origem: edit.origem, empresa_id: edit.empresa_id,
@@ -171,16 +175,16 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
     let notaId = edit.id;
     if (notaId) { const r = await sb.from("notas_fiscais").update({ ...cab, updated_at: new Date().toISOString() }).eq("id", notaId); if (r.error) return toast.error(r.error.message); await sb.from("notas_fiscais_itens").delete().eq("nota_id", notaId); }
     else { const r = await sb.from("notas_fiscais").insert(cab).select("id").single(); if (r.error) return toast.error(r.error.message.includes("chave_unica") ? "Esta NF-e já foi importada" : r.error.message); notaId = r.data.id; }
-    const itens = edit.itens.map((i: ItemEdit) => ({ nota_id: notaId, estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id || null, codigo_origem: i.codigo, descricao: i.descricao, ncm: i.ncm, cfop: i.cfop, cst: i.cst, unidade: i.unidade,
+    const itens = linhas.map((i: ItemEdit) => ({ nota_id: notaId, estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id || null, codigo_origem: i.codigo, descricao: i.descricao, ncm: i.ncm, cfop: i.cfop, cst: i.cst, unidade: i.unidade,
       quantidade: i.quantidade, fator_conversao: i.fator || 1, valor_unitario: i.valorUnitario, valor_total: i.valorTotal || i.quantidade * i.valorUnitario,
       aliq_icms: i.aliqIcms ?? 0, valor_icms: i.valorIcms ?? 0, aliq_ipi: i.aliqIpi ?? 0, valor_ipi: i.valorIpi ?? 0, aliq_pis: i.aliqPis ?? 0, valor_pis: i.valorPis ?? 0, aliq_cofins: i.aliqCofins ?? 0, valor_cofins: i.valorCofins ?? 0 }));
     const ri = await sb.from("notas_fiscais_itens").insert(itens); if (ri.error) return toast.error(ri.error.message);
     if (lancar) {
-      const movs = edit.itens.map((i: ItemEdit) => ({ estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id, tipo: "entrada", origem: "compra_nfe", quantidade: i.quantidade * (i.fator || 1),
+      const movs = linhas.map((i: ItemEdit) => ({ estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id, tipo: "entrada", origem: "compra_nfe", quantidade: i.quantidade * (i.fator || 1),
         custo_unitario: i.valorUnitario / (i.fator || 1), nota_fiscal_id: notaId, documento: `NF ${edit.numero}`, usuario_id: ctx.usuarioId }));
       const rm = await sb.from("estoque_movimentos").insert(movs); if (rm.error) return toast.error("Nota salva, mas a entrada no estoque falhou: " + rm.error.message);
       // Aprende o de-para: grava SKU do fornecedor no vínculo do produto.
-      for (const i of edit.itens as ItemEdit[]) {
+      for (const i of linhas) {
         await sb.from("produto_fornecedores").upsert({ produto_id: i.produto_id, empresa_id: edit.empresa_id, estabelecimento_id: ctx.estabelecimentoId, sku_fornecedor: i.codigo, nome_comercial: i.descricao, unidade_compra: i.unidade, fator_conversao: i.fator || 1 }, { onConflict: "produto_id,empresa_id", ignoreDuplicates: false }).then(() => null, () => null);
       }
       onMudou();
@@ -231,12 +235,32 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
                   <div className="col-span-2 min-w-0 md:col-span-2">
                     {edit.origem === "manual" && !somenteLeitura ? <Input placeholder="Descrição" value={i.descricao} onChange={(e) => setItem(k, { descricao: e.target.value })} /> : <p className="text-sm font-medium">{i.descricao}<span className="block text-xs text-muted-foreground">{i.codigo} • NCM {i.ncm || "—"} • CFOP {i.cfop || "—"}</span></p>}
                   </div>
-                  <div className="col-span-2"><Select disabled={somenteLeitura} value={i.produto_id} onValueChange={(v) => setItem(k, { produto_id: v, ...(edit.origem === "manual" && !i.descricao ? { descricao: produtos.find((p: any) => p.id === v)?.nome } : {}) })}><SelectTrigger className={i.produto_id ? "" : "border-destructive"}><SelectValue placeholder="Vincular produto" /></SelectTrigger><SelectContent>{produtos.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="col-span-2 space-y-1">{i.partes?.length ? <p className="text-xs font-medium text-primary">Desmembrado em {i.partes.length} produtos</p> : <Select disabled={somenteLeitura} value={i.produto_id} onValueChange={(v) => setItem(k, { produto_id: v, ...(edit.origem === "manual" && !i.descricao ? { descricao: produtos.find((p: any) => p.id === v)?.nome } : {}) })}><SelectTrigger className={i.produto_id ? "" : "border-destructive"}><SelectValue placeholder="Vincular produto" /></SelectTrigger><SelectContent>{produtos.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent></Select>}
+                    {!somenteLeitura && <div className="flex flex-wrap gap-1">
+                      {!i.partes?.length && <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setNovoProd({ idx: k, nome: i.descricao, codigo: i.codigo, unidade: i.unidade ?? "", ncm: i.ncm ?? "" })}><PackagePlus className="mr-1 h-3.5 w-3.5" />Criar produto</Button>}
+                      {i.partes?.length ? <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setItem(k, { partes: undefined })}><X className="mr-1 h-3.5 w-3.5" />Desfazer desmembramento</Button>
+                        : <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { const pc = percentuaisIguais(2); setItem(k, { partes: [{ produto_id: i.produto_id, quantidade: i.quantidade * (i.fator || 1), percentual: pc[0] }, { produto_id: "", quantidade: 1, percentual: pc[1] }] }); }}><Split className="mr-1 h-3.5 w-3.5" />Desmembrar</Button>}
+                    </div>}</div>
                   <div><Label className="text-xs">Qtd {i.unidade}</Label><Input type="number" disabled={somenteLeitura || edit.origem === "xml"} value={i.quantidade} onChange={(e) => setItem(k, { quantidade: Number(e.target.value), valorTotal: Number(e.target.value) * i.valorUnitario })} /></div>
-                  <div><Label className="text-xs">Fator (1 {i.unidade || "un"} = ? un estoque)</Label><Input type="number" disabled={somenteLeitura} value={i.fator} onChange={(e) => setItem(k, { fator: Number(e.target.value) || 1 })} /></div>
+                  <div><Label className="text-xs">Converter: 1 {i.unidade || "un"} =</Label><Input type="number" disabled={somenteLeitura || !!i.partes?.length} value={i.fator} onChange={(e) => setItem(k, { fator: Number(e.target.value) || 1 })} /></div>
                   <div><Label className="text-xs">Valor unit.</Label><Input type="number" step="0.01" disabled={somenteLeitura || edit.origem === "xml"} value={i.valorUnitario} onChange={(e) => setItem(k, { valorUnitario: Number(e.target.value), valorTotal: Number(e.target.value) * i.quantidade })} /></div>
                   <div className="flex items-end justify-between gap-1 text-sm md:col-span-1"><span>{brl(i.valorTotal)}</span>{edit.origem === "manual" && !somenteLeitura && <Button size="icon" variant="ghost" onClick={() => setEdit({ ...edit, itens: edit.itens.filter((_: any, x: number) => x !== k) })}><Trash2 className="h-4 w-4" /></Button>}</div>
-                  <p className="col-span-2 text-xs text-muted-foreground md:col-span-6">Entra no estoque: {qtd(i.quantidade * (i.fator || 1))} {produtos.find((p: any) => p.id === i.produto_id)?.unidade ?? ""}</p>
+                  {i.partes?.length ? <div className="col-span-2 space-y-1.5 rounded-md border border-dashed p-2 md:col-span-6">
+                    <p className="text-xs text-muted-foreground">Informe quanto entra de cada produto (na unidade do estoque) e quanto do custo do item ({brl(i.valorTotal)}) vai para cada um.</p>
+                    {i.partes.map((pt, j) => { const upd = (c: Partial<ParteEntrada>) => setItem(k, { partes: i.partes!.map((x, y) => (y === j ? { ...x, ...c } : x)) }); return (
+                      <div key={j} className="grid grid-cols-[1fr_auto] gap-1.5 sm:grid-cols-[1fr_7rem_6rem_auto] sm:items-end">
+                        <Select disabled={somenteLeitura} value={pt.produto_id} onValueChange={(v) => upd({ produto_id: v })}><SelectTrigger className={pt.produto_id ? "" : "border-destructive"}><SelectValue placeholder="Produto" /></SelectTrigger><SelectContent>{produtos.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent></Select>
+                        <Button size="icon" variant="ghost" className="sm:order-last" disabled={somenteLeitura || i.partes!.length <= 2} onClick={() => setItem(k, { partes: i.partes!.filter((_, y) => y !== j) })}><Trash2 className="h-4 w-4" /></Button>
+                        <div><Label className="text-xs">Qtd ({produtos.find((p: any) => p.id === pt.produto_id)?.unidade ?? "un"})</Label><Input type="number" disabled={somenteLeitura} value={pt.quantidade} onChange={(e) => upd({ quantidade: Number(e.target.value) })} /></div>
+                        <div><Label className="text-xs">% do custo</Label><Input type="number" step="0.01" disabled={somenteLeitura} value={pt.percentual} onChange={(e) => upd({ percentual: Number(e.target.value) })} /></div>
+                      </div>); })}
+                    {!somenteLeitura && <div className="flex flex-wrap gap-1">
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setItem(k, { partes: [...i.partes!, { produto_id: "", quantidade: 1, percentual: 0 }] })}><Plus className="mr-1 h-3.5 w-3.5" />Produto</Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { const pc = percentuaisIguais(i.partes!.length); setItem(k, { partes: i.partes!.map((x, y) => ({ ...x, percentual: pc[y] })) }); }}>Ratear custo igual</Button>
+                    </div>}
+                    {errosDesmembramento(i.partes).map((er) => <p key={er} className="text-xs text-destructive">{er}</p>)}
+                  </div>
+                  : <p className="col-span-2 text-xs text-muted-foreground md:col-span-6">Conversão: 1 {i.unidade || "un"} da nota = {qtd(i.fator || 1)} {produtos.find((p: any) => p.id === i.produto_id)?.unidade ?? "un"} no estoque • Entra no estoque: {qtd(i.quantidade * (i.fator || 1))} {produtos.find((p: any) => p.id === i.produto_id)?.unidade ?? ""}</p>}
                 </CardContent></Card>
               ))}
               {edit.origem === "manual" && !somenteLeitura && <Button size="sm" variant="outline" onClick={() => setEdit({ ...edit, itens: [...edit.itens, { codigo: "", descricao: "", quantidade: 1, valorUnitario: 0, valorTotal: 0, produto_id: "", fator: 1 }] })}><Plus className="mr-1 h-4 w-4" />Item</Button>}
@@ -248,6 +272,24 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
             <Button variant="outline" onClick={() => setEdit(null)}>Fechar</Button>
             {!somenteLeitura && <><Button variant="outline" onClick={() => salvar(false)}>Salvar rascunho</Button><Button onClick={() => salvar(true)}><CheckCircle2 className="mr-1 h-4 w-4" />Dar entrada no estoque</Button></>}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!novoProd} onOpenChange={(o) => !o && setNovoProd(null)}>
+        <DialogContent><DialogHeader><DialogTitle>Criar produto a partir da nota</DialogTitle></DialogHeader>
+          {novoProd && <div className="grid gap-2 sm:grid-cols-2">
+            <div className="sm:col-span-2"><Label>Nome</Label><Input value={novoProd.nome} onChange={(e) => setNovoProd({ ...novoProd, nome: e.target.value })} /></div>
+            <div><Label>Código (SKU)</Label><Input value={novoProd.codigo} onChange={(e) => setNovoProd({ ...novoProd, codigo: e.target.value })} /></div>
+            <div><Label>Unidade do estoque</Label><Input value={novoProd.unidade} onChange={(e) => setNovoProd({ ...novoProd, unidade: e.target.value.toUpperCase() })} placeholder="UN, KG, PCT…" /></div>
+            <div><Label>NCM</Label><Input value={novoProd.ncm} onChange={(e) => setNovoProd({ ...novoProd, ncm: e.target.value })} /></div>
+            <p className="text-xs text-muted-foreground sm:col-span-2">O produto é criado como matéria-prima e já fica vinculado a este fornecedor ao dar entrada. Complete o restante (fiscal, preços) depois em Produtos.</p>
+          </div>}
+          <DialogFooter><Button variant="outline" onClick={() => setNovoProd(null)}>Cancelar</Button><Button onClick={async () => {
+            if (!novoProd.nome?.trim()) return toast.error("Informe o nome");
+            if (!novoProd.unidade?.trim()) return toast.error("Informe a unidade");
+            const r = await sb.from("produtos").insert({ estabelecimento_id: ctx.estabelecimentoId, nome: novoProd.nome.trim(), codigo: novoProd.codigo?.trim() || null, unidade: novoProd.unidade.trim(), ncm: soDig(novoProd.ncm) || null, ativo: true, materia_prima: true, comercializavel: false, produzido: false }).select("id").single();
+            if (r.error) return toast.error(r.error.message);
+            await onMudou(); setItem(novoProd.idx, { produto_id: r.data.id, fator: 1 }); setNovoProd(null); toast.success("Produto criado e vinculado ao item");
+          }}>Criar e vincular</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <DeleteConfirmDialog open={!!excluir} onOpenChange={(o) => !o && setExcluir(null)} onConfirm={async () => { await sb.from("notas_fiscais").delete().eq("id", excluir.id); setExcluir(null); carregar(); }} title="Excluir nota" description="O rascunho da nota será excluído." />
