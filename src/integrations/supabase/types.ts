@@ -23417,6 +23417,95 @@ export type Database = {
         }
         Relationships: []
       }
+      producao_maquina_usuarios: {
+        Row: {
+          created_at: string
+          grau_conhecimento: string
+          id: string
+          maquina_id: string
+          observacoes: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          grau_conhecimento: string
+          id?: string
+          maquina_id: string
+          observacoes?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          grau_conhecimento?: string
+          id?: string
+          maquina_id?: string
+          observacoes?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_maquina_usuarios_maquina_id_fkey"
+            columns: ["maquina_id"]
+            isOneToOne: false
+            referencedRelation: "producao_maquinas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_maquina_usuarios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      producao_maquinas: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          em_manutencao: boolean
+          estabelecimento_id: string
+          fabricante: string | null
+          id: string
+          modelo: string | null
+          nome: string
+          observacoes: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          em_manutencao?: boolean
+          estabelecimento_id: string
+          fabricante?: string | null
+          id?: string
+          modelo?: string | null
+          nome: string
+          observacoes?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          em_manutencao?: boolean
+          estabelecimento_id?: string
+          fabricante?: string | null
+          id?: string
+          modelo?: string | null
+          nome?: string
+          observacoes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_maquinas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produto_campos_customizados: {
         Row: {
           ativo: boolean | null
@@ -23616,6 +23705,36 @@ export type Database = {
           },
         ]
       }
+      produto_maquinas: {
+        Row: {
+          maquina_id: string
+          produto_id: string
+        }
+        Insert: {
+          maquina_id: string
+          produto_id: string
+        }
+        Update: {
+          maquina_id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_maquinas_maquina_id_fkey"
+            columns: ["maquina_id"]
+            isOneToOne: false
+            referencedRelation: "producao_maquinas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_maquinas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           altura: number | null
@@ -23624,6 +23743,7 @@ export type Database = {
           categoria_google: string | null
           categoria_id: string | null
           codigo: string | null
+          comercializavel: boolean
           comprimento: number | null
           condicao: string | null
           cor: string | null
@@ -23643,7 +23763,9 @@ export type Database = {
           empilhamento_maximo: number | null
           estabelecimento_id: string | null
           estoque: number | null
+          estoque_minimo: number
           faixa_etaria: string | null
+          ficha_producao: Json | null
           foto_url: string | null
           foto_url_2: string | null
           foto_url_3: string | null
@@ -23656,6 +23778,7 @@ export type Database = {
           id: string
           largura: number | null
           marca: string | null
+          materia_prima: boolean
           material: string | null
           mpn: string | null
           ncm: string | null
@@ -23666,9 +23789,13 @@ export type Database = {
           origem: string | null
           peso_frete_tipo: string | null
           peso_unitario: number | null
+          prazo_reposicao_dias: number
           preco_ativo: boolean | null
           preco_minimo: number | null
           preco_tabela: number | null
+          producao_observacoes: string | null
+          producao_tempo_minutos: number | null
+          produzido: boolean
           tamanho: string | null
           tipo_preco: string | null
           updated_at: string | null
@@ -23681,6 +23808,7 @@ export type Database = {
           categoria_google?: string | null
           categoria_id?: string | null
           codigo?: string | null
+          comercializavel?: boolean
           comprimento?: number | null
           condicao?: string | null
           cor?: string | null
@@ -23700,7 +23828,9 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          estoque_minimo?: number
           faixa_etaria?: string | null
+          ficha_producao?: Json | null
           foto_url?: string | null
           foto_url_2?: string | null
           foto_url_3?: string | null
@@ -23713,6 +23843,7 @@ export type Database = {
           id?: string
           largura?: number | null
           marca?: string | null
+          materia_prima?: boolean
           material?: string | null
           mpn?: string | null
           ncm?: string | null
@@ -23723,9 +23854,13 @@ export type Database = {
           origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          prazo_reposicao_dias?: number
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null
+          producao_observacoes?: string | null
+          producao_tempo_minutos?: number | null
+          produzido?: boolean
           tamanho?: string | null
           tipo_preco?: string | null
           updated_at?: string | null
@@ -23738,6 +23873,7 @@ export type Database = {
           categoria_google?: string | null
           categoria_id?: string | null
           codigo?: string | null
+          comercializavel?: boolean
           comprimento?: number | null
           condicao?: string | null
           cor?: string | null
@@ -23757,7 +23893,9 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          estoque_minimo?: number
           faixa_etaria?: string | null
+          ficha_producao?: Json | null
           foto_url?: string | null
           foto_url_2?: string | null
           foto_url_3?: string | null
@@ -23770,6 +23908,7 @@ export type Database = {
           id?: string
           largura?: number | null
           marca?: string | null
+          materia_prima?: boolean
           material?: string | null
           mpn?: string | null
           ncm?: string | null
@@ -23780,9 +23919,13 @@ export type Database = {
           origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          prazo_reposicao_dias?: number
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null
+          producao_observacoes?: string | null
+          producao_tempo_minutos?: number | null
+          produzido?: boolean
           tamanho?: string | null
           tipo_preco?: string | null
           updated_at?: string | null
@@ -29706,6 +29849,7 @@ export type Database = {
           imap: string | null
           is_porteiro: boolean
           nome: string
+          operador_maquina: boolean
           pilarfone_abas: string[] | null
           pode_usar_interfone: boolean
           pop: string | null
@@ -29719,6 +29863,7 @@ export type Database = {
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
+          setor_produtivo: boolean
           sip_porta: number | null
           sip_porta_alternativa: number | null
           sip_servidor: string | null
@@ -29755,6 +29900,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome: string
+          operador_maquina?: boolean
           pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
@@ -29768,6 +29914,7 @@ export type Database = {
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
+          setor_produtivo?: boolean
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null
@@ -29804,6 +29951,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome?: string
+          operador_maquina?: boolean
           pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
@@ -29817,6 +29965,7 @@ export type Database = {
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
+          setor_produtivo?: boolean
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null
@@ -32539,6 +32688,10 @@ export type Database = {
       salvar_etapas_funil: {
         Args: { p_funil_id: string; p_moves?: Json; p_stages: Json }
         Returns: Json
+      }
+      salvar_maquinas_produto: {
+        Args: { p_maquinas: string[]; p_produto: string }
+        Returns: undefined
       }
       semear_minhas_regras_sistema: { Args: never; Returns: undefined }
       semear_regras_sistema: { Args: { _estab: string }; Returns: undefined }
