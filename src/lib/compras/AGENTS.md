@@ -1,0 +1,1 @@
+- Stock balance changes only through estoque_movimentos inserts (trigger updates produtos.estoque); purchase need lives here and NF-e parsing/fiscal rules in src/lib/fiscal as pure modules. SEFAZ transmission/DF-e need a contracted NF-e gateway.
