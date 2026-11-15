@@ -14,13 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -45,7 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -1220,353 +1213,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     return <div className="text-sm text-muted-foreground">Carregando produtos...</div>;
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-base sm:text-lg font-semibold">Produtos</h3>
-          {hasActiveFilters && (
-            <Badge variant="secondary" className="text-xs">
-              {filteredAndSortedProdutos.length} de {produtos.length}
-            </Badge>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(hasActiveFilters && "border-primary text-primary")}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filtros
-            {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
-          </Button>
-          <Button onClick={openNewDialog} size="sm" className="w-full sm:w-auto">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Produto
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      {showFilters && (
-        <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Filtros</span>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
-                <X className="w-3 h-3 mr-1" />
-                Limpar filtros
-              </Button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, SKU ou NCM..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 text-sm"
-              />
-            </div>
-            <Select value={filterCategoria} onValueChange={setFilterCategoria}>
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas categorias</SelectItem>
-                {categorias.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterGrupo} onValueChange={setFilterGrupo}>
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Grupo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos grupos</SelectItem>
-                {grupos.map((g) => (
-                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos status</SelectItem>
-                <SelectItem value="ativo">Ativo</SelectItem>
-                <SelectItem value="inativo">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterProduzido} onValueChange={setFilterProduzido}>
-              <SelectTrigger className="text-sm"><SelectValue placeholder="Produzido" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Produzido: todos</SelectItem>
-                <SelectItem value="sim">Produzido: sim</SelectItem>
-                <SelectItem value="nao">Produzido: não</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterMateriaPrima} onValueChange={setFilterMateriaPrima}>
-              <SelectTrigger className="text-sm"><SelectValue placeholder="Matéria-prima" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Matéria-prima: todos</SelectItem>
-                <SelectItem value="sim">Matéria-prima: sim</SelectItem>
-                <SelectItem value="nao">Matéria-prima: não</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Custom field filters */}
-          {filterCamposCustomizados.length > 0 && (
-            <div className="border-t pt-3 mt-3">
-              <span className="text-xs font-medium text-muted-foreground mb-2 block">
-                Filtros de campos customizados
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filterCamposCustomizados.map(campo => {
-                  // Range filter for numeric fields with pesquisa_faixa
-                  if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
-                    return (
-                      <div key={campo.id} className="bg-background rounded-md p-3 border">
-                        <Label className="text-xs font-medium mb-2 block">
-                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="De"
-                            value={customFieldFilters.range[campo.campo_key]?.min || ""}
-                            onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
-                            className="text-sm h-8"
-                          />
-                          <span className="text-xs text-muted-foreground">até</span>
-                          <Input
-                            type="number"
-                            placeholder="Até"
-                            value={customFieldFilters.range[campo.campo_key]?.max || ""}
-                            onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
-                            className="text-sm h-8"
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  // Simple number filter
-                  if (campo.tipo === 'numero') {
-                    return (
-                      <div key={campo.id} className="bg-background rounded-md p-3 border">
-                        <Label className="text-xs font-medium mb-2 block">
-                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
-                        </Label>
-                        <Input
-                          type="number"
-                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
-                          value={customFieldFilters.number[campo.campo_key] || ""}
-                          onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
-                          className="text-sm h-8"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Text filter
-                  if (campo.tipo === 'texto') {
-                    return (
-                      <div key={campo.id} className="bg-background rounded-md p-3 border">
-                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
-                        <Input
-                          type="text"
-                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
-                          value={customFieldFilters.text[campo.campo_key] || ""}
-                          onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
-                          className="text-sm h-8"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Selection filter
-                  if (campo.tipo === 'selecao') {
-                    const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
-                    return (
-                      <div key={campo.id} className="bg-background rounded-md p-3 border">
-                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
-                        <Select 
-                          value={customFieldFilters.select[campo.campo_key] || ""} 
-                          onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
-                        >
-                          <SelectTrigger className="text-sm h-8">
-                            <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            {opcoes.map((opcao: string, idx: number) => (
-                              <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  }
-                  
-                  // Checkbox filter
-                  if (campo.tipo === 'checkbox') {
-                    return (
-                      <div key={campo.id} className="bg-background rounded-md p-3 border">
-                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
-                        <Select 
-                          value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
-                          onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
-                        >
-                          <SelectTrigger className="text-sm h-8">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="true">Sim</SelectItem>
-                            <SelectItem value="false">Não</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  }
-                  
-                  return null;
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Cartões em todas as larguras, no padrão de clientes/empresas */}
-      {filteredAndSortedProdutos.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground text-sm border rounded-2xl">
-          {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredAndSortedProdutos.map((produto) => {
-            const p = produto as any;
-            const estoque = Number(p.estoque ?? 0);
-            const minimo = Number(p.estoque_minimo ?? 0);
-            const baixo = minimo > 0 && estoque < minimo;
-            const preco = p.preco_tabela != null ? Number(p.preco_tabela).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "-";
-            return (
-              <div key={produto.id} role="button" tabIndex={0} onClick={() => handleEdit(produto)}
-                onKeyDown={(ev) => { if (ev.key === "Enter") handleEdit(produto); }}
-                className="rounded-2xl border border-border/50 bg-card shadow-sm p-3 flex flex-col gap-3 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all min-w-0">
-                <div className="flex items-start gap-3 min-w-0">
-                  {produto.foto_url ? (
-                    <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded-lg shrink-0" />
-                  ) : (
-                    <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-sm text-primary break-words leading-snug">{produto.nome}</div>
-                    <div className="text-xs text-muted-foreground font-mono break-all mt-0.5">{p.codigo || "-"}</div>
-                  </div>
-                  <Badge variant={produto.ativo ? "default" : "secondary"} className="shrink-0 font-normal">{produto.ativo ? "Ativo" : "Inativo"}</Badge>
-                </div>
-                {(p.produzido || p.materia_prima || p.comercializavel) && (
-                  <div className="flex flex-wrap gap-1">
-                    {p.produzido && <Badge variant="outline" className="font-normal text-[10px]">Produzido</Badge>}
-                    {p.materia_prima && <Badge variant="outline" className="font-normal text-[10px]">Matéria-prima</Badge>}
-                    {p.comercializavel && <Badge variant="outline" className="font-normal text-[10px]">Comercializável</Badge>}
-                  </div>
-                )}
-                <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
-                  {[
-                    ["Categoria", produto.categoria?.nome || "-"],
-                    ["Grupo", produto.grupo?.nome || "-"],
-                    ["Estoque", `${estoque}${p.unidade ? " " + p.unidade : ""}${minimo > 0 ? ` (mín. ${minimo})` : ""}`],
-                    ["Preço", preco],
-                    ["NCM", p.ncm_ref?.codigo || p.ncm || "-"],
-                    ["Unidade", p.unidade || "-"],
-                  ].map(([label, valor]) => (
-                    <div key={label} className="min-w-0">
-                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{label}</dt>
-                      <dd className={cn("text-xs break-words", label === "Estoque" && baixo ? "text-destructive font-medium" : "text-foreground")}>{valor}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <div className="flex flex-wrap justify-end gap-1 pt-2 border-t border-border/40 mt-auto" onClick={(ev) => ev.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleEdit(produto)}><Pencil className="w-4 h-4 mr-1" />Editar</Button>
-                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleDuplicate(produto)}><Copy className="w-4 h-4 mr-1" />Duplicar</Button>
-                  <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive" onClick={() => handleDelete(produto.id)}><Trash2 className="w-4 h-4 mr-1" />Excluir</Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) setDuplicandoDe(null); }}>
-        <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-14 border-b flex-shrink-0">
-            <DialogHeader>
-              <div className="flex flex-col gap-3">
-                <div className="min-w-0">
-                  <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2 pr-2">
-                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
-                      <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                    </div>
-                    <span className="break-words">{editingProduto ? "Editar Produto" : duplicandoDe ? "Duplicar Produto" : "Novo Produto"}</span>
-                  </DialogTitle>
-                  {formData.nome && (
-                    <p className="text-sm sm:text-base font-medium text-foreground mt-1 break-words">{formData.nome}</p>
-                  )}
-                  {formData.codigo && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
-                      SKU: <span className="font-mono">{formData.codigo}</span>
-                    </p>
-                  )}
-                  {duplicandoDe && !editingProduto && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                      Cópia de <span className="font-medium">{duplicandoDe}</span> — confira nome e SKU antes de salvar.
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Comercializável' }] as const).map(flag => (
-                <div key={flag.campo} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                  <Switch checked={formData[flag.campo]} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} />
-                  <Label className="text-xs sm:text-sm cursor-pointer">{flag.nome}</Label>
-                </div>
-                ))}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                  <Switch
-                    checked={formData.produzido}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, produzido: checked }))}
-                  />
-                  <Label className="text-xs sm:text-sm cursor-pointer">Produzido</Label>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
-                  <Switch
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                  />
-                  <Label className="text-xs sm:text-sm cursor-pointer">
-                    {formData.ativo ? "Ativo" : "Inativo"}
-                  </Label>
-                </div>
-                </div>
-              </div>
-            </DialogHeader>
-          </div>
-
-
-          <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
+  const formularioProduto = (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
@@ -2345,20 +1992,383 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </div>
             </TabsContent>
           </Tabs>
+  );
+
+  // Cadastro aberto: ocupa a tela inteira no lugar da lista, como o cadastro de clientes.
+  if (showDialog) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
+            <div className="flex flex-col gap-3">
+              <div className="min-w-0">
+                <div className="text-base sm:text-lg font-semibold flex items-center gap-2 pr-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => { setShowDialog(false); setDuplicandoDe(null); }}
+                    disabled={uploading}
+                    aria-label="Voltar para a lista"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+                    <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  </div>
+                  <span className="break-words">{editingProduto ? "Editar Produto" : duplicandoDe ? "Duplicar Produto" : "Novo Produto"}</span>
+                </div>
+                {formData.nome && (
+                  <p className="text-sm sm:text-base font-medium text-foreground mt-1 break-words">{formData.nome}</p>
+                )}
+                {formData.codigo && (
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
+                    SKU: <span className="font-mono">{formData.codigo}</span>
+                  </p>
+                )}
+                {duplicandoDe && !editingProduto && (
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Cópia de <span className="font-medium">{duplicandoDe}</span> — confira nome e SKU antes de salvar.
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Comercializável' }] as const).map(flag => (
+                  <div key={flag.campo} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
+                    <Switch checked={formData[flag.campo]} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} />
+                    <Label className="text-xs sm:text-sm cursor-pointer">{flag.nome}</Label>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
+                  <Switch
+                    checked={formData.produzido}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, produzido: checked }))}
+                  />
+                  <Label className="text-xs sm:text-sm cursor-pointer">Produzido</Label>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
+                  <Switch
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                  />
+                  <Label className="text-xs sm:text-sm cursor-pointer">
+                    {formData.ativo ? "Ativo" : "Inativo"}
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-3 sm:px-6 py-3 sm:py-4">
+            {formularioProduto}
           </div>
 
           <div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/20 flex-shrink-0">
-            <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-2">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-2 sm:justify-end">
               <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
                 Cancelar
               </Button>
               <Button onClick={handleSave} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
                 {uploading ? "Salvando..." : "Salvar"}
               </Button>
-            </DialogFooter>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold">Produtos</h3>
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="text-xs">
+              {filteredAndSortedProdutos.length} de {produtos.length}
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(hasActiveFilters && "border-primary text-primary")}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+            {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
+          </Button>
+          <Button onClick={openNewDialog} size="sm" className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Filtros</span>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+                <X className="w-3 h-3 mr-1" />
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, SKU ou NCM..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 text-sm"
+              />
+            </div>
+            <Select value={filterCategoria} onValueChange={setFilterCategoria}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas categorias</SelectItem>
+                {categorias.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterGrupo} onValueChange={setFilterGrupo}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos grupos</SelectItem>
+                {grupos.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos status</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterProduzido} onValueChange={setFilterProduzido}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Produzido" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Produzido: todos</SelectItem>
+                <SelectItem value="sim">Produzido: sim</SelectItem>
+                <SelectItem value="nao">Produzido: não</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterMateriaPrima} onValueChange={setFilterMateriaPrima}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Matéria-prima" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Matéria-prima: todos</SelectItem>
+                <SelectItem value="sim">Matéria-prima: sim</SelectItem>
+                <SelectItem value="nao">Matéria-prima: não</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Custom field filters */}
+          {filterCamposCustomizados.length > 0 && (
+            <div className="border-t pt-3 mt-3">
+              <span className="text-xs font-medium text-muted-foreground mb-2 block">
+                Filtros de campos customizados
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filterCamposCustomizados.map(campo => {
+                  // Range filter for numeric fields with pesquisa_faixa
+                  if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">
+                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="De"
+                            value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                            onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                            className="text-sm h-8"
+                          />
+                          <span className="text-xs text-muted-foreground">até</span>
+                          <Input
+                            type="number"
+                            placeholder="Até"
+                            value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                            onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                            className="text-sm h-8"
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // Simple number filter
+                  if (campo.tipo === 'numero') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">
+                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                          value={customFieldFilters.number[campo.campo_key] || ""}
+                          onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                          className="text-sm h-8"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Text filter
+                  if (campo.tipo === 'texto') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Input
+                          type="text"
+                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                          value={customFieldFilters.text[campo.campo_key] || ""}
+                          onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                          className="text-sm h-8"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Selection filter
+                  if (campo.tipo === 'selecao') {
+                    const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Select 
+                          value={customFieldFilters.select[campo.campo_key] || ""} 
+                          onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                        >
+                          <SelectTrigger className="text-sm h-8">
+                            <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {opcoes.map((opcao: string, idx: number) => (
+                              <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }
+                  
+                  // Checkbox filter
+                  if (campo.tipo === 'checkbox') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Select 
+                          value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                          onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                        >
+                          <SelectTrigger className="text-sm h-8">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                            <SelectItem value="false">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cartões em todas as larguras, no padrão de clientes/empresas */}
+      {filteredAndSortedProdutos.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground text-sm border rounded-2xl">
+          {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filteredAndSortedProdutos.map((produto) => {
+            const p = produto as any;
+            const estoque = Number(p.estoque ?? 0);
+            const minimo = Number(p.estoque_minimo ?? 0);
+            const baixo = minimo > 0 && estoque < minimo;
+            const preco = p.preco_tabela != null ? Number(p.preco_tabela).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "-";
+            return (
+              <div key={produto.id} role="button" tabIndex={0} onClick={() => handleEdit(produto)}
+                onKeyDown={(ev) => { if (ev.key === "Enter") handleEdit(produto); }}
+                className="rounded-2xl border border-border/50 bg-card shadow-sm p-3 flex flex-col gap-3 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all min-w-0">
+                <div className="flex items-start gap-3 min-w-0">
+                  {produto.foto_url ? (
+                    <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded-lg shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-primary break-words leading-snug">{produto.nome}</div>
+                    <div className="text-xs text-muted-foreground font-mono break-all mt-0.5">{p.codigo || "-"}</div>
+                  </div>
+                  <Badge variant={produto.ativo ? "default" : "secondary"} className="shrink-0 font-normal">{produto.ativo ? "Ativo" : "Inativo"}</Badge>
+                </div>
+                {(p.produzido || p.materia_prima || p.comercializavel) && (
+                  <div className="flex flex-wrap gap-1">
+                    {p.produzido && <Badge variant="outline" className="font-normal text-[10px]">Produzido</Badge>}
+                    {p.materia_prima && <Badge variant="outline" className="font-normal text-[10px]">Matéria-prima</Badge>}
+                    {p.comercializavel && <Badge variant="outline" className="font-normal text-[10px]">Comercializável</Badge>}
+                  </div>
+                )}
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  {[
+                    ["Categoria", produto.categoria?.nome || "-"],
+                    ["Grupo", produto.grupo?.nome || "-"],
+                    ["Estoque", `${estoque}${p.unidade ? " " + p.unidade : ""}${minimo > 0 ? ` (mín. ${minimo})` : ""}`],
+                    ["Preço", preco],
+                    ["NCM", p.ncm_ref?.codigo || p.ncm || "-"],
+                    ["Unidade", p.unidade || "-"],
+                  ].map(([label, valor]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{label}</dt>
+                      <dd className={cn("text-xs break-words", label === "Estoque" && baixo ? "text-destructive font-medium" : "text-foreground")}>{valor}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="flex flex-wrap justify-end gap-1 pt-2 border-t border-border/40 mt-auto" onClick={(ev) => ev.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleEdit(produto)}><Pencil className="w-4 h-4 mr-1" />Editar</Button>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => handleDuplicate(produto)}><Copy className="w-4 h-4 mr-1" />Duplicar</Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive" onClick={() => handleDelete(produto.id)}><Trash2 className="w-4 h-4 mr-1" />Excluir</Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
     </div>
   );
 }
