@@ -1,5 +1,6 @@
 export interface OpcaoMaterial { id: string; produto_id: string; quantidade: number; unidade: string; meta_producao?: number; rendimento?: number; perda_max_percentual?: number }
-export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[] }
+/** segue_grupo_id: o consumo informado vale por ciclo do grupo indicado (ex.: 1 saco por ciclo da bobina). */
+export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[]; segue_grupo_id?: string }
 export interface RegraMaterialMaquina { material_opcao_id: string; permitida: boolean; simultaneos: number }
 export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; regras_materiais?: RegraMaterialMaquina[] }
 export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[]; material_regra_id?: string }
@@ -64,7 +65,7 @@ export function lerFicha(valor: unknown): FichaProducao {
   return {
     quantidade_base: f.quantidade_base, unidade_produto: f.unidade_produto,
     ...(f.funcionarios_extras ? { funcionarios_extras: f.funcionarios_extras.map(a => ({ id: a.id, quantidade: a.quantidade, servico: a.servico })) } : {}),
-    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, rendimento: o.rendimento, perda_max_percentual: o.perda_max_percentual })) })),
+    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, ...(g.segue_grupo_id ? { segue_grupo_id: g.segue_grupo_id } : {}), opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, rendimento: o.rendimento, perda_max_percentual: o.perda_max_percentual })) })),
     etapas: f.etapas.map(e => {
       const grupo = f.materiais.find(g => g.id === e.material_largura_id);
       return { id: e.id, nome: e.nome, material_regra_id: e.material_regra_id || e.material_largura_id,
@@ -87,6 +88,11 @@ export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorPro
   const materiasUsadas = new Set<string>();
   for (const g of f.materiais) {
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
+    if (g.segue_grupo_id) {
+      const ref = f.materiais.find(x => x.id === g.segue_grupo_id);
+      if (!ref || ref.id === g.id) return 'O material só pode seguir o ciclo de outro material da ficha';
+      if (ref.segue_grupo_id) return 'Siga um material que tenha rendimento próprio, não outro que também segue ciclo';
+    }
     for (const o of g.opcoes) {
       if (o.produto_id && materiasUsadas.has(o.produto_id)) return 'Não repita a mesma matéria-prima na ficha de produção, inclusive nos substitutos';
       if (o.produto_id) materiasUsadas.add(o.produto_id);
@@ -120,14 +126,19 @@ export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorPro
 }
 export function calcularProducao(f: FichaProducao, quantidade: number, escolhas: Record<string, string> = {}, indisponiveis: string[] = []) {
   if (validarFicha(f) || !Number.isFinite(quantidade) || quantidade <= 0) return null;
+  const escolhida = (g: GrupoMaterial) => g.opcoes.find(o => o.id === escolhas[g.id]) || g.opcoes[0];
   const materiais = f.materiais.map(g => {
-    const o = g.opcoes.find(o => o.id === escolhas[g.id]) || g.opcoes[0];
+    const o = escolhida(g);
+    const ref = g.segue_grupo_id ? f.materiais.find(x => x.id === g.segue_grupo_id) : undefined;
+    const refRend = ref ? escolhida(ref).rendimento : undefined;
+    // Seguindo outro grupo: o consumo vale por ciclo do material escolhido naquele grupo.
     // Com rendimento: o consumo informado gera "rendimento" unidades do produto acabado (um ciclo).
     // Sem rendimento: o consumo vale para a quantidade-base, então insumos como embalagem acompanham as unidades produzidas.
-    const base = o.rendimento ? quantidade / o.rendimento * o.quantidade : quantidade / f.quantidade_base * o.quantidade;
-    const ciclos = o.rendimento ? quantidade / o.rendimento : null;
+    const rend = refRend || (ref ? undefined : o.rendimento);
+    const base = rend ? quantidade / rend * o.quantidade : quantidade / f.quantidade_base * o.quantidade;
+    const ciclos = rend ? quantidade / rend : null;
     const perda = o.perda_max_percentual ?? 0;
-    return { grupo_id: g.id, opcao_id: o.id, produto_id: o.produto_id, quantidade: base, rendimento: o.rendimento, ciclos, quantidade_com_perda: base * (1 + perda / 100), perda_max_percentual: perda, unidade: o.unidade, meta_producao: o.meta_producao };
+    return { grupo_id: g.id, opcao_id: o.id, produto_id: o.produto_id, quantidade: base, rendimento: ref ? undefined : o.rendimento, segue_grupo_id: g.segue_grupo_id, ciclos, quantidade_com_perda: base * (1 + perda / 100), perda_max_percentual: perda, unidade: o.unidade, meta_producao: o.meta_producao };
   });
   const etapas = f.etapas.map(e => {
     const o = e.opcoes.find(o => o.id === escolhas[e.id]) || e.opcoes[0];

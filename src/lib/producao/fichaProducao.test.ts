@@ -269,3 +269,34 @@ describe('rendimento por matéria-prima', () => {
     expect(validarFicha(f)).toMatch(/rendimento/i);
   });
 });
+
+describe('montagem rápida e ciclo seguido', () => {
+  const base = (): import('./fichaProducao').FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', etapas: [], materiais: [
+    { id: 'g1', nome: 'Bobina', opcoes: [{ id: 'a', produto_id: 'A', quantidade: 10, unidade: 'kg', rendimento: 1 }, { id: 'b', produto_id: 'B', quantidade: 20, unidade: 'kg', rendimento: 2 }] },
+    { id: 'g2', nome: 'Saco', segue_grupo_id: 'g1', opcoes: [{ id: 's', produto_id: 'S', quantidade: 1, unidade: 'un' }] },
+  ] });
+  it('saco segue os ciclos da bobina escolhida', async () => {
+    const { calcularProducao } = await import('./fichaProducao');
+    expect(calcularProducao(base(), 10)!.materiais[1].quantidade).toBe(10);
+    expect(calcularProducao(base(), 10, { g1: 'b' })!.materiais[1].quantidade).toBe(5);
+  });
+  it('não permite seguir material que também segue', async () => {
+    const { validarFicha } = await import('./fichaProducao');
+    const f = base(); f.materiais[0].segue_grupo_id = 'g2';
+    expect(validarFicha(f)).toMatch(/rendimento próprio/);
+  });
+  it('lote ignora matérias-primas repetidas e falta de estoque sugere substituto', async () => {
+    const m = await import('./montagemFicha');
+    expect(m.adicionarMateriasEmLote(base(), ['A', 'X', 'X'], { X: 'Tubete' }, { X: 'un' }).materiais.length).toBe(3);
+    const r = m.analisarAbastecimento(base(), 10, {}, [{ id: 'A', unidade: 'kg', estoque: 50, preco_tabela: 2 }, { id: 'B', unidade: 'kg', estoque: 200, preco_tabela: 1 }, { id: 'S', unidade: 'un', estoque: 100, preco_tabela: 0.5 }])!;
+    expect(r.materiais[0].falta).toBe(50);
+    expect(r.materiais[0].alternativa?.produto_id).toBe('B');
+    expect(r.custoTotal).toBe(205);
+  });
+  it('importar receita gera ids novos mantendo vínculos', async () => {
+    const { importarReceita } = await import('./montagemFicha');
+    const f = importarReceita(base());
+    expect(f.materiais[0].id).not.toBe('g1');
+    expect(f.materiais[1].segue_grupo_id).toBe(f.materiais[0].id);
+  });
+});

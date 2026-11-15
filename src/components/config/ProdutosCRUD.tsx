@@ -1714,7 +1714,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </TabsList>
 
               {formData.produzido && <>
-                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.materia_prima && p.id !== editingProduto?.id)} erroCadastro={validarMateriaisCadastro(ficha, produtos, estabelecimentoId, editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.materia_prima && p.id !== editingProduto?.id)} erroCadastro={validarMateriaisCadastro(ficha, produtos, estabelecimentoId, editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} receitas={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.produzido && p.id !== editingProduto?.id)} nomeProduto={formData.nome} produtoAtualId={editingProduto?.id} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
                 <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
               </>}
 
