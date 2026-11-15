@@ -1470,6 +1470,9 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </div>
                     <span className="break-words">{editingProduto ? "Editar Produto" : "Novo Produto"}</span>
                   </DialogTitle>
+                  {formData.nome && (
+                    <p className="text-sm sm:text-base font-medium text-foreground mt-1 break-words">{formData.nome}</p>
+                  )}
                   {editingProduto && (
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
                       SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
