@@ -1476,7 +1476,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0 self-start">
+                <div className="flex flex-wrap items-center gap-2 shrink-0 self-start">
+                {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Comercializável' }] as const).map(flag => (
+                <div key={flag.campo} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
+                  <Switch checked={formData[flag.campo]} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} />
+                  <Label className="text-xs sm:text-sm cursor-pointer">{flag.nome}</Label>
+                </div>
+                ))}
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
                   <Switch
                     checked={formData.produzido}
@@ -1563,9 +1569,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TabsContent value="basico" className="mt-4 sm:mt-6">
                 <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-b pb-4">
-                    {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Pode ser comercializado' }] as const).map(flag => <Label key={flag.campo} className="flex items-center gap-2 text-sm"><Checkbox checked={formData[flag.campo]} onCheckedChange={v => setFormData(prev => ({ ...prev, [flag.campo]: v === true }))} />{flag.nome}</Label>)}
-                  </div>
                   <div className="space-y-3 sm:space-y-4">
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
