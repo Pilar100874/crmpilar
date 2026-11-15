@@ -59,6 +59,7 @@ import { FichaProducaoEditor } from './FichaProducaoEditor';
 import { fichaVazia, lerFicha, validarFicha, unidadesCadastro, type FichaProducao } from '@/lib/producao/fichaProducao';
 import { gerarCopiaDeProduto } from '@/lib/produtos/duplicarProduto';
 import { colarDadosProduto } from '@/lib/produtos/colarDadosProduto';
+import { validarMateriaisCadastro } from '@/lib/producao/validarMateriaisCadastro';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
@@ -696,6 +697,17 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleSave = async () => {
+    const idsMateriais = [...new Set(ficha.materiais.flatMap(g => g.opcoes.map(o => o.produto_id)).filter(Boolean))];
+    if (idsMateriais.length) {
+      const { data, error } = await supabase.from('produtos').select('id,nome,estabelecimento_id,materia_prima').eq('estabelecimento_id', estabelecimentoId).in('id', idsMateriais);
+      if (error) { toast.error('Não foi possível conferir as matérias-primas. Tente salvar novamente.'); return; }
+      const erroMaterial = validarMateriaisCadastro(ficha, data || [], estabelecimentoId, editingProduto?.id);
+      if (erroMaterial) {
+        toast.error(erroMaterial);
+        if (formData.produzido) setActiveTab('producao');
+        return;
+      }
+    }
     if (formData.produzido) {
       const erroFicha = validarFicha(ficha, Object.fromEntries(produtos.map(p => [p.id, p.unidade])));
       if (erroFicha) { toast.error(erroFicha); setActiveTab('producao'); return; }
@@ -1151,6 +1163,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
   const colarDados = () => {
     if (!dadosCopiados || dadosCopiados.estabelecimentoId !== estabelecimentoId) return;
+    const erroMaterial = validarMateriaisCadastro(dadosCopiados.ficha, produtos, estabelecimentoId, editingProduto?.id);
+    if (erroMaterial) { toast.error(erroMaterial); return; }
     setFormData(atual => colarDadosProduto(atual, dadosCopiados.form));
     setFicha(structuredClone(dadosCopiados.ficha));
     setMaquinasSelecionadas([...dadosCopiados.maquinas]);
