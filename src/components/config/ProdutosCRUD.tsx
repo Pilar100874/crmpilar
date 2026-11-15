@@ -705,6 +705,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       return;
     }
 
+    if (!formData.unidade.trim()) {
+      toast.error("Unidade é obrigatória");
+      return;
+    }
+
     if (!formData.categoria_id) {
       toast.error("Categoria é obrigatória");
       return;
@@ -1598,7 +1603,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                         />
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label className="text-xs sm:text-sm font-medium">Unidade</Label>
+                        <Label className="text-xs sm:text-sm font-medium">Unidade *</Label>
                         <Select
                           value={formData.unidade || "none"}
                           onValueChange={(value) => setFormData({ ...formData, unidade: value === "none" ? "" : value })}
