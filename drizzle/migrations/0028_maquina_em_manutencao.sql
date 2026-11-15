@@ -1,0 +1,1 @@
+ALTER TABLE public.producao_maquinas ADD COLUMN em_manutencao boolean NOT NULL DEFAULT false;

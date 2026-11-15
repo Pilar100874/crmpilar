@@ -83,6 +83,7 @@ export function ConjuntoItensEditor({ conjuntoId, onClose }: ConjuntoItensEditor
         .select("*")
         .eq("estabelecimento_id", userData?.estabelecimento_id)
         .eq("ativo", true)
+        .eq("comercializavel", true)
         .order("nome");
 
       if (produtosError) throw produtosError;

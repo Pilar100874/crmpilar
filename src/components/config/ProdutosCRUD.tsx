@@ -1,3 +1,4 @@
+import { EstoqueMinimoCampos } from './EstoqueMinimoCampos';
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
@@ -44,13 +45,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
 import { normalizeImageToSquare } from "@/lib/imageNormalize";
 import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
+import { Checkbox } from '@/components/ui/checkbox';
+import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from './ProdutoProducaoTabs';
+import { abasProducao } from '@/lib/producao/regrasProduto';
+import { FichaProducaoEditor } from './FichaProducaoEditor';
+import { fichaVazia, lerFicha, validarFicha, type FichaProducao } from '@/lib/producao/fichaProducao';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -89,6 +96,11 @@ interface CustomFieldFilters {
 }
 
 interface FormData {
+  materia_prima: boolean;
+  produzido: boolean;
+  comercializavel: boolean;
+  producao_observacoes: string;
+  producao_tempo_minutos: string;
   nome: string;
   codigo: string;
   largura: string;
@@ -132,6 +144,8 @@ interface FormData {
   descricao: string;
   marca: string;
   estoque: string;
+  estoque_minimo: string;
+  prazo_reposicao_dias: string;
   garantia: string;
   origem: string;
   condicao: string;
@@ -149,6 +163,11 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
+  materia_prima: false,
+  produzido: false,
+  comercializavel: true,
+  producao_observacoes: '',
+  producao_tempo_minutos: '',
   nome: "",
   codigo: "",
   largura: "",
@@ -192,6 +211,8 @@ const initialFormData: FormData = {
   descricao: "",
   marca: "",
   estoque: "0",
+  estoque_minimo: "0",
+  prazo_reposicao_dias: "15",
   garantia: "",
   origem: "nacional",
   condicao: "novo",
@@ -220,6 +241,17 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("basico");
+  const [maquinas, setMaquinas] = useState<MaquinaOpcao[]>([]);
+  const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
+  const [ficha, setFicha] = useState<FichaProducao>(fichaVazia);
+  useEffect(() => {
+    supabase.from('producao_maquinas').select('id,nome,codigo,ativo,em_manutencao').eq('estabelecimento_id', estabelecimentoId).order('nome').then(r => {
+      if (r.error) toast.error('Não foi possível carregar as máquinas'); else setMaquinas(r.data || []);
+    });
+  }, [estabelecimentoId, showDialog]);
+  useEffect(() => {
+    if (!formData.produzido && ['producao', 'maquinas'].includes(activeTab)) setActiveTab('basico');
+  }, [formData.produzido, activeTab]);
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -230,6 +262,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [filterCategoria, setFilterCategoria] = useState<string>("all");
   const [filterGrupo, setFilterGrupo] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterProduzido, setFilterProduzido] = useState<string>("all");
+  const [filterMateriaPrima, setFilterMateriaPrima] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   
   // Custom field filter states
@@ -346,6 +380,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     if (filterStatus !== "all") {
       result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
     }
+    if (filterProduzido !== "all") result = result.filter(p => !!(p as any).produzido === (filterProduzido === "sim"));
+    if (filterMateriaPrima !== "all") result = result.filter(p => !!(p as any).materia_prima === (filterMateriaPrima === "sim"));
     
     // Apply custom field filters
     filterCamposCustomizados.forEach(campo => {
@@ -445,7 +481,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     });
     
     return result;
-  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection, customFieldFilters, filterCamposCustomizados]);
+  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, filterProduzido, filterMateriaPrima, sortField, sortDirection, customFieldFilters, filterCamposCustomizados]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -468,10 +504,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFilterCategoria("all");
     setFilterGrupo("all");
     setFilterStatus("all");
+    setFilterProduzido("all");
+    setFilterMateriaPrima("all");
     setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   };
 
-  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || hasCustomFilters;
+  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || filterProduzido !== "all" || filterMateriaPrima !== "all" || hasCustomFilters;
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -650,6 +688,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleSave = async () => {
+    if (formData.produzido) {
+      const erroFicha = validarFicha(ficha);
+      if (erroFicha) { toast.error(erroFicha); setActiveTab('producao'); return; }
+    }
     // Validações obrigatórias
     if (!formData.nome.trim()) {
       toast.error("Nome do produto é obrigatório");
@@ -723,6 +765,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       const selectedNcm = ncmCodigos.find(n => n.id === formData.ncm_id);
 
       const produtoData = {
+        ficha_producao: ficha as unknown as Json,
+        materia_prima: formData.materia_prima,
+        produzido: formData.produzido,
+        comercializavel: formData.comercializavel,
+        producao_observacoes: formData.producao_observacoes || null,
+        producao_tempo_minutos: formData.producao_tempo_minutos ? Number(formData.producao_tempo_minutos) : null,
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome.trim(),
         codigo: formData.codigo.trim(),
@@ -767,6 +815,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         descricao: formData.descricao || null,
         marca: formData.marca || null,
         estoque: formData.estoque ? parseInt(formData.estoque) : 0,
+        estoque_minimo: formData.estoque_minimo ? Number(formData.estoque_minimo) : 0,
+        prazo_reposicao_dias: formData.prazo_reposicao_dias ? parseInt(formData.prazo_reposicao_dias) : 15,
         garantia: formData.garantia || null,
         origem: formData.origem || "nacional",
         condicao: formData.condicao || "novo",
@@ -826,6 +876,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       }
 
       // === Sincroniza galeria produto_imagens ===
+      if (produtoId && formData.produzido) {
+        const maquinasDaFicha = ficha.etapas.flatMap(e => e.opcoes.map(o => o.maquina_id));
+        const todasMaquinas = [...new Set([...maquinasSelecionadas, ...maquinasDaFicha])];
+        const { error } = await supabase.rpc('salvar_maquinas_produto', { p_produto: produtoId, p_maquinas: todasMaquinas });
+        if (error) { toast.error('Produto salvo, mas não foi possível salvar as máquinas'); return; }
+      }
       if (produtoId) {
         // 1. Remove os ids que não estão mais na galeria
         const keepIds = uploadedImages.map((i) => i.id).filter(Boolean) as string[];
@@ -884,6 +940,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const handleEdit = async (produto: Produto) => {
+    setFicha(lerFicha(produto.ficha_producao));
+    setActiveTab('basico');
+    const vinculos = await supabase.from('produto_maquinas').select('maquina_id').eq('produto_id', produto.id);
+    if (vinculos.error) { toast.error('Não foi possível carregar as máquinas do produto'); return; }
+    setMaquinasSelecionadas((vinculos.data || []).map(v => v.maquina_id));
     setEditingProduto(produto);
     setSelectedFile(null);
     // carrega galeria do produto
@@ -914,6 +975,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     const p = produto as any;
     setFormData({
       nome: produto.nome,
+      materia_prima: produto.materia_prima ?? false,
+      produzido: produto.produzido ?? false,
+      comercializavel: produto.comercializavel ?? true,
+      producao_observacoes: produto.producao_observacoes || '',
+      producao_tempo_minutos: produto.producao_tempo_minutos?.toString() || '',
       codigo: p.codigo || "",
       largura: produto.largura?.toString() || "",
       altura: p.altura?.toString() || "",
@@ -956,6 +1022,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       descricao: p.descricao || "",
       marca: p.marca || "",
       estoque: p.estoque?.toString() || "0",
+      estoque_minimo: p.estoque_minimo?.toString() || "0",
+      prazo_reposicao_dias: p.prazo_reposicao_dias?.toString() || "15",
       garantia: p.garantia || "",
       origem: p.origem || "nacional",
       condicao: p.condicao || "novo",
@@ -993,6 +1061,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   };
 
   const openNewDialog = () => {
+    setFicha(fichaVazia());
+    setMaquinasSelecionadas([]);
     setEditingProduto(null);
     setSelectedFile(null);
     setFormData(initialFormData);
@@ -1095,6 +1165,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 <SelectItem value="all">Todos status</SelectItem>
                 <SelectItem value="ativo">Ativo</SelectItem>
                 <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterProduzido} onValueChange={setFilterProduzido}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Produzido" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Produzido: todos</SelectItem>
+                <SelectItem value="sim">Produzido: sim</SelectItem>
+                <SelectItem value="nao">Produzido: não</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterMateriaPrima} onValueChange={setFilterMateriaPrima}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Matéria-prima" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Matéria-prima: todos</SelectItem>
+                <SelectItem value="sim">Matéria-prima: sim</SelectItem>
+                <SelectItem value="nao">Matéria-prima: não</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1406,7 +1492,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
           <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
@@ -1454,11 +1540,23 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <span className="hidden sm:inline">Marketplace</span>
                   <span className="sm:hidden">MKT</span>
                 </TabsTrigger>
+                {abasProducao(formData).map(aba => {
+                  const Icone = aba === 'producao' ? Factory : Cog;
+                  return <TabsTrigger key={aba} value={aba} className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"><Icone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span>{aba === 'producao' ? 'Produção' : 'Máquinas'}</span></TabsTrigger>;
+                })}
               </TabsList>
+
+              {formData.produzido && <>
+                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.materia_prima && p.id !== editingProduto?.id)} maquinas={maquinas} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
+              </>}
 
               <TabsContent value="basico" className="mt-4 sm:mt-6">
                 <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-b pb-4">
+                    {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'produzido', nome: 'Produto produzido' }, { campo: 'comercializavel', nome: 'Pode ser comercializado' }] as const).map(flag => <Label key={flag.campo} className="flex items-center gap-2 text-sm"><Checkbox checked={formData[flag.campo]} onCheckedChange={v => setFormData(prev => ({ ...prev, [flag.campo]: v === true }))} />{flag.nome}</Label>)}
+                  </div>
                   <div className="space-y-3 sm:space-y-4">
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -1616,6 +1714,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </div>
                   )}
 
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Estoque mínimo</h4>
+                  <EstoqueMinimoCampos
+                    produtoId={editingProduto?.id}
+                    minimo={formData.estoque_minimo}
+                    prazo={formData.prazo_reposicao_dias}
+                    onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))}
+                  />
+                  </div>
                 </div>
               </TabsContent>
 

@@ -39,6 +39,7 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
         .from('produtos')
         .select('*')
         .eq('ativo', true)
+        .eq('comercializavel', true)
         .order('nome');
 
       if (estabelecimentoId) {

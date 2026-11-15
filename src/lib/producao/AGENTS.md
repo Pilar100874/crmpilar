@@ -1,0 +1,3 @@
+- Store the production recipe in produtos.ficha_producao, validate tenant ownership and positive quantities with the database trigger, and centralize consumption, alternative selection and sequential/bottleneck calculations in fichaProducao.ts so saved recipes and previews agree.
+- Keep machine capacities specific to each product step and union recipe machines with the product-machine selection when saving so the machine association tab includes every configured alternative.
+- Store explicit per-material compatibility and simultaneous output per machine; translate legacy width metadata on read to preserve saved outcomes without width-based editing.

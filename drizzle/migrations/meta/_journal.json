@@ -183,6 +183,69 @@
       "when": 1794596584981,
       "tag": "0025_epi_ficha_recebida",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794597416553,
+      "tag": "0026_rls_usuario_interno_ferr_push_strategy",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794617431480,
+      "tag": "0027_produtos_producao_maquinas",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794617856710,
+      "tag": "0028_maquina_em_manutencao",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794617976332,
+      "tag": "0029_ficha_producao_materiais_etapas",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794619118534,
+      "tag": "0030_usuario_operador_maquina_setor_produtivo",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794619665986,
+      "tag": "0031_produto_estoque_minimo",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794673367339,
+      "tag": "0032_validar_larguras_ficha_producao",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794673750803,
+      "tag": "0033_validar_regras_materia_prima_maquina",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794686489487,
+      "tag": "0034_metas_e_setup_reposicao_producao",
+      "breakpoints": true
     }
   ]
 }

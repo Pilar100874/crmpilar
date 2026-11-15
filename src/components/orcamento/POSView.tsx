@@ -92,6 +92,7 @@ import { EmpresaFormSheetEdit } from "@/components/atendimento/EmpresaFormSheetE
 import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
 import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { podeComercializar } from '@/lib/producao/regrasProduto';
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -707,6 +708,7 @@ export default function POSView({
         `)
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
+        .eq('comercializavel', true)
         .order('nome');
 
       if (error) throw error;
@@ -902,6 +904,7 @@ export default function POSView({
   });
 
   const addToCart = (produto: Produto) => {
+    if (!podeComercializar(produto)) { toast.error('Produto não disponível para comercialização'); return; }
     setCartItems(prev => {
       const newCart = new Map(prev);
       const existing = newCart.get(produto.id);
@@ -1018,6 +1021,11 @@ export default function POSView({
     setLoading(true);
     try {
       // Buscar empresa selecionada para obter dados do cliente
+      const idsProdutos = Array.from(cartItems.keys());
+      const elegiveis = await supabase.from('produtos').select('id,ativo,comercializavel').eq('estabelecimento_id', estabelecimentoId).in('id', idsProdutos);
+      if (elegiveis.error || elegiveis.data?.length !== idsProdutos.length || elegiveis.data.some(p => !podeComercializar(p))) {
+        toast.error('O carrinho contém produto não disponível para comercialização'); return;
+      }
       const { data: empresaData } = await supabase
         .from('empresas')
         .select('*')
@@ -1160,24 +1168,18 @@ export default function POSView({
   };
 
   const handleItemsExtracted = async (items: any[]) => {
-    // Adicionar itens extraídos ao carrinho
+    let adicionados = 0;
     items.forEach(item => {
-      // Buscar produto correspondente ou adicionar como genérico
-      const produto: Produto = {
-        id: crypto.randomUUID(),
-        estabelecimento_id: estabelecimentoId,
-        nome: item.material,
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
+      const produto = produtos.find(p => podeComercializar(p) && p.nome.toLocaleLowerCase('pt-BR') === String(item.material).toLocaleLowerCase('pt-BR'));
+      if (!produto) return;
       for (let i = 0; i < item.quantidade; i++) {
         addToCart(produto);
       }
+      adicionados++;
     });
     
-    toast.success(`${items.length} item(ns) adicionado(s)!`);
+    if (adicionados) toast.success(`${adicionados} item(ns) adicionado(s)!`);
+    if (adicionados < items.length) toast.warning('Itens sem correspondência no catálogo comercializável não foram adicionados');
     setActiveTab("cart");
   };
 
@@ -1187,7 +1189,7 @@ export default function POSView({
         .from("orcamento_conjuntos_itens")
         .select(`
           *,
-          produto:produtos(id, nome)
+          produto:produtos(id, nome, ativo, comercializavel)
         `)
         .eq("conjunto_id", conjuntoId)
         .order("ordem");
@@ -1195,7 +1197,7 @@ export default function POSView({
       if (error) throw error;
 
       // Inicializar itens com valores padrão
-      const itemsPreenchidos = data?.map(item => ({
+      const itemsPreenchidos = data?.filter(item => podeComercializar(item.produto)).map(item => ({
         ...item,
         quantidade: item.quantidade_padrao || 0,
         preco: item.preco_padrao || 0
