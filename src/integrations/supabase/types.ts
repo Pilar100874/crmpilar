@@ -9123,6 +9123,10 @@ export type Database = {
           credito_obs: string | null
           custom_fields: Json | null
           data_fundacao: string | null
+          eh_cliente: boolean
+          eh_fornecedor: boolean
+          eh_transportadora: boolean
+          eh_vendedor: boolean
           email: string | null
           emails_vinculados: string[] | null
           endereco: string | null
@@ -9186,6 +9190,10 @@ export type Database = {
           credito_obs?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
+          eh_cliente?: boolean
+          eh_fornecedor?: boolean
+          eh_transportadora?: boolean
+          eh_vendedor?: boolean
           email?: string | null
           emails_vinculados?: string[] | null
           endereco?: string | null
@@ -9249,6 +9257,10 @@ export type Database = {
           credito_obs?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
+          eh_cliente?: boolean
+          eh_fornecedor?: boolean
+          eh_transportadora?: boolean
+          eh_vendedor?: boolean
           email?: string | null
           emails_vinculados?: string[] | null
           endereco?: string | null
@@ -23609,6 +23621,63 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_fornecedores: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          estabelecimento_id: string
+          fator_conversao: number
+          id: string
+          nome_comercial: string | null
+          principal: boolean
+          produto_id: string
+          sku_fornecedor: string | null
+          unidade_compra: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          estabelecimento_id: string
+          fator_conversao?: number
+          id?: string
+          nome_comercial?: string | null
+          principal?: boolean
+          produto_id: string
+          sku_fornecedor?: string | null
+          unidade_compra?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          estabelecimento_id?: string
+          fator_conversao?: number
+          id?: string
+          nome_comercial?: string | null
+          principal?: boolean
+          produto_id?: string
+          sku_fornecedor?: string | null
+          unidade_compra?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_fornecedores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_fornecedores_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
             referencedColumns: ["id"]
           },
         ]

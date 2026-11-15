@@ -59,9 +59,7 @@ const sections: TabSection[] = [
     title: 'Cadastros',
     items: [
       { id: 'contatos', label: 'Contatos', icon: User, description: 'Gestão de contatos' },
-      { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
-      { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
-      { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
+      { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Clientes, fornecedores, vendedores e transportadoras' },
       { id: 'gerentes', label: 'Gerentes', icon: UserCog, description: 'Gerentes e seus vendedores/empresas' },
       { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
     ],
@@ -96,14 +94,44 @@ const sections: TabSection[] = [
 const tabItems: TabItem[] = sections.flatMap(s => s.items);
 
 /** Telas que já possuem cabeçalho próprio (CadastroHeader) — evita título duplicado. */
-const selfHeaderTabs = ['contatos', 'empresas', 'vendedores', 'transportadoras', 'gerentes'];
+const selfHeaderTabs = ['contatos', 'empresas', 'gerentes'];
 
+
+type PapelEmpresa = 'todos' | 'clientes' | 'fornecedores' | 'vendedores' | 'transportadoras';
+const PAPEIS: { id: PapelEmpresa; label: string }[] = [
+  { id: 'todos', label: 'Todas' },
+  { id: 'clientes', label: 'Clientes' },
+  { id: 'fornecedores', label: 'Fornecedores' },
+  { id: 'vendedores', label: 'Vendedores' },
+  { id: 'transportadoras', label: 'Transportadoras' },
+];
+
+/** Cadastro único de empresas: filtro rápido por papel. */
+const CadastroEmpresasUnificado: React.FC<{ inicial: string | null }> = ({ inicial }) => {
+  const [papel, setPapel] = useState<PapelEmpresa>(() =>
+    (PAPEIS.some(p => p.id === inicial) ? inicial : 'todos') as PapelEmpresa);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-1.5 px-1" role="tablist" aria-label="Filtro rápido">
+        {PAPEIS.map(p => (
+          <button key={p.id} type="button" role="tab" aria-selected={papel === p.id} onClick={() => setPapel(p.id)}
+            className={`rounded-full border px-3 py-1 text-xs sm:text-sm transition-colors ${papel === p.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-muted-foreground hover:text-foreground'}`}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {papel === 'vendedores' ? <Empresas key="v" variant="vendedor" />
+        : papel === 'transportadoras' ? <Empresas key="t" variant="transportadora" />
+        : <Empresas key={papel} filtroPapel={papel} />}
+    </div>
+  );
+};
 
 const ListasHub: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
 
-  const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : t);
+  const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : (t === 'vendedores' || t === 'transportadoras' || t === 'fornecedores') ? 'empresas' : t);
   const [activeTab, setActiveTab] = useState(() => {
     const validTabs = tabItems.map(t => t.id);
     const resolved = resolveTab(tabParam);
@@ -128,9 +156,7 @@ const ListasHub: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'contatos': return <Contatos />;
-      case 'empresas': return <Empresas />;
-      case 'vendedores': return <Empresas variant="vendedor" />;
-      case 'transportadoras': return <Empresas variant="transportadora" />;
+      case 'empresas': return <CadastroEmpresasUnificado inicial={tabParam} />;
       case 'gerentes': return <Gerentes />;
       case 'todos': return <Todos />;
       case 'repassar-vendedores-gerente': return <RepassarVendedoresGerente />;

@@ -38,7 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste, Building2 } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -46,6 +46,7 @@ import { normalizeImageToSquare } from "@/lib/imageNormalize";
 import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
 import { Checkbox } from '@/components/ui/checkbox';
+import { ProdutoFornecedoresTab } from './ProdutoFornecedoresTab';
 import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from './ProdutoProducaoTabs';
 import { abasProducao } from '@/lib/producao/regrasProduto';
 import { FichaProducaoEditor } from './FichaProducaoEditor';
@@ -1223,6 +1224,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   { value: 'frete', nome: 'Frete', icone: Truck },
                   { value: 'embalagem', nome: 'Embalagem', icone: Barcode },
                   { value: 'marketplace', nome: 'Marketplace', icone: Store },
+                  { value: 'fornecedores', nome: 'Fornecedores', icone: Building2 },
                   ...abasProducao(formData).map(aba => ({ value: aba, nome: aba === 'producao' ? 'Produção' : 'Máquinas', icone: aba === 'producao' ? Factory : Cog })),
                 ].map(({ value, nome, icone: Icone }) => (
                   <TabsTrigger key={value} value={value} className="min-w-0 gap-1.5 whitespace-normal rounded-md px-2 py-2 text-xs sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -1235,6 +1237,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 <TabsContent value="producao" className="mt-3 space-y-4"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.materia_prima && p.id !== editingProduto?.id)} erroCadastro={validarMateriaisCadastro(ficha, produtos, estabelecimentoId, editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} receitas={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.produzido && p.id !== editingProduto?.id)} nomeProduto={formData.nome} produtoAtualId={editingProduto?.id} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
                 <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
               </>}
+
+              <TabsContent value="fornecedores" className="mt-3"><ProdutoFornecedoresTab produtoId={editingProduto?.id} estabelecimentoId={estabelecimentoId} unidadeProduto={formData.unidade} /></TabsContent>
 
               <TabsContent value="basico" className="mt-4 sm:mt-6">
                 <div className="mb-4 flex flex-wrap gap-2">

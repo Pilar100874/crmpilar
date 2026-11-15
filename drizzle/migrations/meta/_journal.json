@@ -260,6 +260,13 @@
       "when": 1794705160736,
       "tag": "0036_produto_unidade_medida",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794711748402,
+      "tag": "0037_empresa_papeis_produto_fornecedores",
+      "breakpoints": true
     }
   ]
 }

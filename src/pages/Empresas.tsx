@@ -96,9 +96,11 @@ interface EmpresasProps {
   empresaIdInicial?: string;
   abaInicial?: string;
   onFecharEmbutido?: () => void;
+  /** Filtro rápido por papel (cadastro unificado). */
+  filtroPapel?: "todos" | "clientes" | "fornecedores";
 }
 
-export default function Empresas({ criarInicial = false, hideAdminButtons = false, variant = "empresa", empresaIdInicial, abaInicial, onFecharEmbutido }: EmpresasProps) {
+export default function Empresas({ criarInicial = false, hideAdminButtons = false, variant = "empresa", empresaIdInicial, abaInicial, onFecharEmbutido, filtroPapel = "todos" }: EmpresasProps) {
   const entityConfig = {
     empresa: { singular: "Empresa", plural: "Empresas", tipo_cliente: "B2B", subtitle: "Gerencie sua carteira de clientes", showSegmento: true, showTipoCliente: true },
     vendedor: { singular: "Vendedor", plural: "Vendedores", tipo_cliente: "vendedor", subtitle: "Gerencie seus vendedores", showSegmento: true, showTipoCliente: false },
@@ -260,7 +262,7 @@ export default function Empresas({ criarInicial = false, hideAdminButtons = fals
     } catch {
       try { localStorage.removeItem(key); } catch {}
     }
-  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor, filtroPapel]);
 
   useEffect(() => { setPage(1); }, [searchTerm, statusFilter, variant, filtroGerenteVendedor]);
 
@@ -523,7 +525,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
     fetchEstabelecimento();
-  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor, filtroPapel]);
 
   // Detectar se há um ID de empresa para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
@@ -544,13 +546,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     const fetchEmpresas = async (estabId: string) => {
     try {
       setLoading(true);
-      let query = supabase
+      let query: any = supabase
         .from('empresas')
         .select('*', { count: 'exact' })
         .eq('estabelecimento_id', estabId);
 
       if (variant === "empresa") {
         query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
+        if (filtroPapel === "clientes") query = query.eq('eh_cliente' as any, true);
+        if (filtroPapel === "fornecedores") query = query.eq('eh_fornecedor' as any, true);
       } else {
         query = query.eq('tipo_cliente', entityConfig.tipo_cliente);
       }
@@ -749,6 +753,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       produtos_interesse: Array.isArray((empresa as any).produtos_interesse) ? (empresa as any).produtos_interesse.join(", ") : ((empresa as any).produtos_interesse || ""),
       tags: Array.isArray((empresa as any).tags) ? (empresa as any).tags.join(", ") : ((empresa as any).tags || ""),
       observacoes_internas: (empresa as any).observacoes_internas || "",
+      eh_cliente: (empresa as any).eh_cliente ?? true,
+      eh_fornecedor: (empresa as any).eh_fornecedor ?? false,
+      eh_vendedor: (empresa as any).eh_vendedor ?? false,
+      eh_transportadora: (empresa as any).eh_transportadora ?? false,
     };
 
     
@@ -1247,6 +1255,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         cep: formData.cep,
         bairro: formData.neighborhood || null,
         tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
+        eh_cliente: formData.eh_cliente ?? (variant === "empresa" && filtroPapel !== "fornecedores"),
+        eh_fornecedor: formData.eh_fornecedor ?? filtroPapel === "fornecedores",
+        eh_vendedor: variant === "vendedor" ? true : !!formData.eh_vendedor,
+        eh_transportadora: variant === "transportadora" ? true : !!formData.eh_transportadora,
         ...(variant === "vendedor" ? { tipo_vendedor: formData.tipo_vendedor || "representante" } : {}),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
@@ -2627,6 +2639,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
 
           <TabsContent value="empresa" className="space-y-6 p-4 sm:p-8 mt-0">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-2">
+              <span className="text-xs font-medium text-muted-foreground">Esta empresa é:</span>
+              {([
+                ["eh_cliente", "Cliente", variant === "empresa" && filtroPapel !== "fornecedores"],
+                ["eh_fornecedor", "Fornecedor", filtroPapel === "fornecedores"],
+                ["eh_vendedor", "Vendedor", variant === "vendedor"],
+                ["eh_transportadora", "Transportadora", variant === "transportadora"],
+              ] as const).map(([campo, rotulo, padrao]) => {
+                const fixo = (campo === "eh_vendedor" && variant === "vendedor") || (campo === "eh_transportadora" && variant === "transportadora");
+                return (
+                  <label key={campo} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={fixo ? true : (formData[campo] ?? padrao)}
+                      disabled={fixo}
+                      onCheckedChange={(v) => setFormData({ ...formData, [campo]: v === true })}
+                    />
+                    {rotulo}
+                  </label>
+                );
+              })}
+            </div>
             <div className="space-y-8">
               <section>
                 <div className="flex items-center gap-3 mb-6">

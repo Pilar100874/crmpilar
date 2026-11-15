@@ -260,14 +260,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Empresas"
     },
     {
-      "id": "vendedores",
-      "label": "Vendedores"
-    },
-    {
-      "id": "transportadoras",
-      "label": "Transportadoras"
-    },
-    {
       "id": "gerentes",
       "label": "Gerentes"
     },
