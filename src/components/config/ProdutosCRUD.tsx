@@ -45,7 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -57,6 +57,7 @@ import { ProdutoProducaoCampos, ProdutoMaquinasCampos, type MaquinaOpcao } from 
 import { abasProducao } from '@/lib/producao/regrasProduto';
 import { FichaProducaoEditor } from './FichaProducaoEditor';
 import { fichaVazia, lerFicha, validarFicha, unidadesCadastro, type FichaProducao } from '@/lib/producao/fichaProducao';
+import { gerarCopiaDeProduto } from '@/lib/produtos/duplicarProduto';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
@@ -242,6 +243,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  /** Nome do produto que está sendo copiado; mostra o aviso no cabeçalho do cadastro. */
+  const [duplicandoDe, setDuplicandoDe] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("basico");
   const [maquinas, setMaquinas] = useState<MaquinaOpcao[]>([]);
   const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
@@ -933,6 +936,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
       setShowDialog(false);
       setEditingProduto(null);
+      setDuplicandoDe(null);
       setSelectedFile(null);
       setProductImages([]);
       setFormData(initialFormData);
@@ -951,7 +955,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFicha(lerFicha(produto.ficha_producao));
     setActiveTab('basico');
     const vinculos = await supabase.from('produto_maquinas').select('maquina_id').eq('produto_id', produto.id);
-    if (vinculos.error) { toast.error('Não foi possível carregar as máquinas do produto'); return; }
+    if (vinculos.error) { toast.error('Não foi possível carregar as máquinas do produto'); return false; }
     setMaquinasSelecionadas((vinculos.data || []).map(v => v.maquina_id));
     setEditingProduto(produto);
     setSelectedFile(null);
@@ -1049,6 +1053,74 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       categoria_google: p.categoria_google || "",
     });
     setShowDialog(true);
+    return true;
+  };
+
+  /** Gera nome e SKU que ainda não existam, para a cópia não colidir com o produto original. */
+  const nomesParaCopia = async (nome: string, codigo: string) => {
+    const { data } = await supabase
+      .from('produtos')
+      .select('nome, codigo')
+      .eq('estabelecimento_id', estabelecimentoId);
+    return gerarCopiaDeProduto(nome, codigo, data || []);
+  };
+
+  /**
+   * Baixa as fotos do produto e devolve cada uma como arquivo novo, para que a cópia
+   * tenha fotos próprias em vez de apontar para os arquivos do produto original.
+   */
+  const copiarFotos = async (produto: Produto): Promise<ProductImage[]> => {
+    const { data: imgs } = await supabase
+      .from('produto_imagens')
+      .select('*')
+      .eq('produto_id', produto.id)
+      .order('ordem', { ascending: true });
+    const fontes = (imgs && imgs.length > 0)
+      ? imgs
+      : (produto.foto_url ? [{ url: produto.foto_url, is_principal: true, ordem: 0 }] : []);
+    const copiadas: ProductImage[] = [];
+    for (const img of fontes) {
+      if (!img.url) continue;
+      try {
+        const resp = await fetch(img.url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const blob = await resp.blob();
+        const arquivo = new File([blob], `copia-${Date.now()}-${copiadas.length}.jpg`, {
+          type: blob.type || 'image/jpeg',
+        });
+        copiadas.push({
+          url: img.url,
+          file: arquivo,
+          is_principal: !!img.is_principal,
+          ordem: img.ordem ?? copiadas.length,
+        });
+      } catch (err) {
+        console.error('Não foi possível copiar a foto do produto:', err);
+      }
+    }
+    if (copiadas.length > 0 && !copiadas.some(i => i.is_principal)) copiadas[0].is_principal = true;
+    return copiadas;
+  };
+
+  /**
+   * Abre o cadastro preenchido com os dados de um produto já existente — inclusive a
+   * ficha de produção e as máquinas — mas salvando como produto novo.
+   */
+  const handleDuplicate = async (produto: Produto) => {
+    if (!(await handleEdit(produto))) return;
+    const [{ nome, codigo }, fotos] = await Promise.all([
+      nomesParaCopia(produto.nome, (produto as any).codigo || ""),
+      copiarFotos(produto),
+    ]);
+    // Produto novo: o original continua intacto e a gravação faz INSERT, não UPDATE.
+    setEditingProduto(null);
+    setDuplicandoDe(produto.nome);
+    setProductImages(fotos);
+    // O estoque físico não é duplicado: a cópia começa sem saldo.
+    setFormData(f => ({ ...f, nome, codigo, estoque: "0" }));
+    if (fotos.length === 0) {
+      toast.warning("A cópia foi aberta sem as fotos do produto original.");
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -1073,6 +1145,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFicha(fichaVazia());
     setMaquinasSelecionadas([]);
     setEditingProduto(null);
+    setDuplicandoDe(null);
     setSelectedFile(null);
     setFormData(initialFormData);
     setProductImages([]);
@@ -1355,6 +1428,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <Pencil className="w-4 h-4 mr-1" />
                   Editar
                 </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDuplicate(produto)}>
+                  <Copy className="w-4 h-4 mr-1" />
+                  Duplicar
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleDelete(produto.id)} className="text-destructive">
                   <Trash2 className="w-4 h-4 mr-1" />
                   Excluir
@@ -1446,8 +1523,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)} className="h-8 w-8">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)} className="h-8 w-8" title="Editar">
                     <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDuplicate(produto)} className="h-8 w-8" title="Duplicar">
+                    <Copy className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(produto.id)} className="h-8 w-8 text-destructive hover:text-destructive">
                     <Trash2 className="w-4 h-4" />
@@ -1466,7 +1546,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         </Table>
       </div>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) setDuplicandoDe(null); }}>
         <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-14 border-b flex-shrink-0">
@@ -1477,14 +1557,19 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                    <span className="break-words">{editingProduto ? "Editar Produto" : "Novo Produto"}</span>
+                    <span className="break-words">{editingProduto ? "Editar Produto" : duplicandoDe ? "Duplicar Produto" : "Novo Produto"}</span>
                   </DialogTitle>
                   {formData.nome && (
                     <p className="text-sm sm:text-base font-medium text-foreground mt-1 break-words">{formData.nome}</p>
                   )}
-                  {editingProduto && (
+                  {formData.codigo && (
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
-                      SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
+                      SKU: <span className="font-mono">{formData.codigo}</span>
+                    </p>
+                  )}
+                  {duplicandoDe && !editingProduto && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      Cópia de <span className="font-medium">{duplicandoDe}</span> — confira nome e SKU antes de salvar.
                     </p>
                   )}
                 </div>
