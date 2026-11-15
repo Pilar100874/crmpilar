@@ -173,3 +173,14 @@ describe('exceções por matéria-prima e máquina', () => {
     expect(lerFicha(f)).toEqual(f);
   });
 });
+
+describe('perda máxima por matéria-prima', () => {
+  it('soma a perda máxima ao consumo e rejeita 100%', async () => {
+    const { calcularProducao, validarFicha } = await import('./fichaProducao');
+    const f = { quantidade_base: 1, unidade_produto: 'un', etapas: [], materiais: [{ id: 'g', nome: 'MP', opcoes: [{ id: 'o', produto_id: 'p', quantidade: 2, unidade: 'kg', perda_max_percentual: 10 }] }] };
+    const r = calcularProducao(f, 100)!;
+    expect(r.materiais[0].quantidade).toBe(200);
+    expect(r.materiais[0].quantidade_com_perda).toBeCloseTo(220);
+    expect(validarFicha({ ...f, materiais: [{ ...f.materiais[0], opcoes: [{ ...f.materiais[0].opcoes[0], perda_max_percentual: 100 }] }] })).toBeTruthy();
+  });
+});

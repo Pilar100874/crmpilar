@@ -1,4 +1,4 @@
-export interface OpcaoMaterial { id: string; produto_id: string; quantidade: number; unidade: string; meta_producao?: number }
+export interface OpcaoMaterial { id: string; produto_id: string; quantidade: number; unidade: string; meta_producao?: number; perda_max_percentual?: number }
 export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[] }
 export interface RegraMaterialMaquina { material_opcao_id: string; permitida: boolean; simultaneos: number }
 export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; regras_materiais?: RegraMaterialMaquina[] }
@@ -15,7 +15,7 @@ export function lerFicha(valor: unknown): FichaProducao {
   return {
     quantidade_base: f.quantidade_base, unidade_produto: f.unidade_produto,
     ...(f.funcionarios_extras ? { funcionarios_extras: f.funcionarios_extras.map(a => ({ id: a.id, quantidade: a.quantidade, servico: a.servico })) } : {}),
-    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao })) })),
+    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, perda_max_percentual: o.perda_max_percentual })) })),
     etapas: f.etapas.map(e => {
       const grupo = f.materiais.find(g => g.id === e.material_largura_id);
       return { id: e.id, nome: e.nome, material_regra_id: e.material_regra_id || e.material_largura_id,
@@ -40,6 +40,7 @@ export function validarFicha(f: FichaProducao): string | null {
     if (new Set(g.opcoes.map(o => o.produto_id)).size !== g.opcoes.length) return 'Não repita a mesma matéria-prima no grupo';
     for (const o of g.opcoes) {
       if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima, quantidade positiva e unidade';
+      if (o.perda_max_percentual != null && (!Number.isFinite(o.perda_max_percentual) || o.perda_max_percentual < 0 || o.perda_max_percentual >= 100)) return 'A perda máxima deve ficar entre 0% e 99,9%';
       if (o.meta_producao != null && (!Number.isFinite(o.meta_producao) || o.meta_producao <= 0)) return 'A meta de produção deve ser maior que zero';
     }
   }
@@ -68,7 +69,9 @@ export function calcularProducao(f: FichaProducao, quantidade: number, escolhas:
   if (validarFicha(f) || !Number.isFinite(quantidade) || quantidade <= 0) return null;
   const materiais = f.materiais.map(g => {
     const o = g.opcoes.find(o => o.id === escolhas[g.id]) || g.opcoes[0];
-    return { grupo_id: g.id, opcao_id: o.id, produto_id: o.produto_id, quantidade: quantidade / f.quantidade_base * o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao };
+    const base = quantidade / f.quantidade_base * o.quantidade;
+    const perda = o.perda_max_percentual ?? 0;
+    return { grupo_id: g.id, opcao_id: o.id, produto_id: o.produto_id, quantidade: base, quantidade_com_perda: base * (1 + perda / 100), perda_max_percentual: perda, unidade: o.unidade, meta_producao: o.meta_producao };
   });
   const etapas = f.etapas.map(e => {
     const o = e.opcoes.find(o => o.id === escolhas[e.id]) || e.opcoes[0];
