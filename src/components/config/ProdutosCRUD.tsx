@@ -1452,7 +1452,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredAndSortedProdutos.map((produto) => {
             const p = produto as any;
             const estoque = Number(p.estoque ?? 0);

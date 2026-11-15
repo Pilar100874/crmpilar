@@ -67,7 +67,7 @@ export function MaquinasCRUD({ estabelecimentoId }: { estabelecimentoId: string 
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Máquinas</h2><Button onClick={() => { setEditando(null); setForm(vazio); setAberto(true); }}><Plus className="mr-2 h-4 w-4" />Nova máquina</Button></div>
     <Input aria-label="Buscar máquinas" placeholder="Buscar por nome ou código" value={busca} onChange={e => setBusca(e.target.value)} />
     {!items.length && <p className="text-muted-foreground text-sm">Nenhuma máquina cadastrada.</p>}
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
     {items.filter(m => `${m.nome} ${m.codigo}`.toLowerCase().includes(busca.toLowerCase())).map(m => <div key={m.id} role="button" tabIndex={0} onClick={() => abrirEdicao(m)} onKeyDown={e => { if (e.key === 'Enter') abrirEdicao(m); }} className="cursor-pointer rounded-lg border bg-card p-4 transition-shadow hover:shadow-md min-w-0">
       <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Cog className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1 break-words"><p className="font-semibold">{m.nome}</p><p className="text-xs text-muted-foreground">Código {m.codigo}</p></div></div>
