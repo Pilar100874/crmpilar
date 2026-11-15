@@ -14802,6 +14802,30 @@ export type Database = {
           },
         ]
       }
+      nfe_config: {
+        Row: {
+          ambiente: string
+          estabelecimento_id: string
+          token_homologacao: string | null
+          token_producao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          estabelecimento_id: string
+          token_homologacao?: string | null
+          token_producao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          estabelecimento_id?: string
+          token_homologacao?: string | null
+          token_producao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nota_links: {
         Row: {
           created_at: string
@@ -33027,6 +33051,23 @@ export type Database = {
           id: string
           policy_id: string
           similarity: number
+        }[]
+      }
+      nfe_config_salvar: {
+        Args: {
+          p_ambiente: string
+          p_token_homologacao: string
+          p_token_producao: string
+        }
+        Returns: undefined
+      }
+      nfe_config_status: {
+        Args: never
+        Returns: {
+          ambiente: string
+          tem_token_homologacao: boolean
+          tem_token_producao: boolean
+          updated_at: string
         }[]
       }
       op_calculate_smart_priority: {

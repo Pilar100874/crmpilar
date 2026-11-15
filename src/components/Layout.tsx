@@ -216,6 +216,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "Faturamento", title: "Faturamento", url: "/faturamento", icon: LucideIcons.Receipt },
       { id: "Regras Fiscais", title: "Regras Fiscais", url: "/fiscal/regras", icon: LucideIcons.Scale },
+      { id: "Configuração NF-e", title: "Configuração NF-e", url: "/fiscal/configuracao-nfe", icon: LucideIcons.KeyRound },
     ],
   },
   {

@@ -131,6 +131,7 @@ const Compras = React.lazy(() => import("./pages/compras/Compras"));
 const Estoque = React.lazy(() => import("./pages/estoque/Estoque"));
 const RegrasFiscais = React.lazy(() => import("./pages/fiscal/RegrasFiscais"));
 const Faturamento = React.lazy(() => import("./pages/fiscal/Faturamento"));
+const ConfigNfe = React.lazy(() => import("./pages/fiscal/ConfigNfe"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
 const RelatoriosVozSnapshots = React.lazy(() => import("./pages/RelatoriosVozSnapshots"));
@@ -734,6 +735,7 @@ const App = () => (
               <Route path="/estoque/entrada" element={<Estoque />} />
               <Route path="/fiscal/regras" element={<RegrasFiscais />} />
               <Route path="/faturamento" element={<Faturamento />} />
+              <Route path="/fiscal/configuracao-nfe" element={<ConfigNfe />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
               <Route path="/admin/relatorios-voz" element={<RelatoriosVozConfig />} />
               <Route path="/admin/relatorios-voz/snapshots" element={<RelatoriosVozSnapshots />} />

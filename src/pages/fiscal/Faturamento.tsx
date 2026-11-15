@@ -114,7 +114,7 @@ export default function Faturamento() {
   return (
     <div className="space-y-4 p-3 sm:p-6">
       <div className="flex items-center gap-2"><Receipt className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Faturamento</h1></div>
-      <p className="text-sm text-muted-foreground">Pedidos finalizados viram notas de saída com CFOP e impostos pelas regras fiscais, e o estoque é baixado. Depois de faturar, use "Emitir NF-e" para transmitir à SEFAZ pelo Focus NFe e baixar o DANFE e o XML autorizado. O CNPJ da unidade precisa estar cadastrado no Focus NFe com o certificado digital.</p>
+      <p className="text-sm text-muted-foreground">Pedidos finalizados viram notas de saída com CFOP e impostos pelas regras fiscais, e o estoque é baixado. Configure o token em Fiscal → Configuração NF-e. Depois de faturar, use "Emitir NF-e" para transmitir à SEFAZ pelo Focus NFe e baixar o DANFE e o XML autorizado. O CNPJ da unidade precisa estar cadastrado no Focus NFe com o certificado digital.</p>
       {!pedidos.length && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum pedido finalizado.</p>}
       <div className="space-y-2">
         {pedidos.map((p) => { const n = notaDo(p.id); return (

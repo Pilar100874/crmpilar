@@ -15,10 +15,6 @@ const Body = z.object({
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const token = Deno.env.get("FOCUS_NFE_TOKEN");
-    if (!token) return json({ error: "Token do Focus NFe não configurado" }, 400);
-    const producao = (Deno.env.get("FOCUS_NFE_AMBIENTE") ?? "homologacao") === "producao";
-    const BASE = producao ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
     const auth = req.headers.get("Authorization") ?? "";
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
     const { data: claims, error: authErr } = await sb.auth.getClaims(auth.replace("Bearer ", ""));
@@ -30,6 +26,14 @@ Deno.serve(async (req) => {
     // Leitura pelo próprio usuário: as regras de acesso garantem que a nota é da empresa dele.
     const { data: nota, error } = await sb.from("notas_fiscais").select("*, notas_fiscais_itens(*, produtos(codigo, origem)), unidades(*), empresas(*)").eq("id", nota_id).single();
     if (error || !nota) return json({ error: "Nota não encontrada" }, 404);
+    // Token e ambiente da empresa da nota (configurados em Fiscal → Configuração NF-e), lidos só no servidor.
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: cfg } = await admin.from("nfe_config").select("*").eq("estabelecimento_id", nota.estabelecimento_id).maybeSingle();
+    // Cancelar/consultar/baixar usam o ambiente em que a nota foi emitida.
+    const producao = (nota.ambiente ?? cfg?.ambiente ?? "homologacao") === "producao";
+    const token = (producao ? cfg?.token_producao : cfg?.token_homologacao) ?? Deno.env.get("FOCUS_NFE_TOKEN");
+    if (!token) return json({ error: `Token do Focus NFe de ${producao ? "produção" : "homologação"} não configurado (Fiscal → Configuração NF-e)` }, 400);
+    const BASE = producao ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
     if (nota.tipo !== "saida") return json({ error: "Somente notas de saída são emitidas" }, 400);
     const focus = (path: string, init: RequestInit = {}) => fetch(BASE + path, { ...init, headers: { Authorization: "Basic " + btoa(token + ":"), "Content-Type": "application/json", ...(init.headers ?? {}) } });
     const upd = (c: Record<string, unknown>) => sb.from("notas_fiscais").update({ ...c, updated_at: new Date().toISOString() }).eq("id", nota_id);

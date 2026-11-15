@@ -295,6 +295,13 @@
       "when": 1794714258589,
       "tag": "0041_notas_fiscais_emissao_sefaz",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794714547287,
+      "tag": "0042_nfe_config_tokens",
+      "breakpoints": true
     }
   ]
 }
