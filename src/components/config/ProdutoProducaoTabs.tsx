@@ -8,9 +8,9 @@ export interface MaquinaOpcao { id: string; nome: string; codigo: string; ativo:
 export function ProdutoProducaoCampos({ tempo, observacoes, onChange }: {
   tempo: string; observacoes: string; onChange: (campo: 'producao_tempo_minutos' | 'producao_observacoes', valor: string) => void;
 }) {
-  return <div className="space-y-4">
-    <div className="space-y-2"><Label htmlFor="tempo-producao">Tempo de produção por unidade (minutos)</Label><Input id="tempo-producao" type="number" min="0" step="0.01" value={tempo} onChange={e => onChange('producao_tempo_minutos', e.target.value)} /></div>
-    <div className="space-y-2"><Label htmlFor="observacoes-producao">Processo de produção e observações</Label><Textarea id="observacoes-producao" rows={5} value={observacoes} onChange={e => onChange('producao_observacoes', e.target.value)} /></div>
+  return <div className="grid grid-cols-1 md:grid-cols-4 gap-2 border-t pt-3">
+    <div className="space-y-1"><Label className="text-xs text-muted-foreground" htmlFor="tempo-producao">Tempo por unidade (min)</Label><Input className="h-8 px-2 text-sm" id="tempo-producao" type="number" min="0" step="0.01" value={tempo} onChange={e => onChange('producao_tempo_minutos', e.target.value)} /></div>
+    <div className="space-y-1 md:col-span-3"><Label className="text-xs text-muted-foreground" htmlFor="observacoes-producao">Processo e observações</Label><Textarea className="min-h-16 px-2 py-1.5 text-sm" id="observacoes-producao" rows={2} value={observacoes} onChange={e => onChange('producao_observacoes', e.target.value)} /></div>
   </div>;
 }
 
