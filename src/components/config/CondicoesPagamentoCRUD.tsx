@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MEIOS_PAGAMENTO_NFE } from "@/lib/fiscal/motorFiscal";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Pencil, Plus } from "lucide-react";
 import { CondicaoPagamento, TipoPagamento } from "@/types/orcamento";
@@ -47,6 +48,9 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
     valor_minimo: "",
     valor_maximo: "",
     tipo_pagamento_id: "",
+    meio_pagamento_nfe: "15",
+    parcelas: "1",
+    intervalo_dias: "30",
     ativo: true,
   });
 
@@ -99,13 +103,16 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
     }
 
     try {
-      const condicaoData = {
+      const condicaoData: any = {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
         descricao: formData.descricao || null,
         valor_minimo: formData.valor_minimo ? parseFloat(formData.valor_minimo) : 0,
         valor_maximo: formData.valor_maximo ? parseFloat(formData.valor_maximo) : null,
         tipo_pagamento_id: formData.tipo_pagamento_id || null,
+        meio_pagamento_nfe: formData.meio_pagamento_nfe,
+        parcelas: Math.max(1, Number(formData.parcelas) || 1),
+        intervalo_dias: Math.max(0, Number(formData.intervalo_dias) || 0),
         ativo: formData.ativo,
       };
 
@@ -142,6 +149,9 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
         valor_minimo: "",
         valor_maximo: "",
         tipo_pagamento_id: "",
+        meio_pagamento_nfe: "15",
+        parcelas: "1",
+        intervalo_dias: "30",
         ativo: true,
       });
       loadCondicoes();
@@ -159,6 +169,9 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
       valor_minimo: condicao.valor_minimo.toString(),
       valor_maximo: condicao.valor_maximo?.toString() || "",
       tipo_pagamento_id: condicao.tipo_pagamento_id || "",
+      meio_pagamento_nfe: (condicao as any).meio_pagamento_nfe || "15",
+      parcelas: String((condicao as any).parcelas ?? 1),
+      intervalo_dias: String((condicao as any).intervalo_dias ?? 30),
       ativo: condicao.ativo,
     });
     setShowDialog(true);
@@ -198,6 +211,9 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
             valor_minimo: "",
             valor_maximo: "",
             tipo_pagamento_id: "",
+            meio_pagamento_nfe: "15",
+            parcelas: "1",
+            intervalo_dias: "30",
             ativo: true,
           });
           setShowDialog(true);
@@ -341,6 +357,24 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs sm:text-sm">Meio de pagamento na NF-e</Label>
+                <Select value={formData.meio_pagamento_nfe} onValueChange={(v) => setFormData({ ...formData, meio_pagamento_nfe: v })}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>{MEIOS_PAGAMENTO_NFE.map((m) => <SelectItem key={m.valor} value={m.valor}>{m.rotulo}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs sm:text-sm">Parcelas</Label>
+                <Input type="number" min={1} value={formData.parcelas} onChange={(e) => setFormData({ ...formData, parcelas: e.target.value })} className="text-sm" />
+              </div>
+              <div>
+                <Label className="text-xs sm:text-sm">Dias entre parcelas</Label>
+                <Input type="number" min={0} value={formData.intervalo_dias} onChange={(e) => setFormData({ ...formData, intervalo_dias: e.target.value })} className="text-sm" />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

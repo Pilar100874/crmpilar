@@ -114,3 +114,29 @@ export function lerTributacao(r: any): TributacaoItem {
     valor_icms_st: n(r?.valor_icms_st, st.valor), valor_fcp: n(r?.valor_fcp, ic.valor_fcp), valor_difal: n(r?.valor_difal, r?.difal?.valor), bruto: r,
   };
 }
+
+/** Meio de pagamento da NF-e (tPag). */
+export const MEIOS_PAGAMENTO_NFE = [
+  { valor: "01", rotulo: "Dinheiro" }, { valor: "02", rotulo: "Cheque" }, { valor: "03", rotulo: "Cartão de crédito" },
+  { valor: "04", rotulo: "Cartão de débito" }, { valor: "05", rotulo: "Crédito loja" }, { valor: "15", rotulo: "Boleto bancário" },
+  { valor: "16", rotulo: "Depósito bancário" }, { valor: "17", rotulo: "PIX" }, { valor: "18", rotulo: "Transferência / carteira digital" },
+  { valor: "90", rotulo: "Sem pagamento" }, { valor: "99", rotulo: "Outros" },
+] as const;
+
+/** Modalidade do frete da NF-e (modFrete). */
+export const MODALIDADES_FRETE = [
+  { valor: 0, rotulo: "Por conta do emitente (CIF)" }, { valor: 1, rotulo: "Por conta do destinatário (FOB)" },
+  { valor: 2, rotulo: "Por conta de terceiros" }, { valor: 3, rotulo: "Transporte próprio do emitente" },
+  { valor: 4, rotulo: "Transporte próprio do destinatário" }, { valor: 9, rotulo: "Sem frete" },
+] as const;
+
+/** Parcelas da cobrança a partir da condição de pagamento (vencimentos a partir da emissão). */
+export function parcelasCobranca(total: number, parcelas: number, intervaloDias: number, emissao: Date = new Date()) {
+  const n = Math.max(1, Math.floor(parcelas) || 1);
+  const base = Math.floor((total / n) * 100) / 100;
+  return Array.from({ length: n }, (_, k) => {
+    const d = new Date(emissao); d.setDate(d.getDate() + intervaloDias * (k + 1));
+    const valor = k === n - 1 ? Math.round((total - base * (n - 1)) * 100) / 100 : base;
+    return { numero: String(k + 1).padStart(3, "0"), vencimento: d.toISOString().slice(0, 10), valor };
+  });
+}

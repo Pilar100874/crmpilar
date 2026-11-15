@@ -64,6 +64,9 @@ Deno.serve(async (req) => {
       if (r.status === "autorizado") Object.assign(c, { status: "emitida", chave: r.chave_nfe ?? nota.chave, numero: r.numero, serie: r.serie, protocolo: r.protocolo, caminho_xml: r.caminho_xml_nota_fiscal, caminho_danfe: r.caminho_danfe, emitida_em: new Date().toISOString() });
       if (r.status === "cancelado") Object.assign(c, { status: "cancelada" });
       await upd(c);
+      // Numeração manual: avança o próximo número da unidade após a autorização.
+      if (r.status === "autorizado" && nota.unidades?.proximo_numero_nfe && Number(r.numero) >= nota.unidades.proximo_numero_nfe)
+        await sb.from("unidades").update({ proximo_numero_nfe: Number(r.numero) + 1 }).eq("id", nota.unidade_id);
       return c;
     };
 
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
         if (Number(i.aliq_ipi) > 0) Object.assign(it, { ipi_situacao_tributaria: "50", ipi_codigo_enquadramento_legal: "999", ipi_base_calculo: valor, ipi_aliquota: Number(i.aliq_ipi), ipi_valor: r2(i.valor_ipi) });
         return it;
       });
-      const payload = {
+      const payload: Record<string, unknown> = {
         natureza_operacao: nota.natureza_operacao || "Venda de mercadoria", data_emissao: new Date().toISOString(), tipo_documento: 1, finalidade_emissao: nota.finalidade_emissao || 1,
         cnpj_emitente: dig(un.cnpj), local_destino: dest.estado?.toUpperCase() === un.uf?.toUpperCase() ? 1 : 2,
         [docDest.length === 14 ? "cnpj_destinatario" : "cpf_destinatario"]: docDest,
@@ -112,9 +115,35 @@ Deno.serve(async (req) => {
         logradouro_destinatario: dest.endereco, numero_destinatario: dest.numero || "S/N", complemento_destinatario: dest.complemento || undefined,
         bairro_destinatario: dest.bairro || "Centro", municipio_destinatario: dest.cidade, uf_destinatario: dest.estado.toUpperCase(), cep_destinatario: dig(dest.cep), pais_destinatario: "Brasil",
         indicador_inscricao_estadual_destinatario: ie ? 1 : 9, inscricao_estadual_destinatario: ie || undefined,
-        consumidor_final: nota.consumidor_final === true ? 1 : nota.consumidor_final === false ? 0 : (ie ? 0 : 1), presenca_comprador: Number(nota.presenca_comprador) || 9, modalidade_frete: 9,
+        consumidor_final: nota.consumidor_final === true ? 1 : nota.consumidor_final === false ? 0 : (ie ? 0 : 1), presenca_comprador: Number(nota.presenca_comprador) || 9,
         valor_frete: r2(nota.valor_frete), valor_desconto: r2(nota.valor_desconto), items: itens,
       };
+      // Transporte, volumes, cobrança e série/numeração definidos no faturamento e no cadastro da unidade.
+      const modFrete = Number.isInteger(nota.modalidade_frete) ? nota.modalidade_frete : 9;
+      Object.assign(payload, { modalidade_frete: modFrete, valor_seguro: r2(nota.valor_seguro), valor_outras_despesas: r2(nota.outras_despesas) });
+      if (un.serie_nfe) Object.assign(payload, { serie: String(un.serie_nfe) });
+      if (un.proximo_numero_nfe) Object.assign(payload, { numero: String(un.proximo_numero_nfe) });
+      const ieSt = (un.ie_substituto ?? []).find((x: any) => x?.uf?.toUpperCase() === dest.estado?.toUpperCase());
+      if (ieSt?.ie) Object.assign(payload, { inscricao_estadual_st: dig(ieSt.ie) });
+      if (nota.transportadora_id) {
+        const { data: t } = await sb.from("empresas").select("nome, nome_fantasia, cnpj, inscricao_estadual, endereco, numero, cidade, estado").eq("id", nota.transportadora_id).maybeSingle();
+        if (t) { const d = dig(t.cnpj); Object.assign(payload, { [d.length === 11 ? "cpf_transportador" : "cnpj_transportador"]: d || undefined, nome_transportador: t.nome || t.nome_fantasia,
+          inscricao_estadual_transportador: dig(t.inscricao_estadual) || undefined, endereco_transportador: [t.endereco, t.numero].filter(Boolean).join(", ") || undefined, municipio_transportador: t.cidade || undefined, uf_transportador: t.estado?.toUpperCase() || undefined }); }
+      }
+      if (nota.placa_veiculo) Object.assign(payload, { veiculo_placa: nota.placa_veiculo.replace(/[^A-Za-z0-9]/g, "").toUpperCase(), veiculo_uf: nota.uf_veiculo || undefined });
+      if (nota.volumes || nota.peso_bruto || nota.peso_liquido) Object.assign(payload, { volumes: [{ quantidade: nota.volumes || undefined, especie: nota.especie_volumes || undefined, peso_bruto: nota.peso_bruto ? Number(nota.peso_bruto) : undefined, peso_liquido: nota.peso_liquido ? Number(nota.peso_liquido) : undefined }] });
+      const totalNota = r2(nota.valor_total);
+      let meio = "99", parcelas = 1, intervalo = 0;
+      if (nota.condicao_pagamento_id) {
+        const { data: cp } = await sb.from("condicoes_pagamento").select("meio_pagamento_nfe, parcelas, intervalo_dias").eq("id", nota.condicao_pagamento_id).maybeSingle();
+        if (cp) { meio = cp.meio_pagamento_nfe || "99"; parcelas = Math.max(1, cp.parcelas || 1); intervalo = cp.intervalo_dias ?? 30; }
+      }
+      Object.assign(payload, { formas_pagamento: [{ forma_pagamento: meio, valor_pagamento: meio === "90" ? 0 : totalNota, indicador_pagamento: parcelas > 1 || intervalo > 0 ? 1 : 0 }] });
+      if (parcelas > 1 || intervalo > 0) {
+        const base = Math.floor((totalNota / parcelas) * 100) / 100;
+        Object.assign(payload, { numero_fatura: nota.ref_externa ?? ref, valor_original_fatura: totalNota, valor_liquido_fatura: totalNota,
+          duplicatas: Array.from({ length: parcelas }, (_, k) => { const d = new Date(); d.setDate(d.getDate() + intervalo * (k + 1)); return { numero: String(k + 1).padStart(3, "0"), data_vencimento: d.toISOString().slice(0, 10), valor: k === parcelas - 1 ? r2(totalNota - base * (parcelas - 1)) : base }; }) });
+      }
       const resp = await focus(`/v2/nfe?ref=${encodeURIComponent(ref)}`, { method: "POST", body: JSON.stringify(payload) });
       const txt = await resp.text(); let r: any = {}; try { r = JSON.parse(txt); } catch { r = { mensagem: txt }; }
       await upd({ ref_externa: ref, ambiente: producao ? "producao" : "homologacao", status_sefaz: r.status ?? (resp.ok ? "processando_autorizacao" : "erro"), mensagem_sefaz: r.mensagem ?? (r.erros ? JSON.stringify(r.erros) : null) });

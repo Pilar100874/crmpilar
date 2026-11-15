@@ -23,3 +23,12 @@ describe("consumidor final da venda", () => {
   it("revenda não é consumidor final", () => { expect(consumidorFinalVenda(null, "revenda", true, "1")).toBe(false); });
   it("sem dados do pedido usa não contribuinte", () => { expect(consumidorFinalVenda(null, null, false, "9")).toBe(true); });
 });
+
+import { parcelasCobranca } from "./motorFiscal";
+describe("parcelasCobranca", () => {
+  it("divide 100 em 3 parcelas com o resto na última", () => {
+    const p = parcelasCobranca(100, 3, 30, new Date("2026-01-01T12:00:00"));
+    expect(p.map((x) => x.valor)).toEqual([33.33, 33.33, 33.34]);
+    expect(p[0].vencimento).toBe("2026-01-31");
+  });
+});

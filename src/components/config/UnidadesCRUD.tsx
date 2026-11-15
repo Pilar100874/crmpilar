@@ -1,3 +1,4 @@
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [regime, setRegime] = useState("");
   const [crt, setCrt] = useState("");
   const [cnae, setCnae] = useState("");
+  const [serieNfe, setSerieNfe] = useState("1");
+  const [proximoNumero, setProximoNumero] = useState("");
+  const [ieSt, setIeSt] = useState("");
   const [buscandoFiscal, setBuscandoFiscal] = useState(false);
   const buscarDadosFiscais = async () => {
     const doc = cnpj.replace(/\D/g, "");
@@ -190,7 +194,10 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       regime_tributario: regime || null,
       crt: crt || null,
       cnae_fiscal: cnae.replace(/\D/g, "") || null,
-    };
+      serie_nfe: Number(serieNfe) || 1,
+      proximo_numero_nfe: Number(proximoNumero) || null,
+      ie_substituto: ieSt.split(/\n|;/).map((l) => l.trim()).filter(Boolean).map((l) => { const [uf, ...ie] = l.split(/[\s:=-]+/); return { uf: (uf || "").toUpperCase().slice(0, 2), ie: ie.join("").replace(/\D/g, "") }; }).filter((x) => x.uf.length === 2 && x.ie),
+    } as any;
 
     if (editingId) {
       const { error } = await supabase
@@ -270,11 +277,15 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setRegime(unidade.regime_tributario || "");
     setCrt(unidade.crt || "");
     setCnae(unidade.cnae_fiscal || "");
+    setSerieNfe(String((unidade as any).serie_nfe ?? 1));
+    setProximoNumero((unidade as any).proximo_numero_nfe ? String((unidade as any).proximo_numero_nfe) : "");
+    setIeSt((((unidade as any).ie_substituto ?? []) as any[]).map((x) => `${x.uf} ${x.ie}`).join("\n"));
     setEditingId(unidade.id);
     setFormOpen(true);
   };
 
   const resetForm = () => {
+    setSerieNfe("1"); setProximoNumero(""); setIeSt("");
     setNome("");
     setCep("");
     setLogradouro("");
@@ -547,6 +558,19 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           <div className="min-w-0 space-y-2">
             <Label htmlFor="unidade-cnae">CNAE principal</Label>
             <Input id="unidade-cnae" value={cnae} onChange={(e) => setCnae(e.target.value)} placeholder="Ex.: 2222-6/00" />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="unidade-serie">Série da NF-e</Label>
+            <Input id="unidade-serie" inputMode="numeric" value={serieNfe} onChange={(e) => setSerieNfe(e.target.value.replace(/\D/g, "").slice(0, 3))} />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="unidade-numero-nfe">Próximo número da NF-e</Label>
+            <Input id="unidade-numero-nfe" inputMode="numeric" value={proximoNumero} onChange={(e) => setProximoNumero(e.target.value.replace(/\D/g, "").slice(0, 9))} placeholder="Automático pelo emissor" />
+          </div>
+          <div className="min-w-0 space-y-2 sm:col-span-3">
+            <Label htmlFor="unidade-ie-st">Inscrição estadual de substituto tributário em outros estados</Label>
+            <Textarea id="unidade-ie-st" rows={2} value={ieSt} onChange={(e) => setIeSt(e.target.value)} placeholder={"Uma por linha, ex.:\nRJ 12345678\nMG 0012345670099"} />
+            <p className="text-xs text-muted-foreground">Usada quando a unidade recolhe a ST direto para o estado do cliente.</p>
           </div>
         </div>
 

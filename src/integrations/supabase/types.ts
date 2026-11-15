@@ -5920,7 +5920,10 @@ export type Database = {
           descricao: string | null
           estabelecimento_id: string | null
           id: string
+          intervalo_dias: number | null
+          meio_pagamento_nfe: string | null
           nome: string
+          parcelas: number | null
           tipo_pagamento_id: string | null
           updated_at: string | null
           valor_maximo: number | null
@@ -5932,7 +5935,10 @@ export type Database = {
           descricao?: string | null
           estabelecimento_id?: string | null
           id?: string
+          intervalo_dias?: number | null
+          meio_pagamento_nfe?: string | null
           nome: string
+          parcelas?: number | null
           tipo_pagamento_id?: string | null
           updated_at?: string | null
           valor_maximo?: number | null
@@ -5944,7 +5950,10 @@ export type Database = {
           descricao?: string | null
           estabelecimento_id?: string | null
           id?: string
+          intervalo_dias?: number | null
+          meio_pagamento_nfe?: string | null
           nome?: string
+          parcelas?: number | null
           tipo_pagamento_id?: string | null
           updated_at?: string | null
           valor_maximo?: number | null
@@ -14975,24 +14984,31 @@ export type Database = {
           caminho_danfe: string | null
           caminho_xml: string | null
           chave: string | null
+          condicao_pagamento_id: string | null
           consumidor_final: boolean | null
           created_at: string
           data_emissao: string | null
           destinacao_mercadoria: string | null
           emitida_em: string | null
           empresa_id: string | null
+          especie_volumes: string | null
           estabelecimento_id: string
           finalidade_emissao: number | null
           id: string
           mensagem_sefaz: string | null
+          modalidade_frete: number | null
           natureza_operacao: string | null
           numero: string | null
           observacoes: string | null
           orcamento_id: string | null
           origem: string
+          outras_despesas: number | null
           participante_cnpj: string | null
           participante_nome: string | null
           participante_uf: string | null
+          peso_bruto: number | null
+          peso_liquido: number | null
+          placa_veiculo: string | null
           presenca_comprador: string | null
           protocolo: string | null
           ref_externa: string | null
@@ -15001,6 +15017,8 @@ export type Database = {
           status_sefaz: string | null
           tipo: string
           tipo_operacao_id: string | null
+          transportadora_id: string | null
+          uf_veiculo: string | null
           unidade_id: string | null
           updated_at: string
           usuario_id: string | null
@@ -15012,7 +15030,9 @@ export type Database = {
           valor_ipi: number
           valor_pis: number
           valor_produtos: number
+          valor_seguro: number | null
           valor_total: number
+          volumes: number | null
           xml: string | null
         }
         Insert: {
@@ -15020,24 +15040,31 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
           data_emissao?: string | null
           destinacao_mercadoria?: string | null
           emitida_em?: string | null
           empresa_id?: string | null
+          especie_volumes?: string | null
           estabelecimento_id: string
           finalidade_emissao?: number | null
           id?: string
           mensagem_sefaz?: string | null
+          modalidade_frete?: number | null
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
           orcamento_id?: string | null
           origem?: string
+          outras_despesas?: number | null
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          peso_bruto?: number | null
+          peso_liquido?: number | null
+          placa_veiculo?: string | null
           presenca_comprador?: string | null
           protocolo?: string | null
           ref_externa?: string | null
@@ -15046,6 +15073,8 @@ export type Database = {
           status_sefaz?: string | null
           tipo: string
           tipo_operacao_id?: string | null
+          transportadora_id?: string | null
+          uf_veiculo?: string | null
           unidade_id?: string | null
           updated_at?: string
           usuario_id?: string | null
@@ -15057,7 +15086,9 @@ export type Database = {
           valor_ipi?: number
           valor_pis?: number
           valor_produtos?: number
+          valor_seguro?: number | null
           valor_total?: number
+          volumes?: number | null
           xml?: string | null
         }
         Update: {
@@ -15065,24 +15096,31 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
           data_emissao?: string | null
           destinacao_mercadoria?: string | null
           emitida_em?: string | null
           empresa_id?: string | null
+          especie_volumes?: string | null
           estabelecimento_id?: string
           finalidade_emissao?: number | null
           id?: string
           mensagem_sefaz?: string | null
+          modalidade_frete?: number | null
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
           orcamento_id?: string | null
           origem?: string
+          outras_despesas?: number | null
           participante_cnpj?: string | null
           participante_nome?: string | null
           participante_uf?: string | null
+          peso_bruto?: number | null
+          peso_liquido?: number | null
+          placa_veiculo?: string | null
           presenca_comprador?: string | null
           protocolo?: string | null
           ref_externa?: string | null
@@ -15091,6 +15129,8 @@ export type Database = {
           status_sefaz?: string | null
           tipo?: string
           tipo_operacao_id?: string | null
+          transportadora_id?: string | null
+          uf_veiculo?: string | null
           unidade_id?: string | null
           updated_at?: string
           usuario_id?: string | null
@@ -15102,7 +15142,9 @@ export type Database = {
           valor_ipi?: number
           valor_pis?: number
           valor_produtos?: number
+          valor_seguro?: number | null
           valor_total?: number
+          volumes?: number | null
           xml?: string | null
         }
         Relationships: [
@@ -30124,14 +30166,17 @@ export type Database = {
           crt: string | null
           estabelecimento_id: string | null
           id: string
+          ie_substituto: Json
           inscricao_estadual: string | null
           latitude: number | null
           logradouro: string | null
           longitude: number | null
           nome: string
           numero: string | null
+          proximo_numero_nfe: number | null
           ramal_portaria: string | null
           regime_tributario: string | null
+          serie_nfe: number | null
           sip_porta: number | null
           sip_porta_alternativa: number | null
           sip_servidor: string | null
@@ -30155,14 +30200,17 @@ export type Database = {
           crt?: string | null
           estabelecimento_id?: string | null
           id?: string
+          ie_substituto?: Json
           inscricao_estadual?: string | null
           latitude?: number | null
           logradouro?: string | null
           longitude?: number | null
           nome: string
           numero?: string | null
+          proximo_numero_nfe?: number | null
           ramal_portaria?: string | null
           regime_tributario?: string | null
+          serie_nfe?: number | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null
@@ -30186,14 +30234,17 @@ export type Database = {
           crt?: string | null
           estabelecimento_id?: string | null
           id?: string
+          ie_substituto?: Json
           inscricao_estadual?: string | null
           latitude?: number | null
           logradouro?: string | null
           longitude?: number | null
           nome?: string
           numero?: string | null
+          proximo_numero_nfe?: number | null
           ramal_portaria?: string | null
           regime_tributario?: string | null
+          serie_nfe?: number | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
           sip_servidor?: string | null

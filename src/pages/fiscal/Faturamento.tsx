@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Receipt, FileCheck2, Ban, Send, RefreshCw, FileText, FileCode } from "lucide-react";
 import { toast } from "sonner";
-import { DESTINACOES, FINALIDADES_NFE, OPERACOES, PRESENCAS, destinoOperacao, faltasConsulta, lerTributacao, montarConsulta } from "@/lib/fiscal/motorFiscal";
+import { DESTINACOES, FINALIDADES_NFE, MODALIDADES_FRETE, OPERACOES, PRESENCAS, destinoOperacao, faltasConsulta, lerTributacao, montarConsulta } from "@/lib/fiscal/motorFiscal";
 import { rotuloRegime } from "@/lib/fiscal/regimeTributario";
 import { brl, dataBr, nomeEmpresa, qtd, useContextoInterno } from "@/lib/estoque/contexto";
 
@@ -20,20 +21,25 @@ export default function Faturamento() {
   const ctx = useContextoInterno();
   const [pedidos, setPedidos] = useState<any[]>([]); const [notas, setNotas] = useState<any[]>([]);
   const [unidades, setUnidades] = useState<any[]>([]); const [tipos, setTipos] = useState<any[]>([]);
+  const [transportadoras, setTransportadoras] = useState<any[]>([]); const [condicoes, setCondicoes] = useState<any[]>([]);
   const tipoDe = (id?: string | null) => tipos.find((t) => t.id === id) ?? null;
   const dadosPedido = (pr: any) => ({ finalidade_nfe: tipoDe(pr.tipoId)?.finalidade_nfe ?? 1, consumidor_final: pr.consumidor === "sim" ? true : pr.consumidor === "nao" ? false : null, destinacao: pr.destinacao || null, presenca: pr.presenca || null });
   const abrir = (p: any) => { const tp = tipoDe(p.tipo_operacao_id); setPrep({ pedido: p, unidadeId: p.unidade_id ?? unidades[0]?.id ?? "", tipoId: tp?.id ?? "", operacao: tp?.operacao_base ?? "venda",
-    consumidor: p.consumidor_final_venda === true ? "sim" : p.consumidor_final_venda === false ? "nao" : "auto", destinacao: p.destinacao_mercadoria ?? "", presenca: p.presenca_comprador ?? "9" }); };
+    consumidor: p.consumidor_final_venda === true ? "sim" : p.consumidor_final_venda === false ? "nao" : "auto", destinacao: p.destinacao_mercadoria ?? "", presenca: p.presenca_comprador ?? "9",
+    frete: "9", transportadoraId: "", placa: "", ufVeiculo: "", volumes: "", especie: "", pesoBruto: "", pesoLiquido: "", condicaoId: "", seguro: "", despesas: "" }); };
   const [trib, setTrib] = useState<{ chave: string; itens?: any[]; erro?: string; carregando?: boolean } | null>(null);
   const [prep, setPrep] = useState<any | null>(null); const [cancelar, setCancelar] = useState<any | null>(null);
   const carregar = async () => {
     if (!ctx.estabelecimentoId) return;
-    const [o, n, u, t] = await Promise.all([
+    const [o, n, u, t, tr, cp] = await Promise.all([
       sb.from("orcamentos").select("id, created_at, valor_total, unidade_id, tipo_operacao_id, consumidor_final_venda, destinacao_mercadoria, presenca_comprador, empresas(id, nome_fantasia, nome, cnpj, estado, regime_tributario, inscricao_estadual, contribuinte_icms, consumidor_final, inscricao_suframa, cnae_fiscal), orcamento_itens(produto_id, quantidade, preco_unitario, subtotal, produtos(nome, ncm, unidade, cest, ex_tipi, origem, tipo_item_fiscal, codigo_beneficio_fiscal))").eq("estabelecimento_id", ctx.estabelecimentoId).eq("etapa", "finalizado").order("created_at", { ascending: false }).limit(200),
       sb.from("notas_fiscais").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("tipo", "saida").order("created_at", { ascending: false }).limit(300),
       sb.from("unidades").select("id, nome, uf, cnpj, regime_tributario, crt, cnae_fiscal, certificado_valido_ate").eq("estabelecimento_id", ctx.estabelecimentoId).order("nome"),
       sb.from("fiscal_tipos_operacao").select("*").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome"),
+      sb.from("empresas").select("id, nome, nome_fantasia, cnpj, inscricao_estadual, estado").eq("estabelecimento_id", ctx.estabelecimentoId).eq("eh_transportadora", true).order("nome").limit(500),
+      sb.from("condicoes_pagamento").select("id, nome, meio_pagamento_nfe, parcelas, intervalo_dias").eq("estabelecimento_id", ctx.estabelecimentoId).eq("ativo", true).order("nome"),
     ]);
+    setTransportadoras(tr.data ?? []); setCondicoes(cp.data ?? []);
     setPedidos(o.data ?? []); setNotas(n.data ?? []); setUnidades(u.data ?? []); setTipos(t.data ?? []);
   };
   useEffect(() => { carregar(); }, [ctx.estabelecimentoId]);
@@ -66,17 +72,22 @@ export default function Faturamento() {
     if (!un) return toast.error("Escolha a unidade emissora");
     if (itens.some((i: any) => !i.t?.cfop)) return toast.error(trib?.erro ?? "Aguarde a tributação do Systax");
     if (!un.regime_tributario) return toast.error("Defina o regime tributário da unidade no cadastro de Unidades");
+    if (["0", "1", "2"].includes(prep.frete) && !prep.transportadoraId) return toast.error("Escolha a transportadora para essa modalidade de frete");
+    if (prep.placa && !/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/i.test(prep.placa.replace(/[^A-Za-z0-9]/g, ""))) return toast.error("Placa do veículo inválida (ex.: ABC1D23)");
     const soma = (k: string) => itens.reduce((s: number, i: any) => s + (Number(i.t[`valor_${k}`]) || 0), 0);
     const valorProdutos = itens.reduce((s: number, i: any) => s + i.valor, 0);
     const p = prep.pedido; const tipo = tipoDe(prep.tipoId); const dp = dadosPedido(prep);
     await sb.from("orcamentos").update({ tipo_operacao_id: tipo?.id ?? null, consumidor_final_venda: dp.consumidor_final, destinacao_mercadoria: dp.destinacao, presenca_comprador: dp.presenca }).eq("id", p.id);
     const r = await sb.from("notas_fiscais").insert({ estabelecimento_id: ctx.estabelecimentoId, unidade_id: un.id, tipo: "saida", status: "pronta", origem: "orcamento", orcamento_id: p.id, empresa_id: p.empresas?.id ?? null,
       natureza_operacao: tipo?.natureza_operacao || tipo?.nome || OPERACOES.find((o) => o.valor === prep.operacao)?.rotulo,
+      modalidade_frete: Number(prep.frete), transportadora_id: prep.transportadoraId || null, placa_veiculo: prep.placa.trim().toUpperCase() || null, uf_veiculo: prep.ufVeiculo.trim().toUpperCase() || null,
+      volumes: Number(prep.volumes) || null, especie_volumes: prep.especie.trim() || null, peso_bruto: Number(prep.pesoBruto) || null, peso_liquido: Number(prep.pesoLiquido) || null,
+      condicao_pagamento_id: prep.condicaoId || null, valor_seguro: Number(prep.seguro) || 0, outras_despesas: Number(prep.despesas) || 0,
       tipo_operacao_id: tipo?.id ?? null, finalidade_emissao: dp.finalidade_nfe, consumidor_final: dp.consumidor_final, presenca_comprador: dp.presenca, destinacao_mercadoria: dp.destinacao, participante_nome: nomeEmpresa(p.empresas), participante_cnpj: p.empresas?.cnpj, participante_uf: p.empresas?.estado,
       data_emissao: new Date().toISOString().slice(0, 10), valor_produtos: valorProdutos, valor_icms: soma("icms"), valor_ipi: soma("ipi"), valor_pis: soma("pis"), valor_cofins: soma("cofins"),
-      valor_total: valorProdutos + soma("ipi") + soma("icms_st"), usuario_id: ctx.usuarioId }).select("id").single();
+      valor_total: valorProdutos + soma("ipi") + soma("icms_st") + (Number(prep.seguro) || 0) + (Number(prep.despesas) || 0), usuario_id: ctx.usuarioId }).select("id").single();
     if (r.error) return toast.error(r.error.message);
-    const ri = await sb.from("notas_fiscais_itens").insert(itens.map((i: any) => ({ nota_id: r.data.id, estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id, descricao: i.produtos?.nome ?? "Item", ncm: i.produtos?.ncm, unidade: i.produtos?.unidade,
+        const ri = await sb.from("notas_fiscais_itens").insert(itens.map((i: any) => ({ nota_id: r.data.id, estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id, descricao: i.produtos?.nome ?? "Item", ncm: i.produtos?.ncm, unidade: i.produtos?.unidade,
       cfop: i.t.cfop, cst: i.t.cst, quantidade: i.quantidade, valor_unitario: i.preco_unitario, valor_total: i.valor,
       aliq_icms: i.t.aliq_icms, valor_icms: i.t.valor_icms, aliq_ipi: i.t.aliq_ipi, valor_ipi: i.t.valor_ipi, aliq_pis: i.t.aliq_pis, valor_pis: i.t.valor_pis, aliq_cofins: i.t.aliq_cofins, valor_cofins: i.t.valor_cofins, tributacao: i.t.bruto })));
     if (ri.error) return toast.error(ri.error.message);
@@ -165,6 +176,20 @@ export default function Faturamento() {
               <div><Label>Destinação da mercadoria</Label><Select value={prep.destinacao || "auto"} onValueChange={(v) => setPrep({ ...prep, destinacao: v === "auto" ? "" : v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="auto">Pelo cadastro do cliente</SelectItem>{DESTINACOES.map((d) => <SelectItem key={d.valor} value={d.valor}>{d.rotulo}</SelectItem>)}</SelectContent></Select></div>
               <div><Label>Consumidor final</Label><Select value={prep.consumidor} onValueChange={(v) => setPrep({ ...prep, consumidor: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="auto">Automático (destinação / cadastro)</SelectItem><SelectItem value="sim">Sim</SelectItem><SelectItem value="nao">Não</SelectItem></SelectContent></Select></div>
               <div><Label>Como a venda foi feita</Label><Select value={prep.presenca} onValueChange={(v) => setPrep({ ...prep, presenca: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PRESENCAS.map((x) => <SelectItem key={x.valor} value={x.valor}>{x.rotulo}</SelectItem>)}</SelectContent></Select></div>
+            </div>
+            <p className="pt-1 text-sm font-medium">Transporte e pagamento</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div><Label>Frete</Label><Select value={prep.frete} onValueChange={(v) => setPrep({ ...prep, frete: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MODALIDADES_FRETE.map((m) => <SelectItem key={m.valor} value={String(m.valor)}>{m.rotulo}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Transportadora</Label><Select value={prep.transportadoraId || "nenhuma"} onValueChange={(v) => setPrep({ ...prep, transportadoraId: v === "nenhuma" ? "" : v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="nenhuma">Nenhuma</SelectItem>{transportadoras.map((t) => <SelectItem key={t.id} value={t.id}>{nomeEmpresa(t)}</SelectItem>)}</SelectContent></Select>{!transportadoras.length && <p className="mt-1 text-xs text-muted-foreground">Marque empresas como transportadora no cadastro.</p>}</div>
+              <div><Label>Placa do veículo</Label><Input type="text" value={prep.placa} onChange={(e) => setPrep({ ...prep, placa: e.target.value })} placeholder="ABC1D23" /></div>
+              <div><Label>UF do veículo</Label><Input type="text" value={prep.ufVeiculo} onChange={(e) => setPrep({ ...prep, ufVeiculo: e.target.value })} placeholder="SP" /></div>
+              <div><Label>Volumes</Label><Input type="number" value={prep.volumes} onChange={(e) => setPrep({ ...prep, volumes: e.target.value })} placeholder="" /></div>
+              <div><Label>Espécie</Label><Input type="text" value={prep.especie} onChange={(e) => setPrep({ ...prep, especie: e.target.value })} placeholder="Caixa, bobina, saco…" /></div>
+              <div><Label>Peso bruto (kg)</Label><Input type="number" value={prep.pesoBruto} onChange={(e) => setPrep({ ...prep, pesoBruto: e.target.value })} placeholder="" /></div>
+              <div><Label>Peso líquido (kg)</Label><Input type="number" value={prep.pesoLiquido} onChange={(e) => setPrep({ ...prep, pesoLiquido: e.target.value })} placeholder="" /></div>
+              <div><Label>Condição de pagamento</Label><Select value={prep.condicaoId || "nenhuma"} onValueChange={(v) => setPrep({ ...prep, condicaoId: v === "nenhuma" ? "" : v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="nenhuma">Não informada (outros)</SelectItem>{condicoes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Seguro (R$)</Label><Input type="number" value={prep.seguro} onChange={(e) => setPrep({ ...prep, seguro: e.target.value })} placeholder="0,00" /></div>
+              <div><Label>Outras despesas (R$)</Label><Input type="number" value={prep.despesas} onChange={(e) => setPrep({ ...prep, despesas: e.target.value })} placeholder="0,00" /></div>
             </div>
             {tipoDe(prep.tipoId) && <p className="text-xs text-muted-foreground">Finalidade {FINALIDADES_NFE.find((f) => f.valor === tipoDe(prep.tipoId).finalidade_nfe)?.rotulo} • {tipoDe(prep.tipoId).movimenta_estoque ? "baixa estoque" : "não movimenta estoque"} • {tipoDe(prep.tipoId).gera_financeiro ? "gera cobrança" : "sem cobrança"}</p>}
             <p className="text-xs text-muted-foreground">{calc.un?.regime_tributario ? rotuloRegime(calc.un.regime_tributario) : "Unidade sem regime tributário"} • {calc.destino === "interna" ? "dentro do estado" : calc.destino === "interestadual" ? "fora do estado" : "exterior"}{!prep.pedido.empresas?.estado ? " (cliente sem UF cadastrada)" : ""}</p>
