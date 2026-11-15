@@ -9,6 +9,26 @@ export const unidadesConsumo = ['un', 'kg', 'g', 'L', 'mL', 'm', 'm²', 'm³'] a
 export const unidadesCadastro = ['un', 'kg', 'g', 't', 'L', 'mL', 'm', 'cm', 'm²', 'm³', 'caixa', 'pote', 'saco', 'balde', 'rolo', 'par', 'cento', 'milheiro'] as const;
 export const fichaVazia = (): FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [] });
 
+// Factors relative to grams, millilitres and centimetres; packaging has no implicit conversion.
+const gruposConversao = [
+  { g: 1, kg: 1000, t: 1000000 },
+  { mL: 1, L: 1000 },
+  { cm: 1, m: 100 },
+] as const;
+export function unidadesCompativeis(unidade: string): string[] {
+  const u = unidade.trim();
+  const grupo = gruposConversao.find(g => Object.prototype.hasOwnProperty.call(g, u));
+  return grupo ? Object.keys(grupo) : u ? [u] : [];
+}
+export function converterQuantidade(quantidade: number, origem: string, destino: string): number | null {
+  if (!Number.isFinite(quantidade) || !origem.trim() || !unidadesCompativeis(origem).includes(destino.trim())) return null;
+  if (origem.trim() === destino.trim()) return quantidade;
+  const grupo = gruposConversao.find(g => Object.prototype.hasOwnProperty.call(g, origem.trim()));
+  if (!grupo) return null;
+  const fatores: Record<string, number> = grupo;
+  return quantidade * fatores[origem.trim()] / fatores[destino.trim()];
+}
+
 /** Unidades de medida cadastradas em cada produto (chave = id do produto). */
 export type UnidadesCadastroPorProduto = Record<string, string | null | undefined>;
 
@@ -18,7 +38,7 @@ export function unidadeCadastrada(unidades: UnidadesCadastroPorProduto, produtoI
 }
 
 /**
- * A unidade de cada matéria-prima (e do produto acabado) vem do cadastro do próprio produto.
+ * Preserva unidades de consumo compatíveis com o cadastro; o produto acabado segue o cadastro.
  * Retorna a mesma ficha quando nada muda, para não disparar re-render sem necessidade.
  * Quando o produto ainda não tem unidade cadastrada, mantém a unidade já salva na ficha.
  */
@@ -30,7 +50,7 @@ export function sincronizarUnidades(f: FichaProducao, unidades: UnidadesCadastro
     ...g,
     opcoes: g.opcoes.map(o => {
       const u = unidadeCadastrada(unidades, o.produto_id);
-      if (u && u !== o.unidade) { mudou = true; return { ...o, unidade: u }; }
+      if (u && !unidadesCompativeis(u).includes(o.unidade)) { mudou = true; return { ...o, unidade: u }; }
       return o;
     }),
   }));
@@ -57,7 +77,7 @@ export function lerFicha(valor: unknown): FichaProducao {
     }),
   };
 }
-export function validarFicha(f: FichaProducao): string | null {
+export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorProduto): string | null {
   if (!Number.isFinite(f.quantidade_base) || f.quantidade_base <= 0) return 'Informe uma quantidade-base maior que zero';
   if (!f.unidade_produto) return 'Informe a unidade do produto';
   for (const apoio of f.funcionarios_extras ?? []) {
@@ -68,7 +88,8 @@ export function validarFicha(f: FichaProducao): string | null {
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
     if (new Set(g.opcoes.map(o => o.produto_id)).size !== g.opcoes.length) return 'Não repita a mesma matéria-prima no grupo';
     for (const o of g.opcoes) {
-      if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima e uma quantidade positiva; a unidade vem do cadastro do produto';
+      if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima, a unidade e uma quantidade positiva';
+      if (unidades && !unidadesCompativeis(unidadeCadastrada(unidades, o.produto_id)).includes(o.unidade)) return 'A unidade de consumo deve ser compatível com a unidade cadastrada da matéria-prima';
       if (o.perda_max_percentual != null && (!Number.isFinite(o.perda_max_percentual) || o.perda_max_percentual < 0 || o.perda_max_percentual >= 100)) return 'A perda máxima deve ficar entre 0% e 99,9%';
       if (o.meta_producao != null && (!Number.isFinite(o.meta_producao) || o.meta_producao <= 0)) return 'A meta de produção deve ser maior que zero';
     }

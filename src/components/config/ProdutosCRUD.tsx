@@ -691,7 +691,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
   const handleSave = async () => {
     if (formData.produzido) {
-      const erroFicha = validarFicha(ficha);
+      const erroFicha = validarFicha(ficha, Object.fromEntries(produtos.map(p => [p.id, p.unidade])));
       if (erroFicha) { toast.error(erroFicha); setActiveTab('producao'); return; }
     }
     // Validações obrigatórias

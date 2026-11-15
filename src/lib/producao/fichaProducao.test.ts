@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcularProducao, validarFicha, lerFicha, type FichaProducao } from './fichaProducao';
+import { calcularProducao, validarFicha, lerFicha, unidadesCompativeis, converterQuantidade, sincronizarUnidades, type FichaProducao } from './fichaProducao';
 const ficha: FichaProducao = {
   quantidade_base: 10, unidade_produto: 'un',
   materiais: [
@@ -207,5 +207,36 @@ describe('unidade da matéria-prima vem do cadastro do produto', () => {
     const { unidadeCadastrada } = await import('./fichaProducao');
     expect(unidadeCadastrada({ x: ' kg ' }, 'x')).toBe('kg');
     expect(unidadeCadastrada({ x: null }, 'x')).toBe('');
+  });
+});
+
+describe('conversões compatíveis na produção', () => {
+  it('converte kg para gramas e preserva a quantidade física', () => {
+    expect(converterQuantidade(2, 'kg', 'g')).toBe(2000);
+    expect(converterQuantidade(2000, 'g', 'kg')).toBe(2);
+  });
+  it('nunca converte kg para unidade', () => {
+    expect(unidadesCompativeis('kg')).not.toContain('un');
+    expect(converterQuantidade(2, 'kg', 'un')).toBeNull();
+    const f = structuredClone(ficha);
+    f.materiais[0].opcoes[0].unidade = 'un';
+    expect(validarFicha(f, { x: 'kg', a: 'kg', y: 'un' })).not.toBeNull();
+  });
+  it('preserva consumo em gramas ao sincronizar e reabrir cadastro em kg', () => {
+    const f = structuredClone(ficha);
+    f.materiais[0].opcoes[0].unidade = 'g';
+    f.materiais[0].opcoes[0].quantidade = 2000;
+    const reaberta = sincronizarUnidades(lerFicha(JSON.parse(JSON.stringify(f))), { x: 'kg', a: 'kg', y: 'un' }, 'un');
+    expect(reaberta.materiais[0].opcoes[0].unidade).toBe('g');
+    expect(calcularProducao(reaberta, 100)?.materiais[0].quantidade).toBe(20000);
+    expect(validarFicha(reaberta, { x: 'kg', a: 'kg', y: 'un' })).toBeNull();
+  });
+  it('converte volume e comprimento sem misturar dimensões ou embalagens', () => {
+    expect(converterQuantidade(1, 'L', 'mL')).toBe(1000);
+    expect(converterQuantidade(1, 'm', 'cm')).toBe(100);
+    expect(converterQuantidade(1, 't', 'kg')).toBe(1000);
+    expect(converterQuantidade(1, 'kg', 'L')).toBeNull();
+    expect(converterQuantidade(1, 'm²', 'm')).toBeNull();
+    expect(unidadesCompativeis('caixa')).toEqual(['caixa']);
   });
 });

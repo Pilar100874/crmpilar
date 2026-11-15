@@ -16,6 +16,7 @@ export interface ProdutoCategoria {
 }
 
 export interface Produto {
+  unidade?: string | null;
   materia_prima?: boolean;
   produzido?: boolean;
   comercializavel?: boolean;
