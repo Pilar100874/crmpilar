@@ -84,10 +84,12 @@ export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorPro
     if (!Number.isInteger(apoio.quantidade) || apoio.quantidade <= 0) return 'Informe uma quantidade inteira maior que zero de funcionários extras';
     if (!apoio.servico.trim()) return 'Informe o serviço realizado pelos funcionários extras';
   }
+  const materiasUsadas = new Set<string>();
   for (const g of f.materiais) {
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
-    if (new Set(g.opcoes.map(o => o.produto_id)).size !== g.opcoes.length) return 'Não repita a mesma matéria-prima no grupo';
     for (const o of g.opcoes) {
+      if (o.produto_id && materiasUsadas.has(o.produto_id)) return 'Não repita a mesma matéria-prima na ficha de produção, inclusive nos substitutos';
+      if (o.produto_id) materiasUsadas.add(o.produto_id);
       if (!o.produto_id || !o.unidade || !Number.isFinite(o.quantidade) || o.quantidade <= 0) return 'Selecione a matéria-prima, a unidade e uma quantidade positiva';
       if (unidades && !unidadesCompativeis(unidadeCadastrada(unidades, o.produto_id)).includes(o.unidade)) return 'A unidade de consumo deve ser compatível com a unidade cadastrada da matéria-prima';
       if (o.perda_max_percentual != null && (!Number.isFinite(o.perda_max_percentual) || o.perda_max_percentual < 0 || o.perda_max_percentual >= 100)) return 'A perda máxima deve ficar entre 0% e 99,9%';

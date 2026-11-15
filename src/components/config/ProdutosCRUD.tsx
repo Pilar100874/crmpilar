@@ -45,7 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera, Factory, Cog, Copy, ClipboardPaste } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
@@ -58,6 +58,7 @@ import { abasProducao } from '@/lib/producao/regrasProduto';
 import { FichaProducaoEditor } from './FichaProducaoEditor';
 import { fichaVazia, lerFicha, validarFicha, unidadesCadastro, type FichaProducao } from '@/lib/producao/fichaProducao';
 import { gerarCopiaDeProduto } from '@/lib/produtos/duplicarProduto';
+import { colarDadosProduto } from '@/lib/produtos/colarDadosProduto';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ProdutosCRUDProps {
@@ -249,6 +250,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [maquinas, setMaquinas] = useState<MaquinaOpcao[]>([]);
   const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
   const [ficha, setFicha] = useState<FichaProducao>(fichaVazia);
+  const [dadosCopiados, setDadosCopiados] = useState<{ estabelecimentoId: string; form: FormData; ficha: FichaProducao; maquinas: string[]; fotos: ProductImage[] } | null>(null);
+  const [copiandoDados, setCopiandoDados] = useState(false);
   useEffect(() => {
     supabase.from('producao_maquinas').select('id,nome,codigo,ativo,em_manutencao').eq('estabelecimento_id', estabelecimentoId).order('nome').then(r => {
       if (r.error) toast.error('Não foi possível carregar as máquinas'); else setMaquinas(r.data || []);
@@ -1123,6 +1126,39 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
+  const copiarDados = async () => {
+    setCopiandoDados(true);
+    try {
+      const form = structuredClone(formData);
+      const fichaCopiada = structuredClone(ficha);
+      const maquinasCopiadas = [...maquinasSelecionadas];
+      const fotos = await Promise.all(productImages.map(async img => {
+        let file = img.file;
+        if (!file) {
+          const resposta = await fetch(img.url);
+          if (!resposta.ok) throw new Error('Foto indisponível');
+          const blob = await resposta.blob();
+          file = new File([blob], 'foto-copiada.jpg', { type: blob.type });
+        }
+        return { url: img.url, file, ordem: img.ordem, is_principal: img.is_principal };
+      }));
+      setDadosCopiados({ estabelecimentoId, form, ficha: fichaCopiada, maquinas: maquinasCopiadas, fotos });
+      toast.success('Dados copiados');
+    } catch {
+      toast.error('Não foi possível copiar os dados e fotos do produto');
+    } finally { setCopiandoDados(false); }
+  };
+
+  const colarDados = () => {
+    if (!dadosCopiados || dadosCopiados.estabelecimentoId !== estabelecimentoId) return;
+    setFormData(atual => colarDadosProduto(atual, dadosCopiados.form));
+    setFicha(structuredClone(dadosCopiados.ficha));
+    setMaquinasSelecionadas([...dadosCopiados.maquinas]);
+    setProductImages(dadosCopiados.fotos.map(img => ({ ...img })));
+    setSelectedFile(null);
+    toast.success('Dados colados; nome, SKU, códigos de barras e estoque foram mantidos. Salve para confirmar.');
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
 
@@ -1664,6 +1700,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </>}
 
               <TabsContent value="basico" className="mt-4 sm:mt-6">
+                <div className="mb-4 flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={copiandoDados || uploading} onClick={copiarDados} title="Copiar dados, produção, máquinas e fotos deste produto"><Copy className="h-4 w-4 mr-2" />{copiandoDados ? 'Copiando…' : 'Copiar dados'}</Button>
+                  <Button type="button" variant="outline" size="sm" disabled={copiandoDados || uploading || !dadosCopiados || dadosCopiados.estabelecimentoId !== estabelecimentoId} onClick={colarDados} title="Colar sem alterar nome, SKU, códigos de barras e estoque"><ClipboardPaste className="h-4 w-4 mr-2" />Colar dados</Button>
+                </div>
                 <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
                   <div className="space-y-3 sm:space-y-4">

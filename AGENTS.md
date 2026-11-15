@@ -47,5 +47,6 @@
 - Use PainelAtendimentoHeader for attendance panels and shared task details to keep title, icon, spacing and close actions consistent.
 - One voice agent per function/dept; per-client scripts.
 <!-- LOVABLE:BEGIN -->
+- Product data transfer uses a tenant-scoped in-memory snapshot, independent photo uploads and existing save validation while preserving destination identity, barcodes and stock; recipe validation rejects repeated materials across all groups.
 - Store additional production staffing as optional quantity/service groups in the existing product recipe and preserve them in its shared reader; this keeps helpers separate from machine-operator qualifications without changing production timing.
 <!-- LOVABLE:END -->

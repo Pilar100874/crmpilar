@@ -12,6 +12,17 @@ const ficha: FichaProducao = {
   ],
 };
 describe('ficha de produção', () => {
+  it('não permite duas matérias-primas iguais entre grupos ou substitutos', () => {
+    const f = structuredClone(ficha);
+    f.materiais[1].opcoes[0].produto_id = 'x';
+    expect(validarFicha(f)).toMatch(/Não repita/);
+    f.materiais[1].opcoes[0].produto_id = 'a';
+    expect(validarFicha(f)).toMatch(/Não repita/);
+    f.materiais[1].opcoes[0].produto_id = 'y';
+    f.materiais[0].opcoes[1].produto_id = 'x';
+    expect(validarFicha(f)).toMatch(/Não repita/);
+    expect(validarFicha(ficha)).toBeNull();
+  });
   it('escala o consumo de cada matéria-prima para a quantidade-base', () => {
     expect(calcularProducao(ficha, 100)?.materiais.map(m => [m.produto_id, m.quantidade, m.unidade])).toEqual([['x', 20, 'kg'], ['y', 50, 'un']]);
   });
