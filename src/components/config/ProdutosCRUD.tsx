@@ -1462,21 +1462,21 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-14 border-b flex-shrink-0">
             <DialogHeader>
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
-                <div className="flex-1 min-w-0">
+              <div className="flex flex-col gap-3">
+                <div className="min-w-0">
                   <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2 pr-2">
                     <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                    <span className="truncate">{editingProduto ? "Editar Produto" : "Novo Produto"}</span>
+                    <span className="break-words">{editingProduto ? "Editar Produto" : "Novo Produto"}</span>
                   </DialogTitle>
                   {editingProduto && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-all">
                       SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
                     </p>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 shrink-0 self-start">
+                <div className="flex flex-wrap items-center gap-2">
                 {([{ campo: 'materia_prima', nome: 'Matéria-prima' }, { campo: 'comercializavel', nome: 'Comercializável' }] as const).map(flag => (
                 <div key={flag.campo} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur">
                   <Switch checked={formData[flag.campo]} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [flag.campo]: checked }))} />
