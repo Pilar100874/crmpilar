@@ -15,3 +15,8 @@ it('recusa material removido ou com classificação alterada', () => {
   expect(validarMateriaisCadastro(ficha, [], 'empresa', 'b')).toContain('Selecione novamente');
   expect(validarMateriaisCadastro(ficha, [{ ...material, materia_prima: false }], 'empresa', 'b')).toContain('Bobina');
 });
+it('valida também substitutos, não apenas a opção principal', () => {
+  const comSubstituto = { ...ficha, materiais: [{ ...ficha.materiais[0], opcoes: [...ficha.materiais[0].opcoes, { id: 'o2', produto_id: 'b', quantidade: 20, unidade: 'kg' }] }] };
+  expect(validarMateriaisCadastro(comSubstituto, [material], 'empresa', 'c')).toContain('Selecione novamente');
+  expect(validarMateriaisCadastro(comSubstituto, [material, { ...material, id: 'b' }], 'empresa', 'c')).toBeNull();
+});

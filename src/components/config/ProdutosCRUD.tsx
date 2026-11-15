@@ -1161,9 +1161,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     } finally { setCopiandoDados(false); }
   };
 
-  const colarDados = () => {
+  const colarDados = async () => {
     if (!dadosCopiados || dadosCopiados.estabelecimentoId !== estabelecimentoId) return;
-    const erroMaterial = validarMateriaisCadastro(dadosCopiados.ficha, produtos, estabelecimentoId, editingProduto?.id);
+    const idsMateriais = [...new Set(dadosCopiados.ficha.materiais.flatMap(g => g.opcoes.map(o => o.produto_id)).filter(Boolean))];
+    const { data, error } = idsMateriais.length
+      ? await supabase.from('produtos').select('id,nome,estabelecimento_id,materia_prima').eq('estabelecimento_id', estabelecimentoId).in('id', idsMateriais)
+      : { data: [], error: null };
+    if (error) { toast.error('Não foi possível conferir as matérias-primas. Tente colar novamente.'); return; }
+    const erroMaterial = validarMateriaisCadastro(dadosCopiados.ficha, data || [], estabelecimentoId, editingProduto?.id);
     if (erroMaterial) { toast.error(erroMaterial); return; }
     setFormData(atual => colarDadosProduto(atual, dadosCopiados.form));
     setFicha(structuredClone(dadosCopiados.ficha));
@@ -1709,7 +1714,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </TabsList>
 
               {formData.produzido && <>
-                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.materia_prima && p.id !== editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
+                <TabsContent value="producao" className="space-y-6"><FichaProducaoEditor ficha={ficha} onChange={setFicha} materias={produtos.filter(p => p.estabelecimento_id === estabelecimentoId && p.materia_prima && p.id !== editingProduto?.id)} erroCadastro={validarMateriaisCadastro(ficha, produtos, estabelecimentoId, editingProduto?.id)} maquinas={maquinas} unidadeDoProdutoAtual={formData.unidade} /><ProdutoProducaoCampos tempo={formData.producao_tempo_minutos} observacoes={formData.producao_observacoes} onChange={(campo, valor) => setFormData(prev => ({ ...prev, [campo]: valor }))} /></TabsContent>
                 <TabsContent value="maquinas"><ProdutoMaquinasCampos maquinas={maquinas} selecionadas={maquinasSelecionadas} onChange={setMaquinasSelecionadas} /></TabsContent>
               </>}
 

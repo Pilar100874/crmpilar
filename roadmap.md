@@ -1,5 +1,6 @@
 # Roadmap — Atendimento
 ## Produtos e produção
+- [x] Revisar seleção, previsão, duplicação, colagem, importações e validações salvas das matérias-primas
 - [x] Corrigir a rejeição genérica de matéria-prima na gravação e ao colar uma ficha
 - [x] Impedir matérias-primas repetidas e permitir copiar/colar dados entre produtos
 - [x] Adicionar funcionários extras por serviço na ficha de produção e validar gravação/reabertura no celular

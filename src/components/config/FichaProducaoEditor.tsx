@@ -27,8 +27,8 @@ function UnidadeDoCadastro({ label, produtoId, unidades, valor, onChange }: { la
   </div>;
 }
 
-export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unidadeDoProdutoAtual }: {
-  ficha: FichaProducao; onChange: (f: FichaProducao) => void; materias: Materia[]; maquinas: MaquinaOpcao[]; unidadeDoProdutoAtual?: string | null;
+export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unidadeDoProdutoAtual, erroCadastro }: {
+  ficha: FichaProducao; onChange: (f: FichaProducao) => void; materias: Materia[]; maquinas: MaquinaOpcao[]; unidadeDoProdutoAtual?: string | null; erroCadastro?: string | null;
 }) {
   const unidades: UnidadesCadastroPorProduto = useMemo(() => Object.fromEntries(materias.map(m => [m.id, m.unidade])), [materias]);
   // Keep compatible consumption units when the recipe or product registration changes.
@@ -46,7 +46,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     if (!outra || !atual) return;
     etapas[index] = outra; etapas[index + delta] = atual; onChange({ ...ficha, etapas });
   };
-  const resultado = calcularProducao(ficha, quantidade, escolhas, maquinas.filter(m => !m.ativo || m.em_manutencao).map(m => m.id));
+  const resultado = erroCadastro ? null : calcularProducao(ficha, quantidade, escolhas, maquinas.filter(m => !m.ativo || m.em_manutencao).map(m => m.id));
   const nomeMateria = (id: string) => materias.find(m => m.id === id)?.nome || 'Matéria-prima não disponível';
   const nomeMaquina = (id: string) => maquinas.find(m => m.id === id)?.nome || 'Máquina não disponível';
   const formatar = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 4 });
@@ -131,7 +131,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
         {resultado.etapas.length > 0 && !resultado.incompativel && <><p>Tempo do lote, etapas sem sobreposição: <strong>{formatar(resultado.minutosSequenciais ?? 0)} min</strong></p><p>Capacidade máxima da linha (gargalo): <strong>{formatar(resultado.capacidadeLinha || 0)} {ficha.unidade_produto}/min</strong></p>{resultado.setupTotal > 0 && <p>Setup total das máquinas: <strong>{formatar(resultado.setupTotal)} min</strong></p>}</>}
         {resultado.indisponivel && <p className="text-destructive">Previsão indisponível: há máquina incompatível, inativa ou em manutenção na seleção.</p>}
       </div>}
-      {!resultado && validarFicha(ficha) && <p className="text-sm text-destructive">{validarFicha(ficha)}</p>}
+      {!resultado && (erroCadastro || validarFicha(ficha)) && <p className="text-sm text-destructive">{erroCadastro || validarFicha(ficha)}</p>}
     </section>
     <DeleteConfirmDialog open={!!remocao} onOpenChange={v => { if (!v) setRemocao(null); }} itemName={remocao?.nome} onConfirm={() => { remocao?.executar(); setRemocao(null); }} />
   </div>;
