@@ -4,7 +4,7 @@ import { BrowserRouter, Link, Route, Routes, useNavigate } from "react-router-do
 import { useState } from "react";
 import { UnsavedChangesProvider, useEtapasPendentes } from "./UnsavedChangesContext";
 import { lerRascunhoVistoria, useRascunhoVistoria } from "@/lib/cv/rascunhoVistoria";
-import { instalarProtecaoNavegacao } from "@/lib/navigationGuard";
+import { instalarProtecaoHistorico, instalarProtecaoNavegacao } from "@/lib/navigationGuard";
 
 afterEach(() => { cleanup(); sessionStorage.clear(); window.history.replaceState({ idx: 0 }, "", "/etapas"); });
 
@@ -26,6 +26,17 @@ function preencher() {
 }
 
 describe("Saída de telas por etapas", () => {
+  it("Proteção de Voltar pode interromper o evento antes de desmontar o formulário", () => {
+    const posterior = vi.fn();
+    const remover = instalarProtecaoHistorico(event => event.stopImmediatePropagation());
+    window.addEventListener("popstate", posterior);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(posterior).not.toHaveBeenCalled();
+    remover();
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(posterior).toHaveBeenCalledTimes(1);
+    window.removeEventListener("popstate", posterior);
+  });
   it("Cancelar mantém os dados digitados e a etapa atual", () => {
     montar(); preencher(); fireEvent.click(screen.getByText("Outro módulo"));
     expect(window.location.pathname).toBe("/etapas");

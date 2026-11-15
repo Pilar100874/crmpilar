@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { UNSAFE_NavigationContext, useLocation, useNavigate } from "react-router-dom";
-import { instalarProtecaoNavegacao } from "@/lib/navigationGuard";
+import { instalarProtecaoHistorico, instalarProtecaoNavegacao } from "@/lib/navigationGuard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,8 +102,7 @@ export const UnsavedChangesProvider = ({ children }: { children: React.ReactNode
         setPending({ entry, continuar: () => window.history.go(delta) });
       } else indiceRef.current = indice;
     };
-    window.addEventListener("popstate", handler, true);
-    return () => window.removeEventListener("popstate", handler, true);
+    return instalarProtecaoHistorico(handler);
   }, []);
   useEffect(() => {
     if (!restaurandoRef.current) indiceRef.current = window.history.state?.idx ?? indiceRef.current;
