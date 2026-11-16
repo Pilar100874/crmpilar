@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { gerarPdfVencimentos } from "@/lib/epi/relatorioEpi";
+import { gerarPdfVencimentos, gerarPdfFicha } from "@/lib/epi/relatorioEpi";
+import EpiSetores, { type Setor, type SetorItem, type FuncSetor } from "@/components/epi/EpiSetores";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { HardHat, FileDown, Plus, Pencil, Trash2, Printer, Undo2, AlertTriangle } from "lucide-react";
+import { HardHat, FileDown, Plus, Pencil, Trash2, Undo2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "@/pages/ponto/usePontoEmpresa";
 import {
@@ -41,16 +42,23 @@ export default function ControleEpi() {
   const [nova, setNova] = useState<any | null>(null);
   const [devolver, setDevolver] = useState<{ e: Entrega; motivo: string } | null>(null);
   const [fichaFunc, setFichaFunc] = useState<string>("");
+  const [setores, setSetores] = useState<Setor[]>([]);
+  const [setorItens, setSetorItens] = useState<SetorItem[]>([]);
+  const [vinculos, setVinculos] = useState<FuncSetor[]>([]);
   const hoje = hojeISO();
 
   const load = async () => {
     if (!empresaId) return;
-    const [a, b, c] = await Promise.all([
+    const [a, b, c, d, e2, f2] = await Promise.all([
       sb.from("epi_itens").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("usuarios").select("id, nome, email, unidade_id, unidades(nome)").eq("usa_epi", true).eq("ativo", true).order("nome"),
       sb.from("epi_entregas").select("*").eq("empresa_id", empresaId).order("data_entrega", { ascending: false }),
+      sb.from("epi_setores").select("id, nome").eq("empresa_id", empresaId).order("nome"),
+      sb.from("epi_setor_itens").select("id, setor_id, epi_id, quantidade").eq("empresa_id", empresaId),
+      sb.from("epi_funcionario_setor").select("id, usuario_id, setor_id").eq("empresa_id", empresaId),
     ]);
     setEpis(a.data || []); setFuncs(b.data || []); setEntregas(c.data || []);
+    setSetores(d.data || []); setSetorItens(e2.data || []); setVinculos(f2.data || []);
   };
   useEffect(() => { load(); }, [empresaId]);
 
@@ -120,6 +128,16 @@ export default function ControleEpi() {
   });
   const ficha = entregas.filter((e) => e.usuario_id === fichaFunc).sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
   const fFicha = funcMap.get(fichaFunc);
+  const setorNome = (uid: string) => setores.find((s) => s.id === vinculos.find((v) => v.usuario_id === uid)?.setor_id)?.nome;
+  const baixarFicha = () => {
+    if (!fFicha) return;
+    const sid = vinculos.find((v) => v.usuario_id === fFicha.id)?.setor_id;
+    gerarPdfFicha({
+      funcionario: fFicha.nome, email: fFicha.email ?? "—", unidade: fFicha.unidades?.nome ?? "—", setor: setorNome(fFicha.id) ?? "—",
+      exigidos: setorItens.filter((i) => i.setor_id === sid).map((i) => `${i.quantidade}× ${epiMap.get(i.epi_id)?.nome ?? "—"}`),
+      linhas: ficha.map((e) => ({ data: e.data_entrega, epi: epiMap.get(e.epi_id)?.nome ?? "—", quantidade: e.quantidade, ca: e.ca_numero ?? "—", motivo: MOTIVOS_ENTREGA[e.motivo] ?? e.motivo, troca: e.troca_prevista ?? "", devolucao: e.data_devolucao ? e.data_devolucao.split("-").reverse().join("/") : "" })),
+    });
+  };
 
   if (!empresaId) return <div className="p-6 text-muted-foreground">Cadastre uma empresa no Controle de Ponto para usar o controle de EPI.</div>;
 
@@ -153,6 +171,7 @@ export default function ControleEpi() {
         <TabsList className="flex-wrap h-auto print:hidden">
           <TabsTrigger value="entregas">Entregas</TabsTrigger>
           <TabsTrigger value="epis">EPIs cadastrados</TabsTrigger>
+          <TabsTrigger value="setores">Setores</TabsTrigger>
           <TabsTrigger value="ficha">Ficha do funcionário</TabsTrigger>
           <TabsTrigger value="alertas">Alertas</TabsTrigger>
         </TabsList>
@@ -201,19 +220,23 @@ export default function ControleEpi() {
           </div>
         </TabsContent>
 
+        <TabsContent value="setores">
+          <EpiSetores empresaId={empresaId} epis={epis} funcs={funcs} entregas={entregas} setores={setores} itens={setorItens} vinculos={vinculos} onChange={load} />
+        </TabsContent>
+
         <TabsContent value="ficha" className="space-y-3">
           <div className="flex flex-wrap gap-2 print:hidden">
             <Select value={fichaFunc} onValueChange={setFichaFunc}>
               <SelectTrigger className="w-72"><SelectValue placeholder="Escolha o funcionário" /></SelectTrigger>
               <SelectContent>{funcs.map((f) => <SelectItem key={f.id} value={f.id}>{nomeFunc(f.id)}</SelectItem>)}</SelectContent>
             </Select>
-            {fFicha && <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />Imprimir ficha</Button>}
+            {fFicha && <Button variant="outline" onClick={baixarFicha}><FileDown className="h-4 w-4 mr-1" />Gerar PDF da ficha</Button>}
           </div>
           {fFicha && (
             <Card><CardHeader><CardTitle className="text-base">Ficha de Controle de Entrega de EPI</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="grid sm:grid-cols-2 gap-1">
-                  <p><b>Funcionário:</b> {nomeFunc(fFicha.id)}</p><p><b>E-mail:</b> {fFicha.email ?? "—"}</p>
+                  <p><b>Funcionário:</b> {nomeFunc(fFicha.id)}</p><p><b>E-mail:</b> {fFicha.email ?? "—"}</p><p><b>Setor:</b> {setorNome(fFicha.id) ?? "Sem setor"}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">Registro interno do DP. O comprovante legal é a ficha em papel assinada pelo funcionário (NR-6 e art. 158 da CLT).</p>
                 <div className="space-y-2">

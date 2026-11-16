@@ -35,3 +35,38 @@ export function gerarPdfVencimentos(linhas: LinhaRelatorio[], titulo: string) {
   }
   doc.save(`epi-vencimentos-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
+
+export type FichaPdf = {
+  funcionario: string; email: string; unidade: string; setor: string;
+  exigidos: string[];
+  linhas: { data: string; epi: string; quantidade: number; ca: string; motivo: string; troca: string; devolucao: string }[];
+};
+
+/** Ficha de controle de entrega de EPI do funcionário (NR-6), com campo de assinatura em papel. */
+export function gerarPdfFicha(f: FichaPdf) {
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text("Ficha de Controle de Entrega de EPI", 14, 16);
+  doc.setFontSize(9);
+  doc.text(`Funcionário: ${f.funcionario}`, 14, 24);
+  doc.text(`E-mail: ${f.email}`, 110, 24);
+  doc.text(`Unidade: ${f.unidade}`, 14, 30);
+  doc.text(`Setor: ${f.setor}`, 110, 30);
+  const exig = doc.splitTextToSize(`EPIs exigidos pelo setor: ${f.exigidos.length ? f.exigidos.join(", ") : "—"}`, 182);
+  doc.text(exig, 14, 36);
+  autoTable(doc, {
+    startY: 38 + exig.length * 4,
+    head: [["Data", "EPI", "Qtd", "CA", "Motivo", "Troca prevista", "Devolução", "Assinatura"]],
+    body: f.linhas.map((l) => [br(l.data), l.epi, String(l.quantidade), l.ca, l.motivo, br(l.troca), l.devolucao || "—", ""]),
+    styles: { fontSize: 8, minCellHeight: 9 },
+    columnStyles: { 7: { cellWidth: 32 } },
+    headStyles: { fillColor: [60, 60, 60] },
+  });
+  let y = (doc as any).lastAutoTable.finalY + 10;
+  if (y > 250) { doc.addPage(); y = 20; }
+  const termo = doc.splitTextToSize("Declaro ter recebido os EPIs acima, gratuitamente, e ter sido orientado sobre seu uso, guarda e conservação, comprometendo-me a usá-los apenas para a finalidade a que se destinam e a comunicar qualquer alteração que os torne impróprios (NR-6 e art. 158 da CLT).", 182);
+  doc.text(termo, 14, y);
+  y += termo.length * 4 + 18;
+  doc.line(14, y, 100, y); doc.text("Assinatura do funcionário", 14, y + 5);
+  doc.line(115, y, 196, y); doc.text("Data", 115, y + 5);
+  doc.save(`ficha-epi-${f.funcionario.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+}

@@ -1,2 +1,3 @@
 - Pure EPI rules (CA, vida útil, estoque) live here; stock is adjusted by a DB trigger on epi_entregas, so UI and database agree.
 - EPI recipients are usuarios flagged usa_epi (Cadastro de Usuários → EPI); entregas reference usuario_id.
+- Setores de EPI: epi_setores/epi_setor_itens/epi_funcionario_setor define required EPIs per sector; gaps computed by episFaltantes.

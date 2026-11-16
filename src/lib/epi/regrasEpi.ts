@@ -57,3 +57,19 @@ export function validarEntrega(
   if (epi.estoque < quantidade) return "Estoque insuficiente.";
   return null;
 }
+
+/** EPIs exigidos pelo setor que o funcionário não tem em uso (sem devolução e com troca não vencida). */
+export function episFaltantes(
+  exigidos: { epi_id: string; quantidade: number }[],
+  entregasFuncionario: { epi_id: string; quantidade: number; data_devolucao: string | null; troca_prevista: string | null }[],
+  hoje: string,
+): { epi_id: string; falta: number }[] {
+  return exigidos
+    .map((x) => {
+      const emUso = entregasFuncionario
+        .filter((e) => e.epi_id === x.epi_id && !e.data_devolucao && (!e.troca_prevista || e.troca_prevista >= hoje))
+        .reduce((s, e) => s + e.quantidade, 0);
+      return { epi_id: x.epi_id, falta: Math.max(0, x.quantidade - emUso) };
+    })
+    .filter((x) => x.falta > 0);
+}

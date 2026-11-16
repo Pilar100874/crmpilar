@@ -9856,6 +9856,35 @@ export type Database = {
           },
         ]
       }
+      epi_funcionario_setor: {
+        Row: {
+          empresa_id: string
+          id: string
+          setor_id: string
+          usuario_id: string
+        }
+        Insert: {
+          empresa_id: string
+          id?: string
+          setor_id: string
+          usuario_id: string
+        }
+        Update: {
+          empresa_id?: string
+          id?: string
+          setor_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_funcionario_setor_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "epi_setores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_itens: {
         Row: {
           ativo: boolean
@@ -9914,6 +9943,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      epi_setor_itens: {
+        Row: {
+          empresa_id: string
+          epi_id: string
+          id: string
+          quantidade: number
+          setor_id: string
+        }
+        Insert: {
+          empresa_id: string
+          epi_id: string
+          id?: string
+          quantidade?: number
+          setor_id: string
+        }
+        Update: {
+          empresa_id?: string
+          epi_id?: string
+          id?: string
+          quantidade?: number
+          setor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_setor_itens_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epi_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_setor_itens_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "epi_setores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_setores: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
       estabelecimentos: {
         Row: {

@@ -448,6 +448,10 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "EPIs cadastrados"
     },
     {
+      "id": "setores",
+      "label": "Setores"
+    },
+    {
       "id": "ficha",
       "label": "Ficha do funcionário"
     },
