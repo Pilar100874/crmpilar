@@ -77,6 +77,14 @@ export default function ControleEpi() {
 
   const salvarEpi = async () => {
     if (!epiForm.nome.trim()) return toast.error("Informe o nome do EPI.");
+    if (!epiForm.categoria) return toast.error("Escolha a categoria do EPI.");
+    if (!epiForm.fabricante.trim()) return toast.error("Informe o fabricante do EPI.");
+    if (!epiForm.ca_numero.trim()) return toast.error("Informe o número do CA.");
+    if (!epiForm.ca_validade_indeterminada && !epiForm.ca_validade) return toast.error("Informe a validade do CA ou marque validade indeterminada.");
+    if (!epiForm.tamanho.trim()) return toast.error("Informe o tamanho do EPI.");
+    if (!epiForm.vida_util_dias || Number(epiForm.vida_util_dias) <= 0) return toast.error("Informe a vida útil em dias (maior que zero).");
+    if (epiForm.estoque === "" || Number(epiForm.estoque) < 0) return toast.error("Informe o estoque.");
+    if (epiForm.estoque_minimo === "" || Number(epiForm.estoque_minimo) < 0) return toast.error("Informe o estoque mínimo.");
     const payload = {
       empresa_id: empresaId, nome: epiForm.nome.trim(), categoria: epiForm.categoria || null,
       ca_numero: epiForm.ca_numero || null, ca_validade: epiForm.ca_validade_indeterminada ? null : (epiForm.ca_validade || null),
@@ -91,8 +99,12 @@ export default function ControleEpi() {
 
   const registrarEntrega = async () => {
     const epi = epiMap.get(nova.epi_id);
-    if (!nova.funcionario_id || !epi) return toast.error("Escolha o funcionário e o EPI.");
+    if (!nova.funcionario_id) return toast.error("Escolha o funcionário.");
+    if (!epi) return toast.error("Escolha o EPI.");
     const qtd = Number(nova.quantidade || 0);
+    if (!nova.quantidade || qtd <= 0) return toast.error("Informe a quantidade (maior que zero).");
+    if (!nova.data_entrega) return toast.error("Informe a data da entrega.");
+    if (!nova.motivo) return toast.error("Escolha o motivo da entrega.");
     const erro = validarEntrega(epi, qtd, hoje);
     if (erro) return toast.error(erro);
     if (!nova.ficha_recebida) return toast.error("Confirme que recebeu a ficha de EPI preenchida e assinada.");
@@ -294,22 +306,22 @@ export default function ControleEpi() {
       <Dialog open={!!epiForm} onOpenChange={(o) => !o && setEpiForm(null)}>
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>{epiForm?.id ? "Editar EPI" : "Cadastrar EPI"}</DialogTitle></DialogHeader>
           {epiForm && <div className="grid sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2"><Label>Nome</Label><Input value={epiForm.nome} onChange={(e) => setEpiForm({ ...epiForm, nome: e.target.value })} placeholder="Ex.: Botina de segurança" /></div>
-            <div><Label>Categoria</Label><Select value={epiForm.categoria || ""} onValueChange={(v) => setEpiForm({ ...epiForm, categoria: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{CATEGORIAS_EPI.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Fabricante</Label><Input value={epiForm.fabricante} onChange={(e) => setEpiForm({ ...epiForm, fabricante: e.target.value })} /></div>
-            <div><Label>Nº do CA</Label><Input value={epiForm.ca_numero} onChange={(e) => setEpiForm({ ...epiForm, ca_numero: e.target.value })} /></div>
+            <div className="sm:col-span-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={epiForm.nome} onChange={(e) => setEpiForm({ ...epiForm, nome: e.target.value })} placeholder="Ex.: Botina de segurança" /></div>
+            <div><Label>Categoria <span className="text-destructive">*</span></Label><Select value={epiForm.categoria || ""} onValueChange={(v) => setEpiForm({ ...epiForm, categoria: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{CATEGORIAS_EPI.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Fabricante <span className="text-destructive">*</span></Label><Input value={epiForm.fabricante} onChange={(e) => setEpiForm({ ...epiForm, fabricante: e.target.value })} /></div>
+            <div><Label>Nº do CA <span className="text-destructive">*</span></Label><Input value={epiForm.ca_numero} onChange={(e) => setEpiForm({ ...epiForm, ca_numero: e.target.value })} /></div>
             <div>
-              <Label>Validade do CA</Label>
+              <Label>Validade do CA <span className="text-destructive">*</span></Label>
               <Input type="date" value={epiForm.ca_validade_indeterminada ? "" : epiForm.ca_validade} disabled={!!epiForm.ca_validade_indeterminada} onChange={(e) => setEpiForm({ ...epiForm, ca_validade: e.target.value })} />
               <label className="flex items-center gap-2 mt-2 text-sm cursor-pointer select-none">
                 <Checkbox checked={!!epiForm.ca_validade_indeterminada} onCheckedChange={(v) => setEpiForm({ ...epiForm, ca_validade_indeterminada: v === true, ca_validade: v === true ? "" : epiForm.ca_validade })} />
                 Validade indeterminada
               </label>
             </div>
-            <div><Label>Tamanho</Label><Input value={epiForm.tamanho} onChange={(e) => setEpiForm({ ...epiForm, tamanho: e.target.value })} /></div>
-            <div><Label>Vida útil (dias)</Label><Input type="number" value={epiForm.vida_util_dias} onChange={(e) => setEpiForm({ ...epiForm, vida_util_dias: e.target.value })} /></div>
-            <div><Label>Estoque</Label><Input type="number" value={epiForm.estoque} onChange={(e) => setEpiForm({ ...epiForm, estoque: e.target.value })} /></div>
-            <div><Label>Estoque mínimo</Label><Input type="number" value={epiForm.estoque_minimo} onChange={(e) => setEpiForm({ ...epiForm, estoque_minimo: e.target.value })} /></div>
+            <div><Label>Tamanho <span className="text-destructive">*</span></Label><Input value={epiForm.tamanho} onChange={(e) => setEpiForm({ ...epiForm, tamanho: e.target.value })} /></div>
+            <div><Label>Vida útil (dias) <span className="text-destructive">*</span></Label><Input type="number" value={epiForm.vida_util_dias} onChange={(e) => setEpiForm({ ...epiForm, vida_util_dias: e.target.value })} /></div>
+            <div><Label>Estoque <span className="text-destructive">*</span></Label><Input type="number" value={epiForm.estoque} onChange={(e) => setEpiForm({ ...epiForm, estoque: e.target.value })} /></div>
+            <div><Label>Estoque mínimo <span className="text-destructive">*</span></Label><Input type="number" value={epiForm.estoque_minimo} onChange={(e) => setEpiForm({ ...epiForm, estoque_minimo: e.target.value })} /></div>
           </div>}
           <DialogFooter><Button variant="outline" onClick={() => setEpiForm(null)}>Cancelar</Button><Button onClick={salvarEpi}>Salvar</Button></DialogFooter>
         </DialogContent>
@@ -318,13 +330,13 @@ export default function ControleEpi() {
       <Dialog open={!!nova} onOpenChange={(o) => !o && setNova(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>Nova entrega de EPI</DialogTitle></DialogHeader>
           {nova && <div className="space-y-3">
-            <div><Label>Funcionário</Label><Select value={nova.funcionario_id} onValueChange={(v) => setNova({ ...nova, funcionario_id: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{funcs.map((f) => <SelectItem key={f.id} value={f.id}>{nomeFunc(f.id)}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>EPI</Label><Select value={nova.epi_id} onValueChange={(v) => setNova({ ...nova, epi_id: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{epis.filter((i) => i.ativo).map((i) => <SelectItem key={i.id} value={i.id}>{i.nome}{i.tamanho ? ` (${i.tamanho})` : ""} — estoque {i.estoque}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Funcionário <span className="text-destructive">*</span></Label><Select value={nova.funcionario_id} onValueChange={(v) => setNova({ ...nova, funcionario_id: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{funcs.map((f) => <SelectItem key={f.id} value={f.id}>{nomeFunc(f.id)}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>EPI <span className="text-destructive">*</span></Label><Select value={nova.epi_id} onValueChange={(v) => setNova({ ...nova, epi_id: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{epis.filter((i) => i.ativo).map((i) => <SelectItem key={i.id} value={i.id}>{i.nome}{i.tamanho ? ` (${i.tamanho})` : ""} — estoque {i.estoque}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Quantidade</Label><Input type="number" value={nova.quantidade} onChange={(e) => setNova({ ...nova, quantidade: e.target.value })} /></div>
-              <div><Label>Data</Label><Input type="date" value={nova.data_entrega} onChange={(e) => setNova({ ...nova, data_entrega: e.target.value })} /></div>
+              <div><Label>Quantidade <span className="text-destructive">*</span></Label><Input type="number" value={nova.quantidade} onChange={(e) => setNova({ ...nova, quantidade: e.target.value })} /></div>
+              <div><Label>Data <span className="text-destructive">*</span></Label><Input type="date" value={nova.data_entrega} onChange={(e) => setNova({ ...nova, data_entrega: e.target.value })} /></div>
             </div>
-            <div><Label>Motivo</Label><Select value={nova.motivo} onValueChange={(v) => setNova({ ...nova, motivo: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(MOTIVOS_ENTREGA).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Motivo <span className="text-destructive">*</span></Label><Select value={nova.motivo} onValueChange={(v) => setNova({ ...nova, motivo: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(MOTIVOS_ENTREGA).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
             {nova.epi_id && <p className="text-xs text-muted-foreground">Troca prevista: {br(trocaPrevista(nova.data_entrega, epiMap.get(nova.epi_id)?.vida_util_dias))}</p>}
             <div><Label>Observações</Label><Textarea value={nova.observacoes} onChange={(e) => setNova({ ...nova, observacoes: e.target.value })} /></div>
             <div className="flex items-start gap-2 rounded-md border p-3">
