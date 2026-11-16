@@ -9,6 +9,8 @@
 - [x] Limpar rascunhos de entrada/saída de veículos ao sair e revisar demais assistentes
 - [x] Testar permanência, descarte e reinício em celular e desktop
 ## Produtos e produção
+- [x] Prioridade por grupo com setas e promoção direta; testes de leitura/ordem/cálculo e troca no celular em blocos/tabela
+- [ ] Validar gravação/reabertura da prioridade pela tela — produto produzido disponível sem tipo fiscal obrigatório; não inventar classificação fiscal
 - [x] Alinhar edição de produtos aos contatos e conferir todas as abas em celular, tablet e desktop
 - [x] Revisar seleção, previsão, duplicação, colagem, importações e validações salvas das matérias-primas
 - [x] Corrigir a rejeição genérica de matéria-prima na gravação e ao colar uma ficha

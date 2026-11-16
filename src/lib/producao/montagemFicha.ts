@@ -58,6 +58,17 @@ export function moverEtapa(f: FichaProducao, de: number, para: number): FichaPro
   const etapas = [...f.etapas]; const [e] = etapas.splice(de, 1); etapas.splice(para, 0, e);
   return { ...f, etapas };
 }
+/** Array order is the saved preference: first option is the default, followed by substitutes. */
+export function priorizarMateria(f: FichaProducao, grupoId: string, opcaoId: string, posicao: number): FichaProducao {
+  const grupo = f.materiais.find(g => g.id === grupoId);
+  if (!grupo || !Number.isInteger(posicao) || posicao < 0 || posicao >= grupo.opcoes.length) return f;
+  const atual = grupo.opcoes.findIndex(o => o.id === opcaoId);
+  if (atual < 0 || atual === posicao) return f;
+  const opcoes = [...grupo.opcoes];
+  const [opcao] = opcoes.splice(atual, 1);
+  opcoes.splice(posicao, 0, opcao);
+  return { ...f, materiais: f.materiais.map(g => g.id === grupoId ? { ...g, opcoes } : g) };
+}
 /** Copies another product's recipe with fresh ids, remapping every internal reference. */
 export function importarReceita(origem: FichaProducao, produtoAtualId?: string): FichaProducao {
   const mapa = new Map<string, string>();

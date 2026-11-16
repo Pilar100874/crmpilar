@@ -8,8 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Plus, Trash2, ArrowUp, ArrowDown, Users, Copy, ClipboardPaste, CopyPlus, Layers, LayoutGrid, Rows3, FileDown, Download, GripVertical, ArrowRight, Package, Cog, AlertTriangle, CheckCircle2, Search } from 'lucide-react';
-import { adicionarMateriasEmLote, adicionarSubstitutosEmLote, adicionarEtapaComMaquinas, adicionarMaquinasNaEtapa, copiarParametros, colarParametros, duplicarOpcao, tornarSubstituto, moverEtapa, importarReceita, analisarAbastecimento, custoPorOpcao, alertasLinha, type ParametrosMaterial } from '@/lib/producao/montagemFicha';
+import { Plus, Trash2, ArrowUp, ArrowDown, ChevronsUp, Users, Copy, ClipboardPaste, CopyPlus, Layers, LayoutGrid, Rows3, FileDown, Download, GripVertical, ArrowRight, Package, Cog, AlertTriangle, CheckCircle2, Search } from 'lucide-react';
+import { adicionarMateriasEmLote, adicionarSubstitutosEmLote, adicionarEtapaComMaquinas, adicionarMaquinasNaEtapa, copiarParametros, colarParametros, duplicarOpcao, tornarSubstituto, moverEtapa, priorizarMateria, importarReceita, analisarAbastecimento, custoPorOpcao, alertasLinha, type ParametrosMaterial } from '@/lib/producao/montagemFicha';
 import { gerarPdfFichaProducao } from '@/lib/producao/pdfFichaProducao';
 import { lerFicha } from '@/lib/producao/fichaProducao';
 import { calcularProducao, validarFicha, unidadesConsumo, sincronizarUnidades, unidadeCadastrada, unidadesCompativeis, converterQuantidade, type FichaProducao, type GrupoMaterial, type EtapaProducao, type UnidadesCadastroPorProduto } from '@/lib/producao/fichaProducao';
@@ -103,6 +103,11 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     if (lote?.tipo === 'maquinas' && lote.alvo) onChange(adicionarMaquinasNaEtapa(ficha, lote.alvo, ids));
   };
   const mudarOpcao = (g: GrupoMaterial, id: string, valores: Partial<GrupoMaterial['opcoes'][number]>) => atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === id ? { ...x, ...valores } : x) });
+  const mudarPrioridade = (g: GrupoMaterial, opcaoId: string, posicao: number) => {
+    onChange(priorizarMateria(ficha, g.id, opcaoId, posicao));
+    // A priority change returns this group's simulation to its new default.
+    setEscolhas(atual => { const nova = { ...atual }; delete nova[g.id]; return nova; });
+  };
   const receitasValidas = receitas.filter(r => { const f = lerFicha(r.ficha_producao); return f.materiais.length || f.etapas.length; });
 
   const campoMateria = (g: GrupoMaterial, o: GrupoMaterial['opcoes'][number], index: number, i: number) => <Select value={o.produto_id} onValueChange={v => mudarOpcao(g, o.id, { produto_id: v, unidade: unidadeCadastrada(unidades, v) || o.unidade })}><SelectTrigger aria-label={`Matéria-prima ${index + 1} opção ${i + 1}`} className="min-h-8 h-auto min-w-0 px-2 py-1.5 text-sm [&>span]:whitespace-normal [&>span]:break-words"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{materias.filter(m => m.ativo || m.id === o.produto_id).map(m => <SelectItem key={m.id} value={m.id} disabled={ficha.materiais.some(grupo => grupo.opcoes.some(opcao => opcao.id !== o.id && opcao.produto_id === m.id))}>{m.nome}{!m.ativo && ' (inativa)'}</SelectItem>)}</SelectContent></Select>;
@@ -110,6 +115,11 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     const q = converterQuantidade(o.quantidade, o.unidade, v); if (q == null) return; mudarOpcao(g, o.id, { unidade: v, quantidade: q });
   }} />;
   const acoesOpcao = (g: GrupoMaterial, o: GrupoMaterial['opcoes'][number], index: number, i: number) => <div className="flex flex-wrap justify-end gap-0">
+    {g.opcoes.length > 1 && <>
+      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={i === 0} title="Tornar primeira prioridade" aria-label={`Tornar primeira prioridade material ${index + 1} opção ${i + 1}`} onClick={() => mudarPrioridade(g, o.id, 0)}><ChevronsUp className="h-3.5 w-3.5" /></Button>
+      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={i === 0} title="Aumentar prioridade" aria-label={`Aumentar prioridade material ${index + 1} opção ${i + 1}`} onClick={() => mudarPrioridade(g, o.id, i - 1)}><ArrowUp className="h-3.5 w-3.5" /></Button>
+      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={i === g.opcoes.length - 1} title="Diminuir prioridade" aria-label={`Diminuir prioridade material ${index + 1} opção ${i + 1}`} onClick={() => mudarPrioridade(g, o.id, i + 1)}><ArrowDown className="h-3.5 w-3.5" /></Button>
+    </>}
     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Copiar consumo, rendimento e perda" aria-label={`Copiar parâmetros material ${index + 1} opção ${i + 1}`} onClick={() => setParametros(copiarParametros(o))}><Copy className="h-3.5 w-3.5" /></Button>
     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={!parametros} title="Colar parâmetros copiados" aria-label={`Colar parâmetros material ${index + 1} opção ${i + 1}`} onClick={() => parametros && atualizarMaterial({ ...g, opcoes: g.opcoes.map(x => x.id === o.id ? colarParametros(x, parametros) : x) })}><ClipboardPaste className="h-3.5 w-3.5" /></Button>
     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Duplicar como novo substituto" aria-label={`Duplicar material ${index + 1} opção ${i + 1}`} onClick={() => onChange(duplicarOpcao(ficha, g.id, o.id))}><CopyPlus className="h-3.5 w-3.5" /></Button>
@@ -141,7 +151,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
       {!ficha.materiais.length && <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">Clique em <strong>Inserir várias</strong> para marcar todas as matérias-primas de uma vez.</p>}
       {visao === 'tabela' && ficha.materiais.length > 0 && <div className="rounded-md border divide-y">
         {ficha.materiais.flatMap((g, index) => g.opcoes.map((o, i) => <div key={o.id} className="grid grid-cols-2 md:grid-cols-12 gap-x-2 gap-y-1.5 p-2 items-end">
-          <div className="col-span-2 md:col-span-4 min-w-0 space-y-0.5"><Label className={rotuloCompacto}>{g.nome} · {i === 0 ? 'principal' : `substituto ${i}`}</Label>{campoMateria(g, o, index, i)}</div>
+          <div className="col-span-2 md:col-span-4 min-w-0 space-y-0.5"><Label className={rotuloCompacto}>{g.nome} · {i + 1}ª prioridade{i === 0 ? ' (principal)' : ''}</Label>{campoMateria(g, o, index, i)}</div>
           <Numero className="md:col-span-2" label="Consumo" valor={o.quantidade} onChange={v => mudarOpcao(g, o.id, { quantidade: v })} />
           {campoUnidade(g, o, index, i, 'Unidade')}
           {g.segue_grupo_id ? <div className="min-w-0 space-y-0.5 md:col-span-2"><Label className={rotuloCompacto}>Rendimento</Label><p className="flex h-8 items-center text-[11px] text-muted-foreground">Segue ciclo</p></div> : <Numero className="md:col-span-2" label="Rendimento" valor={o.rendimento ?? 0} onChange={v => mudarOpcao(g, o.id, { rendimento: v > 0 ? v : undefined })} />}
@@ -161,7 +171,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
             <Select value="" onValueChange={v => onChange(tornarSubstituto(ficha, g.id, v))}><SelectTrigger aria-label={`Tornar material ${index + 1} substituto`} className="min-h-8 h-auto w-full sm:w-44 px-2 text-xs [&>span]:whitespace-normal"><SelectValue placeholder="Escolha o material" /></SelectTrigger><SelectContent>{ficha.materiais.filter(x => x.id !== g.id).map(x => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}</SelectContent></Select></div>}
         </div>
         {g.opcoes.map((o, i) => { const custo = custos.find(c => c.opcao_id === o.id)?.custoUnitario; return <div key={o.id} className={`rounded-md border p-2 space-y-1.5 ${i === 0 ? 'border-primary/40' : 'ml-2 sm:ml-4 border-dashed'}`}>
-          <div className="flex flex-wrap items-center gap-1.5"><Badge variant={i === 0 ? 'default' : 'outline'}>{i === 0 ? 'Principal' : `OU substituto ${i}`}</Badge>{custo != null && <span className="text-[11px] text-muted-foreground">Custo/{ficha.unidade_produto}: <strong>{moeda(custo)}</strong></span>}<div className="ml-auto">{acoesOpcao(g, o, index, i)}</div></div>
+          <div className="flex flex-wrap items-center gap-1.5"><Badge variant={i === 0 ? 'default' : 'outline'}>{i + 1}ª prioridade · {i === 0 ? 'Principal' : 'OU substituto'}</Badge>{custo != null && <span className="text-[11px] text-muted-foreground">Custo/{ficha.unidade_produto}: <strong>{moeda(custo)}</strong></span>}<div className="ml-auto">{acoesOpcao(g, o, index, i)}</div></div>
           <div className="grid grid-cols-2 md:grid-cols-12 gap-x-2 gap-y-1.5 items-end">
             <div className="min-w-0 space-y-0.5 col-span-2 md:col-span-5"><Label className={rotuloCompacto}>Matéria-prima</Label>{campoMateria(g, o, index, i)}</div>
             <Numero className="md:col-span-2" texto={g.segue_grupo_id ? 'Consumo/ciclo' : 'Consumo'} label={`Consumo material ${index + 1} opção ${i + 1}${g.segue_grupo_id ? ' (por ciclo)' : ''}`} valor={o.quantidade} onChange={v => mudarOpcao(g, o.id, { quantidade: v })} />
