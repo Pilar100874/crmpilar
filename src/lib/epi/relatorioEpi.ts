@@ -70,3 +70,33 @@ export function gerarPdfFicha(f: FichaPdf) {
   doc.line(115, y, 196, y); doc.text("Data", 115, y + 5);
   doc.save(`ficha-epi-${f.funcionario.replace(/\s+/g, "-").toLowerCase()}.pdf`);
 }
+
+export type FuncSituacao = { funcionario: string; atuais: { epi: string; qtd: number; troca: string; situacao: string }[]; faltam: string[] };
+
+/** PDF por setor: EPIs atuais de cada funcionário e o que falta conforme o setor. */
+export function gerarPdfSetores(setores: { setor: string; exigidos: string[]; funcionarios: FuncSituacao[] }[]) {
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text("EPIs por setor — situação dos funcionários", 14, 16);
+  doc.setFontSize(9); doc.text(`Emitido em ${new Date().toLocaleString("pt-BR")}`, 14, 22);
+  let y = 30;
+  for (const s of setores) {
+    if (y > 250) { doc.addPage(); y = 16; }
+    doc.setFontSize(11); doc.text(`Setor: ${s.setor} (${s.funcionarios.length} funcionário(s))`, 14, y);
+    doc.setFontSize(8);
+    const ex = doc.splitTextToSize(`Exigidos: ${s.exigidos.join(", ") || "nenhum EPI definido"}`, 182);
+    doc.text(ex, 14, y + 5);
+    autoTable(doc, {
+      startY: y + 7 + ex.length * 3.5,
+      head: [["Funcionário", "EPIs atuais (troca prevista)", "Falta entregar"]],
+      body: s.funcionarios.length ? s.funcionarios.map((f) => [
+        f.funcionario,
+        f.atuais.map((a) => `${a.qtd}× ${a.epi} — ${a.situacao}${a.troca ? ` (${br(a.troca)})` : ""}`).join("\n") || "—",
+        f.faltam.join("\n") || "Em dia",
+      ]) : [["Nenhum funcionário neste setor", "", ""]],
+      styles: { fontSize: 8 }, headStyles: { fillColor: [60, 60, 60] },
+      columnStyles: { 0: { cellWidth: 45 }, 2: { cellWidth: 50 } },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+  doc.save(`epi-por-setor-${new Date().toISOString().slice(0, 10)}.pdf`);
+}

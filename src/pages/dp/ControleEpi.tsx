@@ -167,6 +167,20 @@ export default function ControleEpi() {
         ))}
       </div>
 
+      <Card className="print:hidden"><CardContent className="p-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+        {[
+          ["1", "Cadastre os EPIs", "aba EPIs cadastrados"],
+          ["2", "Defina setores e funcionários", "aba Setores"],
+          ["3", "Registre as entregas", "botão Nova entrega"],
+          ["4", "Acompanhe pendências", "abas Setores e Alertas"],
+        ].map(([n, t, d]) => (
+          <div key={n} className="flex items-start gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">{n}</span>
+            <div><p className="font-medium leading-tight">{t}</p><p className="text-xs text-muted-foreground">{d}</p></div>
+          </div>
+        ))}
+      </CardContent></Card>
+
       <Tabs defaultValue="entregas">
         <TabsList className="flex-wrap h-auto print:hidden">
           <TabsTrigger value="entregas">Entregas</TabsTrigger>
@@ -177,6 +191,7 @@ export default function ControleEpi() {
         </TabsList>
 
         <TabsContent value="entregas" className="space-y-3">
+          <p className="text-sm text-muted-foreground print:hidden">Cada entrega registrada aqui baixa o estoque. Use "Devolver" quando o EPI voltar.</p>
           <Input placeholder="Buscar por funcionário ou EPI" value={busca} onChange={(e) => setBusca(e.target.value)} className="max-w-sm" />
           <div className="space-y-2">
             {entregasFiltradas.map((e) => (
@@ -198,6 +213,7 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="epis" className="space-y-3">
+          <p className="text-sm text-muted-foreground print:hidden">Cadastre cada EPI com nº e validade do CA e vida útil — a vida útil calcula a data da próxima troca.</p>
           <Button variant="outline" onClick={() => setEpiForm({ ...epiVazio })}><Plus className="h-4 w-4 mr-1" />Cadastrar EPI</Button>
           <div className="grid gap-2 md:grid-cols-2">
             {epis.map((i) => (
@@ -225,6 +241,7 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="ficha" className="space-y-3">
+          <p className="text-sm text-muted-foreground print:hidden">Escolha um funcionário para ver o histórico e gerar o PDF da ficha para assinatura em papel.</p>
           <div className="flex flex-wrap gap-2 print:hidden">
             <Select value={fichaFunc} onValueChange={setFichaFunc}>
               <SelectTrigger className="w-72"><SelectValue placeholder="Escolha o funcionário" /></SelectTrigger>
@@ -256,6 +273,7 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="alertas" className="space-y-3">
+          <p className="text-sm text-muted-foreground print:hidden">O que precisa de atenção: trocas vencidas ou em até 15 dias, CA irregular e estoque baixo.</p>
           <Button variant="outline" onClick={() => gerarPdfVencimentos(entregas.filter((e) => !e.data_devolucao && (["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)) || caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje))).map((e) => {
             const caVenc = caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje);
             const f = funcMap.get(e.usuario_id);

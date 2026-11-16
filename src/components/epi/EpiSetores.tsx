@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Trash2, Users, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, Users, ShieldCheck, FileDown, ClipboardList } from "lucide-react";
+import { gerarPdfSetores } from "@/lib/epi/relatorioEpi";
 import { toast } from "sonner";
 import { episFaltantes } from "@/lib/epi/regrasEpi";
 
@@ -36,6 +37,25 @@ export default function EpiSetores({ empresaId, epis, funcs, entregas, setores, 
   const epiNome = useMemo(() => new Map(epis.map((e) => [e.id, `${e.nome}${e.tamanho ? ` (${e.tamanho})` : ""}`])), [epis]);
   const setorDe = useMemo(() => new Map(vinculos.map((v) => [v.usuario_id, v.setor_id])), [vinculos]);
   const itensSel = itens.filter((i) => i.setor_id === sel);
+  const situacaoTroca = (t: string | null) => !t ? "Em uso" : t < hoje ? "Troca vencida" : (new Date(t).getTime() - new Date(hoje).getTime()) / 864e5 <= 15 ? "Troca em breve" : "Em uso";
+  const resumoSetores = useMemo(() => {
+    const grupos = [...setores.map((s) => ({ id: s.id, nome: s.nome })), { id: "", nome: "Sem setor" }];
+    return grupos.map((g) => {
+      const exig = itens.filter((i) => i.setor_id === g.id);
+      const membros = funcs.filter((f) => (setorDe.get(f.id) ?? "") === g.id);
+      return {
+        id: g.id, setor: g.nome, exigidos: exig.map((i) => `${i.quantidade}× ${epiNome.get(i.epi_id) ?? "—"}`),
+        funcionarios: membros.map((f) => {
+          const ent = entregas.filter((e) => e.usuario_id === f.id);
+          return {
+            funcionario: f.nome,
+            atuais: ent.filter((e) => !e.data_devolucao).map((e) => ({ epi: epiNome.get(e.epi_id) ?? "—", qtd: e.quantidade, troca: e.troca_prevista ?? "", situacao: situacaoTroca(e.troca_prevista) })),
+            faltam: episFaltantes(exig, ent, hoje).map((x) => `${x.falta}× ${epiNome.get(x.epi_id) ?? "—"}`),
+          };
+        }),
+      };
+    }).filter((g) => g.id || g.funcionarios.length);
+  }, [setores, itens, funcs, setorDe, entregas, epiNome, hoje]);
 
   const criarSetor = async () => {
     if (!novoSetor.trim()) return toast.error("Informe o nome do setor.");
@@ -64,6 +84,9 @@ export default function EpiSetores({ empresaId, epis, funcs, entregas, setores, 
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <p className="lg:col-span-2 text-sm text-muted-foreground rounded-md border bg-muted/40 p-3">
+        <b>Como usar:</b> 1) crie os setores e diga quais EPIs cada um exige · 2) escolha o setor de cada funcionário · 3) veja abaixo, por setor, os EPIs atuais e o que falta entregar, e gere o PDF.
+      </p>
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" />Setores e EPIs obrigatórios</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -124,6 +147,38 @@ export default function EpiSetores({ empresaId, epis, funcs, entregas, setores, 
             );
           })}
           {!funcs.length && <p className="text-sm text-muted-foreground">Nenhum usuário marcado com "Usa EPI".</p>}
+        </CardContent>
+      </Card>
+
+      <Card className="lg:col-span-2">
+        <CardHeader className="pb-2 flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+          <CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" />Situação por setor</CardTitle>
+          <Button size="sm" variant="outline" onClick={() => gerarPdfSetores(resumoSetores)} disabled={!resumoSetores.length}><FileDown className="h-4 w-4 mr-1" />PDF de todos os setores</Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {resumoSetores.map((g) => (
+            <div key={g.id || "sem"} className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-1">
+                <div className="min-w-0"><p className="font-semibold">{g.setor}</p><p className="text-xs text-muted-foreground">Exige: {g.exigidos.join(", ") || "nenhum EPI definido"}</p></div>
+                <Button size="sm" variant="ghost" onClick={() => gerarPdfSetores([g])}><FileDown className="h-4 w-4 mr-1" />PDF</Button>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {g.funcionarios.map((f) => (
+                  <div key={f.funcionario} className="rounded-md border p-2 space-y-1 text-sm">
+                    <p className="font-medium">{f.funcionario}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {f.atuais.map((a, i) => <Badge key={i} variant={a.situacao === "Troca vencida" ? "destructive" : a.situacao === "Troca em breve" ? "outline" : "secondary"}>{a.qtd}× {a.epi} · {a.situacao}</Badge>)}
+                      {!f.atuais.length && <span className="text-xs text-muted-foreground">Nenhum EPI em uso</span>}
+                    </div>
+                    {g.id && (f.faltam.length
+                      ? <p className="text-xs text-destructive">Falta entregar: {f.faltam.join(", ")}</p>
+                      : <p className="text-xs text-muted-foreground">Tudo que o setor exige está entregue.</p>)}
+                  </div>
+                ))}
+                {!g.funcionarios.length && <p className="text-sm text-muted-foreground">Nenhum funcionário neste setor.</p>}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
