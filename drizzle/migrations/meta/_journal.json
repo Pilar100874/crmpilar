@@ -351,6 +351,13 @@
       "when": 1794857851434,
       "tag": "0049_epi_ca_validade_indeterminada",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794858760283,
+      "tag": "0050_produto_fornecedor_qtd_minima",
+      "breakpoints": true
     }
   ]
 }

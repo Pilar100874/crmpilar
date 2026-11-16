@@ -24318,6 +24318,7 @@ export type Database = {
           nome_comercial: string | null
           principal: boolean
           produto_id: string
+          qtd_minima_compra: number | null
           sku_fornecedor: string | null
           unidade_compra: string | null
           updated_at: string
@@ -24331,6 +24332,7 @@ export type Database = {
           nome_comercial?: string | null
           principal?: boolean
           produto_id: string
+          qtd_minima_compra?: number | null
           sku_fornecedor?: string | null
           unidade_compra?: string | null
           updated_at?: string
@@ -24344,6 +24346,7 @@ export type Database = {
           nome_comercial?: string | null
           principal?: boolean
           produto_id?: string
+          qtd_minima_compra?: number | null
           sku_fornecedor?: string | null
           unidade_compra?: string | null
           updated_at?: string

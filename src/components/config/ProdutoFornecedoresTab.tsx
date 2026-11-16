@@ -16,6 +16,7 @@ interface Linha {
   sku_fornecedor: string;
   unidade_compra: string;
   fator_conversao: number;
+  qtd_minima_compra: number | null;
   principal: boolean;
 }
 
@@ -37,7 +38,7 @@ export function ProdutoFornecedoresTab({ produtoId, estabelecimentoId, unidadePr
   useEffect(() => {
     if (!produtoId) return;
     supabase.from("produto_fornecedores").select("*").eq("produto_id", produtoId).order("created_at")
-      .then(({ data }) => setLinhas((data || []).map((d: any) => ({ ...d, nome_comercial: d.nome_comercial || "", sku_fornecedor: d.sku_fornecedor || "", unidade_compra: d.unidade_compra || "", fator_conversao: Number(d.fator_conversao) || 1 }))));
+      .then(({ data }) => setLinhas((data || []).map((d: any) => ({ ...d, nome_comercial: d.nome_comercial || "", sku_fornecedor: d.sku_fornecedor || "", unidade_compra: d.unidade_compra || "", fator_conversao: Number(d.fator_conversao) || 1, qtd_minima_compra: d.qtd_minima_compra == null ? null : Number(d.qtd_minima_compra) }))));
   }, [produtoId]);
 
   if (!produtoId) {
@@ -51,6 +52,7 @@ export function ProdutoFornecedoresTab({ produtoId, estabelecimentoId, unidadePr
     if (linhas.some(l => !l.empresa_id)) return toast.error("Selecione a empresa fornecedora em todas as linhas");
     const ids = linhas.map(l => l.empresa_id);
     if (new Set(ids).size !== ids.length) return toast.error("O mesmo fornecedor está repetido");
+    if (linhas.some(l => l.qtd_minima_compra != null && l.qtd_minima_compra < 0)) return toast.error("A quantidade mínima não pode ser negativa");
     if (linhas.some(l => !(l.fator_conversao > 0))) return toast.error("O fator de conversão deve ser maior que zero");
     setSalvando(true);
     try {
@@ -63,13 +65,13 @@ export function ProdutoFornecedoresTab({ produtoId, estabelecimentoId, unidadePr
         ...(l.id ? { id: l.id } : {}),
         produto_id: produtoId, estabelecimento_id: estabelecimentoId!, empresa_id: l.empresa_id,
         nome_comercial: l.nome_comercial.trim() || null, sku_fornecedor: l.sku_fornecedor.trim() || null,
-        unidade_compra: l.unidade_compra || null, fator_conversao: l.fator_conversao, principal: l.principal,
+        unidade_compra: l.unidade_compra || null, fator_conversao: l.fator_conversao, qtd_minima_compra: l.qtd_minima_compra && l.qtd_minima_compra > 0 ? l.qtd_minima_compra : null, principal: l.principal,
         updated_at: new Date().toISOString(),
       }));
       if (rows.length) {
         const { data, error } = await supabase.from("produto_fornecedores").upsert(rows as any).select("*");
         if (error) throw error;
-        setLinhas((data || []).map((d: any) => ({ ...d, nome_comercial: d.nome_comercial || "", sku_fornecedor: d.sku_fornecedor || "", unidade_compra: d.unidade_compra || "", fator_conversao: Number(d.fator_conversao) || 1 })));
+        setLinhas((data || []).map((d: any) => ({ ...d, nome_comercial: d.nome_comercial || "", sku_fornecedor: d.sku_fornecedor || "", unidade_compra: d.unidade_compra || "", fator_conversao: Number(d.fator_conversao) || 1, qtd_minima_compra: d.qtd_minima_compra == null ? null : Number(d.qtd_minima_compra) })));
       }
       toast.success("Fornecedores salvos");
     } catch (e: any) {
@@ -81,7 +83,7 @@ export function ProdutoFornecedoresTab({ produtoId, estabelecimentoId, unidadePr
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Empresas marcadas como fornecedor que vendem este material.</p>
-        <Button type="button" size="sm" variant="outline" onClick={() => setLinhas(ls => [...ls, { empresa_id: "", nome_comercial: "", sku_fornecedor: "", unidade_compra: unidadeProduto || "", fator_conversao: 1, principal: ls.length === 0 }])}>
+        <Button type="button" size="sm" variant="outline" onClick={() => setLinhas(ls => [...ls, { empresa_id: "", nome_comercial: "", sku_fornecedor: "", unidade_compra: unidadeProduto || "", fator_conversao: 1, qtd_minima_compra: null, principal: ls.length === 0 }])}>
           <Plus className="mr-1 h-4 w-4" />Adicionar fornecedor
         </Button>
       </div>
@@ -108,6 +110,10 @@ export function ProdutoFornecedoresTab({ produtoId, estabelecimentoId, unidadePr
           <div className="min-w-0 sm:col-span-2">
             <Label className="text-xs">1 {l.unidade_compra || "un. compra"} = quantos {unidadeProduto || "un"}</Label>
             <Input className="h-9" type="number" min={0} step="any" value={l.fator_conversao} onChange={e => set(i, "fator_conversao", Number(e.target.value))} />
+          </div>
+          <div className="min-w-0 sm:col-span-2">
+            <Label className="text-xs">Quantidade mínima de compra ({l.unidade_compra || "un. compra"})</Label>
+            <Input className="h-9" type="number" min={0} step="any" placeholder="Sem mínimo" value={l.qtd_minima_compra ?? ""} onChange={e => set(i, "qtd_minima_compra", e.target.value === "" ? null : Number(e.target.value))} />
           </div>
           <div className="flex items-end justify-between gap-2 sm:col-span-2">
             <label className="flex items-center gap-2 pb-2 text-sm"><Checkbox checked={l.principal} onCheckedChange={v => set(i, "principal", v === true)} />Principal</label>

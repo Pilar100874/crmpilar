@@ -1,0 +1,1 @@
+ALTER TABLE public.produto_fornecedores ADD COLUMN IF NOT EXISTS qtd_minima_compra numeric CHECK (qtd_minima_compra IS NULL OR qtd_minima_compra >= 0);
