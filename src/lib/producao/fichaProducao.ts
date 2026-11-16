@@ -5,7 +5,8 @@ export interface RegraMaterialMaquina { material_opcao_id: string; permitida: bo
 export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; regras_materiais?: RegraMaterialMaquina[] }
 export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[]; material_regra_id?: string }
 export interface ApoioProducao { id: string; quantidade: number; servico: string }
-export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[]; funcionarios_extras?: ApoioProducao[] }
+export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[]; funcionarios_extras?: ApoioProducao[]; checklist?: ItemChecklistProducao[] }
+export interface ItemChecklistProducao { id: string; texto: string }
 export const unidadesConsumo = ['un', 'kg', 'g', 'L', 'mL', 'm', 'm²', 'm³'] as const;
 export const unidadesCadastro = ['un', 'kg', 'g', 't', 'L', 'mL', 'm', 'cm', 'm²', 'm³', 'caixa', 'pote', 'saco', 'balde', 'rolo', 'par', 'cento', 'milheiro'] as const;
 export const fichaVazia = (): FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [] });
@@ -81,6 +82,7 @@ export function lerFicha(valor: unknown): FichaProducao {
 export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorProduto): string | null {
   if (!Number.isFinite(f.quantidade_base) || f.quantidade_base <= 0) return 'Informe uma quantidade-base maior que zero';
   if (!f.unidade_produto) return 'Informe a unidade do produto';
+  for (const item of f.checklist ?? []) if (!item.texto.trim()) return 'Preencha o texto de todos os itens do check list de produção';
   for (const apoio of f.funcionarios_extras ?? []) {
     if (!Number.isInteger(apoio.quantidade) || apoio.quantidade <= 0) return 'Informe uma quantidade inteira maior que zero de funcionários extras';
     if (!apoio.servico.trim()) return 'Informe o serviço realizado pelos funcionários extras';

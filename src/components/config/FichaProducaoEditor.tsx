@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Plus, Trash2, ArrowUp, ArrowDown, ChevronsUp, Users, Copy, ClipboardPaste, CopyPlus, Layers, LayoutGrid, Rows3, FileDown, Download, GripVertical, ArrowRight, Package, Cog, AlertTriangle, CheckCircle2, Search } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, ChevronsUp, Users, Copy, ClipboardPaste, CopyPlus, Layers, LayoutGrid, Rows3, FileDown, Download, GripVertical, ArrowRight, Package, Cog, AlertTriangle, CheckCircle2, Search, ClipboardList } from 'lucide-react';
 import { adicionarMateriasEmLote, adicionarSubstitutosEmLote, adicionarEtapaComMaquinas, adicionarMaquinasNaEtapa, copiarParametros, colarParametros, duplicarOpcao, tornarSubstituto, moverEtapa, priorizarMateria, importarReceita, analisarAbastecimento, custoPorOpcao, alertasLinha, type ParametrosMaterial } from '@/lib/producao/montagemFicha';
 import { gerarPdfFichaProducao } from '@/lib/producao/pdfFichaProducao';
 import { lerFicha } from '@/lib/producao/fichaProducao';
@@ -223,6 +223,19 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
           <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => atualizarEtapa({ ...e, opcoes: [...e.opcoes, { id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar máquina alternativa</Button>
         </div>
       </div></div>; })}
+    </section>
+    <section className="space-y-2">
+      <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
+        <h4 className="min-w-0 font-medium flex items-center gap-2"><ClipboardList className="h-4 w-4 shrink-0" />Check list de produção</h4>
+        <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, checklist: [...(ficha.checklist ?? []), { id: crypto.randomUUID(), texto: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar item</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">Itens que o operador deve conferir durante a produção deste produto.</p>
+      {(ficha.checklist ?? []).map((item, index) => <div key={item.id} className="flex items-center gap-2 min-w-0 rounded-md border border-accent bg-accent/30 px-2 py-1">
+        <Checkbox disabled aria-hidden />
+        <Input className={campoCompacto + ' flex-1 min-w-0'} aria-label={`Item ${index + 1} do check list`} placeholder="Ex.: Pesar bobina a cada 10 produzidas" value={item.texto} onChange={ev => onChange({ ...ficha, checklist: ficha.checklist?.map(c => c.id === item.id ? { ...c, texto: ev.target.value } : c) })} />
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" disabled={index === 0} aria-label={`Subir item ${index + 1}`} onClick={() => { const l = [...(ficha.checklist ?? [])]; [l[index - 1], l[index]] = [l[index], l[index - 1]]; onChange({ ...ficha, checklist: l }); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Excluir item ${index + 1}`} onClick={() => setRemocao({ nome: item.texto || 'item do check list', executar: () => onChange({ ...ficha, checklist: ficha.checklist?.filter(c => c.id !== item.id) }) })}><Trash2 className="h-3.5 w-3.5" /></Button>
+      </div>)}
     </section>
     <section className="space-y-2">
       <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
