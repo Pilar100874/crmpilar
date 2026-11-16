@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -227,7 +228,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     <section className="space-y-2">
       <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
         <h4 className="min-w-0 font-medium flex items-center gap-2"><ClipboardList className="h-4 w-4 shrink-0" />Check list de produção</h4>
-        <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, checklist: [...(ficha.checklist ?? []), { id: crypto.randomUUID(), texto: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar item</Button>
+        <div className="flex flex-wrap gap-1.5"><ChecklistModelos ficha={ficha} onChange={onChange} /><Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, checklist: [...(ficha.checklist ?? []), { id: crypto.randomUUID(), texto: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Item avulso</Button></div>
       </div>
       <p className="text-xs text-muted-foreground">Itens que o operador deve conferir durante a produção deste produto.</p>
       {(ficha.checklist ?? []).map((item, index) => <div key={item.id} className="flex items-center gap-2 min-w-0 rounded-md border border-accent bg-accent/30 px-2 py-1">
@@ -279,4 +280,44 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     <SelecaoLote aberto={!!lote} titulo={lote?.tipo === 'materias' ? 'Inserir matérias-primas' : lote?.tipo === 'substitutos' ? 'Inserir substitutos' : lote?.tipo === 'etapa' ? 'Nova etapa: marque a máquina principal e as alternativas' : 'Inserir máquinas alternativas'} itens={lote?.tipo === 'materias' || lote?.tipo === 'substitutos' ? itensMaterias : itensMaquinas} onFechar={() => setLote(null)} onConfirmar={confirmarLote} />
     <DeleteConfirmDialog open={!!remocao} onOpenChange={v => { if (!v) setRemocao(null); }} itemName={remocao?.nome} onConfirm={() => { remocao?.executar(); setRemocao(null); }} />
   </div>;
+}
+
+type ModeloChecklist = { id: string; nome: string; itens: { texto: string }[] };
+function ChecklistModelos({ ficha, onChange }: { ficha: FichaProducao; onChange: (f: FichaProducao) => void }) {
+  const [modelos, setModelos] = useState<ModeloChecklist[]>([]);
+  const [salvarAberto, setSalvarAberto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [excluir, setExcluir] = useState<ModeloChecklist | null>(null);
+  const carregar = async () => { const { data } = await supabase.from('producao_checklist_modelos').select('id,nome,itens').order('nome'); setModelos((data ?? []) as unknown as ModeloChecklist[]); };
+  useEffect(() => { void carregar(); }, []);
+  const aplicar = (m: ModeloChecklist) => {
+    const atuais = ficha.checklist ?? [];
+    const existentes = new Set(atuais.map(i => i.texto.trim().toLowerCase()));
+    const novos = m.itens.filter(i => i.texto.trim() && !existentes.has(i.texto.trim().toLowerCase())).map(i => ({ id: crypto.randomUUID(), texto: i.texto }));
+    onChange({ ...ficha, checklist: [...atuais, ...novos] });
+    toast.success(novos.length ? `${novos.length} item(ns) adicionados do modelo "${m.nome}"` : 'Todos os itens do modelo já estão na lista');
+  };
+  const salvar = async () => {
+    const itens = (ficha.checklist ?? []).filter(i => i.texto.trim()).map(i => ({ texto: i.texto.trim() }));
+    if (!nome.trim() || !itens.length) { toast.error('Informe o nome e tenha ao menos um item preenchido'); return; }
+    const existente = modelos.find(m => m.nome.toLowerCase() === nome.trim().toLowerCase());
+    const { error } = existente ? await supabase.from('producao_checklist_modelos').update({ itens }).eq('id', existente.id) : await supabase.from('producao_checklist_modelos').insert({ nome: nome.trim(), itens });
+    if (error) { toast.error('Não foi possível salvar o modelo'); return; }
+    toast.success(existente ? 'Modelo atualizado' : 'Modelo salvo'); setSalvarAberto(false); setNome(''); void carregar();
+  };
+  return <>
+    <Select value="" onValueChange={id => { const m = modelos.find(x => x.id === id); if (m) aplicar(m); }}>
+      <SelectTrigger className="h-8 w-auto text-xs gap-1" aria-label="Usar modelo de check list"><ClipboardList className="h-3.5 w-3.5" /><SelectValue placeholder={modelos.length ? 'Usar modelo' : 'Sem modelos'} /></SelectTrigger>
+      <SelectContent>{modelos.map(m => <SelectItem key={m.id} value={m.id}>{m.nome} ({m.itens.length})</SelectItem>)}</SelectContent>
+    </Select>
+    <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" disabled={!(ficha.checklist ?? []).some(i => i.texto.trim())} onClick={() => setSalvarAberto(true)}><CopyPlus className="h-3.5 w-3.5 mr-1" />Salvar como modelo</Button>
+    <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}><DialogContent>
+      <DialogHeader><DialogTitle>Modelos de check list</DialogTitle></DialogHeader>
+      <div className="space-y-1"><Label htmlFor="nome-modelo-checklist">Nome do modelo</Label><Input id="nome-modelo-checklist" placeholder="Ex.: Bobinas de papel" value={nome} onChange={e => setNome(e.target.value)} />
+        <p className="text-xs text-muted-foreground">Usar um nome existente atualiza aquele modelo com os itens atuais.</p></div>
+      {modelos.length > 0 && <div className="space-y-1 max-h-48 overflow-y-auto">{modelos.map(m => <div key={m.id} className="flex items-center justify-between gap-2 text-sm border rounded px-2 py-1"><button type="button" className="truncate text-left" onClick={() => setNome(m.nome)}>{m.nome} <span className="text-muted-foreground">({m.itens.length})</span></button><Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label={`Excluir modelo ${m.nome}`} onClick={() => setExcluir(m)}><Trash2 className="h-3.5 w-3.5" /></Button></div>)}</div>}
+      <DialogFooter><Button type="button" onClick={salvar}>Salvar</Button></DialogFooter>
+    </DialogContent></Dialog>
+    <DeleteConfirmDialog open={!!excluir} onOpenChange={o => !o && setExcluir(null)} itemName={excluir?.nome ?? ''} onConfirm={async () => { if (excluir) await supabase.from('producao_checklist_modelos').delete().eq('id', excluir.id); setExcluir(null); void carregar(); }} />
+  </>;
 }

@@ -1,0 +1,5 @@
+CREATE TABLE public.producao_checklist_modelos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), estabelecimento_id uuid NOT NULL DEFAULT public.get_auth_user_estabelecimento_id() REFERENCES public.estabelecimentos(id), nome text NOT NULL, itens jsonb NOT NULL DEFAULT '[]'::jsonb, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(estabelecimento_id,nome));
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.producao_checklist_modelos TO authenticated;
+GRANT ALL ON public.producao_checklist_modelos TO service_role;
+ALTER TABLE public.producao_checklist_modelos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY checklist_modelos_empresa ON public.producao_checklist_modelos TO authenticated USING(estabelecimento_id=public.get_auth_user_estabelecimento_id()) WITH CHECK(estabelecimento_id=public.get_auth_user_estabelecimento_id());

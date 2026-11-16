@@ -23988,6 +23988,38 @@ export type Database = {
         }
         Relationships: []
       }
+      producao_checklist_modelos: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          itens: Json
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          itens?: Json
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          itens?: Json
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_checklist_modelos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       producao_maquina_usuarios: {
         Row: {
           created_at: string
