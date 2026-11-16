@@ -66,6 +66,7 @@ export function lerFicha(valor: unknown): FichaProducao {
   return {
     quantidade_base: f.quantidade_base, unidade_produto: f.unidade_produto,
     ...(f.funcionarios_extras ? { funcionarios_extras: f.funcionarios_extras.map(a => ({ id: a.id, quantidade: a.quantidade, servico: a.servico })) } : {}),
+    ...(Array.isArray(f.checklist) ? { checklist: f.checklist.map(i => ({ id: i.id, texto: i.texto })) } : {}),
     materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, ...(g.segue_grupo_id ? { segue_grupo_id: g.segue_grupo_id } : {}), opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, rendimento: o.rendimento, perda_max_percentual: o.perda_max_percentual })) })),
     etapas: f.etapas.map(e => {
       const grupo = f.materiais.find(g => g.id === e.material_largura_id);
