@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_itens ADD COLUMN IF NOT EXISTS ca_validade_indeterminada boolean NOT NULL DEFAULT false;

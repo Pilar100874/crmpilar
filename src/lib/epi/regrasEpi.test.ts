@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trocaPrevista, situacaoEntrega, validarEntrega, estoqueBaixo } from "./regrasEpi";
+import { trocaPrevista, situacaoEntrega, validarEntrega, estoqueBaixo, caVencido } from "./regrasEpi";
 
 describe("regras de EPI", () => {
   it("troca prevista soma a vida útil", () => {
@@ -16,6 +16,11 @@ describe("regras de EPI", () => {
     expect(validarEntrega({ ca_numero: "123", ca_validade: "2025-12-31", estoque: 5 }, 1, "2026-01-01")).toMatch(/vencido/);
     expect(validarEntrega({ ca_numero: "123", ca_validade: "2027-01-01", estoque: 0 }, 1, "2026-01-01")).toMatch(/Estoque/);
     expect(validarEntrega({ ca_numero: "123", ca_validade: "2027-01-01", estoque: 2 }, 1, "2026-01-01")).toBeNull();
+  });
+  it("CA com validade indeterminada nunca vence", () => {
+    expect(caVencido("2025-12-31", "2026-01-01")).toBe(true);
+    expect(caVencido("2025-12-31", "2026-01-01", true)).toBe(false);
+    expect(validarEntrega({ ca_numero: "123", ca_validade: "2025-12-31", ca_validade_indeterminada: true, estoque: 5 }, 1, "2026-01-01")).toBeNull();
   });
   it("estoque baixo", () => {
     expect(estoqueBaixo({ estoque: 2, estoque_minimo: 2 })).toBe(true);

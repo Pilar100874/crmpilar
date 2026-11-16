@@ -37,7 +37,8 @@ export function situacaoEntrega(
   return "em_uso";
 }
 
-export function caVencido(caValidade: string | null | undefined, hoje: string): boolean {
+export function caVencido(caValidade: string | null | undefined, hoje: string, validadeIndeterminada = false): boolean {
+  if (validadeIndeterminada) return false;
   return !!caValidade && caValidade < hoje;
 }
 
@@ -47,13 +48,13 @@ export function estoqueBaixo(i: { estoque: number; estoque_minimo: number }): bo
 
 /** Bloqueios antes de registrar uma entrega. */
 export function validarEntrega(
-  epi: { ca_numero: string | null; ca_validade: string | null; estoque: number },
+  epi: { ca_numero: string | null; ca_validade: string | null; ca_validade_indeterminada?: boolean; estoque: number },
   quantidade: number,
   hoje: string,
 ): string | null {
   if (quantidade <= 0) return "Informe a quantidade.";
   if (!epi.ca_numero) return "EPI sem Certificado de Aprovação (CA) cadastrado.";
-  if (caVencido(epi.ca_validade, hoje)) return "O CA deste EPI está vencido.";
+  if (caVencido(epi.ca_validade, hoje, epi.ca_validade_indeterminada)) return "O CA deste EPI está vencido.";
   if (epi.estoque < quantidade) return "Estoque insuficiente.";
   return null;
 }

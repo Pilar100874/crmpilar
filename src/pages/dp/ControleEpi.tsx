@@ -24,11 +24,11 @@ const sb = supabase as any;
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 const br = (d?: string | null) => (d ? d.split("-").reverse().join("/") : "—");
 
-type Epi = { id: string; nome: string; categoria: string | null; ca_numero: string | null; ca_validade: string | null; fabricante: string | null; tamanho: string | null; vida_util_dias: number | null; estoque: number; estoque_minimo: number; ativo: boolean };
+type Epi = { id: string; nome: string; categoria: string | null; ca_numero: string | null; ca_validade: string | null; ca_validade_indeterminada: boolean; fabricante: string | null; tamanho: string | null; vida_util_dias: number | null; estoque: number; estoque_minimo: number; ativo: boolean };
 type Func = { id: string; nome: string; email: string | null; unidade_id: string | null; unidades?: { nome: string } | null };
 type Entrega = { id: string; usuario_id: string; epi_id: string; quantidade: number; data_entrega: string; motivo: string; ca_numero: string | null; troca_prevista: string | null; data_devolucao: string | null; motivo_devolucao: string | null; ficha_recebida: boolean; observacoes: string | null };
 
-const epiVazio = { nome: "", categoria: "", ca_numero: "", ca_validade: "", fabricante: "", tamanho: "", vida_util_dias: "", estoque: "0", estoque_minimo: "0" };
+const epiVazio = { nome: "", categoria: "", ca_numero: "", ca_validade: "", ca_validade_indeterminada: false, fabricante: "", tamanho: "", vida_util_dias: "", estoque: "0", estoque_minimo: "0" };
 
 export default function ControleEpi() {
   const { empresaId } = usePontoEmpresa();
@@ -70,7 +70,7 @@ export default function ControleEpi() {
     const trocas = entregas.filter((e) => ["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)));
     return {
       trocas,
-      ca: epis.filter((e) => e.ativo && (caVencido(e.ca_validade, hoje) || !e.ca_numero)),
+      ca: epis.filter((e) => e.ativo && (caVencido(e.ca_validade, hoje, e.ca_validade_indeterminada) || !e.ca_numero)),
       estoque: epis.filter((e) => e.ativo && estoqueBaixo(e)),
     };
   }, [entregas, epis, hoje]);
@@ -79,7 +79,8 @@ export default function ControleEpi() {
     if (!epiForm.nome.trim()) return toast.error("Informe o nome do EPI.");
     const payload = {
       empresa_id: empresaId, nome: epiForm.nome.trim(), categoria: epiForm.categoria || null,
-      ca_numero: epiForm.ca_numero || null, ca_validade: epiForm.ca_validade || null, fabricante: epiForm.fabricante || null,
+      ca_numero: epiForm.ca_numero || null, ca_validade: epiForm.ca_validade_indeterminada ? null : (epiForm.ca_validade || null),
+      ca_validade_indeterminada: !!epiForm.ca_validade_indeterminada, fabricante: epiForm.fabricante || null,
       tamanho: epiForm.tamanho || null, vida_util_dias: epiForm.vida_util_dias ? Number(epiForm.vida_util_dias) : null,
       estoque: Number(epiForm.estoque || 0), estoque_minimo: Number(epiForm.estoque_minimo || 0),
     };
@@ -213,7 +214,7 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="epis" className="space-y-3">
-          <p className="text-sm text-muted-foreground print:hidden">Cadastre cada EPI com nº e validade do CA e vida útil — a vida útil calcula a data da próxima troca.</p>
+          <p className="text-sm text-muted-foreground print:hidden">Cadastre cada EPI com nº do CA, validade do CA (ou indeterminada) e vida útil — a vida útil calcula a data da próxima troca.</p>
           <Button variant="outline" onClick={() => setEpiForm({ ...epiVazio })}><Plus className="h-4 w-4 mr-1" />Cadastrar EPI</Button>
           <div className="grid gap-2 md:grid-cols-2">
             {epis.map((i) => (
@@ -221,14 +222,14 @@ export default function ControleEpi() {
                 <div className="min-w-0">
                   <p className="font-medium">{i.nome} {i.tamanho && <span className="text-muted-foreground">({i.tamanho})</span>}</p>
                   <p className="text-xs text-muted-foreground">{i.categoria ?? "Sem categoria"} · {i.fabricante ?? "—"}</p>
-                  <p className="text-xs">CA {i.ca_numero ?? "—"} · validade {br(i.ca_validade)} · vida útil {i.vida_util_dias ? `${i.vida_util_dias} dias` : "—"}</p>
+                  <p className="text-xs">CA {i.ca_numero ?? "—"} · validade {i.ca_validade_indeterminada ? "indeterminada" : br(i.ca_validade)} · vida útil {i.vida_util_dias ? `${i.vida_util_dias} dias` : "—"}</p>
                   <div className="flex gap-1 mt-1 flex-wrap">
                     <Badge variant={estoqueBaixo(i) ? "destructive" : "secondary"}>Estoque {i.estoque}</Badge>
-                    {(caVencido(i.ca_validade, hoje) || !i.ca_numero) && <Badge variant="destructive">CA irregular</Badge>}
+                    {(caVencido(i.ca_validade, hoje, i.ca_validade_indeterminada) || !i.ca_numero) && <Badge variant="destructive">CA irregular</Badge>}
                   </div>
                 </div>
                 <div className="flex">
-                  <Button size="icon" variant="ghost" onClick={() => setEpiForm({ ...i, vida_util_dias: i.vida_util_dias ?? "", ca_validade: i.ca_validade ?? "", estoque: String(i.estoque), estoque_minimo: String(i.estoque_minimo) })}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => setEpiForm({ ...i, vida_util_dias: i.vida_util_dias ?? "", ca_validade: i.ca_validade ?? "", ca_validade_indeterminada: i.ca_validade_indeterminada ?? false, estoque: String(i.estoque), estoque_minimo: String(i.estoque_minimo) })}><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => setExcluirEpi(i)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardContent></Card>
@@ -274,8 +275,8 @@ export default function ControleEpi() {
 
         <TabsContent value="alertas" className="space-y-3">
           <p className="text-sm text-muted-foreground print:hidden">O que precisa de atenção: trocas vencidas ou em até 15 dias, CA irregular e estoque baixo.</p>
-          <Button variant="outline" onClick={() => gerarPdfVencimentos(entregas.filter((e) => !e.data_devolucao && (["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)) || caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje))).map((e) => {
-            const caVenc = caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje);
+          <Button variant="outline" onClick={() => gerarPdfVencimentos(entregas.filter((e) => !e.data_devolucao && (["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)) || caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje, epiMap.get(e.epi_id)?.ca_validade_indeterminada))).map((e) => {
+            const caVenc = caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje, epiMap.get(e.epi_id)?.ca_validade_indeterminada);
             const f = funcMap.get(e.usuario_id);
             return { unidade: f?.unidades?.nome ?? "Sem unidade", funcionario: nomeFunc(e.usuario_id), epi: epiMap.get(e.epi_id)?.nome ?? "—", ca: e.ca_numero ?? "—", entrega: e.data_entrega, vencimento: e.troca_prevista ?? "", situacao: [situacaoEntrega(e, hoje) === "vencida" ? "Troca vencida" : situacaoEntrega(e, hoje) === "vence_em_breve" ? "Troca vencendo" : "", caVenc ? `CA vencido em ${(epiMap.get(e.epi_id)?.ca_validade ?? "").split("-").reverse().join("/")}` : ""].filter(Boolean).join(" · ") };
           }), "EPIs vencidos, vencendo (15 dias) e com CA vencido, por unidade")}><FileDown className="h-4 w-4 mr-1" />PDF de vencimentos por unidade</Button>
@@ -297,7 +298,14 @@ export default function ControleEpi() {
             <div><Label>Categoria</Label><Select value={epiForm.categoria || ""} onValueChange={(v) => setEpiForm({ ...epiForm, categoria: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{CATEGORIAS_EPI.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Fabricante</Label><Input value={epiForm.fabricante} onChange={(e) => setEpiForm({ ...epiForm, fabricante: e.target.value })} /></div>
             <div><Label>Nº do CA</Label><Input value={epiForm.ca_numero} onChange={(e) => setEpiForm({ ...epiForm, ca_numero: e.target.value })} /></div>
-            <div><Label>Validade do CA</Label><Input type="date" value={epiForm.ca_validade} onChange={(e) => setEpiForm({ ...epiForm, ca_validade: e.target.value })} /></div>
+            <div>
+              <Label>Validade do CA</Label>
+              <Input type="date" value={epiForm.ca_validade_indeterminada ? "" : epiForm.ca_validade} disabled={!!epiForm.ca_validade_indeterminada} onChange={(e) => setEpiForm({ ...epiForm, ca_validade: e.target.value })} />
+              <label className="flex items-center gap-2 mt-2 text-sm cursor-pointer select-none">
+                <Checkbox checked={!!epiForm.ca_validade_indeterminada} onCheckedChange={(v) => setEpiForm({ ...epiForm, ca_validade_indeterminada: v === true, ca_validade: v === true ? "" : epiForm.ca_validade })} />
+                Validade indeterminada
+              </label>
+            </div>
             <div><Label>Tamanho</Label><Input value={epiForm.tamanho} onChange={(e) => setEpiForm({ ...epiForm, tamanho: e.target.value })} /></div>
             <div><Label>Vida útil (dias)</Label><Input type="number" value={epiForm.vida_util_dias} onChange={(e) => setEpiForm({ ...epiForm, vida_util_dias: e.target.value })} /></div>
             <div><Label>Estoque</Label><Input type="number" value={epiForm.estoque} onChange={(e) => setEpiForm({ ...epiForm, estoque: e.target.value })} /></div>

@@ -9890,6 +9890,7 @@ export type Database = {
           ativo: boolean
           ca_numero: string | null
           ca_validade: string | null
+          ca_validade_indeterminada: boolean
           categoria: string | null
           created_at: string
           empresa_id: string
@@ -9906,6 +9907,7 @@ export type Database = {
           ativo?: boolean
           ca_numero?: string | null
           ca_validade?: string | null
+          ca_validade_indeterminada?: boolean
           categoria?: string | null
           created_at?: string
           empresa_id: string
@@ -9922,6 +9924,7 @@ export type Database = {
           ativo?: boolean
           ca_numero?: string | null
           ca_validade?: string | null
+          ca_validade_indeterminada?: boolean
           categoria?: string | null
           created_at?: string
           empresa_id?: string
