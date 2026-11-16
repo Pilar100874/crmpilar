@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { gerarPdfVencimentos, gerarPdfFicha } from "@/lib/epi/relatorioEpi";
-import EpiSetores, { type Setor, type SetorItem, type FuncSetor } from "@/components/epi/EpiSetores";
+import EpiSetores, { EpiSituacaoSetores, type Setor, type SetorItem, type FuncSetor } from "@/components/epi/EpiSetores";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -185,7 +185,7 @@ export default function ControleEpi() {
           ["1", "Cadastre os EPIs", "aba EPIs cadastrados"],
           ["2", "Defina setores e funcionários", "aba Setores"],
           ["3", "Registre as entregas", "botão Nova entrega"],
-          ["4", "Acompanhe pendências", "abas Setores e Alertas"],
+          ["4", "Acompanhe pendências", "aba Alertas"],
         ].map(([n, t, d]) => (
           <div key={n} className="flex items-start gap-2">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">{n}</span>
@@ -286,7 +286,8 @@ export default function ControleEpi() {
         </TabsContent>
 
         <TabsContent value="alertas" className="space-y-3">
-          <p className="text-sm text-muted-foreground print:hidden">O que precisa de atenção: trocas vencidas ou em até 15 dias, CA irregular e estoque baixo.</p>
+          <p className="text-sm text-muted-foreground print:hidden">O que precisa de atenção: trocas vencidas ou em até 15 dias, CA irregular, estoque baixo e a situação de EPIs por setor.</p>
+          <EpiSituacaoSetores epis={epis} funcs={funcs} entregas={entregas} setores={setores} itens={setorItens} vinculos={vinculos} />
           <Button variant="outline" onClick={() => gerarPdfVencimentos(entregas.filter((e) => !e.data_devolucao && (["vencida", "vence_em_breve"].includes(situacaoEntrega(e, hoje)) || caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje, epiMap.get(e.epi_id)?.ca_validade_indeterminada))).map((e) => {
             const caVenc = caVencido(epiMap.get(e.epi_id)?.ca_validade, hoje, epiMap.get(e.epi_id)?.ca_validade_indeterminada);
             const f = funcMap.get(e.usuario_id);
