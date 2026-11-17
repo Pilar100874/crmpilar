@@ -300,3 +300,10 @@ describe('montagem rápida e ciclo seguido', () => {
     expect(f.materiais[1].segue_grupo_id).toBe(f.materiais[0].id);
   });
 });
+
+import { validarFicha as validarNome } from './fichaProducao';
+describe('nome do material obrigatório', () => {
+  it('bloqueia material sem nome', () => {
+    expect(validarNome({ quantidade_base: 1, unidade_produto: 'un', etapas: [], materiais: [{ id: 'g', nome: ' ', opcoes: [{ id: 'o', produto_id: 'p', quantidade: 1, unidade: 'kg' }] }] })).toBe('Informe o nome de cada material');
+  });
+});

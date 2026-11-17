@@ -90,6 +90,7 @@ export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorPro
   }
   const materiasUsadas = new Set<string>();
   for (const g of f.materiais) {
+    if (!g.nome.trim()) return 'Informe o nome de cada material';
     if (!g.opcoes.length) return 'Cada material precisa de pelo menos uma matéria-prima';
     if (g.segue_grupo_id) {
       const ref = f.materiais.find(x => x.id === g.segue_grupo_id);
