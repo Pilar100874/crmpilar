@@ -1251,21 +1251,20 @@ body {
 }
 
 .produto-editor [role="tabpanel"] [role="combobox"] {
-  height: auto;
-  min-height: 2.25rem;
-  white-space: normal;
+  height: 2rem;
+  min-height: 2rem;
+  padding-block: 0;
+  white-space: nowrap;
   text-align: left;
 }
 
 .produto-editor [role="tabpanel"] [role="combobox"] > span {
   display: block;
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: unset;
-  overflow: visible;
-  text-overflow: clip;
   min-width: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .produto-editor [role="tabpanel"] [role="combobox"] svg {
