@@ -76,7 +76,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
   const [conferencia, setConferencia] = useState(false);
   const [fechados, setFechados] = useState<Record<string, boolean>>({});
   const alternar = (id: string) => setFechados(f => ({ ...f, [id]: !f[id] }));
-  const todosIds = [...ficha.materiais.map(g => g.id), ...ficha.etapas.map(e => e.id)];
+  const todosIds = ['secao-materiais', 'secao-etapas', 'secao-checklist', 'secao-apoio', 'secao-simulacao', ...ficha.materiais.map(g => g.id), ...ficha.etapas.map(e => e.id)];
   const definirTodos = (v: boolean) => setFechados(Object.fromEntries(todosIds.map(id => [id, v])));
   const seta = (id: string, rotulo: string) => <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-expanded={!fechados[id]} aria-label={`${fechados[id] ? 'Expandir' : 'Recolher'} ${rotulo}`} title={fechados[id] ? 'Expandir' : 'Recolher'} onClick={() => alternar(id)}>{fechados[id] ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</Button>;
   const [lote, setLote] = useState<{ tipo: 'materias' | 'substitutos' | 'etapa' | 'maquinas'; alvo?: string } | null>(null);
@@ -145,7 +145,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
       <Button type="button" variant={conferencia ? 'default' : 'outline'} size="sm" className="h-8 px-2 text-xs" onClick={() => setConferencia(v => !v)}><Workflow className="h-3.5 w-3.5 mr-1" />{conferencia ? 'Voltar à edição' : 'Conferir em fluxo'}</Button>
       {!conferencia && todosIds.length > 0 && <><Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => definirTodos(true)}><ChevronsDownUp className="h-3.5 w-3.5 mr-1" />Recolher tudo</Button><Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => definirTodos(false)}><ChevronsUpDown className="h-3.5 w-3.5 mr-1" />Expandir tudo</Button></>}
     </div>
-    {conferencia ? <FluxoConferenciaProducao ficha={ficha} nomeMateria={nomeMateria} nomeMaquina={nomeMaquina} maquinas={maquinas} operadores={operadores} erro={erroCadastro || validarFicha(ficha, unidades)} onEditar={id => { setConferencia(false); setFechados(f => ({ ...f, [id]: false })); }} /> : <>
+    {conferencia ? <FluxoConferenciaProducao ficha={ficha} nomeMateria={nomeMateria} nomeMaquina={nomeMaquina} maquinas={maquinas} operadores={operadores} erro={erroCadastro || validarFicha(ficha, unidades)} onEditar={id => { setConferencia(false); setFechados(f => ({ ...f, [id]: false, 'secao-materiais': false, 'secao-etapas': false })); }} /> : <>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
       <Numero obrigatorio label="Quantidade-base produzida" texto="Quantidade-base" valor={ficha.quantidade_base} onChange={v => onChange({ ...ficha, quantidade_base: v })} />
       {(unidadeDoProdutoAtual || '').trim()
@@ -154,13 +154,14 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
     </div>
     <section className="space-y-2">
       <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
-        <h4 className="min-w-0 font-medium flex items-center gap-2"><Package className="h-4 w-4 shrink-0" />Matérias-primas</h4>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 items-center gap-1">{seta('secao-materiais', 'Matérias-primas')}<h4 className="min-w-0 font-medium flex items-center gap-2"><Package className="h-4 w-4 shrink-0" /><span className="truncate" title="Matérias-primas">Matérias-primas</span></h4></div>
+        <div className={fechados['secao-materiais'] ? 'hidden' : 'flex flex-wrap gap-2'}>
           <div className="flex rounded-md border"><Button type="button" size="sm" variant={visao === 'blocos' ? 'secondary' : 'ghost'} onClick={() => setVisao('blocos')} aria-label="Ver em blocos"><LayoutGrid className="h-4 w-4" /></Button><Button type="button" size="sm" variant={visao === 'tabela' ? 'secondary' : 'ghost'} onClick={() => setVisao('tabela')} aria-label="Ver em tabela rápida"><Rows3 className="h-4 w-4" /></Button></div>
           <Button type="button" size="sm" onClick={() => setLote({ tipo: 'materias' })}><Layers className="h-4 w-4 mr-1" />Inserir várias</Button>
           <Button type="button" variant="outline" size="sm" onClick={() => onChange({ ...ficha, materiais: [...ficha.materiais, { id: crypto.randomUUID(), nome: `Material ${ficha.materiais.length + 1}`, opcoes: [{ id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: '' }] }] })}><Plus className="h-4 w-4 mr-1" />Adicionar material</Button>
         </div>
       </div>
+      <div hidden={fechados['secao-materiais']} className="space-y-2">
       {parametros && <p className="flex items-center gap-2 text-xs text-muted-foreground min-w-0"><ClipboardPaste className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 truncate">Copiado: {formatar(parametros.quantidade)} {parametros.unidade}{parametros.rendimento ? ` · rende ${formatar(parametros.rendimento)}` : ''}{parametros.perda_max_percentual ? ` · perda ${formatar(parametros.perda_max_percentual)}%` : ''} — cole em outra matéria-prima</span><Button type="button" variant="link" size="sm" className="h-auto p-0 shrink-0" onClick={() => setParametros(null)}>Limpar</Button></p>}
       {!ficha.materiais.length && <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">Clique em <strong>Inserir várias</strong> para marcar todas as matérias-primas de uma vez.</p>}
       {visao === 'tabela' && ficha.materiais.length > 0 && <div className="rounded-md border divide-y">
@@ -200,9 +201,11 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
           <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => atualizarMaterial({ ...g, opcoes: [...g.opcoes, { id: crypto.randomUUID(), produto_id: '', quantidade: 1, unidade: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar substituto</Button>
         </div></>}
       </div>; })}
+      </div>
     </section>
     <section className="space-y-2">
-      <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5"><h4 className="min-w-0 font-medium flex items-center gap-2"><Cog className="h-4 w-4 shrink-0" />Esteira de produção (etapas em sequência)</h4><div className="flex flex-wrap gap-1"><Button type="button" size="sm" className="h-8 px-2 text-xs" onClick={() => setLote({ tipo: 'etapa' })}><Layers className="h-3.5 w-3.5 mr-1" />Etapa com várias máquinas</Button><Button type="button" size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, etapas: [...ficha.etapas, { id: crypto.randomUUID(), nome: `Etapa ${ficha.etapas.length + 1}`, opcoes: [{ id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar etapa</Button></div></div>
+      <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5"><div className="flex min-w-0 items-center gap-1">{seta('secao-etapas', 'Esteira de produção (etapas em sequência)')}<h4 className="min-w-0 font-medium flex items-center gap-2"><Cog className="h-4 w-4 shrink-0" /><span className="truncate" title="Esteira de produção (etapas em sequência)">Esteira de produção (etapas em sequência)</span></h4></div><div className={fechados['secao-etapas'] ? 'hidden' : 'flex flex-wrap gap-1'}><Button type="button" size="sm" className="h-8 px-2 text-xs" onClick={() => setLote({ tipo: 'etapa' })}><Layers className="h-3.5 w-3.5 mr-1" />Etapa com várias máquinas</Button><Button type="button" size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, etapas: [...ficha.etapas, { id: crypto.randomUUID(), nome: `Etapa ${ficha.etapas.length + 1}`, opcoes: [{ id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar etapa</Button></div></div>
+      <div hidden={fechados['secao-etapas']} className="space-y-2">
       {ficha.etapas.length > 1 && <p className="text-xs text-muted-foreground">Arraste pelo ícone <GripVertical className="inline h-3 w-3" /> para mudar a ordem (ou use as setas).</p>}
       {ficha.etapas.map((e, index) => { const r = resultado?.etapas[index]; const gargalo = !!r && ficha.etapas.length > 1 && r.capacidade === resultado?.capacidadeLinha && Math.max(...(resultado?.etapas.map(x => x.capacidade) || [0])) > r.capacidade; return <div key={e.id} className="space-y-2">
         {index > 0 && <div className="flex justify-center text-muted-foreground"><ArrowDown className="h-4 w-4" /></div>}
@@ -239,12 +242,14 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
           <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => atualizarEtapa({ ...e, opcoes: [...e.opcoes, { id: crypto.randomUUID(), maquina_id: '', capacidade_minuto: 1 }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar máquina alternativa</Button>
         </div></>}
       </div></div>; })}
+      </div>
     </section>
     <section className="space-y-2">
       <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
-        <h4 className="min-w-0 font-medium flex items-center gap-2"><ClipboardList className="h-4 w-4 shrink-0" />Check list de produção</h4>
-        <div className="flex flex-wrap gap-1.5"><ChecklistModelos ficha={ficha} onChange={onChange} /><Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, checklist: [...(ficha.checklist ?? []), { id: crypto.randomUUID(), texto: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Item avulso</Button></div>
+        <div className="flex min-w-0 items-center gap-1">{seta('secao-checklist', 'Check list de produção')}<h4 className="min-w-0 font-medium flex items-center gap-2"><ClipboardList className="h-4 w-4 shrink-0" /><span className="truncate" title="Check list de produção">Check list de produção</span></h4></div>
+        <div className={fechados['secao-checklist'] ? 'hidden' : 'flex flex-wrap gap-1.5'}><ChecklistModelos ficha={ficha} onChange={onChange} /><Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, checklist: [...(ficha.checklist ?? []), { id: crypto.randomUUID(), texto: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Item avulso</Button></div>
       </div>
+      <div hidden={fechados['secao-checklist']} className="space-y-2">
       <p className="text-xs text-muted-foreground">Itens que o operador deve conferir durante a produção deste produto.</p>
       {(ficha.checklist ?? []).map((item, index) => <div key={item.id} className="flex items-center gap-2 min-w-0 rounded-md border border-accent bg-accent/30 px-2 py-1">
         <Checkbox disabled aria-hidden />
@@ -252,22 +257,26 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
         <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" disabled={index === 0} aria-label={`Subir item ${index + 1}`} onClick={() => { const l = [...(ficha.checklist ?? [])]; [l[index - 1], l[index]] = [l[index], l[index - 1]]; onChange({ ...ficha, checklist: l }); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
         <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Excluir item ${index + 1}`} onClick={() => setRemocao({ nome: item.texto || 'item do check list', executar: () => onChange({ ...ficha, checklist: ficha.checklist?.filter(c => c.id !== item.id) }) })}><Trash2 className="h-3.5 w-3.5" /></Button>
       </div>)}
+      </div>
     </section>
     <section className="space-y-2">
       <div className="flex flex-wrap justify-between items-center gap-1.5 border-b pb-1.5">
-        <h4 className="min-w-0 font-medium flex items-center gap-2"><Users className="h-4 w-4 shrink-0" />Funcionários extras</h4>
-        <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => onChange({ ...ficha, funcionarios_extras: [...(ficha.funcionarios_extras ?? []), { id: crypto.randomUUID(), quantidade: 1, servico: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar serviço</Button>
+        <div className="flex min-w-0 items-center gap-1">{seta('secao-apoio', 'Funcionários extras')}<h4 className="min-w-0 font-medium flex items-center gap-2"><Users className="h-4 w-4 shrink-0" /><span className="truncate" title="Funcionários extras">Funcionários extras</span></h4></div>
+        <Button type="button" variant="outline" size="sm" className={fechados['secao-apoio'] ? 'hidden' : 'h-8 px-2 text-xs'} onClick={() => onChange({ ...ficha, funcionarios_extras: [...(ficha.funcionarios_extras ?? []), { id: crypto.randomUUID(), quantidade: 1, servico: '' }] })}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar serviço</Button>
       </div>
+      <div hidden={fechados['secao-apoio']} className="space-y-2">
       {(ficha.funcionarios_extras ?? []).map((apoio, index) => <div key={apoio.id} className="border rounded-md p-2 min-w-0 produto-editor-apoio grid grid-cols-[minmax(0,1fr)_2rem] md:grid-cols-[8rem_minmax(0,1fr)_2rem] gap-2 items-end">
         <div className="min-w-0 space-y-0.5 col-span-2 md:col-span-1"><Label htmlFor={`apoio-quantidade-${apoio.id}`} className={rotuloCompacto}>Quantidade<Obrig /></Label><Input className={campoCompacto} id={`apoio-quantidade-${apoio.id}`} aria-label={`Quantidade de funcionários extras serviço ${index + 1}`} type="number" min="1" step="1" value={apoio.quantidade || ''} onChange={ev => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.map(a => a.id === apoio.id ? { ...a, quantidade: Number(ev.target.value) } : a) })} /></div>
         <div className="min-w-0 space-y-0.5"><Label htmlFor={`apoio-servico-${apoio.id}`} className={rotuloCompacto}>Serviço realizado<Obrig /></Label><Input className={campoCompacto} id={`apoio-servico-${apoio.id}`} aria-label={`Serviço realizado pelos funcionários extras ${index + 1}`} placeholder="Ex.: embalar ou abastecer a máquina" value={apoio.servico} onChange={ev => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.map(a => a.id === apoio.id ? { ...a, servico: ev.target.value } : a) })} /></div>
         <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Excluir serviço extra ${index + 1}`} title="Excluir serviço extra" onClick={() => setRemocao({ nome: apoio.servico || 'serviço de funcionários extras', executar: () => onChange({ ...ficha, funcionarios_extras: ficha.funcionarios_extras?.filter(a => a.id !== apoio.id) }) })}><Trash2 className="h-3.5 w-3.5" /></Button>
       </div>)}
       <p className="text-xs text-muted-foreground">Total além dos operadores: <strong>{(ficha.funcionarios_extras ?? []).reduce((total, a) => total + (a.quantidade || 0), 0)}</strong></p>
+      </div>
     </section>
     </>}
     <section className="space-y-2 border-t pt-3">
-      <h4 className="font-medium">Simulação do lote</h4>
+      <div className="flex min-w-0 items-center gap-1">{seta('secao-simulacao', 'Simulação do lote')}<h4 className="truncate font-medium">Simulação do lote</h4></div>
+      <div hidden={fechados['secao-simulacao']} className="space-y-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
         <Numero label={`Quantidade a produzir (${ficha.unidade_produto})`} valor={quantidade} onChange={setQuantidade} />
         {ficha.materiais.filter(g => g.opcoes.length > 1).map(g => <div key={g.id} className="space-y-0.5 min-w-0"><Label className={rotuloCompacto}>{g.nome}</Label><Select value={escolhas[g.id] || g.opcoes[0]?.id} onValueChange={v => setEscolhas({ ...escolhas, [g.id]: v })}><SelectTrigger aria-label={`Escolha para ${g.nome}`} className={gatilhoCompacto}><SelectValue /></SelectTrigger><SelectContent>{g.opcoes.map(o => <SelectItem key={o.id} value={o.id}>{nomeMateria(o.produto_id)}</SelectItem>)}</SelectContent></Select></div>)}
@@ -292,6 +301,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
         {resultado.indisponivel && <p className="text-destructive">Previsão indisponível: há máquina incompatível, inativa ou em manutenção na seleção.</p>}
       </div>}
       {!resultado && (erroCadastro || validarFicha(ficha)) && <p className="text-sm text-destructive">{erroCadastro || validarFicha(ficha)}</p>}
+      </div>
     </section>
     <SelecaoLote aberto={!!lote} titulo={lote?.tipo === 'materias' ? 'Inserir matérias-primas' : lote?.tipo === 'substitutos' ? 'Inserir substitutos' : lote?.tipo === 'etapa' ? 'Nova etapa: marque a máquina principal e as alternativas' : 'Inserir máquinas alternativas'} itens={lote?.tipo === 'materias' || lote?.tipo === 'substitutos' ? itensMaterias : itensMaquinas} onFechar={() => setLote(null)} onConfirmar={confirmarLote} />
     <DeleteConfirmDialog open={!!remocao} onOpenChange={v => { if (!v) setRemocao(null); }} itemName={remocao?.nome} onConfirm={() => { remocao?.executar(); setRemocao(null); }} />
