@@ -165,7 +165,7 @@ export function FichaProducaoEditor({ ficha, onChange, materias, maquinas, unida
       {!ficha.materiais.length && <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">Clique em <strong>Inserir várias</strong> para marcar todas as matérias-primas de uma vez.</p>}
       {visao === 'tabela' && ficha.materiais.length > 0 && <div className="rounded-md border divide-y">
         {ficha.materiais.flatMap((g, index) => g.opcoes.map((o, i) => <div key={o.id} className="grid grid-cols-2 md:grid-cols-12 gap-x-2 gap-y-1.5 p-2 items-end">
-          <div className="col-span-2 md:col-span-3 min-w-0 space-y-0.5"><Label className={rotuloCompacto}>{g.nome} · {i + 1}ª prioridade{i === 0 ? ' (principal)' : ''}<Obrig /></Label>{campoMateria(g, o, index, i)}</div>
+          <div className="col-span-2 md:col-span-3 min-w-0 space-y-0.5"><Label className={rotuloCompacto}>{g.nome} · {i + 1}ª<Obrig /></Label>{campoMateria(g, o, index, i)}</div>
           <Numero obrigatorio className="md:col-span-2" label="Consumo" valor={o.quantidade} onChange={v => mudarOpcao(g, o.id, { quantidade: v })} />
           {campoUnidade(g, o, index, i, 'Unidade', 'md:col-span-2')}
           {g.segue_grupo_id ? <div className="min-w-0 space-y-0.5 md:col-span-2"><Label className={rotuloCompacto}>Rendimento</Label><p className="flex h-8 items-center text-[11px] text-muted-foreground">Segue ciclo</p></div> : <Numero className="md:col-span-2" label="Rendimento" valor={o.rendimento ?? 0} onChange={v => mudarOpcao(g, o.id, { rendimento: v > 0 ? v : undefined })} />}
