@@ -68,6 +68,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
+import { MENUS_OPERACIONAIS } from "@/lib/menusOperacionais";
 import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization, applyUserFooterCustomization, applySystemFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
@@ -190,60 +191,7 @@ export const menuItems: MenuItem[] = [
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
-  {
-    id: "Compras",
-    title: "Compras",
-    icon: LucideIcons.ShoppingCart,
-    subItems: [
-      { id: "Necessidade de Compra", title: "Necessidade de Compra", url: "/compras/necessidade", icon: LucideIcons.ClipboardList },
-      { id: "Cotações de Compra", title: "Cotações", url: "/compras/cotacoes", icon: LucideIcons.Send },
-    ],
-  },
-  {
-    id: "Estoque",
-    title: "Estoque",
-    icon: LucideIcons.Boxes,
-    subItems: [
-      { id: "Saldos de Estoque", title: "Saldos", url: "/estoque/saldos", icon: LucideIcons.Boxes },
-      { id: "Movimentações de Estoque", title: "Movimentações", url: "/estoque/movimentacoes", icon: LucideIcons.ArrowLeftRight },
-      { id: "Entrada de NF-e", title: "Entrada de NF-e", url: "/estoque/entrada", icon: LucideIcons.FileInput },
-    ],
-  },
-  {
-    id: "Módulo Faturamento", title: "Faturamento", icon: LucideIcons.Receipt,
-    subItems: [
-      { id: "Painel de Faturamento", title: "Painel", url: "/faturamento/painel", icon: LucideIcons.BarChart3 },
-      { id: "Faturamento", title: "Faturar Pedidos", url: "/faturamento", icon: LucideIcons.Receipt },
-      { id: "Nova NF-e", title: "Nova NF-e", url: "/faturamento/nova", icon: LucideIcons.FilePlus2 },
-      { id: "NF-e Emitidas", title: "NF-e Emitidas", url: "/faturamento/notas/emitidas", icon: LucideIcons.FileText },
-      { id: "Rascunhos NF-e", title: "Rascunhos", url: "/faturamento/notas/rascunhos", icon: LucideIcons.FilePen },
-      { id: "Notas Rejeitadas", title: "Rejeitadas", url: "/faturamento/notas/rejeitadas", icon: LucideIcons.FileX },
-      { id: "Notas Canceladas", title: "Canceladas", url: "/faturamento/notas/canceladas", icon: LucideIcons.Ban },
-      { id: "Devoluções NF-e", title: "Devoluções", url: "/faturamento/notas/devolucoes", icon: LucideIcons.Undo2 },
-      { id: "Eventos Fiscais", title: "Eventos e Inutilização", url: "/faturamento/eventos", icon: LucideIcons.History },
-      { id: "Séries e Numeração", title: "Séries e Numeração", url: "/faturamento/series", icon: LucideIcons.Hash },
-    ],
-  },
-  {
-    id: "Notas Fiscais de Entrada", title: "Notas Fiscais de Entrada", icon: LucideIcons.FileInput,
-    subItems: [
-      { id: "Painel de Entradas", title: "Painel e Conferência", url: "/entradas/painel", icon: LucideIcons.ClipboardCheck },
-      { id: "Importação Fiscal XML", title: "Importar XML", url: "/estoque/entrada", icon: LucideIcons.Upload },
-      { id: "Distribuição DF-e", title: "Documentos e Manifestação", url: "/entradas/documentos", icon: LucideIcons.Download },
-    ],
-  },
-  {
-    id: "Fiscal", title: "Fiscal", icon: LucideIcons.Landmark,
-    subItems: [
-      { id: "Auditoria Fiscal", title: "Auditoria Systax", url: "/fiscal/auditoria", icon: LucideIcons.ShieldCheck },
-      { id: "Simulador Tributário", title: "Simulador Tributário", url: "/fiscal/simulador", icon: LucideIcons.Calculator },
-      { id: "Relatórios Fiscais", title: "Relatórios", url: "/fiscal/relatorios", icon: LucideIcons.BarChart3 },
-      { id: "Monitor Fiscal", title: "Monitor e Certificados", url: "/fiscal/monitor", icon: LucideIcons.Activity },
-      { id: "Tipos de operação", title: "Tipos de operação", url: "/fiscal/tipos-operacao", icon: LucideIcons.ListChecks },
-      { id: "Configuração Systax", title: "Configuração Systax", url: "/fiscal/configuracao-systax", icon: LucideIcons.Scale },
-      { id: "Motor próprio NF-e", title: "Motor próprio NF-e", url: "/fiscal/motor-proprio", icon: LucideIcons.Server },
-    ],
-  },
+  ...MENUS_OPERACIONAIS,
   {
     id: "Assistente",
     title: "Assistente",

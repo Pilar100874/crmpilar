@@ -2,6 +2,7 @@ import * as LucideIcons from "lucide-react";
 import type { MenuItem } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import {MENUS_OPERACIONAIS} from './menusOperacionais';
 
 const KEY = "menu_customization_v1";
 export const MENU_CUSTOMIZATION_EVENT = "menu-customization-changed";
@@ -265,7 +266,7 @@ export function initialFromBase(base: MenuItem[]): MenuCustomization {
       const node: CustomNode = { kind: "program", programId: s.id };
       if (s.group) {
         if (!groups.has(s.group)) groups.set(s.group, []);
-        groups.get(s.group)!.push(node);
+        groups.get(s.group)?.push(node);
       } else {
         plain.push(node);
       }
@@ -416,7 +417,7 @@ export function getEffectiveMainCustomization(
   custom: MenuCustomization | null = loadCustomization()
 ): MenuCustomization {
   const source = custom ?? initialFromBase(base);
-  const migrated = migrateStructure(source);
+  const migrated = organizarMenusOperacionais(base, migrateStructure(source));
   const programs = extractPrograms(base);
   const placed = new Set<string>();
 
@@ -450,6 +451,37 @@ export function getEffectiveMainCustomization(
   }
 
   return { ...migrated, roots: [...roots, ...missing] };
+}
+
+/** Applies the requested grouping without changing saved unrelated customizations. */
+function organizarMenusOperacionais(base: MenuItem[], custom: MenuCustomization): MenuCustomization {
+  const ativos = MENUS_OPERACIONAIS.filter(m => base.some(b => b.id === m.id));
+  if (!ativos.length) return custom;
+  const organizado = ativos.every(menu => {
+    const root = custom.roots.find(n => n.kind === 'container' && n.id === `c-${menu.id}`);
+    if (root?.kind !== 'container') return false;
+    return menu.subItems.every(s => s.group
+      ? root.children.some(n => n.kind === 'container' && n.title === s.group && n.children.some(c => c.kind === 'program' && c.programId === s.id))
+      : root.children.some(n => n.kind === 'program' && n.programId === s.id));
+  });
+  if (organizado) return custom;
+  const ids = new Set(ativos.flatMap(m => m.subItems.map(s => s.id)));
+  ids.add('Importação Fiscal XML'); // duplicate of Entrada de NF-e
+  const containers = new Set(ativos.flatMap(m => [m.id, `c-${m.id}`]));
+  const strip = (nodes: CustomNode[]): CustomNode[] => nodes.flatMap(n => {
+    if (n.kind === 'program') return ids.has(n.programId) ? [] : [n];
+    const children = strip(n.children);
+    if (!children.length && ativos.some(m => n.id === `g-${m.id}-Configurações`)) return [];
+    if (containers.has(n.id) || !children.length && ['Fiscal','c-Fiscal','Notas Fiscais de Entrada','c-Notas Fiscais de Entrada'].includes(n.id)) return children;
+    return [{...n, children}];
+  });
+  const roots = strip(custom.roots);
+  for (const menu of ativos) {
+    const children: CustomNode[] = menu.subItems.filter(s => !s.group).map(s => ({kind:'program',programId:s.id}));
+    children.push({kind:'container',id:`g-${menu.id}-Configurações`,title:'Configurações',iconName:'Settings',children:menu.subItems.filter(s => s.group === 'Configurações').map(s => ({kind:'program',programId:s.id}))});
+    roots.push({kind:'container',id:`c-${menu.id}`,title:menu.title,iconName:menu.id === 'Compras' ? 'ShoppingCart' : menu.id === 'Estoque' ? 'Boxes' : 'Receipt',children});
+  }
+  return {...custom,roots};
 }
 
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {

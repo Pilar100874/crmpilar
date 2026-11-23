@@ -250,82 +250,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Ajuste de Imagem em Lote"
     }
   ],
-  "Necessidade de Compra": [
-    {
-      "id": "necessidade",
-      "label": "Necessidade de compra"
-    },
-    {
-      "id": "cotacoes",
-      "label": "Cotações"
-    }
-  ],
-  "Cotações de Compra": [
-    {
-      "id": "necessidade",
-      "label": "Necessidade de compra"
-    },
-    {
-      "id": "cotacoes",
-      "label": "Cotações"
-    }
-  ],
-  "Saldos de Estoque": [
-    {
-      "id": "saldos",
-      "label": "Saldos"
-    },
-    {
-      "id": "movimentacoes",
-      "label": "Movimentações"
-    },
-    {
-      "id": "entrada",
-      "label": "Entrada de NF-e"
-    }
-  ],
-  "Movimentações de Estoque": [
-    {
-      "id": "saldos",
-      "label": "Saldos"
-    },
-    {
-      "id": "movimentacoes",
-      "label": "Movimentações"
-    },
-    {
-      "id": "entrada",
-      "label": "Entrada de NF-e"
-    }
-  ],
-  "Entrada de NF-e": [
-    {
-      "id": "saldos",
-      "label": "Saldos"
-    },
-    {
-      "id": "movimentacoes",
-      "label": "Movimentações"
-    },
-    {
-      "id": "entrada",
-      "label": "Entrada de NF-e"
-    }
-  ],
-  "Importação Fiscal XML": [
-    {
-      "id": "saldos",
-      "label": "Saldos"
-    },
-    {
-      "id": "movimentacoes",
-      "label": "Movimentações"
-    },
-    {
-      "id": "entrada",
-      "label": "Entrada de NF-e"
-    }
-  ],
   "Conteúdos": [
     {
       "id": "contatos",
@@ -1846,94 +1770,190 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
   ],
   "Config Estab Condicoes Pagamento": [
     {
-      "id": "cadastro-unidades",
+      "id": "produtos",
+      "label": "Produtos"
+    },
+    {
+      "id": "maquinas",
+      "label": "Máquinas"
+    },
+    {
+      "id": "conhecimento-maquinas",
+      "label": "Conhecimento em máquinas"
+    },
+    {
+      "id": "categorias",
+      "label": "Categorias"
+    },
+    {
+      "id": "grupos",
+      "label": "Grupos"
+    },
+    {
+      "id": "campos",
+      "label": "Campos Customizados"
+    },
+    {
+      "id": "unidades",
       "label": "Unidades"
     },
     {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
+      "id": "ncm",
+      "label": "NCM"
     },
     {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
+      "id": "tabelas-preco",
+      "label": "Preço por Categoria"
     },
     {
-      "id": "segmentos",
-      "label": "Segmentos"
+      "id": "tipos-pagamento",
+      "label": "Tipos de Pagamento"
     },
     {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
+      "id": "condicoes",
+      "label": "Condições de Pagamento"
     },
     {
-      "id": "email-config",
-      "label": "Email Config"
+      "id": "custos-veiculo",
+      "label": "Custos de Veículos"
     },
     {
-      "id": "comunicacao",
-      "label": "Comunicação"
+      "id": "pedagio",
+      "label": "API de Pedágio"
     },
     {
-      "id": "integrações",
-      "label": "Integrações"
+      "id": "frete-terceiros",
+      "label": "Frete de Terceiros"
     },
     {
-      "id": "sistema",
-      "label": "Sistema"
+      "id": "automacao",
+      "label": "Regras de Automação"
     },
     {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
+      "id": "relatorio-orcamento",
+      "label": "Configuração do Relatório"
     },
     {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
+      "id": "importacao-terceiros",
+      "label": "Importação de Terceiros"
+    },
+    {
+      "id": "whatsapp-catalogo",
+      "label": "Lista de Produtos no WhatsApp"
+    },
+    {
+      "id": "licitacoes-bot",
+      "label": "Bot Caça Licitações"
+    },
+    {
+      "id": "etiquetas-zebra",
+      "label": "Impressão de Etiquetas Zebra"
+    },
+    {
+      "id": "cadastro",
+      "label": "Cadastro"
+    },
+    {
+      "id": "importacao",
+      "label": "Importação"
+    },
+    {
+      "id": "ajuste-imagens",
+      "label": "Ajuste de Imagem em Lote"
     }
   ],
   "Config Estab Produtos": [
     {
-      "id": "cadastro-unidades",
+      "id": "produtos",
+      "label": "Produtos"
+    },
+    {
+      "id": "maquinas",
+      "label": "Máquinas"
+    },
+    {
+      "id": "conhecimento-maquinas",
+      "label": "Conhecimento em máquinas"
+    },
+    {
+      "id": "categorias",
+      "label": "Categorias"
+    },
+    {
+      "id": "grupos",
+      "label": "Grupos"
+    },
+    {
+      "id": "campos",
+      "label": "Campos Customizados"
+    },
+    {
+      "id": "unidades",
       "label": "Unidades"
     },
     {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
+      "id": "ncm",
+      "label": "NCM"
     },
     {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
+      "id": "tabelas-preco",
+      "label": "Preço por Categoria"
     },
     {
-      "id": "segmentos",
-      "label": "Segmentos"
+      "id": "tipos-pagamento",
+      "label": "Tipos de Pagamento"
     },
     {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
+      "id": "condicoes",
+      "label": "Condições de Pagamento"
     },
     {
-      "id": "email-config",
-      "label": "Email Config"
+      "id": "custos-veiculo",
+      "label": "Custos de Veículos"
     },
     {
-      "id": "comunicacao",
-      "label": "Comunicação"
+      "id": "pedagio",
+      "label": "API de Pedágio"
     },
     {
-      "id": "integrações",
-      "label": "Integrações"
+      "id": "frete-terceiros",
+      "label": "Frete de Terceiros"
     },
     {
-      "id": "sistema",
-      "label": "Sistema"
+      "id": "automacao",
+      "label": "Regras de Automação"
     },
     {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
+      "id": "relatorio-orcamento",
+      "label": "Configuração do Relatório"
     },
     {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
+      "id": "importacao-terceiros",
+      "label": "Importação de Terceiros"
+    },
+    {
+      "id": "whatsapp-catalogo",
+      "label": "Lista de Produtos no WhatsApp"
+    },
+    {
+      "id": "licitacoes-bot",
+      "label": "Bot Caça Licitações"
+    },
+    {
+      "id": "etiquetas-zebra",
+      "label": "Impressão de Etiquetas Zebra"
+    },
+    {
+      "id": "cadastro",
+      "label": "Cadastro"
+    },
+    {
+      "id": "importacao",
+      "label": "Importação"
+    },
+    {
+      "id": "ajuste-imagens",
+      "label": "Ajuste de Imagem em Lote"
     }
   ],
   "Config Estab Grupos Produtos": [
@@ -2210,6 +2230,68 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "visual-sistema",
       "label": "Visual do Sistema"
+    }
+  ],
+  "Necessidade de Compra": [
+    {
+      "id": "necessidade",
+      "label": "Necessidade de compra"
+    },
+    {
+      "id": "cotacoes",
+      "label": "Cotações"
+    }
+  ],
+  "Cotações de Compra": [
+    {
+      "id": "necessidade",
+      "label": "Necessidade de compra"
+    },
+    {
+      "id": "cotacoes",
+      "label": "Cotações"
+    }
+  ],
+  "Saldos de Estoque": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
+  "Movimentações de Estoque": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
+  "Entrada de NF-e": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
     }
   ]
 };

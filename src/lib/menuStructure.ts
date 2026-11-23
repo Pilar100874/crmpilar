@@ -2,6 +2,7 @@
 // Este arquivo centraliza a estrutura de menus para ser reutilizada em outras partes do sistema
 
 import * as LucideIcons from "lucide-react";
+import {MENUS_OPERACIONAIS} from './menusOperacionais';
 
 export interface SubMenuItem {
   id: string;
@@ -20,6 +21,7 @@ export interface MenuCategory {
 }
 
 export const menuStructure: MenuCategory[] = [
+  ...MENUS_OPERACIONAIS,
   { 
     id: "Dashboards",
     title: "Dashboards", 

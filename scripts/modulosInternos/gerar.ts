@@ -18,6 +18,7 @@ export const ARQUIVOS_FONTE = [
   "src/App.tsx",
   "src/components/Layout.tsx",
   "src/lib/menuStructure.ts",
+  "src/lib/menusOperacionais.ts",
 ];
 
 export interface ModuloInterno {
@@ -63,9 +64,9 @@ export const mapearModulos = (raiz: string): Record<string, ModuloInterno[]> => 
   }
 
   // 3) itens do menu (id + url)
-  const menu = ler("src/components/Layout.tsx") + ler("src/lib/menuStructure.ts");
+  const menu = ler("src/components/Layout.tsx") + ler("src/lib/menuStructure.ts") + ler("src/lib/menusOperacionais.ts");
   const itens: { id: string; url: string }[] = [];
-  for (const m of menu.matchAll(/id:\s*"([^"]+)",\s*title:\s*"[^"]*",\s*url:\s*"([^"]+)"/g)) {
+  for (const m of menu.matchAll(/id:\s*["']([^"']+)["'],\s*title:\s*["'][^"']*["'],\s*url:\s*["']([^"']+)["']/g)) {
     itens.push({ id: m[1], url: m[2] });
   }
 

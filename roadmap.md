@@ -72,6 +72,7 @@
 - [x] Aposentar emissão e recebimento via Focus a pedido do usuário; substituir pelo emissor/DF-e do Coletor
 - [ ] Validar integração Systax — depende do endereço da API, token e licença contratados (formato do retorno a confirmar com a documentação Systax)
 ## Emissor NF-e próprio (Coletor)
+- [x] Organizar Compras, Estoque e Faturamento no menu principal com Configurações próprias, preservando outros menus e destinos existentes
 - [x] Remover integração Focus das telas, consultas e serviços; preservar notas históricas e bloqueio de homologação
 - [x] Cadastrar responsável técnico por unidade e incluí-lo no XML; gravação/reabertura verificadas com cadastro temporário removido
 - [x] Mostrar saúde do Coletor e fila fiscal no Monitor, sem confundir atividade dos outros módulos

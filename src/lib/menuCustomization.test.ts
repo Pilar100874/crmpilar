@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { BarChart3, MessageSquare } from "lucide-react";
 import type { MenuItem } from "@/components/Layout";
 import { getEffectiveMainCustomization, type MenuCustomization } from "./menuCustomization";
+import {MENUS_OPERACIONAIS} from './menusOperacionais';
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/estabelecimentoUtils", () => ({ getEstabelecimentoId: vi.fn() }));
@@ -12,6 +13,23 @@ const base: MenuItem[] = [{ id: "Atendimento", title: "Chats", icon: MessageSqua
 ] }];
 
 describe("novos programas no menu personalizado", () => {
+  it('agrupa os três módulos na raiz e suas configurações sem alterar outros menus salvos', () => {
+    const custom: MenuCustomization = {version:1,roots:[{kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Faturamento'},{kind:'program',programId:'Painel Chats'}]},{kind:'program',programId:'Motor próprio NF-e'}]};
+    const effective = getEffectiveMainCustomization([...base,...MENUS_OPERACIONAIS],custom);
+    for (const menu of MENUS_OPERACIONAIS) {
+      const root = effective.roots.find(n => n.kind === 'container' && n.id === `c-${menu.id}`);
+      expect(root?.kind).toBe('container');
+      if (root?.kind !== 'container') throw new Error('Menu ausente');
+      const config = root.children.find(n => n.kind === 'container' && n.title === 'Configurações');
+      expect(config?.kind).toBe('container');
+      if (config?.kind !== 'container') throw new Error('Configurações ausentes');
+      expect(config.children.map(n => n.kind === 'program' ? n.programId : '')).toEqual(menu.subItems.filter(s => s.group).map(s => s.id));
+    }
+    expect(effective.roots.find(n => n.kind === 'container' && n.id === 'meu-menu')).toEqual({kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Painel Chats'}]});
+    expect(custom.roots).toHaveLength(2);
+    const again = getEffectiveMainCustomization([...base,...MENUS_OPERACIONAIS],effective);
+    expect(again).toEqual(effective);
+  });
   it("insere Jornada da equipe dentro de Chats sem alterar a personalização salva", () => {
     const custom: MenuCustomization = { version: 1, roots: [{ kind: "container", id: "c-Atendimento", title: "Chats", children: [{ kind: "program", programId: "Painel Chats" }] }] };
     const effective = getEffectiveMainCustomization(base, custom);

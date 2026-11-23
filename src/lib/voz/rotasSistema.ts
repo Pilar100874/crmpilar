@@ -243,7 +243,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/fiscal/simulador", titulo: "Simulador Tributário" },
   { path: "/fiscal/relatorios", titulo: "Relatórios Fiscais" },
   { path: "/fiscal/monitor", titulo: "Monitor Fiscal" },
-  { path: "/fiscal/motor-proprio", titulo: "Motor próprio NF-e" },
+  { path: "/fiscal/motor-proprio", titulo: "Emissor NF-e próprio", aliases: ["configurações faturamento", "motor próprio nfe"] },
   { path: "/entradas/documentos", titulo: "Documentos e Manifestação" },
   { path: "/estoque/entrada", titulo: "Importar XML" },
   { path: "/faturamento/painel", titulo: "Painel de Faturamento", aliases: ["dashboard faturamento", "total faturado"] },
