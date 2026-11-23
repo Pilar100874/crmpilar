@@ -3563,6 +3563,8 @@ export type Database = {
           created_at: string
           dispositivo_id: string | null
           estabelecimento_id: string
+          fiscal_ultima_comunicacao: string | null
+          fiscal_versao: string | null
           id: string
           nome: string
           ultima_comunicacao: string | null
@@ -3576,6 +3578,8 @@ export type Database = {
           created_at?: string
           dispositivo_id?: string | null
           estabelecimento_id: string
+          fiscal_ultima_comunicacao?: string | null
+          fiscal_versao?: string | null
           id?: string
           nome: string
           ultima_comunicacao?: string | null
@@ -3589,6 +3593,8 @@ export type Database = {
           created_at?: string
           dispositivo_id?: string | null
           estabelecimento_id?: string
+          fiscal_ultima_comunicacao?: string | null
+          fiscal_versao?: string | null
           id?: string
           nome?: string
           ultima_comunicacao?: string | null
@@ -30786,6 +30792,10 @@ export type Database = {
           proximo_numero_nfe: number | null
           ramal_portaria: string | null
           regime_tributario: string | null
+          responsavel_tecnico_cnpj: string | null
+          responsavel_tecnico_contato: string | null
+          responsavel_tecnico_email: string | null
+          responsavel_tecnico_fone: string | null
           serie_nfe: number | null
           sip_porta: number | null
           sip_porta_alternativa: number | null
@@ -30820,6 +30830,10 @@ export type Database = {
           proximo_numero_nfe?: number | null
           ramal_portaria?: string | null
           regime_tributario?: string | null
+          responsavel_tecnico_cnpj?: string | null
+          responsavel_tecnico_contato?: string | null
+          responsavel_tecnico_email?: string | null
+          responsavel_tecnico_fone?: string | null
           serie_nfe?: number | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null
@@ -30854,6 +30868,10 @@ export type Database = {
           proximo_numero_nfe?: number | null
           ramal_portaria?: string | null
           regime_tributario?: string | null
+          responsavel_tecnico_cnpj?: string | null
+          responsavel_tecnico_contato?: string | null
+          responsavel_tecnico_email?: string | null
+          responsavel_tecnico_fone?: string | null
           serie_nfe?: number | null
           sip_porta?: number | null
           sip_porta_alternativa?: number | null

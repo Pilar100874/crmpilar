@@ -10,6 +10,12 @@ const g=(n,c)=>c?`<${n}>${c}</${n}>`:'';
 const dig=(s)=>String(s??'').replace(/\D/g,'');
 const f=(n,c=2)=>(Math.round((Number(n)||0)*10**c)/10**c).toFixed(c);
 const hoje=()=>new Date(Date.now()-3*3600e3).toISOString().slice(0,19)+'-03:00';
+function responsavelTecnico(u){
+  const cnpj=dig(u.responsavel_tecnico_cnpj),contato=String(u.responsavel_tecnico_contato??'').trim(),email=String(u.responsavel_tecnico_email??'').trim(),fone=dig(u.responsavel_tecnico_fone);
+  if(!cnpj&&!contato&&!email&&!fone)return '';
+  if(cnpj.length!==14||contato.length<2||contato.length>60||!/^\S+@\S+\.\S+$/.test(email)||email.length>60||fone.length<6||fone.length>14)throw new Error('Complete CNPJ, contato, e-mail e telefone do responsável técnico na unidade');
+  return g('infRespTec',t('CNPJ',cnpj)+t('xContato',contato)+t('email',email)+t('fone',fone));
+}
 function dvChave(c43){let p=2,s=0;for(let i=c43.length-1;i>=0;i--){s+=Number(c43[i])*p;p=p===9?2:p+1;}const r=s%11;return r<2?0:11-r;}
 function montarChave({uf,dataEmissao,cnpj,serie,numero,id}){
   const nNF=String(numero).padStart(9,'0');let cNF=String(parseInt(crypto.createHash('sha256').update(String(id)).digest('hex').slice(0,12),16)%1e8).padStart(8,'0');
@@ -84,7 +90,7 @@ async function montarNfe(op,municipio){
   const soma=pagos.reduce((s,p)=>s+n(p.valor),0);
   const pag=g('pag',pagos.map(p=>g('detPag',t('tPag',String(p.meio).padStart(2,'0'))+(String(p.meio)==='99'?t('xPag','Outros'):'')+t('vPag',f(p.meio==='90'?0:p.valor)))).join('')+(soma-vNF>0.009?t('vTroco',f(soma-vNF)):''));
   const infAdic=(dados.informacoes_fisco||dados.observacoes||nota.observacoes)?g('infAdic',t('infAdFisco',dados.informacoes_fisco||undefined)+t('infCpl',dados.observacoes||nota.observacoes||undefined)):'';
-  const xml=`<NFe xmlns="${NS}"><infNFe Id="NFe${chave}" versao="4.00">${g('ide',ide)}${g('emit',emit)}${g('dest',dest)}${dets}${g('total',total)}${g('transp',transp)}${cobr}${pag}${infAdic}</infNFe></NFe>`;
+  const xml=`<NFe xmlns="${NS}"><infNFe Id="NFe${chave}" versao="4.00">${g('ide',ide)}${g('emit',emit)}${g('dest',dest)}${dets}${g('total',total)}${g('transp',transp)}${cobr}${pag}${infAdic}${responsavelTecnico(u)}</infNFe></NFe>`;
   return {xml,chave,vNF:Number(f(vNF))};
 }
-module.exports={montarNfe,montarChave,dvChave,txt,t,g,f,dig,hoje,NS};
+module.exports={montarNfe,montarChave,dvChave,txt,t,g,f,dig,hoje,NS,responsavelTecnico};

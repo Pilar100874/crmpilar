@@ -9,6 +9,7 @@ import {Server,PlugZap} from 'lucide-react';
 import {toast} from 'sonner';
 import {useContextoInterno} from '@/lib/estoque/contexto';
 import {FiscalEmissionEngine} from '@/lib/fiscal/servicoFiscal';
+import {SaudeEmissor} from '@/components/fiscal/SaudeEmissor';
 const sb=supabase as any;
 export default function ConfigMotorFiscal(){
  const ctx=useContextoInterno();const [status,setStatus]=useState<any>(null),[ambiente,setAmbiente]=useState('homologacao'),[teste,setTeste]=useState<any>(null),[busy,setBusy]=useState(false);
@@ -17,6 +18,7 @@ export default function ConfigMotorFiscal(){
  const salvar=async(ativo:boolean,amb=ambiente)=>{if(amb==='producao'&&!status?.homologado)return toast.error('Produção só depois de uma NF-e autorizada em homologação');setBusy(true);const {error}=await sb.rpc('fiscal_coletor_ativar',{p_ambiente:amb,p_ativo:ativo});setBusy(false);if(error)return toast.error(error.message);await carregar();toast.success(ativo?'Emissão pelo Coletor ativada':'Emissão desativada');};
  return <div className="space-y-4 p-3 sm:p-6 min-w-0 max-w-3xl">
   <header className="flex items-center gap-2"><Server className="h-6 w-6 text-primary"/><h1 className="text-xl font-semibold">Emissor NF-e próprio</h1></header>
+  <SaudeEmissor estabelecimentoId={ctx.estabelecimentoId}/>
   <div className="flex flex-wrap gap-2"><Badge variant={status?.habilitado?'default':'outline'}>{status?.habilitado?'Ativado':'Desativado'}</Badge><Badge variant="outline">{status?.homologado?'Homologação comprovada':'Homologação pendente'}</Badge>{teste&&<Badge variant={teste.coletor_online?'default':'destructive'}>{teste.coletor_online?'Coletor conectado':'Coletor desligado'}</Badge>}</div>
   <div className="flex items-center gap-3"><Switch id="ativo" checked={!!status?.habilitado} disabled={busy} onCheckedChange={v=>salvar(v)}/><Label htmlFor="ativo">Emitir pelo Coletor</Label></div>
   <div className="max-w-xs"><Label>Ambiente padrão</Label><Select value={ambiente} onValueChange={v=>{setAmbiente(v);if(status)salvar(!!status.habilitado,v);}}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="homologacao">Homologação</SelectItem><SelectItem value="producao" disabled={!status?.homologado}>Produção</SelectItem></SelectContent></Select></div>
@@ -27,6 +29,6 @@ export default function ConfigMotorFiscal(){
    <li>Cadastre o certificado A1 e a senha em cada unidade emissora.</li>
    <li>Faça uma NF-e em homologação. A primeira autorização real libera a produção.</li>
    <li>Use Fiscal → Monitor para testar a comunicação com a SEFAZ da unidade.</li>
-  </ol><p className="text-xs text-muted-foreground">Autorizadores mapeados: SP, RS e os estados atendidos pela SVRS. Distribuição e manifestação usam o Ambiente Nacional.</p></section>
+   </ol><p className="text-xs text-muted-foreground">Cobertura NF-e: todos os 26 estados e Distrito Federal, por autorizador próprio, SVRS ou SVAN. Distribuição e manifestação usam o Ambiente Nacional. A aceitação real depende da homologação de cada unidade.</p></section>
  </div>;
 }

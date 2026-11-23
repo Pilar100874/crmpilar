@@ -8,7 +8,7 @@ const {soap,tag,bloco,todos,desc,attr,gunzip}=require('./sefaz');
 let timer=null,ocupado=false;const estado={ativo:false,ultimo:null,erro:null,processadas:0,eventos:[]};
 const log=(m)=>{estado.eventos.unshift(`${new Date().toLocaleTimeString('pt-BR')} ${m}`);estado.eventos=estado.eventos.slice(0,30);};
 async function api(acao,extra={}){
-  const cfg=loadConfig();const r=await fetch(`${cfg.url}/functions/v1/fiscal-coletor`,{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:`Bearer ${cfg.anonKey}`},body:JSON.stringify({...extra,acao,chave:String(cfg.chaveEmpresa||'').trim().toUpperCase()})});
+  const cfg=loadConfig();const r=await fetch(`${cfg.url}/functions/v1/fiscal-coletor`,{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:`Bearer ${cfg.anonKey}`},body:JSON.stringify({...extra,acao,versao:require('../package.json').version,chave:String(cfg.chaveEmpresa||'').trim().toUpperCase()})});
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||`Erro ${r.status}`);return j;
 }
 const municipios=new Map();

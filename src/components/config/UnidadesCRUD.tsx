@@ -37,6 +37,10 @@ interface Unidade {
   certificado_nome_arquivo?: string | null;
   certificado_titular?: string | null;
   certificado_valido_ate?: string | null;
+  responsavel_tecnico_cnpj?: string | null;
+  responsavel_tecnico_contato?: string | null;
+  responsavel_tecnico_email?: string | null;
+  responsavel_tecnico_fone?: string | null;
 }
 
 interface UnidadesCRUDProps {
@@ -58,6 +62,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [regime, setRegime] = useState("");
   const [crt, setCrt] = useState("");
   const [cnae, setCnae] = useState("");
+  const [tecnico, setTecnico] = useState({cnpj: "", contato: "", email: "", fone: ""});
   const [serieNfe, setSerieNfe] = useState("1");
   const [proximoNumero, setProximoNumero] = useState("");
   const [ieSt, setIeSt] = useState("");
@@ -166,6 +171,11 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       return;
     }
 
+    const tecnicoPreenchido = Object.values(tecnico).some(v => v.trim());
+    if (tecnicoPreenchido && (tecnico.cnpj.replace(/\D/g, "").length !== 14 || tecnico.contato.trim().length < 2 || tecnico.contato.trim().length > 60 || !/^\S+@\S+\.\S+$/.test(tecnico.email.trim()) || tecnico.email.trim().length > 60 || tecnico.fone.replace(/\D/g, "").length < 6 || tecnico.fone.replace(/\D/g, "").length > 14)) {
+      toast({title: "Responsável técnico incompleto", description: "Preencha CNPJ (14 dígitos), contato, e-mail válido e telefone.", variant: "destructive"});
+      return;
+    }
     // Check for duplicates (case-insensitive)
     const existingUnidade = unidades.find(u => 
       u.nome.toLowerCase() === trimmedNome.toLowerCase() && u.id !== editingId
@@ -182,6 +192,10 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
 
     const unidadeData = {
       nome: trimmedNome,
+      responsavel_tecnico_cnpj: tecnico.cnpj.replace(/\D/g, "") || null,
+      responsavel_tecnico_contato: tecnico.contato.trim() || null,
+      responsavel_tecnico_email: tecnico.email.trim() || null,
+      responsavel_tecnico_fone: tecnico.fone.replace(/\D/g, "") || null,
       cep: cep || null,
       logradouro: logradouro || null,
       numero: numero || null,
@@ -264,6 +278,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   };
 
   const handleEdit = (unidade: Unidade) => {
+    setTecnico({cnpj: unidade.responsavel_tecnico_cnpj ?? "", contato: unidade.responsavel_tecnico_contato ?? "", email: unidade.responsavel_tecnico_email ?? "", fone: unidade.responsavel_tecnico_fone ?? ""});
     setNome(unidade.nome);
     setCep(unidade.cep || "");
     setLogradouro(unidade.logradouro || "");
@@ -285,6 +300,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   };
 
   const resetForm = () => {
+    setTecnico({cnpj: "", contato: "", email: "", fone: ""});
     setSerieNfe("1"); setProximoNumero(""); setIeSt("");
     setNome("");
     setCep("");
@@ -574,6 +590,15 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           </div>
         </div>
 
+        <section className="space-y-3 border-t pt-4">
+          <h3 className="font-medium">Responsável técnico pela emissão NF-e</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 space-y-1"><Label htmlFor="tecnico-cnpj">CNPJ do responsável técnico</Label><Input id="tecnico-cnpj" inputMode="numeric" maxLength={18} value={tecnico.cnpj} onChange={e => setTecnico(v => ({...v, cnpj: e.target.value}))}/></div>
+            <div className="min-w-0 space-y-1"><Label htmlFor="tecnico-contato">Nome do contato</Label><Input id="tecnico-contato" maxLength={60} value={tecnico.contato} onChange={e => setTecnico(v => ({...v, contato: e.target.value}))}/></div>
+            <div className="min-w-0 space-y-1"><Label htmlFor="tecnico-email">E-mail do responsável técnico</Label><Input id="tecnico-email" type="email" maxLength={60} value={tecnico.email} onChange={e => setTecnico(v => ({...v, email: e.target.value}))}/></div>
+            <div className="min-w-0 space-y-1"><Label htmlFor="tecnico-fone">Telefone do responsável técnico</Label><Input id="tecnico-fone" type="tel" maxLength={20} value={tecnico.fone} onChange={e => setTecnico(v => ({...v, fone: e.target.value}))}/></div>
+          </div>
+        </section>
         {editingId ? (
           (() => {
             const atual = unidades.find((u) => u.id === editingId);

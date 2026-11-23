@@ -18,7 +18,11 @@ Deno.serve(async req=>{
  let nota:any=null;
  if(b.nota_id){const {data:n,error}=await sb.from('notas_fiscais').select('*,notas_fiscais_itens(*)').eq('id',b.nota_id).eq('estabelecimento_id',e).single();if(error)return json({error:'Nota não disponível'},404);nota=n;}
  if(b.acao==='arquivo'){if(!nota?.xml)return json({error:'XML autorizado ainda não disponível'},404);return new Response(nota.xml,{headers:{...corsHeaders,'Content-Type':'application/xml'}});}
- if(b.acao==='testar'){const {data:k}=await admin.from('automacao_app_chaves').select('ultima_comunicacao').eq('estabelecimento_id',e).eq('app','coletor').order('ultima_comunicacao',{ascending:false}).limit(1).maybeSingle();const online=!!k?.ultima_comunicacao&&Date.now()-new Date(k.ultima_comunicacao).getTime()<120000;return json({habilitado:!!cfg?.habilitado,homologado:!!cfg?.homologado,coletor_online:online,mensagem:online?'Coletor conectado':'Nenhum Coletor conectado nos últimos 2 minutos'});}
+ if(b.acao==='testar'){
+  const {data:coletores,error:ce}=await admin.from('automacao_app_chaves').select('id,nome,fiscal_ultima_comunicacao,fiscal_versao').eq('estabelecimento_id',e).eq('app','coletor').eq('bloqueado',false).order('fiscal_ultima_comunicacao',{ascending:false,nullsFirst:false});if(ce)throw ce;
+  const online=(coletores??[]).some(k=>k.fiscal_ultima_comunicacao&&Date.now()-new Date(k.fiscal_ultima_comunicacao).getTime()<120000);
+  return json({habilitado:!!cfg?.habilitado,homologado:!!cfg?.homologado,ambiente:cfg?.ambiente??'homologacao',coletor_online:online,coletores:coletores??[],mensagem:online?'Módulo fiscal conectado':'Nenhum módulo fiscal conectado nos últimos 2 minutos'});
+ }
  if(!cfg?.habilitado)return json({error:'Emissão pelo Coletor desativada (Fiscal → Motor próprio NF-e)'},409);
  if(['emitir','consultar','cancelamento','carta_correcao'].includes(b.acao)&&!nota)return json({error:'Selecione a nota'},400);
  const uid=nota?.unidade_id??b.unidade_id;if(!uid)return json({error:'Selecione a unidade'},400);

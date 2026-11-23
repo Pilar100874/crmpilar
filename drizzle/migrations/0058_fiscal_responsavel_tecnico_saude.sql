@@ -1,0 +1,3 @@
+ALTER TABLE public.unidades ADD COLUMN IF NOT EXISTS responsavel_tecnico_cnpj text, ADD COLUMN IF NOT EXISTS responsavel_tecnico_contato text, ADD COLUMN IF NOT EXISTS responsavel_tecnico_email text, ADD COLUMN IF NOT EXISTS responsavel_tecnico_fone text;
+ALTER TABLE public.automacao_app_chaves ADD COLUMN IF NOT EXISTS fiscal_ultima_comunicacao timestamptz, ADD COLUMN IF NOT EXISTS fiscal_versao text;
+COMMENT ON COLUMN public.automacao_app_chaves.fiscal_ultima_comunicacao IS 'Última comunicação autenticada do módulo fiscal; independente dos demais módulos do Coletor';

@@ -5,7 +5,7 @@ import {encodeBase64} from 'jsr:@std/encoding@1/base64';
 import {aplicarRetorno} from '../_shared/fiscal/aplicar.ts';
 /** Ponte do módulo Fiscal do Coletor: entrega a fila (com certificado A1) e recebe os retornos da SEFAZ. */
 const json=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{...corsHeaders,'Content-Type':'application/json'}});
-const Body=z.object({chave:z.string().min(4).max(80),acao:z.enum(['pendentes','resultado','falha','preparar']),chave_nfe:z.string().regex(/^\d{44}$/).optional(),xml:z.string().max(2000000).optional(),operacao_id:z.string().uuid().optional(),retorno:z.record(z.unknown()).optional(),erro:z.string().max(2000).optional()});
+const Body=z.object({chave:z.string().min(4).max(80),versao:z.string().max(30).optional(),acao:z.enum(['pendentes','resultado','falha','preparar']),chave_nfe:z.string().regex(/^\d{44}$/).optional(),xml:z.string().max(2000000).optional(),operacao_id:z.string().uuid().optional(),retorno:z.record(z.unknown()).optional(),erro:z.string().max(2000).optional()});
 Deno.serve(async req=>{
  if(req.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});
  try{
@@ -13,7 +13,7 @@ Deno.serve(async req=>{
   const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const {data:reg}=await admin.from('automacao_app_chaves').select('id,estabelecimento_id,bloqueado,app').eq('chave',b.chave.trim().toUpperCase()).maybeSingle();
   if(!reg||reg.app!=='coletor'||reg.bloqueado)return json({error:'Chave do Coletor inválida ou bloqueada'},403);
-  const e=reg.estabelecimento_id;await admin.from('automacao_app_chaves').update({ultima_comunicacao:new Date().toISOString()}).eq('id',reg.id);
+  const e=reg.estabelecimento_id;const agora=new Date().toISOString();await admin.from('automacao_app_chaves').update({ultima_comunicacao:agora,fiscal_ultima_comunicacao:agora,...(b.versao?{fiscal_versao:b.versao}:{})}).eq('id',reg.id);
   if(b.acao==='pendentes'){
    const {data:cfg}=await admin.from('fiscal_engine_config').select('habilitado').eq('estabelecimento_id',e).maybeSingle();if(!cfg?.habilitado)return json({operacoes:[]});
    await admin.from('fiscal_operacoes').update({situacao:'pendente'}).eq('estabelecimento_id',e).eq('situacao','processando').lt('coletado_em',new Date(Date.now()-600000).toISOString()).lt('tentativas',5);

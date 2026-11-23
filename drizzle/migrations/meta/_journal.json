@@ -407,6 +407,13 @@
       "when": 1795443256429,
       "tag": "0057_fiscal_fila_coletor",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1795444867051,
+      "tag": "0058_fiscal_responsavel_tecnico_saude",
+      "breakpoints": true
     }
   ]
 }
