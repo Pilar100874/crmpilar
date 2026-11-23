@@ -112,7 +112,9 @@ export function analisarAbastecimento(f: FichaProducao, quantidade: number, esco
   });
   const custos = materiais.map(m => m.custo);
   const custoTotal = custos.every(c => c != null) ? custos.reduce((s: number, c) => s + (c as number), 0) : null;
-  return { materiais, custoTotal, custoUnitario: custoTotal == null ? null : custoTotal / quantidade, faltando: materiais.some(m => m.falta > 0) };
+  // Materiais marcados como opcionais não bloqueiam a produção quando faltam em estoque.
+  const faltando = materiais.some(m => m.falta > 0 && !f.materiais.find(x => x.id === m.grupo_id)?.opcional);
+  return { materiais, custoTotal, custoUnitario: custoTotal == null ? null : custoTotal / quantidade, faltando };
 }
 /** Unit cost of the batch for each option of a group, keeping the other choices. */
 export function custoPorOpcao(f: FichaProducao, grupoId: string, quantidade: number, escolhas: Record<string, string>, dados: DadosMateria[]) {
@@ -128,6 +130,10 @@ export function alertasLinha(f: FichaProducao, quantidade: number, escolhas: Rec
     const max = Math.max(...r.etapas.map(e => e.capacidade));
     r.etapas.forEach((e, i) => { if (e.capacidade === r.capacidadeLinha && max > e.capacidade) alertas.push(`Gargalo: a etapa ${i + 1} (${f.etapas[i].nome}) produz ${e.capacidade} por minuto e limita a linha.`); });
   }
-  f.etapas.forEach((e, i) => { const o = e.opcoes.find(o => o.id === escolhas[e.id]) || e.opcoes[0]; if (o?.maquina_id && !operadoresPorMaquina[o.maquina_id]) alertas.push(`A máquina da etapa ${i + 1} (${e.nome}) não tem operador com conhecimento cadastrado.`); });
+  f.etapas.forEach((e, i) => {
+    const o = e.opcoes.find(o => o.id === escolhas[e.id]) || e.opcoes[0];
+    if (o?.maquina_id && !operadoresPorMaquina[o.maquina_id]) alertas.push(`A máquina da etapa ${i + 1} (${e.nome}) não tem operador com conhecimento cadastrado.`);
+    if (o?.maquina_id && o.operadores_necessarios && (operadoresPorMaquina[o.maquina_id] || 0) < o.operadores_necessarios) alertas.push(`A etapa ${i + 1} (${e.nome}) precisa de ${o.operadores_necessarios} funcionário(s) para operar, mas só ${operadoresPorMaquina[o.maquina_id] || 0} tem conhecimento cadastrado.`);
+  });
   return alertas;
 }

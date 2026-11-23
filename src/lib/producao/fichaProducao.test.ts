@@ -307,3 +307,39 @@ describe('nome do material obrigatório', () => {
     expect(validarNome({ quantidade_base: 1, unidade_produto: 'un', etapas: [], materiais: [{ id: 'g', nome: ' ', opcoes: [{ id: 'o', produto_id: 'p', quantidade: 1, unidade: 'kg' }] }] })).toBe('Informe o nome de cada material');
   });
 });
+
+describe('produção sem o item, funcionários e setups por dia', () => {
+  it('material opcional não bloqueia a produção quando falta em estoque', async () => {
+    const m = await import('./montagemFicha');
+    const f: FichaProducao = { quantidade_base: 1, unidade_produto: 'un', etapas: [], materiais: [
+      { id: 'g1', nome: 'Bobina', opcoes: [{ id: 'a', produto_id: 'A', quantidade: 10, unidade: 'kg' }] },
+      { id: 'g2', nome: 'Etiqueta', opcional: true, opcoes: [{ id: 'e', produto_id: 'E', quantidade: 1, unidade: 'un' }] },
+    ] };
+    const dados = [{ id: 'A', unidade: 'kg', estoque: 100 }, { id: 'E', unidade: 'un', estoque: 0 }];
+    expect(m.analisarAbastecimento(f, 10, {}, dados)!.faltando).toBe(false);
+    f.materiais[1].opcional = undefined;
+    expect(m.analisarAbastecimento(f, 10, {}, dados)!.faltando).toBe(true);
+  });
+  it('preserva opcional, funcionários e setups ao reabrir a ficha', () => {
+    const f: FichaProducao = { quantidade_base: 1, unidade_produto: 'un', materiais: [{ id: 'g', nome: 'X', opcional: true, opcoes: [{ id: 'o', produto_id: 'p', quantidade: 1, unidade: 'kg' }] }], etapas: [{ id: 'e', nome: 'Corte', opcoes: [{ id: 'm', maquina_id: 'm1', capacidade_minuto: 10, operadores_necessarios: 2, max_setups_dia: 4 }] }] };
+    const reaberta = lerFicha(JSON.parse(JSON.stringify(f)));
+    expect(reaberta.materiais[0].opcional).toBe(true);
+    expect(reaberta.etapas[0].opcoes[0].operadores_necessarios).toBe(2);
+    expect(reaberta.etapas[0].opcoes[0].max_setups_dia).toBe(4);
+    expect(validarFicha(reaberta)).toBeNull();
+  });
+  it('exige funcionários inteiro não negativo e setups por dia inteiro positivo', () => {
+    const base = (op: Partial<FichaProducao['etapas'][number]['opcoes'][number]>): FichaProducao => ({ quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'X', opcoes: [{ id: 'o', maquina_id: 'm', capacidade_minuto: 1, ...op }] }] });
+    expect(validarFicha(base({ operadores_necessarios: -1 }))).toMatch(/funcionários necessários/i);
+    expect(validarFicha(base({ operadores_necessarios: 1.5 }))).toMatch(/funcionários necessários/i);
+    expect(validarFicha(base({ max_setups_dia: 0 }))).toMatch(/setups por dia/i);
+    expect(validarFicha(base({ max_setups_dia: 2.5 }))).toMatch(/setups por dia/i);
+    expect(validarFicha(base({ operadores_necessarios: 3, max_setups_dia: 6 }))).toBeNull();
+  });
+  it('alerta quando a máquina escolhida precisa de mais funcionários do que os habilitados', async () => {
+    const m = await import('./montagemFicha');
+    const f: FichaProducao = { quantidade_base: 1, unidade_produto: 'un', materiais: [], etapas: [{ id: 'e', nome: 'Corte', opcoes: [{ id: 'o', maquina_id: 'm1', capacidade_minuto: 10, operadores_necessarios: 2 }] }] };
+    expect(m.alertasLinha(f, 10, {}, { m1: 1 }).join(' ')).toMatch(/precisa de 2 funcionário/);
+    expect(m.alertasLinha(f, 10, {}, { m1: 2 }).join(' ')).not.toMatch(/precisa de 2 funcionário/);
+  });
+});

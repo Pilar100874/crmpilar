@@ -25,6 +25,7 @@ export function FluxoConferenciaProducao({ ficha, nomeMateria, nomeMaquina, maqu
         {ficha.materiais.map(g => <div key={g.id} className="rounded-md border p-2 min-w-0 space-y-1">
           <div className="flex items-center gap-1"><p className="flex-1 min-w-0 text-sm font-medium break-words">{g.nome || <span className="text-destructive">Sem nome</span>}</p><Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label={`Editar ${g.nome}`} onClick={() => onEditar(g.id)}><Pencil className="h-3.5 w-3.5" /></Button></div>
           {g.segue_grupo_id && <Badge variant="outline">Segue ciclo de {ficha.materiais.find(x => x.id === g.segue_grupo_id)?.nome}</Badge>}
+          {g.opcional && <Badge variant="secondary">Permite rodar sem esse item</Badge>}
           {g.opcoes.map((o, i) => <p key={o.id} className="text-xs break-words">{i > 0 && <span className="font-semibold text-muted-foreground">OU </span>}
             <span className={o.produto_id ? '' : 'text-destructive'}>{o.produto_id ? nomeMateria(o.produto_id) : 'Matéria-prima não escolhida'}</span>
             {' · '}{f(o.quantidade || 0)} {o.unidade}{o.rendimento ? ` → ${f(o.rendimento)} ${ficha.unidade_produto}` : ''}{o.perda_max_percentual ? ` · perda ${f(o.perda_max_percentual)}%` : ''}</p>)}
@@ -37,7 +38,8 @@ export function FluxoConferenciaProducao({ ficha, nomeMateria, nomeMaquina, maqu
           return <div key={o.id} className={`rounded-md border p-2 text-xs min-w-0 flex-1 basis-48 ${off || !o.maquina_id ? 'border-destructive/60' : ''}`}>
             <p className="font-medium break-words">{j === 0 ? '' : 'OU '}{o.maquina_id ? nomeMaquina(o.maquina_id) : <span className="text-destructive">Máquina não escolhida</span>}</p>
             <p className="text-muted-foreground">{f(o.capacidade_minuto || 0)} {ficha.unidade_produto}/min{o.setup_minutos ? ` · setup ${f(o.setup_minutos)} min` : ''}</p>
-            {o.maquina_id && <p className={operadores[o.maquina_id] ? 'text-muted-foreground' : 'text-destructive'}>{operadores[o.maquina_id] || 0} operador(es){off ? ' · indisponível' : ''}</p>}
+            {o.maquina_id && <p className={operadores[o.maquina_id] ? 'text-muted-foreground' : 'text-destructive'}>{operadores[o.maquina_id] || 0} operador(es){o.operadores_necessarios ? ` · precisa de ${o.operadores_necessarios}` : ''}{off ? ' · indisponível' : ''}</p>}
+            {o.max_setups_dia ? <p className="text-muted-foreground">Máx. {o.max_setups_dia} setup(s)/dia (ideal)</p> : null}
           </div>; })}
           <Button type="button" variant="ghost" size="icon" className="h-7 w-7 self-start" aria-label={`Editar etapa ${i + 1}`} onClick={() => onEditar(e.id)}><Pencil className="h-3.5 w-3.5" /></Button></div>
       </Bloco></div>)}

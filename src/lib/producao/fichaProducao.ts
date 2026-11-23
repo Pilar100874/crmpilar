@@ -1,8 +1,8 @@
 export interface OpcaoMaterial { id: string; produto_id: string; quantidade: number; unidade: string; meta_producao?: number; rendimento?: number; perda_max_percentual?: number }
-/** segue_grupo_id: o consumo informado vale por ciclo do grupo indicado (ex.: 1 saco por ciclo da bobina). */
-export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[]; segue_grupo_id?: string }
+/** segue_grupo_id: o consumo informado vale por ciclo do grupo indicado (ex.: 1 saco por ciclo da bobina). opcional: a produção pode rodar sem esse item (falta de estoque não bloqueia). */
+export interface GrupoMaterial { id: string; nome: string; opcoes: OpcaoMaterial[]; segue_grupo_id?: string; opcional?: boolean }
 export interface RegraMaterialMaquina { material_opcao_id: string; permitida: boolean; simultaneos: number }
-export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; regras_materiais?: RegraMaterialMaquina[] }
+export interface OpcaoMaquina { id: string; maquina_id: string; capacidade_minuto: number; setup_minutos?: number; setup_troca_material_minutos?: number; operadores_necessarios?: number; max_setups_dia?: number; regras_materiais?: RegraMaterialMaquina[] }
 export interface EtapaProducao { id: string; nome: string; opcoes: OpcaoMaquina[]; material_regra_id?: string }
 export interface ApoioProducao { id: string; quantidade: number; servico: string }
 export interface FichaProducao { quantidade_base: number; unidade_produto: string; materiais: GrupoMaterial[]; etapas: EtapaProducao[]; funcionarios_extras?: ApoioProducao[]; checklist?: ItemChecklistProducao[] }
@@ -67,11 +67,11 @@ export function lerFicha(valor: unknown): FichaProducao {
     quantidade_base: f.quantidade_base, unidade_produto: f.unidade_produto,
     ...(f.funcionarios_extras ? { funcionarios_extras: f.funcionarios_extras.map(a => ({ id: a.id, quantidade: a.quantidade, servico: a.servico })) } : {}),
     ...(Array.isArray(f.checklist) ? { checklist: f.checklist.map(i => ({ id: i.id, texto: i.texto })) } : {}),
-    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, ...(g.segue_grupo_id ? { segue_grupo_id: g.segue_grupo_id } : {}), opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, rendimento: o.rendimento, perda_max_percentual: o.perda_max_percentual })) })),
+    materiais: f.materiais.map(g => ({ id: g.id, nome: g.nome, ...(g.segue_grupo_id ? { segue_grupo_id: g.segue_grupo_id } : {}), ...(g.opcional ? { opcional: true } : {}), opcoes: g.opcoes.map(o => ({ id: o.id, produto_id: o.produto_id, quantidade: o.quantidade, unidade: o.unidade, meta_producao: o.meta_producao, rendimento: o.rendimento, perda_max_percentual: o.perda_max_percentual })) })),
     etapas: f.etapas.map(e => {
       const grupo = f.materiais.find(g => g.id === e.material_largura_id);
       return { id: e.id, nome: e.nome, material_regra_id: e.material_regra_id || e.material_largura_id,
-        opcoes: e.opcoes.map(o => ({ id: o.id, maquina_id: o.maquina_id, capacidade_minuto: o.capacidade_minuto, setup_minutos: o.setup_minutos, setup_troca_material_minutos: o.setup_troca_material_minutos,
+        opcoes: e.opcoes.map(o => ({ id: o.id, maquina_id: o.maquina_id, capacidade_minuto: o.capacidade_minuto, setup_minutos: o.setup_minutos, setup_troca_material_minutos: o.setup_troca_material_minutos, operadores_necessarios: o.operadores_necessarios, max_setups_dia: o.max_setups_dia,
           regras_materiais: o.regras_materiais ?? grupo?.opcoes.map(m => {
             const largura = m.largura_cm;
             const n = largura && f.largura_produto_cm ? Math.floor((largura + 1e-9) / f.largura_produto_cm) : 1;
@@ -114,6 +114,8 @@ export function validarFicha(f: FichaProducao, unidades?: UnidadesCadastroPorPro
     for (const o of e.opcoes) {
       if (o.setup_minutos != null && (!Number.isFinite(o.setup_minutos) || o.setup_minutos < 0)) return 'O tempo de setup não pode ser negativo';
       if (o.setup_troca_material_minutos != null && (!Number.isFinite(o.setup_troca_material_minutos) || o.setup_troca_material_minutos < 0)) return 'O setup de reposição não pode ser negativo';
+      if (o.operadores_necessarios != null && (!Number.isInteger(o.operadores_necessarios) || o.operadores_necessarios < 0)) return 'Os funcionários necessários para operar devem ser um número inteiro maior ou igual a zero';
+      if (o.max_setups_dia != null && (!Number.isInteger(o.max_setups_dia) || o.max_setups_dia <= 0)) return 'O número máximo de setups por dia deve ser um número inteiro maior que zero';
     }
     const material = f.materiais.find(g => g.id === e.material_regra_id);
     if (e.material_regra_id && !material) return 'Selecione um material existente para as regras da etapa';

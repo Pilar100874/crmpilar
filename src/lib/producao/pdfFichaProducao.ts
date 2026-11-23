@@ -12,14 +12,14 @@ export function gerarPdfFichaProducao(produto: string, f: FichaProducao, nomeMat
   const grupo = (id?: string) => f.materiais.find(g => g.id === id)?.nome || "";
   autoTable(doc, {
     startY: 28, head: [["Material", "Opção", "Matéria-prima", "Consumo", "Rendimento", "Perda máx."]],
-    body: f.materiais.flatMap(g => g.opcoes.map((o, i) => [g.nome, i === 0 ? "Principal" : `Substituto ${i}`, nomeMateria(o.produto_id), `${n(o.quantidade)} ${o.unidade}${g.segue_grupo_id ? ` por ciclo de ${grupo(g.segue_grupo_id)}` : ""}`, g.segue_grupo_id ? "Segue ciclo" : o.rendimento ? `${n(o.rendimento)} ${f.unidade_produto}` : "Por quantidade-base", o.perda_max_percentual ? `${n(o.perda_max_percentual)}%` : "—"])),
+    body: f.materiais.flatMap(g => g.opcoes.map((o, i) => [`${g.nome}${g.opcional ? " (pode rodar sem)" : ""}`, i === 0 ? "Principal" : `Substituto ${i}`, nomeMateria(o.produto_id), `${n(o.quantidade)} ${o.unidade}${g.segue_grupo_id ? ` por ciclo de ${grupo(g.segue_grupo_id)}` : ""}`, g.segue_grupo_id ? "Segue ciclo" : o.rendimento ? `${n(o.rendimento)} ${f.unidade_produto}` : "Por quantidade-base", o.perda_max_percentual ? `${n(o.perda_max_percentual)}%` : "—"])),
     styles: { fontSize: 8 },
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let y = (doc as any).lastAutoTable.finalY + 8;
   autoTable(doc, {
-    startY: y, head: [["Etapa", "Máquina", "Capacidade/min", "Setup inicial", "Setup reposição"]],
-    body: f.etapas.flatMap((e, i) => e.opcoes.map((o, j) => [j === 0 ? `${i + 1}. ${e.nome}` : "", `${j === 0 ? "" : "OU "}${nomeMaquina(o.maquina_id)}`, n(o.capacidade_minuto), `${n(o.setup_minutos)} min`, `${n(o.setup_troca_material_minutos)} min`])),
+    startY: y, head: [["Etapa", "Máquina", "Capacidade/min", "Setup inicial", "Setup reposição", "Funcionários p/ operar", "Máx. setups/dia"]],
+    body: f.etapas.flatMap((e, i) => e.opcoes.map((o, j) => [j === 0 ? `${i + 1}. ${e.nome}` : "", `${j === 0 ? "" : "OU "}${nomeMaquina(o.maquina_id)}`, n(o.capacidade_minuto), `${n(o.setup_minutos)} min`, `${n(o.setup_troca_material_minutos)} min`, o.operadores_necessarios ? String(o.operadores_necessarios) : "—", o.max_setups_dia ? String(o.max_setups_dia) : "—"])),
     styles: { fontSize: 8 },
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
