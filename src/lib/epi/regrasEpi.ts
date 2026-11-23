@@ -59,6 +59,42 @@ export function validarEntrega(
   return null;
 }
 
+/** Linha de epi_itens como vem do banco (colunas de texto são anuláveis). */
+export type EpiLinha = {
+  id: string;
+  nome: string;
+  categoria: string | null;
+  ca_numero: string | null;
+  ca_validade: string | null;
+  ca_validade_indeterminada?: boolean | null;
+  fabricante: string | null;
+  tamanho: string | null;
+  vida_util_dias: number | null;
+  estoque: number;
+  estoque_minimo: number;
+};
+
+/**
+ * Valores do formulário de EPI a partir de uma linha salva.
+ * Campos de texto nulos (EPIs cadastrados antes das obrigatoriedades) viram "",
+ * para que a validação consiga ler cada campo sem quebrar.
+ */
+export function epiParaEdicao<T extends EpiLinha>(i: T) {
+  return {
+    ...i,
+    nome: i.nome ?? "",
+    categoria: i.categoria ?? "",
+    ca_numero: i.ca_numero ?? "",
+    ca_validade: i.ca_validade ?? "",
+    ca_validade_indeterminada: !!i.ca_validade_indeterminada,
+    fabricante: i.fabricante ?? "",
+    tamanho: i.tamanho ?? "",
+    vida_util_dias: i.vida_util_dias ?? "",
+    estoque: String(i.estoque ?? 0),
+    estoque_minimo: String(i.estoque_minimo ?? 0),
+  };
+}
+
 /** EPIs exigidos pelo setor que o funcionário não tem em uso (sem devolução e com troca não vencida). */
 export function episFaltantes(
   exigidos: { epi_id: string; quantidade: number }[],

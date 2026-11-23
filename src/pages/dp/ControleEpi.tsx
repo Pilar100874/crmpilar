@@ -17,7 +17,7 @@ import { HardHat, FileDown, Plus, Pencil, Trash2, Undo2, AlertTriangle } from "l
 import { toast } from "sonner";
 import { usePontoEmpresa } from "@/pages/ponto/usePontoEmpresa";
 import {
-  CATEGORIAS_EPI, MOTIVOS_ENTREGA, caVencido, estoqueBaixo, situacaoEntrega, trocaPrevista, validarEntrega,
+  CATEGORIAS_EPI, MOTIVOS_ENTREGA, caVencido, epiParaEdicao, estoqueBaixo, situacaoEntrega, trocaPrevista, validarEntrega,
 } from "@/lib/epi/regrasEpi";
 
 const sb = supabase as any;
@@ -78,10 +78,10 @@ export default function ControleEpi() {
   const salvarEpi = async () => {
     if (!epiForm.nome.trim()) return toast.error("Informe o nome do EPI.");
     if (!epiForm.categoria) return toast.error("Escolha a categoria do EPI.");
-    if (!epiForm.fabricante.trim()) return toast.error("Informe o fabricante do EPI.");
-    if (!epiForm.ca_numero.trim()) return toast.error("Informe o número do CA.");
+    if (!(epiForm.fabricante ?? "").trim()) return toast.error("Informe o fabricante do EPI.");
+    if (!(epiForm.ca_numero ?? "").trim()) return toast.error("Informe o número do CA.");
     if (!epiForm.ca_validade_indeterminada && !epiForm.ca_validade) return toast.error("Informe a validade do CA ou marque validade indeterminada.");
-    if (!epiForm.tamanho.trim()) return toast.error("Informe o tamanho do EPI.");
+    if (!(epiForm.tamanho ?? "").trim()) return toast.error("Informe o tamanho do EPI.");
     if (!epiForm.vida_util_dias || Number(epiForm.vida_util_dias) <= 0) return toast.error("Informe a vida útil em dias (maior que zero).");
     if (epiForm.estoque === "" || Number(epiForm.estoque) < 0) return toast.error("Informe o estoque.");
     if (epiForm.estoque_minimo === "" || Number(epiForm.estoque_minimo) < 0) return toast.error("Informe o estoque mínimo.");
@@ -241,7 +241,7 @@ export default function ControleEpi() {
                   </div>
                 </div>
                 <div className="flex">
-                  <Button size="icon" variant="ghost" onClick={() => setEpiForm({ ...i, vida_util_dias: i.vida_util_dias ?? "", ca_validade: i.ca_validade ?? "", ca_validade_indeterminada: i.ca_validade_indeterminada ?? false, estoque: String(i.estoque), estoque_minimo: String(i.estoque_minimo) })}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => setEpiForm(epiParaEdicao(i))}><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => setExcluirEpi(i)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardContent></Card>
