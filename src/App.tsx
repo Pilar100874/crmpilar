@@ -130,6 +130,7 @@ const ControleEpi = React.lazy(() => import("./pages/dp/ControleEpi"));
 const Compras = React.lazy(() => import("./pages/compras/Compras"));
 const Estoque = React.lazy(() => import("./pages/estoque/Estoque"));
 const ConfigSystax = React.lazy(() => import("./pages/fiscal/ConfigSystax"));
+const ModuloConfig = React.lazy(() => import("./pages/config/ModuloConfig"));
 const TiposOperacao = React.lazy(() => import("./pages/fiscal/TiposOperacao"));
 const PainelFaturamento = React.lazy(() => import("./pages/fiscal/PainelFaturamento"));
 const NotasSaida = React.lazy(() => import("./pages/fiscal/NotasSaida"));
@@ -683,6 +684,7 @@ const App = () => (
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />
+              <Route path="/configuracoes/:modulo" element={<ModuloConfig />} />
               <Route path="/pedidos-perdidos" element={<PedidosPerdidos />} />
               <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
               <Route path="/atendimento-config" element={<AtendimentoConfig />} />

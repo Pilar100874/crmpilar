@@ -14,19 +14,18 @@ const base: MenuItem[] = [{ id: "Atendimento", title: "Chats", icon: MessageSqua
 
 describe("novos programas no menu personalizado", () => {
   it('agrupa os três módulos na raiz e suas configurações sem alterar outros menus salvos', () => {
-    const custom: MenuCustomization = {version:1,roots:[{kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Faturamento'},{kind:'program',programId:'Painel Chats'}]},{kind:'program',programId:'Motor próprio NF-e'}]};
+    const custom: MenuCustomization = {version:1,roots:[{kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Faturamento'},{kind:'program',programId:'Painel Chats'}]},{kind:'program',programId:'Motor próprio NF-e'},{kind:'container',id:'g-Compras-Configurações',title:'Configurações',children:[{kind:'program',programId:'Config Estab Condicoes Pagamento'}]}]};
     const effective = getEffectiveMainCustomization([...base,...MENUS_OPERACIONAIS],custom);
     for (const menu of MENUS_OPERACIONAIS) {
       const root = effective.roots.find(n => n.kind === 'container' && n.id === `c-${menu.id}`);
       expect(root?.kind).toBe('container');
       if (root?.kind !== 'container') throw new Error('Menu ausente');
-      const config = root.children.find(n => n.kind === 'container' && n.title === 'Configurações');
-      expect(config?.kind).toBe('container');
-      if (config?.kind !== 'container') throw new Error('Configurações ausentes');
-      expect(config.children.map(n => n.kind === 'program' ? n.programId : '')).toEqual(menu.subItems.filter(s => s.group).map(s => s.id));
+      expect(root.children.at(-1)).toEqual({kind:'program',programId:`Config ${menu.title}`});
+      expect(root.children.some(n => n.kind === 'container')).toBe(false);
     }
     expect(effective.roots.find(n => n.kind === 'container' && n.id === 'meu-menu')).toEqual({kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Painel Chats'}]});
-    expect(custom.roots).toHaveLength(2);
+    expect(custom.roots).toHaveLength(3);
+    expect(JSON.stringify(effective)).not.toContain('Motor próprio NF-e');
     const again = getEffectiveMainCustomization([...base,...MENUS_OPERACIONAIS],effective);
     expect(again).toEqual(effective);
   });

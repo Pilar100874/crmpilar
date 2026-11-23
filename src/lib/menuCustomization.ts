@@ -2,7 +2,7 @@ import * as LucideIcons from "lucide-react";
 import type { MenuItem } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import {MENUS_OPERACIONAIS} from './menusOperacionais';
+import {MENUS_OPERACIONAIS, PROGRAMAS_CONFIG_ANTIGOS} from './menusOperacionais';
 
 const KEY = "menu_customization_v1";
 export const MENU_CUSTOMIZATION_EVENT = "menu-customization-changed";
@@ -460,13 +460,13 @@ function organizarMenusOperacionais(base: MenuItem[], custom: MenuCustomization)
   const organizado = ativos.every(menu => {
     const root = custom.roots.find(n => n.kind === 'container' && n.id === `c-${menu.id}`);
     if (root?.kind !== 'container') return false;
-    return menu.subItems.every(s => s.group
-      ? root.children.some(n => n.kind === 'container' && n.title === s.group && n.children.some(c => c.kind === 'program' && c.programId === s.id))
-      : root.children.some(n => n.kind === 'program' && n.programId === s.id));
+    return menu.subItems.every(s => root.children.some(n => n.kind === 'program' && n.programId === s.id))
+      && !root.children.some(n => n.kind === 'container' && n.id === `g-${menu.id}-Configurações`);
   });
   if (organizado) return custom;
   const ids = new Set(ativos.flatMap(m => m.subItems.map(s => s.id)));
   ids.add('Importação Fiscal XML'); // duplicate of Entrada de NF-e
+  PROGRAMAS_CONFIG_ANTIGOS.forEach(id => ids.add(id));
   const containers = new Set(ativos.flatMap(m => [m.id, `c-${m.id}`]));
   const strip = (nodes: CustomNode[]): CustomNode[] => nodes.flatMap(n => {
     if (n.kind === 'program') return ids.has(n.programId) ? [] : [n];
@@ -477,8 +477,7 @@ function organizarMenusOperacionais(base: MenuItem[], custom: MenuCustomization)
   });
   const roots = strip(custom.roots);
   for (const menu of ativos) {
-    const children: CustomNode[] = menu.subItems.filter(s => !s.group).map(s => ({kind:'program',programId:s.id}));
-    children.push({kind:'container',id:`g-${menu.id}-Configurações`,title:'Configurações',iconName:'Settings',children:menu.subItems.filter(s => s.group === 'Configurações').map(s => ({kind:'program',programId:s.id}))});
+    const children: CustomNode[] = menu.subItems.map(s => ({kind:'program',programId:s.id}));
     roots.push({kind:'container',id:`c-${menu.id}`,title:menu.title,iconName:menu.id === 'Compras' ? 'ShoppingCart' : menu.id === 'Estoque' ? 'Boxes' : 'Receipt',children});
   }
   return {...custom,roots};

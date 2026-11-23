@@ -1,11 +1,11 @@
-import {BarChart3, Boxes, ArrowLeftRight, FileInput, ClipboardList, Send, Receipt, FilePlus2, FileText, FilePen, FileX, Ban, Undo2, History, Hash, ClipboardCheck, Download, ShieldCheck, Calculator, Activity, ListChecks, Scale, Server, Wallet, Package, Building2, ShoppingCart} from 'lucide-react';
+import {BarChart3, Boxes, ArrowLeftRight, FileInput, ClipboardList, Send, Receipt, FilePlus2, FileText, FilePen, FileX, Ban, Undo2, History, Hash, ClipboardCheck, Download, ShieldCheck, Calculator, Activity, ListChecks, Scale, Server, Wallet, Package, Building2, ShoppingCart, Settings} from 'lucide-react';
 
 /** Shared operational menu catalog; configuration groups use existing screens. */
 export const MENUS_OPERACIONAIS = [
   {id:'Compras', title:'Compras', icon:ShoppingCart, subItems:[
     {id:'Necessidade de Compra', title:'Necessidade de Compra', url:'/compras/necessidade', icon:ClipboardList},
     {id:'Cotações de Compra', title:'Cotações', url:'/compras/cotacoes', icon:Send},
-    {id:'Config Estab Condicoes Pagamento', title:'Condições de pagamento', url:'/vendas-config?tab=condicoes', icon:Wallet, group:'Configurações'},
+    {id:'Config Compras', title:'Configurações', url:'/configuracoes/compras', icon:Settings},
   ]},
   {id:'Estoque', title:'Estoque', icon:Boxes, subItems:[
     {id:'Saldos de Estoque', title:'Saldos', url:'/estoque/saldos', icon:Boxes},
@@ -13,8 +13,7 @@ export const MENUS_OPERACIONAIS = [
     {id:'Entrada de NF-e', title:'Importar NF-e / XML', url:'/estoque/entrada', icon:FileInput},
     {id:'Painel de Entradas', title:'Painel e Conferência de Entradas', url:'/entradas/painel', icon:ClipboardCheck},
     {id:'Distribuição DF-e', title:'Documentos e Manifestação', url:'/entradas/documentos', icon:Download},
-    {id:'Config Estab Produtos', title:'Produtos', url:'/vendas-config?tab=produtos', icon:Package, group:'Configurações'},
-    {id:'Config Estab Unidades', title:'Unidades', url:'/config?secao=cadastro-unidades', icon:Building2, group:'Configurações'},
+    {id:'Config Estoque', title:'Configurações', url:'/configuracoes/estoque', icon:Settings},
   ]},
   {id:'Módulo Faturamento', title:'Faturamento', icon:Receipt, subItems:[
     {id:'Painel de Faturamento', title:'Painel', url:'/faturamento/painel', icon:BarChart3},
@@ -30,9 +29,26 @@ export const MENUS_OPERACIONAIS = [
     {id:'Simulador Tributário', title:'Simulador Tributário', url:'/fiscal/simulador', icon:Calculator},
     {id:'Relatórios Fiscais', title:'Relatórios', url:'/fiscal/relatorios', icon:BarChart3},
     {id:'Monitor Fiscal', title:'Monitor e Certificados', url:'/fiscal/monitor', icon:Activity},
-    {id:'Séries e Numeração', title:'Séries e Numeração', url:'/faturamento/series', icon:Hash, group:'Configurações'},
-    {id:'Tipos de operação', title:'Tipos de operação', url:'/fiscal/tipos-operacao', icon:ListChecks, group:'Configurações'},
-    {id:'Configuração Systax', title:'Configuração Systax', url:'/fiscal/configuracao-systax', icon:Scale, group:'Configurações'},
-    {id:'Motor próprio NF-e', title:'Emissor NF-e próprio', url:'/fiscal/motor-proprio', icon:Server, group:'Configurações'},
+    {id:'Config Faturamento', title:'Configurações', url:'/configuracoes/faturamento', icon:Settings},
   ]},
 ];
+
+/** Configuration hubs (same layout as Configurações de Vendas); tab ids are permission keys. */
+export const CONFIGS_OPERACIONAIS: Record<string, {programId:string; titulo:string; descricao:string; abas:{id:string; label:string; icon:typeof Settings}[]}> = {
+  compras: {programId:'Config Compras', titulo:'Configurações de Compras', descricao:'Gerencie as condições usadas nas compras', abas:[
+    {id:'condicoes', label:'Condições de Pagamento', icon:Wallet},
+  ]},
+  estoque: {programId:'Config Estoque', titulo:'Configurações de Estoque', descricao:'Gerencie produtos e unidades do estoque', abas:[
+    {id:'produtos', label:'Produtos', icon:Package},
+    {id:'unidades', label:'Unidades', icon:Building2},
+  ]},
+  faturamento: {programId:'Config Faturamento', titulo:'Configurações de Faturamento', descricao:'Gerencie séries, operações fiscais, Systax e o emissor NF-e', abas:[
+    {id:'series', label:'Séries e Numeração', icon:Hash},
+    {id:'tipos-operacao', label:'Tipos de operação', icon:ListChecks},
+    {id:'systax', label:'Configuração Systax', icon:Scale},
+    {id:'motor-proprio', label:'Emissor NF-e próprio', icon:Server},
+  ]},
+};
+
+/** Former per-item configuration programs, now tabs inside each hub. */
+export const PROGRAMAS_CONFIG_ANTIGOS = ['Config Estab Condicoes Pagamento','Config Estab Produtos','Config Estab Unidades','Séries e Numeração','Tipos de operação','Configuração Systax','Motor próprio NF-e'];

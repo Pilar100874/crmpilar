@@ -1770,190 +1770,94 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
   ],
   "Config Estab Condicoes Pagamento": [
     {
-      "id": "produtos",
-      "label": "Produtos"
-    },
-    {
-      "id": "maquinas",
-      "label": "Máquinas"
-    },
-    {
-      "id": "conhecimento-maquinas",
-      "label": "Conhecimento em máquinas"
-    },
-    {
-      "id": "categorias",
-      "label": "Categorias"
-    },
-    {
-      "id": "grupos",
-      "label": "Grupos"
-    },
-    {
-      "id": "campos",
-      "label": "Campos Customizados"
-    },
-    {
-      "id": "unidades",
+      "id": "cadastro-unidades",
       "label": "Unidades"
     },
     {
-      "id": "ncm",
-      "label": "NCM"
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
     },
     {
-      "id": "tabelas-preco",
-      "label": "Preço por Categoria"
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
     },
     {
-      "id": "tipos-pagamento",
-      "label": "Tipos de Pagamento"
+      "id": "segmentos",
+      "label": "Segmentos"
     },
     {
-      "id": "condicoes",
-      "label": "Condições de Pagamento"
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
     },
     {
-      "id": "custos-veiculo",
-      "label": "Custos de Veículos"
+      "id": "email-config",
+      "label": "Email Config"
     },
     {
-      "id": "pedagio",
-      "label": "API de Pedágio"
+      "id": "comunicacao",
+      "label": "Comunicação"
     },
     {
-      "id": "frete-terceiros",
-      "label": "Frete de Terceiros"
+      "id": "integrações",
+      "label": "Integrações"
     },
     {
-      "id": "automacao",
-      "label": "Regras de Automação"
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
-      "id": "relatorio-orcamento",
-      "label": "Configuração do Relatório"
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
     },
     {
-      "id": "importacao-terceiros",
-      "label": "Importação de Terceiros"
-    },
-    {
-      "id": "whatsapp-catalogo",
-      "label": "Lista de Produtos no WhatsApp"
-    },
-    {
-      "id": "licitacoes-bot",
-      "label": "Bot Caça Licitações"
-    },
-    {
-      "id": "etiquetas-zebra",
-      "label": "Impressão de Etiquetas Zebra"
-    },
-    {
-      "id": "cadastro",
-      "label": "Cadastro"
-    },
-    {
-      "id": "importacao",
-      "label": "Importação"
-    },
-    {
-      "id": "ajuste-imagens",
-      "label": "Ajuste de Imagem em Lote"
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
     }
   ],
   "Config Estab Produtos": [
     {
-      "id": "produtos",
-      "label": "Produtos"
-    },
-    {
-      "id": "maquinas",
-      "label": "Máquinas"
-    },
-    {
-      "id": "conhecimento-maquinas",
-      "label": "Conhecimento em máquinas"
-    },
-    {
-      "id": "categorias",
-      "label": "Categorias"
-    },
-    {
-      "id": "grupos",
-      "label": "Grupos"
-    },
-    {
-      "id": "campos",
-      "label": "Campos Customizados"
-    },
-    {
-      "id": "unidades",
+      "id": "cadastro-unidades",
       "label": "Unidades"
     },
     {
-      "id": "ncm",
-      "label": "NCM"
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
     },
     {
-      "id": "tabelas-preco",
-      "label": "Preço por Categoria"
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
     },
     {
-      "id": "tipos-pagamento",
-      "label": "Tipos de Pagamento"
+      "id": "segmentos",
+      "label": "Segmentos"
     },
     {
-      "id": "condicoes",
-      "label": "Condições de Pagamento"
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
     },
     {
-      "id": "custos-veiculo",
-      "label": "Custos de Veículos"
+      "id": "email-config",
+      "label": "Email Config"
     },
     {
-      "id": "pedagio",
-      "label": "API de Pedágio"
+      "id": "comunicacao",
+      "label": "Comunicação"
     },
     {
-      "id": "frete-terceiros",
-      "label": "Frete de Terceiros"
+      "id": "integrações",
+      "label": "Integrações"
     },
     {
-      "id": "automacao",
-      "label": "Regras de Automação"
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
-      "id": "relatorio-orcamento",
-      "label": "Configuração do Relatório"
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
     },
     {
-      "id": "importacao-terceiros",
-      "label": "Importação de Terceiros"
-    },
-    {
-      "id": "whatsapp-catalogo",
-      "label": "Lista de Produtos no WhatsApp"
-    },
-    {
-      "id": "licitacoes-bot",
-      "label": "Bot Caça Licitações"
-    },
-    {
-      "id": "etiquetas-zebra",
-      "label": "Impressão de Etiquetas Zebra"
-    },
-    {
-      "id": "cadastro",
-      "label": "Cadastro"
-    },
-    {
-      "id": "importacao",
-      "label": "Importação"
-    },
-    {
-      "id": "ajuste-imagens",
-      "label": "Ajuste de Imagem em Lote"
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
     }
   ],
   "Config Estab Grupos Produtos": [
