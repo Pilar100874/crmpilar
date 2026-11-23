@@ -57,12 +57,8 @@ export default function Login() {
     // Load splash video config
     const loadSplashVideo = async () => {
       try {
-        const { data } = await supabase
-          .from("system_visual_config")
-          .select("splash_video_url, splash_video_loop")
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const { data: rows } = await supabase.rpc("get_login_splash");
+        const data = Array.isArray(rows) ? rows[0] : null;
         if (data?.splash_video_url) {
           setSplashVideoUrl(data.splash_video_url);
           setSplashVideoLoop(data.splash_video_loop ?? true);

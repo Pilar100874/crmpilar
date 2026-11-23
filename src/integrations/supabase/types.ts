@@ -33109,6 +33109,13 @@ export type Database = {
       }
       get_current_usuario_id: { Args: never; Returns: string }
       get_current_usuario_id_safe: { Args: never; Returns: string }
+      get_login_splash: {
+        Args: never
+        Returns: {
+          splash_video_loop: boolean
+          splash_video_url: string
+        }[]
+      }
       get_minha_unidade_id: { Args: never; Returns: string }
       get_minhas_credenciais: {
         Args: never

@@ -358,6 +358,13 @@
       "when": 1794858760283,
       "tag": "0050_produto_fornecedor_qtd_minima",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1795435849283,
+      "tag": "0051_restringir_system_visual_config",
+      "breakpoints": true
     }
   ]
 }
