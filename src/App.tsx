@@ -133,6 +133,12 @@ const ConfigSystax = React.lazy(() => import("./pages/fiscal/ConfigSystax"));
 const Faturamento = React.lazy(() => import("./pages/fiscal/Faturamento"));
 const TiposOperacao = React.lazy(() => import("./pages/fiscal/TiposOperacao"));
 const ConfigNfe = React.lazy(() => import("./pages/fiscal/ConfigNfe"));
+const PainelFaturamento = React.lazy(() => import("./pages/fiscal/PainelFaturamento"));
+const NotasSaida = React.lazy(() => import("./pages/fiscal/NotasSaida"));
+const SeriesNumeracao = React.lazy(() => import("./pages/fiscal/SeriesNumeracao"));
+const EventosFiscais = React.lazy(() => import("./pages/fiscal/EventosFiscais"));
+const PainelEntradas = React.lazy(() => import("./pages/fiscal/PainelEntradas"));
+const AuditoriaSystax = React.lazy(() => import("./pages/fiscal/AuditoriaSystax"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
 const RelatoriosVozSnapshots = React.lazy(() => import("./pages/RelatoriosVozSnapshots"));
@@ -739,6 +745,12 @@ const App = () => (
               <Route path="/faturamento" element={<Faturamento />} />
               <Route path="/fiscal/tipos-operacao" element={<TiposOperacao />} />
               <Route path="/fiscal/configuracao-nfe" element={<ConfigNfe />} />
+              <Route path="/faturamento/painel" element={<PainelFaturamento />} />
+              <Route path="/faturamento/notas/:visao" element={<NotasSaida />} />
+              <Route path="/faturamento/series" element={<SeriesNumeracao />} />
+              <Route path="/faturamento/eventos" element={<EventosFiscais />} />
+              <Route path="/entradas/painel" element={<PainelEntradas />} />
+              <Route path="/fiscal/auditoria" element={<AuditoriaSystax />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
               <Route path="/admin/relatorios-voz" element={<RelatoriosVozConfig />} />
               <Route path="/admin/relatorios-voz/snapshots" element={<RelatoriosVozSnapshots />} />

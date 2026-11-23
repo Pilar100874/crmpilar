@@ -4,3 +4,4 @@
 - Unit fiscal lookup goes through nfe-focus acao consultar_cnpj (Focus CNPJ base, company token server-side); it fills regime/CRT/CNAE and IE only when the reply carries it, never guessing.
 - Transport (modFrete, carrier = empresa flagged transportadora, plate, volumes/weights), payment (condicoes_pagamento meio/parcelas/intervalo → formas_pagamento and duplicatas) and unit série/next number/ST IE per UF are chosen at invoicing or in cadastros and sent by nfe-focus, so the emitted XML matches what was saved.
 - NF-e de entrada é auditada no navegador: systax-calcular com o fornecedor como emitente e a unidade como destinatária, comparado ao XML pelo puro auditoriaEntrada.ts; nada é salvo nem bloqueia a entrada.
+- NF-e lifecycle uses notas_fiscais.situacao (11 states in src/lib/fiscal/situacaoNfe.ts), kept in sync from status/status_sefaz by a DB trigger so legacy writers stay correct; numbers are reserved only via nfe_reservar_numero to avoid duplicates.

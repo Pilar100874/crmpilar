@@ -11295,6 +11295,48 @@ export type Database = {
           },
         ]
       }
+      fiscal_consultas_systax: {
+        Row: {
+          created_at: string
+          erro: string | null
+          estabelecimento_id: string
+          id: string
+          nota_id: string | null
+          origem: string
+          requisicao: Json
+          resposta: Json | null
+          sucesso: boolean
+          usuario_id: string | null
+          versao_integracao: string | null
+        }
+        Insert: {
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota_id?: string | null
+          origem?: string
+          requisicao?: Json
+          resposta?: Json | null
+          sucesso?: boolean
+          usuario_id?: string | null
+          versao_integracao?: string | null
+        }
+        Update: {
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota_id?: string | null
+          origem?: string
+          requisicao?: Json
+          resposta?: Json | null
+          sucesso?: boolean
+          usuario_id?: string | null
+          versao_integracao?: string | null
+        }
+        Relationships: []
+      }
       fiscal_tipos_operacao: {
         Row: {
           ativo: boolean
@@ -14989,6 +15031,180 @@ export type Database = {
         }
         Relationships: []
       }
+      nfe_entrada_conferencia: {
+        Row: {
+          created_at: string
+          divergencias: string | null
+          estabelecimento_id: string
+          estoque_lancado: boolean
+          id: string
+          nota_id: string
+          situacao: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          divergencias?: string | null
+          estabelecimento_id: string
+          estoque_lancado?: boolean
+          id?: string
+          nota_id: string
+          situacao?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          divergencias?: string | null
+          estabelecimento_id?: string
+          estoque_lancado?: boolean
+          id?: string
+          nota_id?: string
+          situacao?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_entrada_conferencia_nota_id_fkey"
+            columns: ["nota_id"]
+            isOneToOne: true
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfe_eventos: {
+        Row: {
+          created_at: string
+          dados: Json
+          estabelecimento_id: string
+          id: string
+          justificativa: string | null
+          nota_id: string | null
+          protocolo: string | null
+          sequencia: number
+          situacao: string
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dados?: Json
+          estabelecimento_id: string
+          id?: string
+          justificativa?: string | null
+          nota_id?: string | null
+          protocolo?: string | null
+          sequencia?: number
+          situacao?: string
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dados?: Json
+          estabelecimento_id?: string
+          id?: string
+          justificativa?: string | null
+          nota_id?: string | null
+          protocolo?: string | null
+          sequencia?: number
+          situacao?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_eventos_nota_id_fkey"
+            columns: ["nota_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfe_series: {
+        Row: {
+          ambiente: string
+          ativa: boolean
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          modelo: string
+          proximo_numero: number
+          serie: number
+          unidade_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          ativa?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          modelo?: string
+          proximo_numero?: number
+          serie: number
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          ativa?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          modelo?: string
+          proximo_numero?: number
+          serie?: number
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nfe_transmissoes: {
+        Row: {
+          codigo_status: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          mensagem: string | null
+          nota_id: string | null
+          resultado: string
+          usuario_id: string | null
+        }
+        Insert: {
+          codigo_status?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          mensagem?: string | null
+          nota_id?: string | null
+          resultado: string
+          usuario_id?: string | null
+        }
+        Update: {
+          codigo_status?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          mensagem?: string | null
+          nota_id?: string | null
+          resultado?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_transmissoes_nota_id_fkey"
+            columns: ["nota_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nota_links: {
         Row: {
           created_at: string
@@ -15076,6 +15292,7 @@ export type Database = {
           caminho_danfe: string | null
           caminho_xml: string | null
           chave: string | null
+          chave_idempotencia: string | null
           condicao_pagamento_id: string | null
           consumidor_final: boolean | null
           created_at: string
@@ -15105,6 +15322,7 @@ export type Database = {
           protocolo: string | null
           ref_externa: string | null
           serie: string | null
+          situacao: string
           status: string
           status_sefaz: string | null
           tipo: string
@@ -15132,6 +15350,7 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          chave_idempotencia?: string | null
           condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
@@ -15161,6 +15380,7 @@ export type Database = {
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
+          situacao?: string
           status?: string
           status_sefaz?: string | null
           tipo: string
@@ -15188,6 +15408,7 @@ export type Database = {
           caminho_danfe?: string | null
           caminho_xml?: string | null
           chave?: string | null
+          chave_idempotencia?: string | null
           condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
@@ -15217,6 +15438,7 @@ export type Database = {
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
+          situacao?: string
           status?: string
           status_sefaz?: string | null
           tipo?: string
@@ -33412,6 +33634,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      nfe_reservar_numero: { Args: { p_serie_id: string }; Returns: number }
       op_calculate_smart_priority: {
         Args: { p_task_execution_id: string }
         Returns: number
