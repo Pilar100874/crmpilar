@@ -33,7 +33,7 @@ export default function ModuloConfig() {
   const atual = searchParams.get('tab') || abas[0]?.id || '';
   const trocar = (id: string) => setSearchParams({ tab: id });
   const { itensPermitidos } = useModulosPermitidos(cfg?.programId ?? '', abas, atual, trocar);
-  const { data: estabelecimentoId } = useQuery({ queryKey: ['user-estabelecimento-vendas'], queryFn: getEstabelecimentoId });
+  const { data: estabelecimentoId } = useQuery({ queryKey: ['user-estabelecimento-vendas'], queryFn: () => getEstabelecimentoId() });
   if (!cfg) return <Navigate to="/" replace />;
   const aba = itensPermitidos.find(t => t.id === atual) || itensPermitidos[0] || abas[0];
   const Icone = aba.icon;
