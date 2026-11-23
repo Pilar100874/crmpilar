@@ -18,8 +18,9 @@ const VISOES: Record<string, { titulo: string; situacoes?: string[]; finalidade?
   devolucoes: { titulo: "Devoluções", finalidade: 4 },
 };
 
-export default function NotasSaida() {
-  const { visao = "emitidas" } = useParams();
+export default function NotasSaida({ visaoFixa }: { visaoFixa?: string } = {}) {
+  const { visao: visaoRota = "emitidas" } = useParams();
+  const visao = visaoFixa ?? visaoRota;
   const v = VISOES[visao] ?? VISOES.emitidas;
   const ctx = useContextoInterno();
   const [notas, setNotas] = useState<any[]>([]);

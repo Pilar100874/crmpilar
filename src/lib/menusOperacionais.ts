@@ -1,4 +1,4 @@
-import {BarChart3, Boxes, ArrowLeftRight, FileInput, ClipboardList, Send, Receipt, FilePlus2, FileText, FilePen, FileX, Ban, Undo2, History, Hash, ClipboardCheck, Download, ShieldCheck, Calculator, Activity, ListChecks, Scale, Server, Wallet, Package, Building2, ShoppingCart, Settings} from 'lucide-react';
+import {BarChart3, Boxes, ArrowLeftRight, FileInput, ClipboardList, Send, Receipt, FilePlus2, FileText, FilePen, FileX, Ban, Undo2, History, Hash, ClipboardCheck, Download, ShieldCheck, Calculator, Activity, ListChecks, Scale, Server, Wallet, Package, Building2, ShoppingCart, Settings, MoreHorizontal} from 'lucide-react';
 
 /** Shared operational menu catalog; configuration groups use existing screens. */
 export const MENUS_OPERACIONAIS = [
@@ -22,13 +22,7 @@ export const MENUS_OPERACIONAIS = [
     {id:'NF-e Emitidas', title:'NF-e Emitidas', url:'/faturamento/notas/emitidas', icon:FileText},
     {id:'Rascunhos NF-e', title:'Rascunhos', url:'/faturamento/notas/rascunhos', icon:FilePen},
     {id:'Notas Rejeitadas', title:'Rejeitadas', url:'/faturamento/notas/rejeitadas', icon:FileX},
-    {id:'Notas Canceladas', title:'Canceladas', url:'/faturamento/notas/canceladas', icon:Ban, group:'Mais opções'},
-    {id:'Devoluções NF-e', title:'Devoluções', url:'/faturamento/notas/devolucoes', icon:Undo2, group:'Mais opções'},
-    {id:'Eventos Fiscais', title:'Eventos e Inutilização', url:'/faturamento/eventos', icon:History, group:'Mais opções'},
-    {id:'Auditoria Fiscal', title:'Auditoria Systax', url:'/fiscal/auditoria', icon:ShieldCheck, group:'Mais opções'},
-    {id:'Simulador Tributário', title:'Simulador Tributário', url:'/fiscal/simulador', icon:Calculator, group:'Mais opções'},
-    {id:'Relatórios Fiscais', title:'Relatórios', url:'/fiscal/relatorios', icon:BarChart3, group:'Mais opções'},
-    {id:'Monitor Fiscal', title:'Monitor e Certificados', url:'/fiscal/monitor', icon:Activity, group:'Mais opções'},
+    {id:'Mais Faturamento', title:'Mais opções', url:'/configuracoes/mais-faturamento', icon:MoreHorizontal},
     {id:'Config Faturamento', title:'Configurações', url:'/configuracoes/faturamento', icon:Settings},
   ]},
 ];
@@ -42,6 +36,15 @@ export const CONFIGS_OPERACIONAIS: Record<string, {programId:string; titulo:stri
     {id:'produtos', label:'Produtos', icon:Package},
     {id:'unidades', label:'Unidades', icon:Building2},
   ]},
+  'mais-faturamento': {programId:'Mais Faturamento', titulo:'Mais opções de Faturamento', descricao:'Notas canceladas, devoluções, eventos, auditoria, simulador, relatórios e monitor', abas:[
+    {id:'canceladas', label:'Canceladas', icon:Ban},
+    {id:'devolucoes', label:'Devoluções', icon:Undo2},
+    {id:'eventos', label:'Eventos e Inutilização', icon:History},
+    {id:'auditoria', label:'Auditoria Systax', icon:ShieldCheck},
+    {id:'simulador', label:'Simulador Tributário', icon:Calculator},
+    {id:'relatorios', label:'Relatórios', icon:BarChart3},
+    {id:'monitor', label:'Monitor e Certificados', icon:Activity},
+  ]},
   faturamento: {programId:'Config Faturamento', titulo:'Configurações de Faturamento', descricao:'Gerencie séries, operações fiscais, Systax e o emissor NF-e', abas:[
     {id:'series', label:'Séries e Numeração', icon:Hash},
     {id:'tipos-operacao', label:'Tipos de operação', icon:ListChecks},
@@ -51,4 +54,4 @@ export const CONFIGS_OPERACIONAIS: Record<string, {programId:string; titulo:stri
 };
 
 /** Former per-item configuration programs, now tabs inside each hub. */
-export const PROGRAMAS_CONFIG_ANTIGOS = ['Config Estab Condicoes Pagamento','Config Estab Produtos','Config Estab Unidades','Séries e Numeração','Tipos de operação','Configuração Systax','Motor próprio NF-e'];
+export const PROGRAMAS_CONFIG_ANTIGOS = ['Config Estab Condicoes Pagamento','Config Estab Produtos','Config Estab Unidades','Séries e Numeração','Tipos de operação','Configuração Systax','Motor próprio NF-e','Notas Canceladas','Devoluções NF-e','Eventos Fiscais','Auditoria Fiscal','Simulador Tributário','Relatórios Fiscais','Monitor Fiscal'];

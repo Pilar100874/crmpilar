@@ -20,6 +20,13 @@ const CONTEUDOS: Record<string, ComponentType<{ estabelecimentoId?: string }>> =
   'tipos-operacao': lazy(() => import('@/pages/fiscal/TiposOperacao')),
   systax: lazy(() => import('@/pages/fiscal/ConfigSystax')),
   'motor-proprio': lazy(() => import('@/pages/fiscal/ConfigMotorFiscal')),
+  canceladas: lazy(async () => { const M = (await import('@/pages/fiscal/NotasSaida')).default; return { default: () => <M visaoFixa="canceladas" /> }; }),
+  devolucoes: lazy(async () => { const M = (await import('@/pages/fiscal/NotasSaida')).default; return { default: () => <M visaoFixa="devolucoes" /> }; }),
+  eventos: lazy(() => import('@/pages/fiscal/EventosFiscais')),
+  auditoria: lazy(() => import('@/pages/fiscal/AuditoriaSystax')),
+  simulador: lazy(() => import('@/pages/fiscal/SimuladorTributario')),
+  relatorios: lazy(() => import('@/pages/fiscal/RelatoriosFiscais')),
+  monitor: lazy(() => import('@/pages/fiscal/MonitorFiscal')),
 };
 const PRECISA_ESTAB = new Set(['condicoes', 'produtos']);
 
