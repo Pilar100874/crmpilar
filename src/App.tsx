@@ -139,6 +139,14 @@ const SeriesNumeracao = React.lazy(() => import("./pages/fiscal/SeriesNumeracao"
 const EventosFiscais = React.lazy(() => import("./pages/fiscal/EventosFiscais"));
 const PainelEntradas = React.lazy(() => import("./pages/fiscal/PainelEntradas"));
 const AuditoriaSystax = React.lazy(() => import("./pages/fiscal/AuditoriaSystax"));
+const NovaNfe = React.lazy(() => import("./pages/fiscal/NovaNfe"));
+const FaturarPedidos = React.lazy(() => import("./pages/fiscal/FaturarPedidos"));
+const ConferenciaEntrada = React.lazy(() => import("./pages/fiscal/ConferenciaEntrada"));
+const DocumentosDfe = React.lazy(() => import("./pages/fiscal/DocumentosDfe"));
+const SimuladorTributario = React.lazy(() => import("./pages/fiscal/SimuladorTributario"));
+const ConfigMotorFiscal = React.lazy(() => import("./pages/fiscal/ConfigMotorFiscal"));
+const RelatoriosFiscais = React.lazy(() => import("./pages/fiscal/RelatoriosFiscais"));
+const MonitorFiscal = React.lazy(() => import("./pages/fiscal/MonitorFiscal"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
 const RelatoriosVozSnapshots = React.lazy(() => import("./pages/RelatoriosVozSnapshots"));
@@ -742,7 +750,16 @@ const App = () => (
               <Route path="/estoque/entrada" element={<Estoque />} />
               <Route path="/fiscal/regras" element={<Navigate to="/fiscal/configuracao-systax" replace />} />
               <Route path="/fiscal/configuracao-systax" element={<ConfigSystax />} />
-              <Route path="/faturamento" element={<Faturamento />} />
+              <Route path="/faturamento" element={<FaturarPedidos />} />
+              <Route path="/faturamento/focus" element={<Faturamento />} />
+              <Route path="/faturamento/nova" element={<NovaNfe />} />
+              <Route path="/faturamento/nfe/:id" element={<NovaNfe />} />
+              <Route path="/entradas/conferencia/:id" element={<ConferenciaEntrada />} />
+              <Route path="/entradas/documentos" element={<DocumentosDfe />} />
+              <Route path="/fiscal/simulador" element={<SimuladorTributario />} />
+              <Route path="/fiscal/motor-proprio" element={<ConfigMotorFiscal />} />
+              <Route path="/fiscal/relatorios" element={<RelatoriosFiscais />} />
+              <Route path="/fiscal/monitor" element={<MonitorFiscal />} />
               <Route path="/fiscal/tipos-operacao" element={<TiposOperacao />} />
               <Route path="/fiscal/configuracao-nfe" element={<ConfigNfe />} />
               <Route path="/faturamento/painel" element={<PainelFaturamento />} />

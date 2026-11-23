@@ -121,6 +121,9 @@ function Movimentacoes({ produtos, ctx }: any) {
 type ItemEdit = { codigo: string; descricao: string; ean?: string; ncm?: string; cfop?: string; cst?: string; unidade?: string; quantidade: number; valorUnitario: number; valorTotal: number; produto_id: string; fator: number; aliqIcms?: number; valorIcms?: number; aliqIpi?: number; valorIpi?: number; aliqPis?: number; valorPis?: number; aliqCofins?: number; valorCofins?: number; valorIcmsSt?: number; partes?: ParteEntrada[] };
 
 function EntradaNfe({ produtos, ctx, onMudou }: any) {
+  const navigate=useNavigate(); const location=useLocation();
+  const [unidades,setUnidades]=useState<any[]>([]); const [unidadeId,setUnidadeId]=useState("");
+  useEffect(()=>{if(!ctx.estabelecimentoId)return;sb.from("unidades").select("id,nome,cnpj").eq("estabelecimento_id",ctx.estabelecimentoId).order("nome").then(({data}:any)=>setUnidades(data??[]));},[ctx.estabelecimentoId]);
   const [notas, setNotas] = useState<any[]>([]);
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
@@ -153,18 +156,21 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
     try {
       const nfe = lerNfeXml(xmlTxt);
       if (notas.some((n) => n.chave === nfe.chave && n.status !== "cancelada")) return toast.error("Esta NF-e já foi importada");
+      const un=unidades.find(u=>soDig(u.cnpj)===soDig(nfe.destinatarioCnpj)); if(un)setUnidadeId(un.id);
       const forn = fornecedores.find((f) => soDig(f.cnpj) === soDig(nfe.emitente.cnpj));
       setEdit({ origem: "xml", xml: xmlTxt, chave: nfe.chave, numero: nfe.numero, serie: nfe.serie, data_emissao: nfe.dataEmissao, natureza_operacao: nfe.naturezaOperacao,
-        empresa_id: forn?.id ?? "", participante_nome: nfe.emitente.nome, participante_cnpj: nfe.emitente.cnpj, participante_uf: nfe.emitente.uf, destinatario_cnpj: nfe.destinatarioCnpj, totais: nfe.totais,
+        empresa_id: forn?.id ?? "", participante_nome: nfe.emitente.nome, participante_cnpj: nfe.emitente.cnpj, participante_uf: nfe.emitente.uf, destinatario_cnpj: nfe.destinatarioCnpj, totais: nfe.totais, duplicatas: nfe.duplicatas,
         itens: await dePara(forn?.id ?? null, nfe.itens) });
       if (!forn) toast.warning("Fornecedor do XML não está cadastrado como Fornecedor — escolha ou cadastre em Empresas");
     } catch (e: any) { toast.error(e.message); }
   };
+  useEffect(()=>{const dfe=new URLSearchParams(location.search).get("dfe");if(!dfe||!ctx.estabelecimentoId||!unidades.length||!produtos.length)return;sb.from("fiscal_dfe_documentos").select("xml,unidade_id").eq("id",dfe).eq("estabelecimento_id",ctx.estabelecimentoId).single().then(({data,error}:any)=>{if(error||!data?.xml)return toast.error("XML completo indisponível");setUnidadeId(data.unidade_id);importarTexto(data.xml);navigate("/estoque/entrada",{replace:true});});},[location.search,ctx.estabelecimentoId,unidades.length,produtos.length,fornecedores.length]);
   const manual = () => setEdit({ origem: "manual", data_emissao: new Date().toISOString().slice(0, 10), empresa_id: "", numero: "", serie: "1", itens: [] });
 
   const total = (e: any) => e.itens.reduce((s: number, i: ItemEdit) => s + Number(i.valorTotal || i.quantidade * i.valorUnitario), 0);
 
   const salvar = async (lancar: boolean) => {
+    if (edit.destinatario_cnpj && soDig(unidades.find(u=>u.id===unidadeId)?.cnpj)!==soDig(edit.destinatario_cnpj)) return toast.error("O destinatário do XML não corresponde ao CNPJ da unidade selecionada");
     if (!edit.empresa_id) return toast.error("Escolha o fornecedor");
     if (!edit.itens.length) return toast.error("Inclua ao menos um item");
     for (const [k, i] of (edit.itens as ItemEdit[]).entries()) { if (i.partes?.length) { const er = errosDesmembramento(i.partes); if (er.length) return toast.error(`Item ${k + 1}: ${er[0]}`); } }
@@ -176,27 +182,17 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
       chave: edit.chave || null, numero: edit.numero, serie: edit.serie, data_emissao: edit.data_emissao, natureza_operacao: edit.natureza_operacao, participante_nome: edit.participante_nome,
       participante_cnpj: edit.participante_cnpj, participante_uf: edit.participante_uf, valor_produtos: t.produtos ?? vp, valor_frete: t.frete ?? 0, valor_desconto: t.desconto ?? 0,
       valor_icms: t.icms ?? 0, valor_icms_st: t.icmsSt ?? 0, valor_ipi: t.ipi ?? 0, valor_pis: t.pis ?? 0, valor_cofins: t.cofins ?? 0, valor_total: t.nota ?? vp, xml: edit.xml ?? null, usuario_id: ctx.usuarioId };
-    let notaId = edit.id;
-    if (notaId) { const r = await sb.from("notas_fiscais").update({ ...cab, updated_at: new Date().toISOString() }).eq("id", notaId); if (r.error) return toast.error(r.error.message); await sb.from("notas_fiscais_itens").delete().eq("nota_id", notaId); }
-    else { const r = await sb.from("notas_fiscais").insert(cab).select("id").single(); if (r.error) return toast.error(r.error.message.includes("chave_unica") ? "Esta NF-e já foi importada" : r.error.message); notaId = r.data.id; }
-    const itens = linhas.map((i: ItemEdit) => ({ nota_id: notaId, estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id || null, codigo_origem: i.codigo, descricao: i.descricao, ncm: i.ncm, cfop: i.cfop, cst: i.cst, unidade: i.unidade,
-      quantidade: i.quantidade, fator_conversao: i.fator || 1, valor_unitario: i.valorUnitario, valor_total: i.valorTotal || i.quantidade * i.valorUnitario,
-      aliq_icms: i.aliqIcms ?? 0, valor_icms: i.valorIcms ?? 0, aliq_ipi: i.aliqIpi ?? 0, valor_ipi: i.valorIpi ?? 0, aliq_pis: i.aliqPis ?? 0, valor_pis: i.valorPis ?? 0, aliq_cofins: i.aliqCofins ?? 0, valor_cofins: i.valorCofins ?? 0 }));
-    const ri = await sb.from("notas_fiscais_itens").insert(itens); if (ri.error) return toast.error(ri.error.message);
-    if (lancar) {
-      const movs = linhas.map((i: ItemEdit) => ({ estabelecimento_id: ctx.estabelecimentoId, produto_id: i.produto_id, tipo: "entrada", origem: "compra_nfe", quantidade: i.quantidade * (i.fator || 1),
-        custo_unitario: i.valorUnitario / (i.fator || 1), nota_fiscal_id: notaId, documento: `NF ${edit.numero}`, usuario_id: ctx.usuarioId }));
-      const rm = await sb.from("estoque_movimentos").insert(movs); if (rm.error) return toast.error("Nota salva, mas a entrada no estoque falhou: " + rm.error.message);
-      // Aprende o de-para: grava SKU do fornecedor no vínculo do produto.
-      for (const i of linhas) {
-        await sb.from("produto_fornecedores").upsert({ produto_id: i.produto_id, empresa_id: edit.empresa_id, estabelecimento_id: ctx.estabelecimentoId, sku_fornecedor: i.codigo, nome_comercial: i.descricao, unidade_compra: i.unidade, fator_conversao: i.fator || 1 }, { onConflict: "produto_id,empresa_id", ignoreDuplicates: false }).then(() => null, () => null);
-      }
-      onMudou();
-    }
-    toast.success(lancar ? "Entrada lançada e estoque atualizado" : "Rascunho salvo"); setEdit(null); carregar();
+    if (!unidadeId) return toast.error("Escolha a unidade de entrada no filtro superior");
+    const itens = linhas.map((i: ItemEdit) => ({ produto_id: i.produto_id || null, codigo_origem: i.codigo, descricao: i.descricao, ncm: i.ncm, cfop: i.cfop, cst: i.cst, unidade: i.unidade, quantidade: i.quantidade, fator_conversao: i.fator || 1, valor_unitario: i.valorUnitario, valor_total: i.valorTotal || i.quantidade * i.valorUnitario, aliq_icms: i.aliqIcms || 0, valor_icms: i.valorIcms || 0, aliq_ipi: i.aliqIpi || 0, valor_ipi: i.valorIpi || 0, aliq_pis: i.aliqPis || 0, valor_pis: i.valorPis || 0, aliq_cofins: i.aliqCofins || 0, valor_cofins: i.valorCofins || 0 }));
+    const {data:notaId,error}=await sb.rpc("fiscal_salvar_entrada",{p_nota:edit.id??null,p_dados:{...cab,unidade_id:unidadeId,dados_emissao:{destinatario_cnpj:edit.destinatario_cnpj,duplicatas:edit.duplicatas??[]}},p_itens:itens});
+    if(error)return toast.error(error.message);
+    toast.success("Entrada salva; confira o recebimento antes de lançar o estoque");
+    setEdit(null); carregar(); onMudou();
+    if(lancar)navigate(`/entradas/conferencia/${notaId}`);
   };
 
   const abrir = async (n: any) => {
+    setUnidadeId(n.unidade_id??"");
     const { data } = await sb.from("notas_fiscais_itens").select("*").eq("nota_id", n.id);
     setEdit({ ...n, totais: null, itens: (data ?? []).map((i: any) => ({ codigo: i.codigo_origem ?? "", descricao: i.descricao, ncm: i.ncm, cfop: i.cfop, cst: i.cst, unidade: i.unidade, quantidade: Number(i.quantidade), valorUnitario: Number(i.valor_unitario), valorTotal: Number(i.valor_total), produto_id: i.produto_id ?? "", fator: Number(i.fator_conversao) || 1 })) });
   };
@@ -228,7 +224,8 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
           <DialogHeader><DialogTitle>{somenteLeitura ? "Nota de entrada lançada" : "Entrada de NF-e"}</DialogTitle></DialogHeader>
           {edit && <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-              <div className="col-span-2"><Label>Fornecedor</Label><Select disabled={somenteLeitura} value={edit.empresa_id} onValueChange={async (v) => setEdit({ ...edit, empresa_id: v, itens: edit.origem === "xml" ? await dePara(v, edit.itens) : edit.itens })}><SelectTrigger><SelectValue placeholder={edit.participante_nome || "Escolha"} /></SelectTrigger><SelectContent>{fornecedores.map((f) => <SelectItem key={f.id} value={f.id}>{nomeEmpresa(f)}</SelectItem>)}</SelectContent></Select></div>
+              <div className="col-span-2"><Label>Unidade de entrada *</Label><Select disabled={somenteLeitura} value={unidadeId||undefined} onValueChange={setUnidadeId}><SelectTrigger><SelectValue placeholder="Escolha a unidade"/></SelectTrigger><SelectContent>{unidades.map(u=><SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}</SelectContent></Select></div>
+              <div className="col-span-2"><Label>Fornecedor *</Label><Select disabled={somenteLeitura} value={edit.empresa_id} onValueChange={async (v) => setEdit({ ...edit, empresa_id: v, itens: edit.origem === "xml" ? await dePara(v, edit.itens) : edit.itens })}><SelectTrigger><SelectValue placeholder={edit.participante_nome || "Escolha"} /></SelectTrigger><SelectContent>{fornecedores.map((f) => <SelectItem key={f.id} value={f.id}>{nomeEmpresa(f)}</SelectItem>)}</SelectContent></Select></div>
               <div><Label>Número</Label><Input disabled={somenteLeitura || edit.origem === "xml"} value={edit.numero ?? ""} onChange={(e) => setEdit({ ...edit, numero: e.target.value })} /></div>
               <div><Label>Emissão</Label><Input type="date" disabled={somenteLeitura || edit.origem === "xml"} value={edit.data_emissao ?? ""} onChange={(e) => setEdit({ ...edit, data_emissao: e.target.value })} /></div>
             </div>
@@ -274,7 +271,7 @@ function EntradaNfe({ produtos, ctx, onMudou }: any) {
           </div>}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEdit(null)}>Fechar</Button>
-            {!somenteLeitura && <><Button variant="outline" onClick={() => salvar(false)}>Salvar rascunho</Button><Button onClick={() => salvar(true)}><CheckCircle2 className="mr-1 h-4 w-4" />Dar entrada no estoque</Button></>}
+            {!somenteLeitura && <><Button variant="outline" onClick={() => salvar(false)}>Salvar rascunho</Button><Button onClick={() => salvar(true)}><CheckCircle2 className="mr-1 h-4 w-4" />Conferir entrada</Button></>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

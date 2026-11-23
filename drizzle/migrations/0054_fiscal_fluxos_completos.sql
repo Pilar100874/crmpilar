@@ -1,0 +1,105 @@
+ALTER TABLE public.notas_fiscais ADD COLUMN IF NOT EXISTS dados_emissao jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE public.notas_fiscais ADD COLUMN IF NOT EXISTS serie_id uuid REFERENCES public.nfe_series(id);
+ALTER TABLE public.notas_fiscais ADD COLUMN IF NOT EXISTS motor_emissao text NOT NULL DEFAULT 'focus';
+ALTER TABLE public.notas_fiscais ADD COLUMN IF NOT EXISTS compra_cotacao_id uuid REFERENCES public.compras_cotacoes(id);
+ALTER TABLE public.notas_fiscais_itens ADD COLUMN IF NOT EXISTS quantidade_recebida numeric;
+ALTER TABLE public.notas_fiscais_itens ADD COLUMN IF NOT EXISTS divergencia text;
+CREATE TABLE public.fiscal_engine_config (estabelecimento_id uuid PRIMARY KEY, url_api text NOT NULL, token text, ambiente text NOT NULL DEFAULT 'homologacao' CHECK (ambiente IN ('homologacao','producao')), habilitado boolean NOT NULL DEFAULT false, homologado boolean NOT NULL DEFAULT false, ultimo_teste timestamptz, mensagem text, updated_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.fiscal_engine_config TO service_role;
+ALTER TABLE public.fiscal_engine_config ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.fiscal_dfe_controle (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), estabelecimento_id uuid NOT NULL, unidade_id uuid NOT NULL REFERENCES public.unidades(id), ambiente text NOT NULL DEFAULT 'homologacao', ultimo_nsu text NOT NULL DEFAULT '000000000000000', max_nsu text, proxima_consulta timestamptz, ultima_consulta timestamptz, status text, mensagem text, UNIQUE(unidade_id,ambiente));
+GRANT SELECT ON public.fiscal_dfe_controle TO authenticated;
+GRANT ALL ON public.fiscal_dfe_controle TO service_role;
+ALTER TABLE public.fiscal_dfe_controle ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Internos leem controle DFe" ON public.fiscal_dfe_controle FOR SELECT TO authenticated USING(public.is_usuario_interno(auth.uid()) AND estabelecimento_id=public.get_auth_user_estabelecimento_id());
+CREATE TABLE public.fiscal_dfe_documentos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), estabelecimento_id uuid NOT NULL, unidade_id uuid NOT NULL, ambiente text NOT NULL, nsu text NOT NULL, chave text, esquema text, documento jsonb, xml text, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(unidade_id,ambiente,nsu));
+GRANT SELECT ON public.fiscal_dfe_documentos TO authenticated;
+GRANT ALL ON public.fiscal_dfe_documentos TO service_role;
+ALTER TABLE public.fiscal_dfe_documentos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Internos leem documentos DFe" ON public.fiscal_dfe_documentos FOR SELECT TO authenticated USING(public.is_usuario_interno(auth.uid()) AND estabelecimento_id=public.get_auth_user_estabelecimento_id());
+CREATE OR REPLACE FUNCTION public.fiscal_engine_status() RETURNS TABLE(url_api text, ambiente text, tem_token boolean, habilitado boolean, homologado boolean, ultimo_teste timestamptz, mensagem text) LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$ SELECT c.url_api,c.ambiente,c.token IS NOT NULL,c.habilitado,c.homologado,c.ultimo_teste,c.mensagem FROM fiscal_engine_config c WHERE c.estabelecimento_id=public.get_auth_user_estabelecimento_id() AND public.is_usuario_interno(auth.uid()); $$;
+REVOKE ALL ON FUNCTION public.fiscal_engine_status() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_engine_status() TO authenticated;
+CREATE OR REPLACE FUNCTION public.fiscal_engine_salvar(p_url text,p_token text,p_ambiente text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE e uuid:=public.get_auth_user_estabelecimento_id(); BEGIN IF e IS NULL OR NOT public.is_usuario_interno(auth.uid()) THEN RAISE EXCEPTION 'Sem permissão'; END IF; IF p_url !~ '^https://' OR p_ambiente NOT IN ('homologacao','producao') THEN RAISE EXCEPTION 'Endereço HTTPS e ambiente válidos são obrigatórios'; END IF; INSERT INTO fiscal_engine_config(estabelecimento_id,url_api,token,ambiente) VALUES(e,rtrim(p_url,'/'),nullif(trim(p_token),''),p_ambiente) ON CONFLICT(estabelecimento_id) DO UPDATE SET url_api=EXCLUDED.url_api,token=coalesce(EXCLUDED.token,fiscal_engine_config.token),ambiente=EXCLUDED.ambiente,habilitado=false,homologado=false,ultimo_teste=null,mensagem=null,updated_at=now(); END $$;
+REVOKE ALL ON FUNCTION public.fiscal_engine_salvar(text,text,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_engine_salvar(text,text,text) TO authenticated;
+CREATE OR REPLACE FUNCTION public.fiscal_salvar_rascunho(p_nota uuid,p_chave text,p_dados jsonb,p_itens jsonb) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE e uuid:=public.get_auth_user_estabelecimento_id(); u uuid:=public.get_current_usuario_id_safe(); n uuid; i jsonb; pr produtos%ROWTYPE; un uuid:=nullif(p_dados->>'unidade_id','')::uuid; dest uuid:=nullif(p_dados->>'empresa_id','')::uuid; sr uuid:=nullif(p_dados->>'serie_id','')::uuid; total numeric:=0; vp numeric:=0; st numeric:=0; ipi numeric:=0; ds numeric:=0; fr numeric:=0; se numeric:=0; ou numeric:=0;
+BEGIN
+ IF e IS NULL OR u IS NULL OR NOT public.is_usuario_interno(auth.uid()) THEN RAISE EXCEPTION 'Sem permissão'; END IF;
+ IF jsonb_typeof(p_itens)<>'array' OR jsonb_array_length(p_itens)>500 OR length(coalesce(p_chave,''))<1 THEN RAISE EXCEPTION 'Rascunho inválido'; END IF;
+ IF un IS NOT NULL AND NOT EXISTS(SELECT 1 FROM unidades WHERE id=un AND estabelecimento_id=e) THEN RAISE EXCEPTION 'Unidade de outra empresa'; END IF;
+ IF dest IS NOT NULL AND NOT EXISTS(SELECT 1 FROM empresas WHERE id=dest AND estabelecimento_id=e) THEN RAISE EXCEPTION 'Destinatário de outra empresa'; END IF;
+ IF sr IS NOT NULL AND NOT EXISTS(SELECT 1 FROM nfe_series WHERE id=sr AND estabelecimento_id=e AND ativa AND unidade_id=un AND ambiente=coalesce(p_dados->>'ambiente','homologacao')) THEN RAISE EXCEPTION 'Série incompatível com unidade/ambiente'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(e::text||p_chave,0));
+ n:=p_nota;
+ IF n IS NULL THEN SELECT id INTO n FROM notas_fiscais WHERE estabelecimento_id=e AND chave_idempotencia=p_chave; END IF;
+ IF n IS NOT NULL THEN
+  PERFORM 1 FROM notas_fiscais WHERE id=n AND estabelecimento_id=e AND tipo='saida' AND situacao IN ('rascunho','aguardando_calculo','validada','rejeitada') AND ref_externa IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Nota já transmitida ou não disponível para edição'; END IF;
+ ELSE INSERT INTO notas_fiscais(estabelecimento_id,tipo,status,origem,chave_idempotencia,usuario_id,motor_emissao) VALUES(e,'saida','rascunho','manual',p_chave,u,'proprio') RETURNING id INTO n; END IF;
+ DELETE FROM notas_fiscais_itens WHERE nota_id=n;
+ FOR i IN SELECT value FROM jsonb_array_elements(p_itens) LOOP
+  SELECT * INTO pr FROM produtos WHERE id=(i->>'produto_id')::uuid AND estabelecimento_id=e;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Produto não encontrado nesta empresa'; END IF;
+  IF (i->>'quantidade')::numeric<=0 OR (i->>'valor_unitario')::numeric<0 THEN RAISE EXCEPTION 'Quantidade/preço inválidos'; END IF;
+  vp:=vp+(i->>'quantidade')::numeric*(i->>'valor_unitario')::numeric;
+  ds:=ds+coalesce((i->>'desconto')::numeric,0); fr:=fr+coalesce((i->>'frete')::numeric,0); se:=se+coalesce((i->>'seguro')::numeric,0); ou:=ou+coalesce((i->>'outras')::numeric,0);
+  ipi:=ipi+coalesce((i#>>'{tributacao,ipi,valor}')::numeric,(i#>>'{tributacao,valor_ipi}')::numeric,0); st:=st+coalesce((i#>>'{tributacao,icms_st,valor}')::numeric,(i#>>'{tributacao,st,valor}')::numeric,(i#>>'{tributacao,valor_icms_st}')::numeric,0);
+  INSERT INTO notas_fiscais_itens(nota_id,estabelecimento_id,produto_id,descricao,codigo_origem,ncm,unidade,quantidade,valor_unitario,valor_total,cfop,cst,tributacao,valor_icms,valor_ipi,valor_pis,valor_cofins)
+  VALUES(n,e,pr.id,pr.nome,pr.codigo,pr.ncm,pr.unidade,(i->>'quantidade')::numeric,(i->>'valor_unitario')::numeric,round((i->>'quantidade')::numeric*(i->>'valor_unitario')::numeric,2),i#>>'{tributacao,cfop}',coalesce(i#>>'{tributacao,csosn}',i#>>'{tributacao,cst}',i#>>'{tributacao,icms,cst}'),i->'tributacao',coalesce((i#>>'{tributacao,icms,valor}')::numeric,0),coalesce((i#>>'{tributacao,ipi,valor}')::numeric,0),coalesce((i#>>'{tributacao,pis,valor}')::numeric,0),coalesce((i#>>'{tributacao,cofins,valor}')::numeric,0));
+ END LOOP;
+ UPDATE notas_fiscais SET unidade_id=un,empresa_id=dest,serie_id=sr,ambiente=coalesce(p_dados->>'ambiente','homologacao'),dados_emissao=p_dados-'itens',natureza_operacao=p_dados->>'natureza_operacao',data_emissao=nullif(p_dados->>'data_emissao','')::date,tipo_operacao_id=nullif(p_dados->>'tipo_operacao_id','')::uuid,finalidade_emissao=coalesce((p_dados->>'finalidade_emissao')::smallint,1),consumidor_final=coalesce((p_dados->>'consumidor_final')::boolean,false),presenca_comprador=p_dados->>'presenca_comprador',destinacao_mercadoria=p_dados->>'destinacao_mercadoria',valor_produtos=round(vp,2),valor_desconto=ds,valor_frete=fr,valor_seguro=se,outras_despesas=ou,valor_ipi=ipi,valor_icms_st=st,valor_total=round(vp-ds+fr+se+ou+ipi+st,2),status='rascunho',situacao='rascunho',motor_emissao='proprio',observacoes=p_dados->>'observacoes',participante_nome=(SELECT coalesce(nome_fantasia,nome) FROM empresas WHERE id=dest),participante_cnpj=(SELECT cnpj FROM empresas WHERE id=dest),participante_uf=(SELECT estado FROM empresas WHERE id=dest),updated_at=now() WHERE id=n;
+ RETURN n;
+END $$;
+REVOKE ALL ON FUNCTION public.fiscal_salvar_rascunho(uuid,text,jsonb,jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_salvar_rascunho(uuid,text,jsonb,jsonb) TO authenticated;
+CREATE OR REPLACE FUNCTION public.fiscal_reservar_nota(p_nota uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE n notas_fiscais%ROWTYPE; s nfe_series%ROWTYPE; num bigint; BEGIN
+ SELECT * INTO n FROM notas_fiscais WHERE id=p_nota AND estabelecimento_id=public.get_auth_user_estabelecimento_id() AND public.is_usuario_interno(auth.uid()) FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Nota não encontrada'; END IF;
+ IF n.numero IS NOT NULL THEN RETURN jsonb_build_object('numero',n.numero,'serie',n.serie); END IF;
+ SELECT * INTO s FROM nfe_series WHERE id=n.serie_id AND ativa AND estabelecimento_id=n.estabelecimento_id AND unidade_id=n.unidade_id AND ambiente=n.ambiente FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Série incompatível ou inativa'; END IF;
+ num:=s.proximo_numero;
+ IF num>999999999 THEN RAISE EXCEPTION 'Numeração esgotada'; END IF;
+ UPDATE nfe_series SET proximo_numero=num+1,updated_at=now() WHERE id=s.id;
+ UPDATE notas_fiscais SET numero=num::text,serie=s.serie::text,updated_at=now() WHERE id=n.id;
+ RETURN jsonb_build_object('numero',num::text,'serie',s.serie::text);
+END $$;
+REVOKE ALL ON FUNCTION public.fiscal_reservar_nota(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_reservar_nota(uuid) TO authenticated;
+CREATE OR REPLACE FUNCTION public.fiscal_conferir_entrada(p_nota uuid,p_itens jsonb,p_situacao text,p_divergencias text,p_compra uuid DEFAULT NULL) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE e uuid:=public.get_auth_user_estabelecimento_id(); n notas_fiscais%ROWTYPE; i jsonb; BEGIN
+ IF NOT public.is_usuario_interno(auth.uid()) THEN RAISE EXCEPTION 'Sem permissão'; END IF;
+ SELECT * INTO n FROM notas_fiscais WHERE id=p_nota AND estabelecimento_id=e AND tipo='entrada' FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Entrada não encontrada'; END IF;
+ IF n.status='lancada' OR EXISTS(SELECT 1 FROM estoque_movimentos WHERE nota_fiscal_id=n.id) THEN RAISE EXCEPTION 'Entrada já movimentada'; END IF;
+ IF p_situacao NOT IN ('pendente','aprovada','rejeitada','divergencia') THEN RAISE EXCEPTION 'Situação inválida'; END IF;
+ IF p_compra IS NOT NULL AND NOT EXISTS(SELECT 1 FROM compras_cotacoes WHERE id=p_compra AND estabelecimento_id=e AND fornecedor_id=n.empresa_id) THEN RAISE EXCEPTION 'Compra incompatível com fornecedor'; END IF;
+ FOR i IN SELECT value FROM jsonb_array_elements(p_itens) LOOP
+  IF NOT EXISTS(SELECT 1 FROM notas_fiscais_itens WHERE id=(i->>'id')::uuid AND nota_id=n.id) THEN RAISE EXCEPTION 'Item de outra entrada'; END IF;
+  IF nullif(i->>'produto_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM produtos WHERE id=(i->>'produto_id')::uuid AND estabelecimento_id=e) THEN RAISE EXCEPTION 'Produto de outra empresa'; END IF;
+  IF (i->>'quantidade_recebida')::numeric<0 OR (i->>'fator_conversao')::numeric<=0 THEN RAISE EXCEPTION 'Quantidade/fator inválidos'; END IF;
+  UPDATE notas_fiscais_itens SET produto_id=nullif(i->>'produto_id','')::uuid,quantidade_recebida=(i->>'quantidade_recebida')::numeric,fator_conversao=(i->>'fator_conversao')::numeric,divergencia=i->>'divergencia' WHERE id=(i->>'id')::uuid AND nota_id=n.id;
+ END LOOP;
+ IF p_situacao='aprovada' AND EXISTS(SELECT 1 FROM notas_fiscais_itens WHERE nota_id=n.id AND (produto_id IS NULL OR quantidade_recebida IS NULL)) THEN RAISE EXCEPTION 'Vincule e confira todos os itens'; END IF;
+ INSERT INTO nfe_entrada_conferencia(estabelecimento_id,nota_id,situacao,divergencias,usuario_id) VALUES(e,n.id,p_situacao,p_divergencias,public.get_current_usuario_id_safe()) ON CONFLICT(nota_id) DO UPDATE SET situacao=EXCLUDED.situacao,divergencias=EXCLUDED.divergencias,usuario_id=EXCLUDED.usuario_id,updated_at=now();
+ UPDATE notas_fiscais SET compra_cotacao_id=p_compra,updated_at=now() WHERE id=n.id;
+END $$;
+REVOKE ALL ON FUNCTION public.fiscal_conferir_entrada(uuid,jsonb,text,text,uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_conferir_entrada(uuid,jsonb,text,text,uuid) TO authenticated;
+CREATE OR REPLACE FUNCTION public.fiscal_lancar_entrada(p_nota uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE e uuid:=public.get_auth_user_estabelecimento_id(); n notas_fiscais%ROWTYPE; c nfe_entrada_conferencia%ROWTYPE; BEGIN
+ IF NOT public.is_usuario_interno(auth.uid()) THEN RAISE EXCEPTION 'Sem permissão'; END IF;
+ SELECT * INTO n FROM notas_fiscais WHERE id=p_nota AND estabelecimento_id=e AND tipo='entrada' FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Entrada não encontrada'; END IF;
+ SELECT * INTO c FROM nfe_entrada_conferencia WHERE nota_id=n.id FOR UPDATE;
+ IF c.estoque_lancado OR n.status='lancada' OR EXISTS(SELECT 1 FROM estoque_movimentos WHERE nota_fiscal_id=n.id AND tipo='entrada') THEN RETURN false; END IF;
+ IF c.situacao IS DISTINCT FROM 'aprovada' THEN RAISE EXCEPTION 'Aprove a conferência antes de lançar o estoque'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM notas_fiscais_itens WHERE nota_id=n.id) OR EXISTS(SELECT 1 FROM notas_fiscais_itens WHERE nota_id=n.id AND (produto_id IS NULL OR quantidade_recebida IS NULL OR quantidade_recebida<0 OR fator_conversao<=0)) THEN RAISE EXCEPTION 'Confira todos os itens'; END IF;
+ INSERT INTO estoque_movimentos(estabelecimento_id,unidade_id,produto_id,tipo,origem,quantidade,custo_unitario,nota_fiscal_id,documento,usuario_id) SELECT e,n.unidade_id,produto_id,'entrada','compra_nfe',quantidade_recebida*fator_conversao,valor_unitario/fator_conversao,n.id,'NF '||coalesce(n.numero,''),public.get_current_usuario_id_safe() FROM notas_fiscais_itens WHERE nota_id=n.id AND quantidade_recebida>0;
+ INSERT INTO produto_fornecedores(produto_id,empresa_id,estabelecimento_id,sku_fornecedor,nome_comercial,unidade_compra,fator_conversao) SELECT DISTINCT ON(produto_id) produto_id,n.empresa_id,e,codigo_origem,descricao,unidade,fator_conversao FROM notas_fiscais_itens WHERE nota_id=n.id AND produto_id IS NOT NULL ORDER BY produto_id,created_at ON CONFLICT(produto_id,empresa_id) DO UPDATE SET sku_fornecedor=EXCLUDED.sku_fornecedor,fator_conversao=EXCLUDED.fator_conversao;
+ UPDATE nfe_entrada_conferencia SET estoque_lancado=true,updated_at=now() WHERE nota_id=n.id;
+ UPDATE notas_fiscais SET status='lancada',updated_at=now() WHERE id=n.id;
+ RETURN true;
+END $$;
+REVOKE ALL ON FUNCTION public.fiscal_lancar_entrada(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fiscal_lancar_entrada(uuid) TO authenticated;

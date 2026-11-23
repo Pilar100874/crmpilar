@@ -10039,6 +10039,7 @@ export type Database = {
       }
       estoque_movimentos: {
         Row: {
+          chave_fiscal: string | null
           created_at: string
           custo_unitario: number | null
           documento: string | null
@@ -10056,6 +10057,7 @@ export type Database = {
           usuario_id: string | null
         }
         Insert: {
+          chave_fiscal?: string | null
           created_at?: string
           custo_unitario?: number | null
           documento?: string | null
@@ -10073,6 +10075,7 @@ export type Database = {
           usuario_id?: string | null
         }
         Update: {
+          chave_fiscal?: string | null
           created_at?: string
           custo_unitario?: number | null
           documento?: string | null
@@ -11337,6 +11340,170 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscal_dfe_controle: {
+        Row: {
+          ambiente: string
+          estabelecimento_id: string
+          id: string
+          max_nsu: string | null
+          mensagem: string | null
+          proxima_consulta: string | null
+          status: string | null
+          ultima_consulta: string | null
+          ultimo_nsu: string
+          unidade_id: string
+        }
+        Insert: {
+          ambiente?: string
+          estabelecimento_id: string
+          id?: string
+          max_nsu?: string | null
+          mensagem?: string | null
+          proxima_consulta?: string | null
+          status?: string | null
+          ultima_consulta?: string | null
+          ultimo_nsu?: string
+          unidade_id: string
+        }
+        Update: {
+          ambiente?: string
+          estabelecimento_id?: string
+          id?: string
+          max_nsu?: string | null
+          mensagem?: string | null
+          proxima_consulta?: string | null
+          status?: string | null
+          ultima_consulta?: string | null
+          ultimo_nsu?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_dfe_controle_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_dfe_documentos: {
+        Row: {
+          ambiente: string
+          chave: string | null
+          created_at: string
+          documento: Json | null
+          esquema: string | null
+          estabelecimento_id: string
+          id: string
+          nsu: string
+          unidade_id: string
+          xml: string | null
+        }
+        Insert: {
+          ambiente: string
+          chave?: string | null
+          created_at?: string
+          documento?: Json | null
+          esquema?: string | null
+          estabelecimento_id: string
+          id?: string
+          nsu: string
+          unidade_id: string
+          xml?: string | null
+        }
+        Update: {
+          ambiente?: string
+          chave?: string | null
+          created_at?: string
+          documento?: Json | null
+          esquema?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nsu?: string
+          unidade_id?: string
+          xml?: string | null
+        }
+        Relationships: []
+      }
+      fiscal_engine_config: {
+        Row: {
+          ambiente: string
+          estabelecimento_id: string
+          habilitado: boolean
+          homologado: boolean
+          mensagem: string | null
+          token: string | null
+          ultimo_teste: string | null
+          updated_at: string
+          url_api: string
+        }
+        Insert: {
+          ambiente?: string
+          estabelecimento_id: string
+          habilitado?: boolean
+          homologado?: boolean
+          mensagem?: string | null
+          token?: string | null
+          ultimo_teste?: string | null
+          updated_at?: string
+          url_api: string
+        }
+        Update: {
+          ambiente?: string
+          estabelecimento_id?: string
+          habilitado?: boolean
+          homologado?: boolean
+          mensagem?: string | null
+          token?: string | null
+          ultimo_teste?: string | null
+          updated_at?: string
+          url_api?: string
+        }
+        Relationships: []
+      }
+      fiscal_operacoes: {
+        Row: {
+          acao: string
+          chave: string
+          created_at: string
+          erro: string | null
+          estabelecimento_id: string
+          id: string
+          nota_id: string | null
+          resposta: Json | null
+          situacao: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          chave: string
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota_id?: string | null
+          resposta?: Json | null
+          situacao?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          chave?: string
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota_id?: string | null
+          resposta?: Json | null
+          situacao?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       fiscal_tipos_operacao: {
         Row: {
           ativo: boolean
@@ -11383,6 +11550,56 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_titulos: {
+        Row: {
+          created_at: string
+          empresa_id: string | null
+          estabelecimento_id: string
+          id: string
+          nota_id: string
+          parcela: string
+          situacao: string
+          tipo: string
+          usuario_id: string | null
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota_id: string
+          parcela: string
+          situacao?: string
+          tipo: string
+          usuario_id?: string | null
+          valor: number
+          vencimento: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota_id?: string
+          parcela?: string
+          situacao?: string
+          tipo?: string
+          usuario_id?: string | null
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_titulos_nota_id_fkey"
+            columns: ["nota_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
             referencedColumns: ["id"]
           },
         ]
@@ -15293,9 +15510,11 @@ export type Database = {
           caminho_xml: string | null
           chave: string | null
           chave_idempotencia: string | null
+          compra_cotacao_id: string | null
           condicao_pagamento_id: string | null
           consumidor_final: boolean | null
           created_at: string
+          dados_emissao: Json
           data_emissao: string | null
           destinacao_mercadoria: string | null
           emitida_em: string | null
@@ -15306,6 +15525,7 @@ export type Database = {
           id: string
           mensagem_sefaz: string | null
           modalidade_frete: number | null
+          motor_emissao: string
           natureza_operacao: string | null
           numero: string | null
           observacoes: string | null
@@ -15322,6 +15542,7 @@ export type Database = {
           protocolo: string | null
           ref_externa: string | null
           serie: string | null
+          serie_id: string | null
           situacao: string
           status: string
           status_sefaz: string | null
@@ -15351,9 +15572,11 @@ export type Database = {
           caminho_xml?: string | null
           chave?: string | null
           chave_idempotencia?: string | null
+          compra_cotacao_id?: string | null
           condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
+          dados_emissao?: Json
           data_emissao?: string | null
           destinacao_mercadoria?: string | null
           emitida_em?: string | null
@@ -15364,6 +15587,7 @@ export type Database = {
           id?: string
           mensagem_sefaz?: string | null
           modalidade_frete?: number | null
+          motor_emissao?: string
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
@@ -15380,6 +15604,7 @@ export type Database = {
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
+          serie_id?: string | null
           situacao?: string
           status?: string
           status_sefaz?: string | null
@@ -15409,9 +15634,11 @@ export type Database = {
           caminho_xml?: string | null
           chave?: string | null
           chave_idempotencia?: string | null
+          compra_cotacao_id?: string | null
           condicao_pagamento_id?: string | null
           consumidor_final?: boolean | null
           created_at?: string
+          dados_emissao?: Json
           data_emissao?: string | null
           destinacao_mercadoria?: string | null
           emitida_em?: string | null
@@ -15422,6 +15649,7 @@ export type Database = {
           id?: string
           mensagem_sefaz?: string | null
           modalidade_frete?: number | null
+          motor_emissao?: string
           natureza_operacao?: string | null
           numero?: string | null
           observacoes?: string | null
@@ -15438,6 +15666,7 @@ export type Database = {
           protocolo?: string | null
           ref_externa?: string | null
           serie?: string | null
+          serie_id?: string | null
           situacao?: string
           status?: string
           status_sefaz?: string | null
@@ -15463,10 +15692,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "notas_fiscais_compra_cotacao_id_fkey"
+            columns: ["compra_cotacao_id"]
+            isOneToOne: false
+            referencedRelation: "compras_cotacoes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notas_fiscais_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_serie_id_fkey"
+            columns: ["serie_id"]
+            isOneToOne: false
+            referencedRelation: "nfe_series"
             referencedColumns: ["id"]
           },
           {
@@ -15489,6 +15732,7 @@ export type Database = {
           created_at: string
           cst: string | null
           descricao: string
+          divergencia: string | null
           estabelecimento_id: string
           fator_conversao: number
           id: string
@@ -15496,6 +15740,7 @@ export type Database = {
           nota_id: string
           produto_id: string | null
           quantidade: number
+          quantidade_recebida: number | null
           tributacao: Json | null
           unidade: string | null
           valor_cofins: number
@@ -15515,6 +15760,7 @@ export type Database = {
           created_at?: string
           cst?: string | null
           descricao: string
+          divergencia?: string | null
           estabelecimento_id: string
           fator_conversao?: number
           id?: string
@@ -15522,6 +15768,7 @@ export type Database = {
           nota_id: string
           produto_id?: string | null
           quantidade?: number
+          quantidade_recebida?: number | null
           tributacao?: Json | null
           unidade?: string | null
           valor_cofins?: number
@@ -15541,6 +15788,7 @@ export type Database = {
           created_at?: string
           cst?: string | null
           descricao?: string
+          divergencia?: string | null
           estabelecimento_id?: string
           fator_conversao?: number
           id?: string
@@ -15548,6 +15796,7 @@ export type Database = {
           nota_id?: string
           produto_id?: string | null
           quantidade?: number
+          quantidade_recebida?: number | null
           tributacao?: Json | null
           unidade?: string | null
           valor_cofins?: number
@@ -33322,6 +33571,48 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fiscal_aprovar_titulo: { Args: { p_titulo: string }; Returns: undefined }
+      fiscal_conferir_entrada: {
+        Args: {
+          p_compra?: string
+          p_divergencias: string
+          p_itens: Json
+          p_nota: string
+          p_situacao: string
+        }
+        Returns: undefined
+      }
+      fiscal_engine_salvar: {
+        Args: { p_ambiente: string; p_token: string; p_url: string }
+        Returns: undefined
+      }
+      fiscal_engine_status: {
+        Args: never
+        Returns: {
+          ambiente: string
+          habilitado: boolean
+          homologado: boolean
+          mensagem: string
+          tem_token: boolean
+          ultimo_teste: string
+          url_api: string
+        }[]
+      }
+      fiscal_integrar_titulos: { Args: { p_nota: string }; Returns: undefined }
+      fiscal_lancar_entrada: { Args: { p_nota: string }; Returns: boolean }
+      fiscal_rascunho_completo: {
+        Args: { p_chave: string; p_dados: Json; p_itens: Json; p_nota: string }
+        Returns: string
+      }
+      fiscal_reservar_nota: { Args: { p_nota: string }; Returns: Json }
+      fiscal_salvar_entrada: {
+        Args: { p_dados: Json; p_itens: Json; p_nota: string }
+        Returns: string
+      }
+      fiscal_salvar_rascunho: {
+        Args: { p_chave: string; p_dados: Json; p_itens: Json; p_nota: string }
+        Returns: string
       }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }

@@ -6,6 +6,7 @@ export interface ItemNfe {
 export interface Nfe {
   chave: string; numero: string; serie: string; dataEmissao: string; naturezaOperacao: string;
   emitente: { cnpj: string; nome: string; uf: string }; destinatarioCnpj: string;
+  duplicatas: { numero: string; vencimento: string; valor: number }[];
   itens: ItemNfe[]; totais: { produtos: number; frete: number; desconto: number; icms: number; icmsSt: number; ipi: number; pis: number; cofins: number; nota: number };
 }
 const num = (s?: string | null) => (s ? Number(s.replace(",", ".")) || 0 : 0);
@@ -18,6 +19,8 @@ export function lerNfeXml(xml: string): Nfe {
   if (doc.getElementsByTagName("parsererror").length) throw new Error("Arquivo XML inválido");
   const inf = pega(doc, "infNFe");
   if (!inf) throw new Error("O arquivo não é uma NF-e (infNFe não encontrado)");
+  const chave = (inf.getAttribute("Id") ?? "").replace(/^NFe/, "");
+  if (!/^\d{44}$/.test(chave)) throw new Error("Chave da NF-e inválida: são necessários 44 dígitos");
   const ide = pega(inf, "ide"), emit = pega(inf, "emit"), dest = pega(inf, "dest"), tot = pega(inf, "ICMSTot");
   const itens = Array.from(inf.getElementsByTagNameNS("*", "det")).map((det) => {
     const prod = pega(det, "prod"), icms = pega(det, "ICMS"), ipi = pega(det, "IPITrib"), pis = pega(det, "PIS"), cof = pega(det, "COFINS");
@@ -35,6 +38,7 @@ export function lerNfeXml(xml: string): Nfe {
     dataEmissao: (txt(ide, "dhEmi") || txt(ide, "dEmi")).slice(0, 10), naturezaOperacao: txt(ide, "natOp"),
     emitente: { cnpj: txt(emit, "CNPJ") || txt(emit, "CPF"), nome: txt(emit, "xNome"), uf: txt(pega(emit, "enderEmit"), "UF") },
     destinatarioCnpj: txt(dest, "CNPJ") || txt(dest, "CPF"), itens,
+    duplicatas: Array.from(inf.getElementsByTagNameNS("*", "dup")).map(d => ({numero:txt(d,"nDup"),vencimento:txt(d,"dVenc"),valor:num(txt(d,"vDup"))})),
     totais: { produtos: num(txt(tot, "vProd")), frete: num(txt(tot, "vFrete")), desconto: num(txt(tot, "vDesc")), icms: num(txt(tot, "vICMS")),
       icmsSt: num(txt(tot, "vST")), ipi: num(txt(tot, "vIPI")), pis: num(txt(tot, "vPIS")), cofins: num(txt(tot, "vCOFINS")), nota: num(txt(tot, "vNF")) },
   };

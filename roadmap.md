@@ -60,6 +60,11 @@
 - [x] Pedidos em aberto diários nos Agendados + motivo obrigatório na perda
 
 ## Compras, Estoque, Fiscal e Faturamento
+- [ ] Concluir telas de Nova NF-e, relatórios, simulação, eventos e monitoramento
+- [ ] Completar entrada XML, conferência, vínculos, estoque e financeiro com idempotência
+- [ ] Registrar consultas Systax e bloquear resultados incompletos
+- [ ] Integrar contrato seguro do motor próprio externo, distribuição DF-e e manifestação
+- [ ] Validar fluxos fiscais em tela e testes; homologação externa depende de serviço implantado, documentação Systax e certificado de teste
 - [x] Necessidade de compra (mínimo, vendas, produção, data ideal) e cotações por fornecedor
 - [x] Estoque: saldos, ajustes, movimentações e entrada de NF-e por XML/manual com de-para
 - [x] Tributação via motor Systax (tela de token/licença, campos fiscais nos cadastros) e faturamento de pedidos finalizados com baixa de estoque
