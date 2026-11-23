@@ -14,8 +14,10 @@ export async function chamarFiscal(fn: string,body: unknown) {
 export const FiscalEmissionEngine={ executar:(body:unknown)=>chamarFiscal("fiscal-engine",body) };
 export const SystaxTaxService={ calcular:(body:unknown)=>chamarFiscal("systax-calcular",body) };
 export async function baixarArquivoFiscal(nota_id:string,tipo:"xml"|"danfe") {
-  const { data,error }=await supabase.functions.invoke("fiscal-engine",{body:{acao:"arquivo",nota_id,tipo}});
-  if(error) throw new Error("Arquivo fiscal indisponível. Consulte a situação da nota.");
-  const blob=data instanceof Blob?data:new Blob([typeof data==="string"?data:JSON.stringify(data)],{type:tipo==="xml"?"application/xml":"application/pdf"});
-  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`NFe-${nota_id}.${tipo==="xml"?"xml":"pdf"}`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const { data,error }=await supabase.functions.invoke("fiscal-engine",{body:{acao:"arquivo",nota_id}});
+  if(error) throw new Error("XML autorizado indisponível. Consulte a situação da nota.");
+  const xml=typeof data==="string"?data:data instanceof Blob?await data.text():"";
+  if(!xml.includes("<nfeProc")) throw new Error("A nota ainda não tem XML autorizado.");
+  if(tipo==="danfe"){ const {gerarDanfe}=await import("./danfe"); gerarDanfe(xml).save(`DANFE-${nota_id}.pdf`); return; }
+  const url=URL.createObjectURL(new Blob([xml],{type:"application/xml"})); const a=document.createElement("a"); a.href=url; a.download=`NFe-${nota_id}.xml`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

@@ -400,6 +400,13 @@
       "when": 1795441784107,
       "tag": "0056_entrada_atomica_documentos",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1795443256429,
+      "tag": "0057_fiscal_fila_coletor",
+      "breakpoints": true
     }
   ]
 }

@@ -131,6 +131,9 @@ function loadConfig() {
     // Pilar Voz embutido: desligado até o usuário escolher ativar.
     vozEnabled: saved.vozEnabled === true,
     voz: saved.voz || {},
+    // Emissor NF-e próprio: desligado até o usuário ativar.
+    fiscalEnabled: saved.fiscalEnabled === true,
+    fiscal: saved.fiscal || {},
     filialId: saved.filialId || null,
     filialNome: saved.filialNome || null,
     videoHeight: clamp(saved.videoHeight, 240, 1080, 480),

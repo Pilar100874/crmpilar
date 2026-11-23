@@ -163,6 +163,7 @@ function createTray() {
 
 const { startRemoto, stopRemoto, statusRemoto } = require('./remoto');
 const { startVoz, stopVoz, statusVoz, salvarConfigVoz, pararVozSemSalvar } = require('./voz');
+const { startFiscal, stopFiscal, statusFiscal } = require('./fiscal');
 
 // ─── Início automático junto com o computador ────────────────────────────
 // Igual ao Pilar Remotas: assim que o equipamento liga, o coletor sobe sozinho
@@ -210,6 +211,7 @@ app.whenReady().then(async () => {
   startCollector();
   try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
   try { if (loadConfig().vozEnabled) startVoz(); } catch (e) { console.error('[coletor] voz:', e.message); }
+  try { if (loadConfig().fiscalEnabled) startFiscal(); } catch (e) { console.error('[coletor] fiscal:', e.message); }
 });
 
 
@@ -255,6 +257,9 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
     try { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('updater:progress', pct)); } catch {}
   });
 });
+ipcMain.handle('fiscal:status', () => statusFiscal());
+ipcMain.handle('fiscal:start', () => { startFiscal(); return statusFiscal(); });
+ipcMain.handle('fiscal:stop', () => { stopFiscal(); return statusFiscal(); });
 ipcMain.handle('voz:status', () => statusVoz());
 ipcMain.handle('voz:start', () => { startVoz(); return statusVoz(); });
 ipcMain.handle('voz:stop', () => { stopVoz(); return statusVoz(); });

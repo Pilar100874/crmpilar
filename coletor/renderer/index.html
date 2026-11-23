@@ -408,6 +408,16 @@
         </div>
         <div class="module">
           <div class="module-head">
+            <div class="t"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;">🧾</span> Emissor NF-e</div>
+            <label class="switch"><input type="checkbox" id="toggleFiscal" onchange="toggleFiscal(this.checked)"><span class="track"></span></label>
+          </div>
+          <div class="status-line" id="fiscalStatus">—</div>
+          <div class="meta">Transmite à SEFAZ as NF-e, cancelamentos, cartas de correção, inutilizações e manifestações feitas no CRM, usando o certificado A1 da unidade. As notas só saem com este computador ligado.</div>
+          <div style="margin-top:10px; font-size:12px; font-weight:600; color:var(--text-2);">Eventos</div>
+          <div id="fiscalEventos" class="meta" style="margin-top:4px; max-height:140px; overflow:auto;"></div>
+        </div>
+        <div class="module">
+          <div class="module-head">
             <div class="t"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;display:inline-flex;align-items:center;justify-content:center;">🎧</span> Pilar Voz</div>
             <label class="switch"><input type="checkbox" id="toggleVoz" onchange="toggleVoz(this.checked)"><span class="track"></span></label>
           </div>
@@ -588,6 +598,11 @@
   <script>
     async function togglePonto(v){ if(v) await window.coletor.startPonto(); else await window.coletor.stopPonto(); refresh(); }
     async function toggleCameras(v){ if(v) await window.coletor.startCameras(); else await window.coletor.stopCameras(); refresh(); }
+    async function toggleFiscal(v){ if(v) await window.coletor.fiscalStart(); else await window.coletor.fiscalStop(); refreshFiscal(); }
+    async function refreshFiscal(){ try{ const s=await window.coletor.fiscalStatus(); document.getElementById('toggleFiscal').checked=!!s.ativo;
+      document.getElementById('fiscalStatus').textContent=!s.ativo?'Parado':s.erro?('Erro: '+s.erro):('Ativo · '+s.processadas+' operações · última verificação '+(s.ultimo?new Date(s.ultimo).toLocaleTimeString('pt-BR'):'—'));
+      document.getElementById('fiscalEventos').innerHTML=(s.eventos||[]).map(e=>'<div>'+e.replace(/</g,'&lt;')+'</div>').join('')||'Nenhum evento.'; }catch{} }
+    setInterval(refreshFiscal,3000); setTimeout(refreshFiscal,500);
     async function toggleVoz(v){ if(v) await window.coletor.vozStart(); else await window.coletor.vozStop(); refreshVoz(); }
     async function refreshVoz(){
       try{

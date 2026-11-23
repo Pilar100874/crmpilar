@@ -11466,39 +11466,48 @@ export type Database = {
         Row: {
           acao: string
           chave: string
+          coletado_em: string | null
           created_at: string
           erro: string | null
           estabelecimento_id: string
           id: string
           nota_id: string | null
+          parametros: Json
           resposta: Json | null
           situacao: string
+          tentativas: number
           updated_at: string
           usuario_id: string | null
         }
         Insert: {
           acao: string
           chave: string
+          coletado_em?: string | null
           created_at?: string
           erro?: string | null
           estabelecimento_id: string
           id?: string
           nota_id?: string | null
+          parametros?: Json
           resposta?: Json | null
           situacao?: string
+          tentativas?: number
           updated_at?: string
           usuario_id?: string | null
         }
         Update: {
           acao?: string
           chave?: string
+          coletado_em?: string | null
           created_at?: string
           erro?: string | null
           estabelecimento_id?: string
           id?: string
           nota_id?: string | null
+          parametros?: Json
           resposta?: Json | null
           situacao?: string
+          tentativas?: number
           updated_at?: string
           usuario_id?: string | null
         }
@@ -33573,6 +33582,10 @@ export type Database = {
         }
       }
       fiscal_aprovar_titulo: { Args: { p_titulo: string }; Returns: undefined }
+      fiscal_coletor_ativar: {
+        Args: { p_ambiente: string; p_ativo: boolean }
+        Returns: undefined
+      }
       fiscal_conferir_entrada: {
         Args: {
           p_compra?: string

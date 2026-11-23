@@ -17,6 +17,9 @@ ipcRenderer.on('main-log', (_e, payload) => {
 });
 
 contextBridge.exposeInMainWorld('coletor', {
+  fiscalStatus: () => ipcRenderer.invoke('fiscal:status'),
+  fiscalStart: () => ipcRenderer.invoke('fiscal:start'),
+  fiscalStop: () => ipcRenderer.invoke('fiscal:stop'),
   vozStatus: () => ipcRenderer.invoke('voz:status'),
   vozStart: () => ipcRenderer.invoke('voz:start'),
   vozStop: () => ipcRenderer.invoke('voz:stop'),
