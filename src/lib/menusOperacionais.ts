@@ -1,7 +1,8 @@
 import {BarChart3, Boxes, ArrowLeftRight, FileInput, ClipboardList, Send, Receipt, FilePlus2, FileText, FilePen, FileX, Ban, Undo2, History, Hash, ClipboardCheck, Download, ShieldCheck, Calculator, Activity, ListChecks, Scale, Server, Wallet, Package, Building2, ShoppingCart, Settings, MoreHorizontal} from 'lucide-react';
 
 /** Shared operational menu catalog; configuration groups use existing screens. */
-export const MENUS_OPERACIONAIS = [
+type SubItemOperacional = {id:string; title:string; url:string; icon:typeof Settings; group?:string};
+export const MENUS_OPERACIONAIS: {id:string; title:string; icon:typeof Settings; subItems:SubItemOperacional[]}[] = [
   {id:'Compras', title:'Compras', icon:ShoppingCart, subItems:[
     {id:'Necessidade de Compra', title:'Necessidade de Compra', url:'/compras/necessidade', icon:ClipboardList},
     {id:'Cotações de Compra', title:'Cotações', url:'/compras/cotacoes', icon:Send},
