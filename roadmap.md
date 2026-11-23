@@ -69,13 +69,13 @@
 - [x] Estoque: saldos, ajustes, movimentações e entrada de NF-e por XML/manual com de-para
 - [x] Tributação via motor Systax (tela de token/licença, campos fiscais nos cadastros) e faturamento de pedidos finalizados com baixa de estoque
 - [x] Emissão real via Focus NFe (homologação): emitir, consultar, DANFE, XML, cancelar
-- [ ] Testar emissão — depende do token Focus NFe e do CNPJ da unidade cadastrado no Focus com certificado
-- [ ] Baixar notas de entrada da Receita (manifestação) via Focus NFe
+- [x] Aposentar emissão e recebimento via Focus a pedido do usuário; substituir pelo emissor/DF-e do Coletor
 - [ ] Validar integração Systax — depende do endereço da API, token e licença contratados (formato do retorno a confirmar com a documentação Systax)
 ## Emissor NF-e próprio (Coletor)
+- [x] Remover integração Focus das telas, consultas e serviços; preservar notas históricas e bloqueio de homologação
 - [x] Cadastrar responsável técnico por unidade e incluí-lo no XML; gravação/reabertura verificadas com cadastro temporário removido
 - [x] Mostrar saúde do Coletor e fila fiscal no Monitor, sem confundir atividade dos outros módulos
 - [x] Mapear autorizadores de todas as 27 UFs nos dois ambientes e testar roteamento
 - [x] Fila fiscal no CRM, ponte do Coletor, XML 4.00 assinado, SEFAZ (SP, RS, SVRS, AN), eventos, inutilização, DF-e e DANFE
 - [ ] Homologar uma NF-e real por unidade — depende de gerar e instalar Coletor 2.1.14, certificado A1 e credenciais Systax; nenhuma UF foi homologada nesta alteração
-- [ ] Remover o Focus — somente após a homologação aprovada
+- [x] Remover o Focus — solicitado explicitamente antes da homologação; emissão real continua bloqueada

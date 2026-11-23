@@ -130,9 +130,7 @@ const ControleEpi = React.lazy(() => import("./pages/dp/ControleEpi"));
 const Compras = React.lazy(() => import("./pages/compras/Compras"));
 const Estoque = React.lazy(() => import("./pages/estoque/Estoque"));
 const ConfigSystax = React.lazy(() => import("./pages/fiscal/ConfigSystax"));
-const Faturamento = React.lazy(() => import("./pages/fiscal/Faturamento"));
 const TiposOperacao = React.lazy(() => import("./pages/fiscal/TiposOperacao"));
-const ConfigNfe = React.lazy(() => import("./pages/fiscal/ConfigNfe"));
 const PainelFaturamento = React.lazy(() => import("./pages/fiscal/PainelFaturamento"));
 const NotasSaida = React.lazy(() => import("./pages/fiscal/NotasSaida"));
 const SeriesNumeracao = React.lazy(() => import("./pages/fiscal/SeriesNumeracao"));
@@ -751,7 +749,7 @@ const App = () => (
               <Route path="/fiscal/regras" element={<Navigate to="/fiscal/configuracao-systax" replace />} />
               <Route path="/fiscal/configuracao-systax" element={<ConfigSystax />} />
               <Route path="/faturamento" element={<FaturarPedidos />} />
-              <Route path="/faturamento/focus" element={<Faturamento />} />
+              <Route path="/faturamento/focus" element={<Navigate to="/faturamento" replace />} />
               <Route path="/faturamento/nova" element={<NovaNfe />} />
               <Route path="/faturamento/nfe/:id" element={<NovaNfe />} />
               <Route path="/entradas/conferencia/:id" element={<ConferenciaEntrada />} />
@@ -761,7 +759,7 @@ const App = () => (
               <Route path="/fiscal/relatorios" element={<RelatoriosFiscais />} />
               <Route path="/fiscal/monitor" element={<MonitorFiscal />} />
               <Route path="/fiscal/tipos-operacao" element={<TiposOperacao />} />
-              <Route path="/fiscal/configuracao-nfe" element={<ConfigNfe />} />
+              <Route path="/fiscal/configuracao-nfe" element={<Navigate to="/fiscal/motor-proprio" replace />} />
               <Route path="/faturamento/painel" element={<PainelFaturamento />} />
               <Route path="/faturamento/notas/:visao" element={<NotasSaida />} />
               <Route path="/faturamento/series" element={<SeriesNumeracao />} />

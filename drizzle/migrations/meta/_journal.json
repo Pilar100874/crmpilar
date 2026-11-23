@@ -414,6 +414,13 @@
       "when": 1795444867051,
       "tag": "0058_fiscal_responsavel_tecnico_saude",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1795445714985,
+      "tag": "0059_aposentar_integracao_focus",
+      "breakpoints": true
     }
   ]
 }

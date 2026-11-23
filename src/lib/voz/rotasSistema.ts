@@ -258,7 +258,6 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/fiscal/auditoria", titulo: "Auditoria Fiscal", aliases: ["consultas systax", "auditoria tributária"] },
   { path: "/faturamento", titulo: "Faturamento", aliases: ["faturar pedido", "nota de saída"] },
   { path: "/fiscal/tipos-operacao", titulo: "Tipos de operação", aliases: ["natureza de operação", "cfop operação", "finalidade nfe"] },
-  { path: "/fiscal/configuracao-nfe", titulo: "Configuração NF-e", aliases: ["token focus", "token nfe"] },
   { path: "/fiscal/configuracao-systax", titulo: "Configuração Systax", aliases: ["motor fiscal", "regras fiscais", "cfop", "tributação", "impostos"] },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },

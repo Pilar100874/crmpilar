@@ -66,33 +66,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [serieNfe, setSerieNfe] = useState("1");
   const [proximoNumero, setProximoNumero] = useState("");
   const [ieSt, setIeSt] = useState("");
-  const [buscandoFiscal, setBuscandoFiscal] = useState(false);
-  const buscarDadosFiscais = async () => {
-    const doc = cnpj.replace(/\D/g, "");
-    if (doc.length !== 14) { toast({ title: "Informe o CNPJ da unidade (14 dígitos)", variant: "destructive" }); return; }
-    setBuscandoFiscal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("nfe-focus", { body: { acao: "consultar_cnpj", cnpj: doc } });
-      if (error) {
-        let msg = error.message;
-        try { msg = (await (error as any).context.json()).error ?? msg; } catch { /* sem corpo */ }
-        throw new Error(msg);
-      }
-      const d = data?.dados ?? {};
-      const preenchidos: string[] = [];
-      if (d.optante_mei === true) { setRegime("mei"); setCrt("4"); preenchidos.push("regime (MEI)"); }
-      else if (d.optante_simples_nacional === true) { setRegime("simples_nacional"); setCrt("1"); preenchidos.push("regime (Simples Nacional)"); }
-      else if (d.optante_simples_nacional === false) { setCrt("3"); preenchidos.push("CRT regime normal"); }
-      if (d.cnae_principal) { setCnae(String(d.cnae_principal)); preenchidos.push("CNAE"); }
-      const ies: any[] = Array.isArray(d.inscricoes_estaduais) ? d.inscricoes_estaduais : [];
-      const ie = d.inscricao_estadual || ies.find((x) => !uf || String(x.uf ?? "").toUpperCase() === uf.toUpperCase())?.inscricao_estadual;
-      if (ie) { setInscricaoEstadual(String(ie)); preenchidos.push("inscrição estadual"); }
-      toast({ title: preenchidos.length ? `Preenchido: ${preenchidos.join(", ")}` : "Nada novo encontrado para este CNPJ",
-        description: ie ? undefined : "A consulta não trouxe a inscrição estadual; preencha manualmente." });
-    } catch (e: any) {
-      toast({ title: "Não foi possível consultar", description: e.message, variant: "destructive" });
-    } finally { setBuscandoFiscal(false); }
-  };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
@@ -544,7 +517,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
             <Label htmlFor="unidade-cnpj">CNPJ da unidade</Label>
             <div className="flex gap-2">
               <Input id="unidade-cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
-              <Button type="button" variant="outline" size="icon" aria-label="Buscar dados fiscais pelo CNPJ" title="Buscar dados fiscais (Focus NFe)" disabled={buscandoFiscal} onClick={buscarDadosFiscais}><Search className="h-4 w-4" /></Button>
             </div>
           </div>
           <div className="min-w-0 space-y-2">

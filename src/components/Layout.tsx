@@ -242,7 +242,6 @@ export const menuItems: MenuItem[] = [
       { id: "Tipos de operação", title: "Tipos de operação", url: "/fiscal/tipos-operacao", icon: LucideIcons.ListChecks },
       { id: "Configuração Systax", title: "Configuração Systax", url: "/fiscal/configuracao-systax", icon: LucideIcons.Scale },
       { id: "Motor próprio NF-e", title: "Motor próprio NF-e", url: "/fiscal/motor-proprio", icon: LucideIcons.Server },
-      { id: "Configuração NF-e", title: "Integração Focus NF-e", url: "/fiscal/configuracao-nfe", icon: LucideIcons.KeyRound },
     ],
   },
   {
