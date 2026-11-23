@@ -1,8 +1,8 @@
 {
-  "version": "2.1.12",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.12/ColetorPilar-Setup.exe",
+  "version": "2.1.13",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.13/ColetorPilar-Setup.exe",
   "notas": "2.1.12: o status do Coletor agora reconhece o Pilar Voz ligado e deixa de mostrar Parado.",
-  "downloadUrlMacAppleSilicon": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.12/ColetorPilar-Mac-AppleSilicon.zip",
-  "downloadUrlMacIntel": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.12/ColetorPilar-Mac-Intel.zip",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.12/ColetorPilar-Linux.AppImage"
+  "downloadUrlMacAppleSilicon": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.13/ColetorPilar-Mac-AppleSilicon.zip",
+  "downloadUrlMacIntel": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.13/ColetorPilar-Mac-Intel.zip",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.1.13/ColetorPilar-Linux.AppImage"
 }
