@@ -21,7 +21,8 @@ describe("novos programas no menu personalizado", () => {
       expect(root?.kind).toBe('container');
       if (root?.kind !== 'container') throw new Error('Menu ausente');
       expect(root.children[root.children.length - 1]).toEqual({kind:'program',programId:`Config ${menu.title}`});
-      expect(root.children.some(n => n.kind === 'container')).toBe(false);
+      const grupo = root.children.find(n => n.kind === 'container');
+      expect(grupo?.kind === 'container' ? grupo.children.map(n => n.kind === 'program' ? n.programId : '') : []).toEqual(menu.subItems.filter(s => s.group).map(s => s.id));
     }
     expect(effective.roots.find(n => n.kind === 'container' && n.id === 'meu-menu')).toEqual({kind:'container',id:'meu-menu',title:'Meu menu',children:[{kind:'program',programId:'Painel Chats'}]});
     expect(custom.roots).toHaveLength(3);

@@ -460,7 +460,9 @@ function organizarMenusOperacionais(base: MenuItem[], custom: MenuCustomization)
   const organizado = ativos.every(menu => {
     const root = custom.roots.find(n => n.kind === 'container' && n.id === `c-${menu.id}`);
     if (root?.kind !== 'container') return false;
-    return menu.subItems.every(s => root.children.some(n => n.kind === 'program' && n.programId === s.id))
+    return menu.subItems.every(s => s.group
+      ? root.children.some(n => n.kind === 'container' && n.id === `g-${menu.id}-${s.group}` && n.children.some(c => c.kind === 'program' && c.programId === s.id))
+      : root.children.some(n => n.kind === 'program' && n.programId === s.id))
       && !root.children.some(n => n.kind === 'container' && n.id === `g-${menu.id}-Configurações`);
   });
   if (organizado) return custom;
@@ -471,13 +473,20 @@ function organizarMenusOperacionais(base: MenuItem[], custom: MenuCustomization)
   const strip = (nodes: CustomNode[]): CustomNode[] => nodes.flatMap(n => {
     if (n.kind === 'program') return ids.has(n.programId) ? [] : [n];
     const children = strip(n.children);
-    if (!children.length && ativos.some(m => n.id === `g-${m.id}-Configurações`)) return [];
+    if (ativos.some(m => n.id.startsWith(`g-${m.id}-`))) return children;
     if (containers.has(n.id) || !children.length && ['Fiscal','c-Fiscal','Notas Fiscais de Entrada','c-Notas Fiscais de Entrada'].includes(n.id)) return children;
     return [{...n, children}];
   });
   const roots = strip(custom.roots);
   for (const menu of ativos) {
-    const children: CustomNode[] = menu.subItems.map(s => ({kind:'program',programId:s.id}));
+    const children: CustomNode[] = [];
+    for (const s of menu.subItems) {
+      if (!s.group) { children.push({kind:'program',programId:s.id}); continue; }
+      const gid = `g-${menu.id}-${s.group}`;
+      let g = children.find(n => n.kind === 'container' && n.id === gid);
+      if (!g) { g = {kind:'container',id:gid,title:s.group,iconName:'MoreHorizontal',children:[]}; children.push(g); }
+      if (g.kind === 'container') g.children.push({kind:'program',programId:s.id});
+    }
     roots.push({kind:'container',id:`c-${menu.id}`,title:menu.title,iconName:menu.id === 'Compras' ? 'ShoppingCart' : menu.id === 'Estoque' ? 'Boxes' : 'Receipt',children});
   }
   return {...custom,roots};
