@@ -455,7 +455,7 @@ export function DisparoMassaPanel({ fontes, onClose, onIniciarEnvio, abaInicial 
                   >
                     <Checkbox checked={marcado} onCheckedChange={() => alternar(c.id)} />
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground/70">
-                      {c.nome.split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
+                      {(c.nome ?? "").split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">{c.nome}</p>

@@ -1504,7 +1504,7 @@ export default function Atendimento() {
 
       setRadialCatalogProgress(85);
 
-      const fileName = `catalogo_${catalog.nome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      const fileName = `catalogo_${(catalog.nome ?? "").replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
       // Upload to storage
       const filePath = `catalogs/${Date.now()}_${fileName}`;
@@ -6267,7 +6267,7 @@ ${recentMessages}
             <ScrollArea className="h-64">
               <div className="space-y-2 pr-2">
                 {radialCatalogs
-                  .filter(c => c.nome.toLowerCase().includes(radialCatalogSearch.toLowerCase()))
+                  .filter(c => (c.nome ?? "").toLowerCase().includes(radialCatalogSearch.toLowerCase()))
                   .map((catalog) => {
                     const productCount = catalog.products_page?.products?.length || 0;
                     return (

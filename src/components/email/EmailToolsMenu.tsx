@@ -435,7 +435,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
         />
       ).toBlob();
 
-      const fileName = `catalogo_${catalog.nome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      const fileName = `catalogo_${(catalog.nome ?? "").replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
       
       // Upload to storage
       const estabId = estabelecimentoId || await getEstabelecimentoId();
@@ -974,7 +974,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       case 'tool-catalog':
         const filteredCatalogs = catalogs.filter((catalog) => {
           const searchLower = catalogSearch.toLowerCase();
-          return catalog.nome.toLowerCase().includes(searchLower);
+          return (catalog.nome ?? "").toLowerCase().includes(searchLower);
         });
         
         const getProductCount = (catalog: SavedCatalog) => {

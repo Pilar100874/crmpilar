@@ -62,7 +62,7 @@ export function NcmCRUD() {
     const filtered = ncmCodigos.filter(
       (ncm) =>
         ncm.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ncm.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+        (ncm.descricao ?? "").toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredCodigos(filtered);
   }, [searchTerm, ncmCodigos]);

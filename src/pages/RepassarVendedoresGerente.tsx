@@ -98,11 +98,11 @@ export default function RepassarVendedoresGerente() {
   };
 
   const filtrados = useMemo(
-    () => vendedores.filter((v) => v.nome.toLowerCase().includes(busca.toLowerCase())),
+    () => vendedores.filter((v) => (v.nome ?? "").toLowerCase().includes(busca.toLowerCase())),
     [vendedores, busca],
   );
   const empresasFiltradas = useMemo(
-    () => empresas.filter((e) => e.nome.toLowerCase().includes(buscaEmp.toLowerCase())),
+    () => empresas.filter((e) => (e.nome ?? "").toLowerCase().includes(buscaEmp.toLowerCase())),
     [empresas, buscaEmp],
   );
   const nomeGerente = (id: string) => gerentes.find((g) => g.id === id)?.nome || "";

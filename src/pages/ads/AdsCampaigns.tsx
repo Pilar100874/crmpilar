@@ -117,7 +117,7 @@ export default function AdsCampaigns() {
   // Filtrar campanhas
   const filteredCampaigns = campaigns
     .filter(c => {
-      const matchesSearch = c.campanha.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (c.campanha ?? "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPlatform = filterPlatform === "all" || c.plataforma?.id === filterPlatform;
       const matchesStatus = filterStatus === "all" || c.status === filterStatus;
       const matchesFav = !onlyFavs || isFav(c.key);
