@@ -312,6 +312,20 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Entrada de NF-e"
     }
   ],
+  "Importação Fiscal XML": [
+    {
+      "id": "saldos",
+      "label": "Saldos"
+    },
+    {
+      "id": "movimentacoes",
+      "label": "Movimentações"
+    },
+    {
+      "id": "entrada",
+      "label": "Entrada de NF-e"
+    }
+  ],
   "Conteúdos": [
     {
       "id": "contatos",
