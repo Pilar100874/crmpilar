@@ -39,6 +39,11 @@ export function validarRascunho(d: RascunhoNfe): string[] {
   if (!d.empresa_id) f.push("Escolha o destinatário.");
   if (!d.natureza_operacao.trim()) f.push("Informe a natureza da operação.");
   if (!d.serie_id) f.push("Escolha uma série ativa.");
+  if (!d.tipo_operacao_id) f.push("Escolha o tipo de operação.");
+  if (!d.data_emissao) f.push("Informe a data de emissão.");
+  if (d.data_saida && d.data_emissao && d.data_saida < d.data_emissao) f.push("A data de saída não pode ser anterior à emissão.");
+  if (!d.presenca_comprador) f.push("Informe a presença do comprador.");
+  if (!d.destinacao_mercadoria) f.push("Informe a destinação da mercadoria.");
   if (!d.itens.length) f.push("Inclua ao menos um produto.");
   d.itens.forEach((i,k) => {
     if (!(i.quantidade>0) || !Number.isFinite(i.quantidade)) f.push(`Item ${k+1}: quantidade inválida.`);

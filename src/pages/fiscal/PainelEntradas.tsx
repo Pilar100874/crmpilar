@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileInput } from "lucide-react";
 import { brl, dataBr, useContextoInterno } from "@/lib/estoque/contexto";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 export default function PainelEntradas() {
   const ctx = useContextoInterno();
@@ -27,7 +28,7 @@ export default function PainelEntradas() {
   const diverg = notas.filter((n) => conf[n.id]?.situacao === "divergente").length;
   return (
     <div className="space-y-4 p-3 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><FileInput className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Painel de Entradas</h1></div><Button asChild><Link to="/estoque/entrada">Importar XML</Link></Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><TituloFiscal icone={FileInput} titulo="Painel de Entradas" descricao="Notas de entrada recebidas e situação da conferência"/></div><Button asChild><Link to="/estoque/entrada">Importar XML</Link></Button></div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Notas recebidas", notas.length], ["Valor total", brl(total)], ["Sem conferência", semConf], ["Com divergência", diverg]].map(([t, v]) => <Card key={t as string}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{t}</p><p className="text-lg font-semibold">{v}</p></CardContent></Card>)}
       </div>

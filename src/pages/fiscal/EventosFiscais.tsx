@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { FiscalEmissionEngine } from "@/lib/fiscal/servicoFiscal";
 import { validarInutilizacao } from "@/lib/fiscal/documentoFiscal";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 const TIPOS: Record<string, string> = { cancelamento: "Cancelamento", carta_correcao: "Carta de correção", inutilizacao: "Inutilização", ciencia: "Ciência da operação", confirmacao: "Confirmação da operação", desconhecimento: "Desconhecimento", nao_realizada: "Operação não realizada" };
 export default function EventosFiscais() {
@@ -31,7 +32,7 @@ export default function EventosFiscais() {
   );
   return (
     <div className="space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><History className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Eventos Fiscais</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={History} titulo="Eventos Fiscais" descricao="Cancelamentos, cartas de correção e inutilizações de numeração"/></div>
       <section className="space-y-2 border-b pb-4"><h2 className="font-medium">Inutilizar numeração</h2>
         <div className="grid gap-2 grid-cols-2 lg:grid-cols-4"><div className="col-span-2"><Label>Série *</Label><Select value={inut.serie || undefined} onValueChange={(v) => setInut({ ...inut, serie: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{series.map((s) => <SelectItem key={s.id} value={s.id}>{s.unidades?.nome} · série {s.serie} · {s.ambiente === "producao" ? "Produção" : "Homologação"}</SelectItem>)}</SelectContent></Select></div>
         <div><Label>Número inicial *</Label><Input type="number" min="1" value={inut.inicio} onChange={(e) => setInut({ ...inut, inicio: e.target.value })} /></div><div><Label>Número final *</Label><Input type="number" min="1" value={inut.fim} onChange={(e) => setInut({ ...inut, fim: e.target.value })} /></div></div>

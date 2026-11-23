@@ -7,3 +7,7 @@ describe("Documento fiscal",()=>{
   it("bloqueia devolução sem nota referenciada",()=>{expect(validarRascunho({...novoRascunho(),finalidade_emissao:4})).toContain("Devolução exige referência à nota original.");});
   it("valida intervalo e justificativa da inutilização",()=>{ expect(validarInutilizacao(10,9,"Justificativa válida para teste")).toBe("Informe um intervalo válido de numeração.");expect(validarInutilizacao(1,2,"curta")).toBe("A justificativa deve ter entre 15 e 255 caracteres."); expect(validarInutilizacao(1,2,"Numeração não utilizada nesta série")).toBeNull(); });
 });
+describe("campos obrigatórios da NF-e",()=>{
+  it("exige tipo de operação",()=>{expect(validarRascunho(novoRascunho())).toContain("Escolha o tipo de operação.");});
+  it("não aceita saída antes da emissão",()=>{expect(validarRascunho({...novoRascunho(),data_emissao:"2026-11-20",data_saida:"2026-11-19"})).toContain("A data de saída não pode ser anterior à emissão.");});
+});

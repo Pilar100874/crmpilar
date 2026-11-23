@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
 import { useContextoInterno } from "@/lib/estoque/contexto";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 export default function AuditoriaSystax() {
   const ctx = useContextoInterno();
@@ -16,7 +17,7 @@ export default function AuditoriaSystax() {
   }, [ctx.estabelecimentoId]);
   return (
     <div className="space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Auditoria Fiscal</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={ShieldCheck} titulo="Auditoria Fiscal" descricao="Histórico de todas as consultas tributárias feitas à Systax"/></div>
       <p className="text-sm text-muted-foreground">Cada consulta tributária enviada à Systax fica registrada com o que foi enviado e o que voltou. Os resultados não podem ser alterados sem registro.</p>
       {lista.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma consulta registrada ainda.</p> : lista.map((c) => (
         <Card key={c.id}><CardContent className="space-y-2 p-4">

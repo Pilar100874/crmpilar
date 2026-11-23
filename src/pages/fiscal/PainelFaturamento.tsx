@@ -8,6 +8,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 import { brl, useContextoInterno } from "@/lib/estoque/contexto";
 import { porMes, resumoFaturamento } from "@/lib/fiscal/situacaoNfe";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 const hoje = new Date();
 const inicioPadrao = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1).toISOString().slice(0, 10);
@@ -39,7 +40,7 @@ export default function PainelFaturamento() {
   ];
   return (
     <div className="space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><BarChart3 className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Painel de Faturamento</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={BarChart3} titulo="Painel de Faturamento" descricao="Resumo do faturamento e das notas do período"/></div>
       <div className="flex flex-wrap gap-3">
         <div><Label>De</Label><Input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} /></div>
         <div><Label>Até</Label><Input type="date" value={fim} onChange={(e) => setFim(e.target.value)} /></div>

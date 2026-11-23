@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Scale } from "lucide-react";
 import { toast } from "sonner";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 type Status = { ambiente: string; url_api: string | null; usuario: string | null; tem_token: boolean; tem_licenca: boolean; updated_at: string } | null;
 
@@ -35,7 +36,7 @@ export default function ConfigSystax() {
   const situacao = (ok?: boolean) => ok ? <Badge>Configurado</Badge> : <Badge variant="outline">Não informado</Badge>;
   return (
     <div className="max-w-2xl space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><Scale className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Configuração Systax</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={Scale} titulo="Configuração Systax" descricao="Credenciais e regras usadas no cálculo dos impostos"/></div>
       <p className="text-sm text-muted-foreground">O motor fiscal Systax devolve CFOP, CST/CSOSN, ICMS, ST, DIFAL, FCP, IPI, PIS e COFINS de cada item no faturamento. Token e licença não são mostrados de novo depois de salvos; deixe em branco para manter os atuais.</p>
       <Card><CardContent className="space-y-4 p-4">
         <div><Label>Ambiente</Label>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { FINALIDADES_NFE, OPERACOES } from "@/lib/fiscal/motorFiscal";
 import { useContextoInterno } from "@/lib/estoque/contexto";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 const vazio = { nome: "", operacao_base: "venda", natureza_operacao: "", finalidade_nfe: 1, movimenta_estoque: true, gera_financeiro: true, ativo: true };
 const SUGESTOES = OPERACOES.map((o) => ({ nome: o.rotulo, operacao_base: o.valor, natureza_operacao: o.natureza, finalidade_nfe: o.finalidade, movimenta_estoque: o.estoque, gera_financeiro: o.financeiro, ativo: true }));
@@ -48,7 +49,7 @@ export default function TiposOperacao() {
   return (
     <div className="space-y-4 p-3 sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
-        <ListChecks className="h-6 w-6 text-primary" /><h1 className="flex-1 text-xl font-semibold sm:text-2xl">Tipos de operação</h1>
+        <TituloFiscal icone={ListChecks} titulo="Tipos de operação" descricao="Modelos de operação (venda, devolução, remessa…) usados na nota"/>
         {!form && lista.length > 0 && <Button variant="outline" onClick={criarSugestoes}>Adicionar tipos que faltam</Button>}
         {!form && <Button onClick={() => setForm({ ...vazio })}><Plus className="mr-1 h-4 w-4" />Novo tipo</Button>}
       </div>

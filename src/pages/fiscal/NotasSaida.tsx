@@ -9,6 +9,7 @@ import { FileText } from "lucide-react";
 import { brl, dataBr, useContextoInterno } from "@/lib/estoque/contexto";
 import { SITUACOES_NFE, rotuloSituacao } from "@/lib/fiscal/situacaoNfe";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 const VISOES: Record<string, { titulo: string; situacoes?: string[]; finalidade?: number }> = {
   emitidas: { titulo: "NF-e Emitidas" },
@@ -36,7 +37,7 @@ export default function NotasSaida({ visaoFixa }: { visaoFixa?: string } = {}) {
   const lista = useMemo(() => notas.filter((n) => (sit === "todas" || n.situacao === sit) && `${n.numero ?? ""} ${n.chave ?? ""} ${n.participante_nome ?? ""}`.toLowerCase().includes(busca.toLowerCase())), [notas, busca, sit]);
   return (
     <div className="space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><FileText className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">{v.titulo}</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={FileText} titulo={v.titulo} descricao="Encontre, abra e acompanhe as notas desta lista"/></div>
       <div className="flex flex-wrap gap-3">
         <Input className="max-w-xs" placeholder="Número, chave ou cliente" value={busca} onChange={(e) => setBusca(e.target.value)} />
         {!v.situacoes && <Select value={sit} onValueChange={setSit}><SelectTrigger className="w-52"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as situações</SelectItem>{SITUACOES_NFE.map((s) => <SelectItem key={s.valor} value={s.valor}>{s.rotulo}</SelectItem>)}</SelectContent></Select>}

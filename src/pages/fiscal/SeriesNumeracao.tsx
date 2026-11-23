@@ -11,6 +11,7 @@ import { Hash, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useContextoInterno } from "@/lib/estoque/contexto";
 
+import {TituloFiscal} from '@/components/fiscal/TituloFiscal';
 const sb = supabase as any;
 export default function SeriesNumeracao() {
   const ctx = useContextoInterno();
@@ -39,7 +40,7 @@ export default function SeriesNumeracao() {
   const nomeUn = (id: string) => unidades.find((u) => u.id === id)?.nome ?? "Unidade";
   return (
     <div className="max-w-4xl space-y-4 p-3 sm:p-6">
-      <div className="flex items-center gap-2"><Hash className="h-6 w-6 text-primary" /><h1 className="text-xl font-semibold sm:text-2xl">Séries e Numeração</h1></div>
+      <div className="flex items-center gap-2"><TituloFiscal icone={Hash} titulo="Séries e Numeração" descricao="Séries e próximo número de cada unidade emissora"/></div>
       <p className="text-sm text-muted-foreground">Cada número é reservado no banco uma única vez, mesmo com cliques repetidos. Números pulados devem ser inutilizados.</p>
       <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-5 sm:items-end">
         <div className="sm:col-span-2"><Label>Unidade *</Label><Select value={f.unidade_id} onValueChange={(v) => setF({ ...f, unidade_id: v })}><SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger><SelectContent>{unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}</SelectContent></Select></div>
